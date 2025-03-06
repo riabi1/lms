@@ -63,5 +63,9 @@ class Kernel extends HttpKernel
         'signed' => \App\Http\Middleware\ValidateSignature::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
+        'ensure.is.admin' => \App\Http\Middleware\EnsureIsAdmin::class,
+        'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
+        'verified:admin.verification.notice' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class . ':admin.verification.notice',
+        'verified:instructor.verification.notice' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class . ':instructor.verification.notice',
     ];
 }
