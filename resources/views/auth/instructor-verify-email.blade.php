@@ -1,29 +1,18 @@
 <x-guest-layout>
-  <div class="mb-4 text-sm text-gray-600">
-    {{ __('Thanks for signing up as an Instructor! Before you can proceed, please check your email for a verification link.') }}
-  </div>
+    <div class="mb-4 text-sm text-gray-600">
+        {{ __('Thanks for signing up as an instructor! Before getting started, please check your email for a verification link.') }}
+    </div>
 
-  @if (session('status') == 'verification-link-sent')
-  <div class="mb-4 font-medium text-sm text-green-600">
-    {{ __('A new verification link has been sent to the email address you provided during registration.') }}
-  </div>
-  @endif
+    <div class="mb-4 text-sm text-gray-600">
+        {{ __('Once verified, you can log in to access your dashboard.') }}
+        <a href="{{ route('instructor.login') }}" class="underline text-sm text-gray-600 hover:text-gray-900">
+            {{ __('Click here to log in') }}
+        </a>.
+    </div>
 
-  <div class="mt-4 flex items-center justify-between">
-    <form method="POST" action="{{ route('instructor.verification.send') }}">
-      @csrf
-      <div>
-        <x-primary-button>
-          {{ __('Resend Verification Email') }}
-        </x-primary-button>
-      </div>
-    </form>
-
-    <form method="POST" action="{{ route('instructor.logout') }}">
-      @csrf
-      <button type="submit" class="underline text-sm text-gray-600 hover:text-gray-900">
-        {{ __('Log Out') }}
-      </button>
-    </form>
-  </div>
+    @if (session('status'))
+        <div class="mt-4 font-medium text-sm text-green-600">
+            {{ session('status') }}
+        </div>
+    @endif
 </x-guest-layout>
