@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Http\Controllers\Auth;
+use App\Http\Controllers\Controller;
 use App\Models\Instructor;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use App\Http\Controllers\Controller;
 
 class InstructorRegisteredUserController extends Controller
 {
@@ -30,8 +29,7 @@ class InstructorRegisteredUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        event(new Registered($instructor)); // Envoie l’email de vérification
-
-        return redirect()->route('instructor.verification.notice')->with('status', 'Veuillez vérifier votre email pour compléter l’inscription.');
+        event(new Registered($instructor)); // Identique aux utilisateurs
+        return redirect()->route('instructor.verification.notice'); // Identique, avec nom ajusté
     }
 }
