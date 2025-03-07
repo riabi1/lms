@@ -1,56 +1,126 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\Auth\AdminRegisteredUserController;
 use App\Http\Controllers\Auth\InstructorRegisteredUserController;
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\AdminAuthenticatedSessionController;
 use App\Http\Controllers\Auth\InstructorAuthenticatedSessionController;
-use App\Http\Controllers\Auth\AdminRegisteredUserController;
-
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
-*/
+use App\Http\Controllers\ProfileController;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+// =====================
+// 🔹 User Authentication
+// =====================
+Route::get('/register', [RegisteredUserController::class, 'create'])->name('register');
+Route::post('/register', [RegisteredUserController::class, 'store']);
+Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
+Route::post('/login', [AuthenticatedSessionController::class, 'store']);
+Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+Route::get('/dashboard', fn() => view('dashboard'))->middleware(['auth', 'verified'])->name('dashboard');
+
+// Profile Routes
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::put('/password', [ProfileController::class, 'updatePassword'])->name('password.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// Admin Routes
+// =====================
+// 🔹 Email Verification (Users)
+// =====================
+Route::get('/email/verify', fn() => view('auth.verify-email'))
+    ->name('verification.notice');
+
+Route::get('/email/verify/{id}/{hash}', function ($id, $hash, Request $request) {
+    $user = \App\Models\User::findOrFail($id);
+    if (!hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
+        return redirect()->route('login')->with('error', 'Invalid verification link.');
+    }
+    if ($user->hasVerifiedEmail()) {
+        return redirect()->route('login')->with('message', 'Email already verified.');
+    }
+    $user->markEmailAsVerified();
+    auth()->logout();
+    return redirect()->route('login')->with('message', 'Email verified successfully. Please log in.');
+})->middleware(['signed'])->name('verification.verify');
+
+Route::post('/email/verification-notification', function (Request $request) {
+    $request->user()->sendEmailVerificationNotification();
+    return back()->with('message', 'Un nouveau lien de vérification a été envoyé à votre adresse email.');
+})->middleware(['auth', 'throttle:6,1'])->name('verification.send');
+
+// =====================
+// 🔹 Admin Authentication
+// =====================
+Route::get('/admin/register', [AdminRegisteredUserController::class, 'create'])->name('admin.register');
+Route::post('/admin/register', [AdminRegisteredUserController::class, 'store']);
 Route::get('/admin/login', [AdminAuthenticatedSessionController::class, 'create'])->name('admin.login');
 Route::post('/admin/login', [AdminAuthenticatedSessionController::class, 'store']);
 Route::post('/admin/logout', [AdminAuthenticatedSessionController::class, 'destroy'])->name('admin.logout');
-Route::get('/admin/dashboard', fn() => view('admin.dashboard'))->middleware('auth:admin')->name('admin.dashboard');
 
-// Admin Registration (restricted to authenticated admins)
-Route::get('/admin/register', [AdminRegisteredUserController::class, 'create'])->middleware('ensure.is.admin')->name('admin.register');
-Route::post('/admin/register', [AdminRegisteredUserController::class, 'store'])->middleware('ensure.is.admin');
+Route::get('/admin/dashboard', fn() => view('admin.dashboard'))
+    ->middleware(['auth:admin', 'verified'])
+    ->name('admin.dashboard');
 
+// Admin Email Verification
+Route::get('/admin/email/verify', fn() => view('auth.admin-verify-email'))
+    ->name('admin.verification.notice');
 
+Route::get('/admin/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
+    $request->fulfill();
+    return redirect()->route('admin.dashboard');
+})->middleware(['auth:admin', 'signed'])->name('admin.verification.verify');
 
-// Instructor Routes
+Route::post('/admin/email/verification-notification', function (Request $request) {
+    $request->user()->sendEmailVerificationNotification();
+    return back()->with('message', 'Un nouveau lien de vérification a été envoyé.');
+})->middleware(['auth:admin', 'throttle:6,1'])->name('admin.verification.send');
+
+// =====================
+// 🔹 Instructor Authentication
+// =====================
+Route::get('/instructor/register', [InstructorRegisteredUserController::class, 'create'])->name('instructor.register');
+Route::post('/instructor/register', [InstructorRegisteredUserController::class, 'store']);
 Route::get('/instructor/login', [InstructorAuthenticatedSessionController::class, 'create'])->name('instructor.login');
 Route::post('/instructor/login', [InstructorAuthenticatedSessionController::class, 'store']);
 Route::post('/instructor/logout', [InstructorAuthenticatedSessionController::class, 'destroy'])->name('instructor.logout');
-Route::get('/instructor/dashboard', fn() => view('instructor.dashboard'))->middleware('auth:instructor')->name('instructor.dashboard');
 
-Route::get('/instructor/register', [InstructorRegisteredUserController::class, 'create'])->middleware('ensure.is.admin')->name('instructor.register');
-Route::post('/instructor/register', [InstructorRegisteredUserController::class, 'store'])->middleware('ensure.is.admin');
+Route::get('/instructor/dashboard', fn() => view('instructor.dashboard'))
+    ->middleware(['auth:instructor', 'verified'])
+    ->name('instructor.dashboard');
 
-require __DIR__.'/auth.php';
+// Instructor Email Verification
+Route::get('/instructor/email/verify', fn() => view('auth.instructor-verify-email'))
+    ->name('instructor.verification.notice');
+
+Route::get('/instructor/email/verify/{id}/{hash}', function ($id, $hash, Request $request) {
+    try {
+        $instructor = \App\Models\Instructor::findOrFail($id);
+        if (!hash_equals((string) $hash, sha1($instructor->getEmailForVerification()))) {
+            return redirect()->route('instructor.login')->with('error', 'Invalid verification link.');
+        }
+        if ($instructor->hasVerifiedEmail()) {
+            return redirect()->route('instructor.login')->with('message', 'Email already verified.');
+        }
+        $instructor->markEmailAsVerified();
+        // Removed automatic login
+        return redirect()->route('instructor.login')->with('message', 'Email verified successfully. Please log in.');
+    } catch (\Exception $e) {
+        \Log::error("Verification failed for instructor ID {$id}: " . $e->getMessage());
+        return redirect()->route('instructor.login')->with('error', 'Verification failed. Please try again.');
+    }
+})->middleware(['signed'])->name('instructor.verification.verify');
+
+Route::post('/instructor/email/verification-notification', function (Request $request) {
+    $request->user()->sendEmailVerificationNotification();
+    return back()->with('message', 'Un nouveau lien de vérification a été envoyé.');
+})->middleware(['auth:instructor', 'throttle:6,1'])->name('instructor.verification.send');

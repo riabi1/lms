@@ -9,27 +9,27 @@ use Illuminate\Support\Facades\Auth;
 class InstructorAuthenticatedSessionController extends Controller
 {
   //
-  public function create()
-  {
-    return view('auth.instructor-login'); // Create this view
-  }
+public function create()
+{
+    return view('auth.instructor-login');
+}
 
   public function store(Request $request)
-  {
+{
     $request->validate([
-      'email' => 'required|email',
-      'password' => 'required',
+        'email' => 'required|email',
+        'password' => 'required',
     ]);
 
     if (Auth::guard('instructor')->attempt($request->only('email', 'password'), $request->boolean('remember'))) {
-      $request->session()->regenerate();
-      return redirect()->intended(route('instructor.dashboard')); // Define this route
+        $request->session()->regenerate();
+        return redirect()->intended(route('instructor.dashboard'));
     }
 
     return back()->withErrors([
-      'email' => 'The provided credentials do not match our records.',
+        'email' => 'The provided credentials do not match our records.',
     ]);
-  }
+}
 
   public function destroy(Request $request)
   {

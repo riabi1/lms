@@ -2,46 +2,36 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Http\Controllers\Auth;
 use App\Models\Instructor;
-use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use App\Http\Controllers\Controller;
 
 class InstructorRegisteredUserController extends Controller
 {
-  //
-  /**
-   * Display the instructor registration view.
-   */
-  public function create()
-  {
-    return view('auth.instructor-register');
-  }
+    public function create()
+    {
+        return view('auth.instructor-register');
+    }
 
-  /**
-   * Handle an incoming instructor registration request.
-   */
-  public function store(Request $request)
-  {
-    $request->validate([
-      'name' => ['required', 'string', 'max:255'],
-      'email' => ['required', 'string', 'email', 'max:255', 'unique:instructors'],
-      'password' => ['required', 'confirmed', 'min:8'],
-    ]);
+    public function store(Request $request)
+    {
+        $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:instructors'],
+            'password' => ['required', 'confirmed', 'min:8'],
+        ]);
 
-    $instructor = Instructor::create([
-      'name' => $request->name,
-      'email' => $request->email,
-      'password' => Hash::make($request->password),
-    ]);
+        $instructor = Instructor::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+        ]);
 
-    event(new Registered($instructor));
+        event(new Registered($instructor)); // Envoie l’email de vérification
 
-    Auth::guard('instructor')->login($instructor);
-
-    // Do not log in immediately; redirect to verification notice
-    return redirect()->route('instructor.verification.notice');
-  }
+        return redirect()->route('instructor.verification.notice')->with('status', 'Veuillez vérifier votre email pour compléter l’inscription.');
+    }
 }
