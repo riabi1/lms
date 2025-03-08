@@ -26,7 +26,7 @@ class Instructor extends Authenticatable implements MustVerifyEmail
         'email_verified_at' => 'datetime',
     ];
 
-    // Personnaliser la notification de vérification
+   
     public function sendEmailVerificationNotification()
     {
         $this->notify(new class ($this) extends VerifyEmail {

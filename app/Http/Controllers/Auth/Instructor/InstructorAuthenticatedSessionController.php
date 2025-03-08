@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Auth;
+namespace App\Http\Controllers\Auth\Instructor;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Auth;
 
 class InstructorAuthenticatedSessionController extends Controller
 {
-  //
+
 public function create()
 {
     return view('auth.instructor-login');

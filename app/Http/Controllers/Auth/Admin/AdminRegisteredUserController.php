@@ -1,6 +1,5 @@
 <?php
-
-namespace App\Http\Controllers\Auth;
+namespace App\Http\Controllers\Auth\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Admin;
@@ -35,7 +34,7 @@ class AdminRegisteredUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        event(new Registered($admin)); // Envoie l'email de vérification, comme pour les utilisateurs
+        event(new Registered($admin)); 
 
         return redirect()->route('admin.verification.notice')->with('status', 'Veuillez vérifier votre email pour compléter l’inscription.');
     }
