@@ -1,18 +1,42 @@
-<x-guest-layout>
-    <div class="mb-4 text-sm text-gray-600">
-        {{ __('Thanks for signing up as an instructor! Before getting started, please check your email for a verification link.') }}
-    </div>
+<!DOCTYPE html>
+<html>
 
-    <div class="mb-4 text-sm text-gray-600">
-        {{ __('Once verified, you can log in to access your dashboard.') }}
-        <a href="{{ route('instructor.login') }}" class="underline text-sm text-gray-600 hover:text-gray-900">
-            {{ __('Click here to log in') }}
-        </a>.
-    </div>
+<head>
+  <title>Verify Instructor Email</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
 
-    @if (session('status'))
-        <div class="mt-4 font-medium text-sm text-green-600">
-            {{ session('status') }}
-        </div>
-    @endif
-</x-guest-layout>
+<body>
+  <h1>Please Verify Your Instructor Email</h1>
+  <p>Check your email for a verification link.</p>
+
+  @if (session('message'))
+  <p>{{ session('message') }}</p>
+  @endif
+
+  <form method="POST" action="{{ route('instructor.verification.send') }}">
+    @csrf
+    <button type="submit">Resend Verification Email</button>
+  </form>
+
+  <script>
+    setInterval(() => {
+      fetch('/check-verification', {
+          headers: {
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json'
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.verified) {
+            window.location.reload();
+          }
+        })
+        .catch(error => console.log('Error checking verification:', error));
+    }, 2000);
+  </script>
+</body>
+
+</html>

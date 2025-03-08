@@ -1,30 +1,44 @@
-<x-guest-layout>
-    <div class="mb-4 text-sm text-gray-600">
-        {{ __('Thanks for signing up! Before getting started, please check your email for a verification link.') }}
-    </div>
+<!DOCTYPE html>
+<html>
 
-    <div class="mb-4 text-sm text-gray-600">
-        {{ __('Once verified, you can log in to access your dashboard.') }}
-        <a href="{{ route('login') }}" class="underline text-sm text-gray-600 hover:text-gray-900">
-            {{ __('Click here to log in') }}
-        </a>.
-    </div>
+<head>
+  <title>Verify Email</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
 
-    @if (session('status'))
-        <div class="mt-4 font-medium text-sm text-green-600">
-            {{ session('status') }}
-        </div>
-    @endif
+<body>
+  <h1>Please Verify Your Email</h1>
+  <p>Check your email for a verification link.</p>
 
-    <div class="mt-4">
-        <p class="text-sm text-gray-600">
-            {{ __('Didn’t receive the email?') }}
-        </p>
-        <form method="POST" action="{{ route('verification.send') }}">
-            @csrf
-            <button type="submit" class="underline text-sm text-gray-600 hover:text-gray-900">
-                {{ __('Resend Verification Email') }}
-            </button>
-        </form>
-    </div>
-</x-guest-layout>
+  @if (session('message'))
+  <p>{{ session('message') }}</p>
+  @endif
+
+  <form method="POST" action="{{ route('verification.send') }}">
+    @csrf
+    <button type="submit">Resend Verification Email</button>
+  </form>
+
+  <script>
+    // Check verification status every 2 seconds
+    setInterval(() => {
+      fetch('/check-verification', {
+          headers: {
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json'
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.verified) {
+            window.location.reload(); // Reload the page
+            // The controller will redirect to dashboard if verified
+          }
+        })
+        .catch(error => console.log('Error checking verification:', error));
+    }, 2000);
+  </script>
+</body>
+
+</html>

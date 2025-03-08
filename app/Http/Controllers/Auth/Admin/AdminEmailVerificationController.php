@@ -9,28 +9,30 @@ use Illuminate\Http\RedirectResponse;
 
 class AdminEmailVerificationController extends Controller
 {
-    /**
-     * Display the email verification notice.
-     */
-    public function notice()
-    {
-        return view('auth.admin-verify-email');
+  public function notice(Request $request)
+  {
+    if ($request->user('admin') && $request->user('admin')->hasVerifiedEmail()) {
+      return redirect()->route('admin.dashboard');
     }
+    return view('auth.admin-verify-email');
+  }
 
-    /**
-     * Handle the email verification for admins.
-     */
-    public function verify($id, $hash, Request $request): RedirectResponse
-    {
-        $admin = Admin::findOrFail($id);
-        if (!hash_equals((string) $hash, sha1($admin->getEmailForVerification()))) {
-            return redirect()->route('admin.login')->with('error', 'Lien de vérification invalide.');
-        }
-        if ($admin->hasVerifiedEmail()) {
-            return redirect()->route('admin.login')->with('message', 'Email déjà vérifié.');
-        }
-        $admin->markEmailAsVerified();
-        auth()->guard('admin')->logout();
-        return redirect()->route('admin.login')->with('message', 'Email vérifié avec succès. Veuillez vous connecter.');
+  public function verify($id, $hash, Request $request): RedirectResponse
+  {
+    $admin = Admin::findOrFail($id);
+    if (!hash_equals((string) $hash, sha1($admin->getEmailForVerification()))) {
+      return redirect()->route('admin.login')->with('error', 'Lien de vérification invalide.');
     }
+    if (!$admin->hasVerifiedEmail()) {
+      $admin->markEmailAsVerified();
+      auth()->guard('admin')->login($admin);
+    }
+    return redirect()->route('admin.verification.notice');
+  }
+
+  public function resend(Request $request): RedirectResponse
+  {
+    $request->user()->sendEmailVerificationNotification();
+    return back()->with('message', 'Un nouveau lien de vérification a été envoyé.');
+  }
 }
