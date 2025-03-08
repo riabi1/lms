@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Auth;
+namespace App\Http\Controllers\Auth\Instructor;
 
 use App\Http\Controllers\Controller;
 use App\Models\Instructor;
@@ -29,7 +29,7 @@ class InstructorRegisteredUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        event(new Registered($instructor)); // Identique aux utilisateurs
-        return redirect()->route('instructor.verification.notice'); // Identique, avec nom ajusté
+        event(new Registered($instructor)); 
+        return redirect()->route('instructor.verification.notice'); 
     }
 }

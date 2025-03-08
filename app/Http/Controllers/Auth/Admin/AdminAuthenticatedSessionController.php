@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Auth;
+namespace App\Http\Controllers\Auth\Admin;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -11,7 +11,7 @@ class AdminAuthenticatedSessionController extends Controller
   //
   public function create()
   {
-    return view('auth.admin-login'); // Create this view
+    return view('auth.admin-login'); 
   }
 
   public function store(Request $request)
@@ -23,7 +23,7 @@ class AdminAuthenticatedSessionController extends Controller
 
     if (Auth::guard('admin')->attempt($request->only('email', 'password'), $request->boolean('remember'))) {
       $request->session()->regenerate();
-      return redirect()->intended(route('admin.dashboard')); // Define this route
+      return redirect()->intended(route('admin.dashboard')); 
     }
 
     return back()->withErrors([
