@@ -12,7 +12,7 @@ class InstructorRegisteredUserController extends Controller
 {
     public function create()
     {
-        return view('auth.instructor-register');
+        return view('instructor.instructor_register');
     }
 
     public function store(Request $request)

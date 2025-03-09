@@ -13,9 +13,9 @@ class EmailVerificationController extends Controller
   public function notice(Request $request)
   {
     if ($request->user('web') && $request->user('web')->hasVerifiedEmail()) {
-      return redirect()->route('user.dashboard');
+      return redirect()->route('dashboard');
     }
-    return view('auth.user-verify-email');
+    return view('frontend.dashboard.user-verify-email');
   }
 
   public function verify($id, $hash, Request $request): RedirectResponse
@@ -28,7 +28,7 @@ class EmailVerificationController extends Controller
       $user->markEmailAsVerified();
       Auth::guard('web')->login($user); // Explicitly log in with 'web' guard
     }
-    return redirect()->route('user.verification.notice');
+    return redirect()->route('verification.notice');
   }
 
   public function resend(Request $request): RedirectResponse

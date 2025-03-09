@@ -12,7 +12,7 @@ class InstructorAuthenticatedSessionController extends Controller
 {
   public function create()
   {
-    return view('auth.instructor-login');
+    return view('instructor.instructor_login');
   }
 
   public function store(InstructorLoginRequest $request): RedirectResponse

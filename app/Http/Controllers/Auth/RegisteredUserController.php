@@ -11,7 +11,7 @@ class RegisteredUserController extends Controller
 {
     public function create()
     {
-        return view('auth.register');
+        return view('frontend.dashboard.register');
     }
 
     public function store(Request $request)

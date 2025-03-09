@@ -12,7 +12,7 @@ class AdminAuthenticatedSessionController extends Controller
 {
   public function create()
   {
-    return view('auth.admin-login');
+    return view('admin.admin_login');
   }
 
   public function store(AdminLoginRequest $request): RedirectResponse
