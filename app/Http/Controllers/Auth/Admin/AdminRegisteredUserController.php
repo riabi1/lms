@@ -14,7 +14,7 @@ class AdminRegisteredUserController extends Controller
      */
     public function create()
     {
-        return view('auth.admin-register');
+        return view('admin.admin-register');
     }
 
     /**
@@ -22,17 +22,27 @@ class AdminRegisteredUserController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:admins'],
-            'password' => ['required', 'confirmed'],
-        ]);
+      // Define the secret code (you can move this to config or .env)
+      $secretCode = env('ADMIN_SECRET_CODE', 'admin123'); // Default: 'admin123'
 
-        $admin = Admin::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+      // Validate the request
+      $request->validate([
+        'name' => ['required', 'string', 'max:255'],
+        'email' => ['required', 'string', 'email', 'max:255', 'unique:admins'],
+        'secret_code' => ['required', 'string', function ($attribute, $value, $fail) use ($secretCode) {
+          if ($value !== $secretCode) {
+            $fail('The secret code is incorrect.');
+          }
+        }],
+        'password' => ['required', 'string', 'confirmed'],
+      ]);
+
+      // Create the admin user
+      $admin = Admin::create([
+        'name' => $request->name,
+        'email' => $request->email,
+        'password' => Hash::make($request->password),
+      ]);
 
         event(new Registered($admin)); 
 

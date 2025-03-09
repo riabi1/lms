@@ -1,22 +1,29 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Admin\AdminProfileController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\EmailVerificationController;
-use App\Http\Controllers\Admin\AdminProfileController;
+use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\VerificationStatusController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Instructor\InstructorProfileController;
 use App\Http\Controllers\Auth\Admin\AdminRegisteredUserController;
 use App\Http\Controllers\Auth\Admin\AdminEmailVerificationController;
-use App\Http\Controllers\Instructor\InstructorProfileController;
+use App\Http\Controllers\Auth\Admin\AdminPasswordResetLinkController;
 use App\Http\Controllers\Auth\Admin\AdminAuthenticatedSessionController;
 use App\Http\Controllers\Auth\Instructor\InstructorRegisteredUserController;
 use App\Http\Controllers\Auth\Instructor\InstructorEmailVerificationController;
+use App\Http\Controllers\Auth\Instructor\InstructorPasswordResetLinkController;
 use App\Http\Controllers\Auth\Instructor\InstructorAuthenticatedSessionController;
 
 // Welcome Route
-Route::get('/', fn() => view('welcome'))->name('welcome');
+// Route::get('/', fn() => view('welcome'))->name('welcome');
+
+// Home Page Route
+Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // User Routes
 // Authentication
@@ -25,13 +32,15 @@ Route::middleware('guest:web')->group(function () {
   Route::post('/login', [AuthenticatedSessionController::class, 'store']);
   Route::get('/register', [RegisteredUserController::class, 'create'])->name('register');
   Route::post('/register', [RegisteredUserController::class, 'store']);
+  Route::get('/forgot-password', [PasswordResetLinkController::class, 'create'])->name('password.request');
+  Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])->name('password.email');
 });
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
   ->middleware('auth:web')
   ->name('logout');
 
 // Dashboard
-Route::get('/dashboard', fn() => view('dashboard'))
+Route::get('/dashboard', fn() => view('frontend.dashboard.index'))
   ->middleware(['auth:web', 'verified'])
   ->name('dashboard');
 
@@ -60,13 +69,15 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('/login', [AdminAuthenticatedSessionController::class, 'store']);
     Route::get('/register', [AdminRegisteredUserController::class, 'create'])->name('register');
     Route::post('/register', [AdminRegisteredUserController::class, 'store']);
+    Route::get('/forgot-password', [AdminPasswordResetLinkController::class, 'create'])->name('password.request');
+    Route::post('/forgot-password', [AdminPasswordResetLinkController::class, 'store'])->name('password.email');
   });
   Route::post('/logout', [AdminAuthenticatedSessionController::class, 'destroy'])
     ->middleware('auth:admin')
     ->name('logout');
 
   // Dashboard
-  Route::get('/dashboard', fn() => view('admin.dashboard'))
+  Route::get('/dashboard', fn() => view('admin.admin_dashboard'))
     ->middleware(['auth:admin', 'verified'])
     ->name('dashboard');
 
@@ -95,13 +106,15 @@ Route::prefix('instructor')->name('instructor.')->group(function () {
     Route::post('/login', [InstructorAuthenticatedSessionController::class, 'store']);
     Route::get('/register', [InstructorRegisteredUserController::class, 'create'])->name('register');
     Route::post('/register', [InstructorRegisteredUserController::class, 'store']);
+    Route::get('/forgot-password', [InstructorPasswordResetLinkController::class, 'create'])->name('password.request');
+    Route::post('/forgot-password', [InstructorPasswordResetLinkController::class, 'store'])->name('password.email');
   });
   Route::post('/logout', [InstructorAuthenticatedSessionController::class, 'destroy'])
     ->middleware('auth:instructor')
     ->name('logout');
 
   // Dashboard
-  Route::get('/dashboard', fn() => view('instructor.dashboard'))
+  Route::get('/dashboard', fn() => view('instructor.instructor_dashboard'))
     ->middleware(['auth:instructor', 'verified'])
     ->name('dashboard');
 

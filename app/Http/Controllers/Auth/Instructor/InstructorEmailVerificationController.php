@@ -15,7 +15,7 @@ class InstructorEmailVerificationController extends Controller
     if ($request->user('instructor') && $request->user('instructor')->hasVerifiedEmail()) {
       return redirect()->route('instructor.dashboard');
     }
-    return view('auth.instructor-verify-email');
+    return view('instructor.instructor-verify-email');
   }
 
   public function verify($id, $hash, Request $request): RedirectResponse

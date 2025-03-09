@@ -15,7 +15,7 @@ class AdminEmailVerificationController extends Controller
     if ($request->user('admin') && $request->user('admin')->hasVerifiedEmail()) {
       return redirect()->route('admin.dashboard');
     }
-    return view('auth.admin-verify-email');
+    return view('admin.admin-verify-email');
   }
 
   public function verify($id, $hash, Request $request): RedirectResponse
