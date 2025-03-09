@@ -6,35 +6,34 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
 
 class EmailVerificationController extends Controller
 {
   public function notice(Request $request)
   {
-    // If already verified, redirect to dashboard immediately
-    if ($request->user() && $request->user()->hasVerifiedEmail()) {
-      return redirect()->route('dashboard');
+    if ($request->user('web') && $request->user('web')->hasVerifiedEmail()) {
+      return redirect()->route('user.dashboard');
     }
-    return view('auth.verify-email');
+    return view('auth.user-verify-email');
   }
 
   public function verify($id, $hash, Request $request): RedirectResponse
   {
     $user = User::findOrFail($id);
     if (!hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
-      return redirect()->route('login')->with('error', 'Lien de vérification invalide.');
+      return redirect()->route('user.login')->with('error', 'Lien de vérification invalide.');
     }
     if (!$user->hasVerifiedEmail()) {
       $user->markEmailAsVerified();
-      auth()->login($user); // Ensure user is logged in
+      Auth::guard('web')->login($user); // Explicitly log in with 'web' guard
     }
-    // Redirect back to the notice page instead of login
-    return redirect()->route('verification.notice');
+    return redirect()->route('user.verification.notice');
   }
 
   public function resend(Request $request): RedirectResponse
   {
-    $request->user()->sendEmailVerificationNotification();
+    $request->user('web')->sendEmailVerificationNotification();
     return back()->with('message', 'Un nouveau lien de vérification a été envoyé à votre adresse email.');
   }
 }

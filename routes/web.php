@@ -1,90 +1,128 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\EmailVerificationController;
+use App\Http\Controllers\Admin\AdminProfileController;
 use App\Http\Controllers\Auth\VerificationStatusController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\Admin\AdminRegisteredUserController;
 use App\Http\Controllers\Auth\Admin\AdminEmailVerificationController;
+use App\Http\Controllers\Instructor\InstructorProfileController;
 use App\Http\Controllers\Auth\Admin\AdminAuthenticatedSessionController;
 use App\Http\Controllers\Auth\Instructor\InstructorRegisteredUserController;
 use App\Http\Controllers\Auth\Instructor\InstructorEmailVerificationController;
 use App\Http\Controllers\Auth\Instructor\InstructorAuthenticatedSessionController;
 
-Route::get('/', function () {
-  return view('welcome');
+// Welcome Route
+Route::get('/', fn() => view('welcome'))->name('welcome');
+
+// User Routes
+// Authentication
+Route::middleware('guest:web')->group(function () {
+  Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
+  Route::post('/login', [AuthenticatedSessionController::class, 'store']);
+  Route::get('/register', [RegisteredUserController::class, 'create'])->name('register');
+  Route::post('/register', [RegisteredUserController::class, 'store']);
 });
+Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
+  ->middleware('auth:web')
+  ->name('logout');
 
-// User Authentication
-Route::get('/register', [RegisteredUserController::class, 'create'])->name('register');
-Route::post('/register', [RegisteredUserController::class, 'store']);
-Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
-Route::post('/login', [AuthenticatedSessionController::class, 'store']);
-Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
+// Dashboard
+Route::get('/dashboard', fn() => view('dashboard'))
+  ->middleware(['auth:web', 'verified'])
+  ->name('dashboard');
 
-Route::get('/dashboard', fn() => view('dashboard'))->middleware(['auth', 'verified'])->name('dashboard');
-
-// Profile Routes
-Route::middleware(['auth', 'verified'])->group(function () {
+// Profile
+Route::middleware(['auth:web', 'verified'])->group(function () {
   Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
   Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-  Route::put('/password', [ProfileController::class, 'updatePassword'])->name('password.update');
-  Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+  Route::put('/password', [ProfileController::class, 'updatePassword'])->name('profile.updatePassword');
 });
 
-// Email Verification (Users)
+// Email Verification
 Route::get('/email/verify', [EmailVerificationController::class, 'notice'])
   ->name('verification.notice');
 Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
-  ->middleware(['signed'])->name('verification.verify');
+  ->middleware('signed')
+  ->name('verification.verify');
 Route::post('/email/verification-notification', [EmailVerificationController::class, 'resend'])
-  ->middleware(['auth', 'throttle:6,1'])->name('verification.send');
+  ->middleware(['auth:web']) // Remove throttle in local dev
+  ->name('verification.send');
 
-Route::post('/email/verification-notification', function (Request $request) {
-  $request->user()->sendEmailVerificationNotification();
-  return back()->with('message', 'Un nouveau lien de vérification a été envoyé à votre adresse email.');
-})->middleware(['auth', 'throttle:6,1'])->name('verification.send');
+// Admin Routes
+Route::prefix('admin')->name('admin.')->group(function () {
+  // Authentication
+  Route::middleware('guest:admin')->group(function () {
+    Route::get('/login', [AdminAuthenticatedSessionController::class, 'create'])->name('login');
+    Route::post('/login', [AdminAuthenticatedSessionController::class, 'store']);
+    Route::get('/register', [AdminRegisteredUserController::class, 'create'])->name('register');
+    Route::post('/register', [AdminRegisteredUserController::class, 'store']);
+  });
+  Route::post('/logout', [AdminAuthenticatedSessionController::class, 'destroy'])
+    ->middleware('auth:admin')
+    ->name('logout');
 
-// Admin Authentication
-Route::get('/admin/register', [AdminRegisteredUserController::class, 'create'])->name('admin.register');
-Route::post('/admin/register', [AdminRegisteredUserController::class, 'store']);
-Route::get('/admin/login', [AdminAuthenticatedSessionController::class, 'create'])->name('admin.login');
-Route::post('/admin/login', [AdminAuthenticatedSessionController::class, 'store']);
-Route::post('/admin/logout', [AdminAuthenticatedSessionController::class, 'destroy'])->name('admin.logout');
+  // Dashboard
+  Route::get('/dashboard', fn() => view('admin.dashboard'))
+    ->middleware(['auth:admin', 'verified'])
+    ->name('dashboard');
 
-Route::get('/admin/dashboard', fn() => view('admin.dashboard'))
-  ->middleware(['auth:admin', 'verified'])
-  ->name('admin.dashboard');
+  Route::middleware(['auth:admin', 'verified'])->group(function () {
+    Route::get('/profile/edit', [AdminProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [AdminProfileController::class, 'update'])->name('profile.update');
+    Route::put('/password', [AdminProfileController::class, 'updatePassword'])->name('profile.updatePassword');
+  });
+  
+  // Email Verification
+  Route::get('/email/verify', [AdminEmailVerificationController::class, 'notice'])
+    ->name('verification.notice');
+  Route::get('/email/verify/{id}/{hash}', [AdminEmailVerificationController::class, 'verify'])
+    ->middleware('signed')
+    ->name('verification.verify');
+  Route::post('/email/verification-notification', [AdminEmailVerificationController::class, 'resend'])
+    ->middleware(['auth:admin']) // Remove throttle in local dev
+    ->name('verification.send');
+});
 
-// Admin Email Verification
-Route::get('/admin/email/verify', [AdminEmailVerificationController::class, 'notice'])
-  ->name('admin.verification.notice');
-Route::get('/admin/email/verify/{id}/{hash}', [AdminEmailVerificationController::class, 'verify'])
-  ->middleware(['signed'])->name('admin.verification.verify');
-Route::post('/admin/email/verification-notification', [AdminEmailVerificationController::class, 'resend'])
-  ->middleware(['auth:admin', 'throttle:6,1'])->name('admin.verification.send');
+// Instructor Routes
+Route::prefix('instructor')->name('instructor.')->group(function () {
+  // Authentication
+  Route::middleware('guest:instructor')->group(function () {
+    Route::get('/login', [InstructorAuthenticatedSessionController::class, 'create'])->name('login');
+    Route::post('/login', [InstructorAuthenticatedSessionController::class, 'store']);
+    Route::get('/register', [InstructorRegisteredUserController::class, 'create'])->name('register');
+    Route::post('/register', [InstructorRegisteredUserController::class, 'store']);
+  });
+  Route::post('/logout', [InstructorAuthenticatedSessionController::class, 'destroy'])
+    ->middleware('auth:instructor')
+    ->name('logout');
 
-// Instructor Authentication
-Route::get('/instructor/register', [InstructorRegisteredUserController::class, 'create'])->name('instructor.register');
-Route::post('/instructor/register', [InstructorRegisteredUserController::class, 'store']);
-Route::get('/instructor/login', [InstructorAuthenticatedSessionController::class, 'create'])->name('instructor.login');
-Route::post('/instructor/login', [InstructorAuthenticatedSessionController::class, 'store']);
-Route::post('/instructor/logout', [InstructorAuthenticatedSessionController::class, 'destroy'])->name('instructor.logout');
+  // Dashboard
+  Route::get('/dashboard', fn() => view('instructor.dashboard'))
+    ->middleware(['auth:instructor', 'verified'])
+    ->name('dashboard');
 
-Route::get('/instructor/dashboard', fn() => view('instructor.dashboard'))
-  ->middleware(['auth:instructor', 'verified'])
-  ->name('instructor.dashboard');
+  Route::middleware(['auth:instructor', 'verified'])->group(function () {
+    Route::get('/profile/edit', [InstructorProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [InstructorProfileController::class, 'update'])->name('profile.update');
+    Route::put('/password', [InstructorProfileController::class, 'updatePassword'])->name('profile.updatePassword');
+  });
 
-// Instructor Email Verification
-Route::get('/instructor/email/verify', [InstructorEmailVerificationController::class, 'notice'])
-  ->name('instructor.verification.notice');
-Route::get('/instructor/email/verify/{id}/{hash}', [InstructorEmailVerificationController::class, 'verify'])
-  ->middleware(['signed'])->name('instructor.verification.verify');
-Route::post('/instructor/email/verification-notification', [InstructorEmailVerificationController::class, 'resend'])
-  ->middleware(['auth:instructor', 'throttle:6,1'])->name('instructor.verification.send');
+  // Email Verification
+  Route::get('/email/verify', [InstructorEmailVerificationController::class, 'notice'])
+    ->name('verification.notice');
+  Route::get('/email/verify/{id}/{hash}', [InstructorEmailVerificationController::class, 'verify'])
+    ->middleware('signed')
+    ->name('verification.verify');
+  Route::post('/email/verification-notification', [InstructorEmailVerificationController::class, 'resend'])
+    ->middleware(['auth:instructor']) // Remove throttle in local dev
+    ->name('verification.send');
+});
 
+// Verification Status Check (Shared across all guards)
 Route::get('/check-verification', [VerificationStatusController::class, 'check'])
-  ->middleware('auth:web,admin,instructor')->name('verification.check');
+  ->middleware('auth:web,admin,instructor')
+  ->name('verification.check');

@@ -2,36 +2,30 @@
 
 namespace App\Http\Controllers\Auth\Instructor;
 
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\InstructorLoginRequest;
+use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 
 class InstructorAuthenticatedSessionController extends Controller
 {
-
-public function create()
-{
+  public function create()
+  {
     return view('auth.instructor-login');
-}
+  }
 
-  public function store(Request $request)
-{
-    $request->validate([
-        'email' => 'required|email',
-        'password' => 'required',
-    ]);
-
-    if (Auth::guard('instructor')->attempt($request->only('email', 'password'), $request->boolean('remember'))) {
-        $request->session()->regenerate();
-        return redirect()->intended(route('instructor.dashboard'));
+  public function store(InstructorLoginRequest $request): RedirectResponse
+  {
+    $credentials = $request->only('email', 'password');
+    if (Auth::guard('instructor')->attempt($credentials)) {
+      $request->session()->regenerate();
+      return redirect()->intended(route('instructor.dashboard'));
     }
+    return back()->withErrors(['email' => 'Invalid credentials'])->onlyInput('email');
+  }
 
-    return back()->withErrors([
-        'email' => 'The provided credentials do not match our records.',
-    ]);
-}
-
-  public function destroy(Request $request)
+  public function destroy(Request $request): RedirectResponse
   {
     Auth::guard('instructor')->logout();
     $request->session()->invalidate();

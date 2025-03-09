@@ -9,7 +9,12 @@ class VerificationStatusController extends Controller
 {
   public function check(Request $request)
   {
-    $user = $request->user('web') ?? $request->user('admin') ?? $request->user('instructor');
-    return response()->json(['verified' => $user && $user->hasVerifiedEmail()]);
+    $guards = ['web', 'admin', 'instructor'];
+    foreach ($guards as $guard) {
+      if ($user = $request->user($guard)) {
+        return response()->json(['verified' => $user->hasVerifiedEmail()]);
+      }
+    }
+    return response()->json(['verified' => false]);
   }
 }

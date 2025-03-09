@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Admin;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
 
 class AdminEmailVerificationController extends Controller
 {
@@ -25,14 +26,14 @@ class AdminEmailVerificationController extends Controller
     }
     if (!$admin->hasVerifiedEmail()) {
       $admin->markEmailAsVerified();
-      auth()->guard('admin')->login($admin);
+      Auth::guard('admin')->login($admin); // Explicitly log in with 'admin' guard
     }
     return redirect()->route('admin.verification.notice');
   }
 
   public function resend(Request $request): RedirectResponse
   {
-    $request->user()->sendEmailVerificationNotification();
+    $request->user('admin')->sendEmailVerificationNotification();
     return back()->with('message', 'Un nouveau lien de vérification a été envoyé.');
   }
 }

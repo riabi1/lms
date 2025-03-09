@@ -2,36 +2,30 @@
 
 namespace App\Http\Controllers\Auth\Admin;
 
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\AdminLoginRequest;
+use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 
 class AdminAuthenticatedSessionController extends Controller
 {
-  //
   public function create()
   {
-    return view('auth.admin-login'); 
+    return view('auth.admin-login');
   }
 
-  public function store(Request $request)
+  public function store(AdminLoginRequest $request): RedirectResponse
   {
-    $request->validate([
-      'email' => 'required|email',
-      'password' => 'required',
-    ]);
-
-    if (Auth::guard('admin')->attempt($request->only('email', 'password'), $request->boolean('remember'))) {
+    $credentials = $request->only('email', 'password');
+    if (Auth::guard('admin')->attempt($credentials)) {
       $request->session()->regenerate();
-      return redirect()->intended(route('admin.dashboard')); 
+      return redirect()->intended(route('admin.dashboard'));
     }
-
-    return back()->withErrors([
-      'email' => 'The provided credentials do not match our records.',
-    ]);
+    return back()->withErrors(['email' => 'Invalid credentials'])->onlyInput('email');
   }
 
-  public function destroy(Request $request)
+  public function destroy(Request $request): RedirectResponse
   {
     Auth::guard('admin')->logout();
     $request->session()->invalidate();

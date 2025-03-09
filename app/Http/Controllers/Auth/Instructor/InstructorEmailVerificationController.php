@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Instructor;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
 
 class InstructorEmailVerificationController extends Controller
 {
@@ -25,14 +26,14 @@ class InstructorEmailVerificationController extends Controller
     }
     if (!$instructor->hasVerifiedEmail()) {
       $instructor->markEmailAsVerified();
-      auth()->guard('instructor')->login($instructor);
+      Auth::guard('instructor')->login($instructor); // Explicitly log in with 'instructor' guard
     }
     return redirect()->route('instructor.verification.notice');
   }
 
   public function resend(Request $request): RedirectResponse
   {
-    $request->user()->sendEmailVerificationNotification();
+    $request->user('instructor')->sendEmailVerificationNotification();
     return back()->with('message', 'Un nouveau lien de vérification a été envoyé.');
   }
 }

@@ -20,6 +20,8 @@
     <button type="submit">Resend Verification Email</button>
   </form>
 
+  <p id="status">Waiting for verification...</p>
+
   <script>
     setInterval(() => {
       fetch('/check-verification', {
@@ -30,11 +32,13 @@
         })
         .then(response => response.json())
         .then(data => {
+          console.log('Verification status:', data); // Debug output
           if (data.verified) {
+            document.getElementById('status').textContent = 'Verified! Redirecting...';
             window.location.reload();
           }
         })
-        .catch(error => console.log('Error checking verification:', error));
+        .catch(error => console.error('Error checking verification:', error));
     }, 2000);
   </script>
 </body>
