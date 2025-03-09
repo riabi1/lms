@@ -6,7 +6,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException; // Import the correct namespace
 
-class LoginRequest extends FormRequest
+class AdminLoginRequest extends FormRequest
 {
     public function authorize()
     {
@@ -23,7 +23,7 @@ class LoginRequest extends FormRequest
 
     public function authenticate()
     {
-        if (!Auth::attempt($this->only('email', 'password'))) {
+        if (!Auth::guard('admin')->attempt($this->only('email', 'password'))) {
             throw ValidationException::withMessages([
                 'email' => ['Les identifiants fournis sont incorrects.'],
             ]);

@@ -1,17 +1,18 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
+use App\Http\Controllers\Controller;
 
 class ProfileController extends Controller
 {
     public function edit(Request $request)
     {
-        return view('profile.edit', [
-            'user' => $request->user(),
+        return view('admin.edit', [
+            'user' => $request->user('admin'),
         ]);
     }
 
@@ -19,41 +20,41 @@ class ProfileController extends Controller
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $request->user()->id],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:admins,email,' . $request->user('admin')->id],
         ]);
 
-        $request->user()->update([
+        $request->user('admin')->update([
             'name' => $request->name,
             'email' => $request->email,
         ]);
 
-        return redirect()->route('profile.edit')->with('status', 'profile-updated');
+        return redirect()->route('admin.profile.edit')->with('status', 'profile-updated');
     }
 
     public function updatePassword(Request $request)
     {
         $request->validate([
-            'current_password' => ['required', 'string', 'current_password'],
+            'current_password' => ['required', 'string', 'current_password:admin'],
             'password' => ['required', 'string', Password::defaults(), 'confirmed'],
         ]);
 
-        $request->user()->update([
+        $request->user('admin')->update([
             'password' => Hash::make($request->password),
         ]);
 
-        return redirect()->route('profile.edit')->with('status', 'password-updated');
+        return redirect()->route('admin.profile.edit')->with('status', 'password-updated');
     }
 
     public function destroy(Request $request)
     {
         $request->validate([
-            'password' => ['required', 'string', 'current_password'],
+            'password' => ['required', 'string', 'current_password:admin'],
         ]);
 
-        $user = $request->user();
-        $user->delete();
+        $admin = $request->user('admin');
+        $admin->delete();
 
-        auth()->logout();
+        auth()->guard('admin')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 

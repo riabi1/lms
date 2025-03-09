@@ -9,30 +9,35 @@ use Illuminate\Http\RedirectResponse;
 
 class InstructorEmailVerificationController extends Controller
 {
-  public function notice(Request $request)
-  {
-    if ($request->user('instructor') && $request->user('instructor')->hasVerifiedEmail()) {
-      return redirect()->route('instructor.dashboard');
+    public function __construct()
+    {
+        $this->middleware('auth:instructor')->only(['notice', 'resend']);
     }
-    return view('auth.instructor-verify-email');
-  }
 
-  public function verify($id, $hash, Request $request): RedirectResponse
-  {
-    $instructor = Instructor::findOrFail($id);
-    if (!hash_equals((string) $hash, sha1($instructor->getEmailForVerification()))) {
-      return redirect()->route('instructor.login')->with('error', 'Lien de vérification invalide.');
+    public function notice(Request $request)
+    {
+        if ($request->user('instructor')->hasVerifiedEmail()) {
+            return redirect()->route('instructor.dashboard');
+        }
+        return view('auth.instructor-verify-email');
     }
-    if (!$instructor->hasVerifiedEmail()) {
-      $instructor->markEmailAsVerified();
-      auth()->guard('instructor')->login($instructor);
-    }
-    return redirect()->route('instructor.verification.notice');
-  }
 
-  public function resend(Request $request): RedirectResponse
-  {
-    $request->user()->sendEmailVerificationNotification();
-    return back()->with('message', 'Un nouveau lien de vérification a été envoyé.');
-  }
+    public function verify($id, $hash, Request $request): RedirectResponse
+    {
+        $instructor = Instructor::findOrFail($id);
+        if (!hash_equals((string) $hash, sha1($instructor->getEmailForVerification()))) {
+            return redirect()->route('instructor.login')->with('error', 'Lien de vérification invalide.');
+        }
+        if (!$instructor->hasVerifiedEmail()) {
+            $instructor->markEmailAsVerified();
+            auth()->guard('instructor')->login($instructor);
+        }
+        return redirect()->route('instructor.verification.notice');
+    }
+
+    public function resend(Request $request): RedirectResponse
+    {
+        $request->user('instructor')->sendEmailVerificationNotification();
+        return back()->with('message', 'Un nouveau lien de vérification a été envoyé.');
+    }
 }
