@@ -1,44 +1,53 @@
-<!DOCTYPE html>
-<html>
+<x-guest-layout>
+    <div class="mb-4 text-sm text-gray-600">
+        {{ __('Thanks for signing up! Before getting started, could you verify your email address by clicking on the link we just emailed to you? If you didn\'t receive the email, we will gladly send you another.') }}
+    </div>
 
-<head>
-  <title>Verify Email</title>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
+    @if (session('message'))
+        <div class="mb-4 font-medium text-sm text-green-600">
+            {{ session('message') }}
+        </div>
+    @endif
 
-<body>
-  <h1>Please Verify Your Email</h1>
-  <p>Check your email for a verification link.</p>
+    <form method="POST" action="{{ route('verification.send') }}">
+        @csrf
 
-  @if (session('message'))
-  <p>{{ session('message') }}</p>
-  @endif
+        <div class="mt-4 flex items-center justify-between">
+            <x-primary-button>
+                {{ __('Resend Verification Email') }}
+            </x-primary-button>
 
-  <form method="POST" action="{{ route('verification.send') }}">
-    @csrf
-    <button type="submit">Resend Verification Email</button>
-  </form>
+            <a href="{{ route('logout') }}"
+               onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
+               class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                {{ __('Log Out') }}
+            </a>
 
-  <script>
-    // Check verification status every 2 seconds
-    setInterval(() => {
-      fetch('/check-verification', {
-          headers: {
-            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-            'Accept': 'application/json'
-          }
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.verified) {
-            window.location.reload(); // Reload the page
-            // The controller will redirect to dashboard if verified
-          }
-        })
-        .catch(error => console.log('Error checking verification:', error));
-    }, 2000);
-  </script>
-</body>
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden">
+                @csrf
+            </form>
+        </div>
+    </form>
 
-</html>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            function checkVerification() {
+                fetch('{{ route('verification.check') }}', {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.verified) {
+                        window.location.reload();
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+
+            setInterval(checkVerification, 5000); // Poll every 5 seconds
+        });
+    </script>
+</x-guest-layout>

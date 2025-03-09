@@ -2,40 +2,31 @@
 
 namespace App\Http\Controllers\Auth\Instructor;
 
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
+use App\Http\Requests\Auth\InstructorLoginRequest;
+use Illuminate\Http\Request;
 
 class InstructorAuthenticatedSessionController extends Controller
 {
-
-public function create()
-{
-    return view('auth.instructor-login');
-}
-
-  public function store(Request $request)
-{
-    $request->validate([
-        'email' => 'required|email',
-        'password' => 'required',
-    ]);
-
-    if (Auth::guard('instructor')->attempt($request->only('email', 'password'), $request->boolean('remember'))) {
-        $request->session()->regenerate();
-        return redirect()->intended(route('instructor.dashboard'));
+    public function create()
+    {
+        return view('auth.instructor-login');
     }
 
-    return back()->withErrors([
-        'email' => 'The provided credentials do not match our records.',
-    ]);
-}
+    public function store(InstructorLoginRequest $request)
+    {
+        $request->authenticate();
+        $request->session()->regenerate();
+        return $request->user('instructor')->hasVerifiedEmail()
+            ? redirect()->route('instructor.dashboard')
+            : redirect()->route('instructor.verification.notice');
+    }
 
-  public function destroy(Request $request)
-  {
-    Auth::guard('instructor')->logout();
-    $request->session()->invalidate();
-    $request->session()->regenerateToken();
-    return redirect('/instructor/login');
-  }
+    public function destroy(Request $request)
+    {
+        auth()->guard('instructor')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        return redirect('/');
+    }
 }
