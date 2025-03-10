@@ -30,7 +30,7 @@
     <img src="{{ (!empty($profileData->photo)) ? url('upload/instructor_images/'.$profileData->photo) : url('upload/no_image.jpg')}}" alt="Admin" class="rounded-circle p-1 bg-primary" width="110">
     <div class="mt-3">
         <h4>{{ $profileData->name }}</h4>
-        <p class="text-secondary mb-1">{{ $profileData->username }}</p>
+        
         <p class="text-muted font-size-sm">{{ $profileData->email }}</p>
         <button class="btn btn-primary">Follow</button>
         <button class="btn btn-outline-primary">Message</button>
@@ -66,10 +66,7 @@
                 <div class="col-sm-3">
                     <h6 class="mb-0">User Name</h6>
                 </div>
-                <div class="col-sm-9 text-secondary">
-                    <input type="text" name="username" class="form-control" value="{{ $profileData->username }}" />
-                </div>
-            </div>
+              
             <div class="row mb-3">
                 <div class="col-sm-3">
                     <h6 class="mb-0">Email</h6>

@@ -22,7 +22,7 @@ class AdminRegisteredUserController extends Controller
      */
     public function store(Request $request)
     {
-      // Define the secret code (you can move this to config or .env)
+   
       $secretCode = env('ADMIN_SECRET_CODE', 'admin123'); // Default: 'admin123'
 
       // Validate the request
@@ -46,6 +46,6 @@ class AdminRegisteredUserController extends Controller
 
         event(new Registered($admin)); 
 
-        return redirect()->route('admin.verification.notice')->with('status', 'Veuillez vérifier votre email pour compléter l’inscription.');
+        return redirect()->route('admin.login')->with('message', 'Admin account created successfully! Please log in.');
     }
 }

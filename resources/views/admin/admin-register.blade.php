@@ -1,133 +1,201 @@
-@extends('frontend.master')
-@section('home')
-@section('title')
-Admin Register | Easy Learning
-@endsection
+<!DOCTYPE html>
+<html lang="en">
 
-<!-- ================================
-    START BREADCRUMB AREA
-================================= -->
-<section class="breadcrumb-area section-padding img-bg-2">
-  <div class="overlay"></div>
-  <div class="container">
-    <div class="breadcrumb-content d-flex flex-wrap align-items-center justify-content-between">
-      <div class="section-heading">
-        <h2 class="section__title text-white">Admin Sign Up</h2>
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Favicon -->
+  <link rel="icon" href="{{ asset('backend/assets/images/favicon-32x32.png') }}" type="image/png" />
+  <!-- Plugins -->
+  <link href="{{ asset('backend/assets/plugins/simplebar/css/simplebar.css') }}" rel="stylesheet" />
+  <link href="{{ asset('backend/assets/plugins/perfect-scrollbar/css/perfect-scrollbar.css') }}" rel="stylesheet" />
+  <link href="{{ asset('backend/assets/plugins/metismenu/css/metisMenu.min.css') }}" rel="stylesheet" />
+  <!-- Loader -->
+  <link href="{{ asset('backend/assets/css/pace.min.css') }}" rel="stylesheet" />
+  <script src="{{ asset('backend/assets/js/pace.min.js') }}"></script>
+  <!-- Bootstrap CSS -->
+  <link href="{{ asset('backend/assets/css/bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ asset('backend/assets/css/bootstrap-extended.css') }}" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <link href="{{ asset('backend/assets/css/app.css') }}" rel="stylesheet">
+  <link href="{{ asset('backend/assets/css/icons.css') }}" rel="stylesheet">
+  <!-- Toastr CSS -->
+  <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.css">
+  <title>Admin Register | Easy Learning</title>
+</head>
+
+<body class="">
+  <!-- Wrapper -->
+  <div class="wrapper">
+    <div class="section-authentication-cover">
+      <div class="">
+        <div class="row g-0">
+          <!-- Left Section (Image) -->
+          <div class="col-12 col-xl-7 col-xxl-8 auth-cover-left align-items-center justify-content-center d-none d-xl-flex">
+            <div class="card shadow-none bg-transparent rounded-0 mb-0">
+              <div class="card-body">
+                <img src="{{ asset('backend/assets/images/login-images/login-cover.svg') }}" class="img-fluid auth-img-cover-login" width="650" alt="Register Cover" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Section (Register Form) -->
+          <div class="col-12 col-xl-5 col-xxl-4 auth-cover-right align-items-center justify-content-center">
+            <div class="card rounded-0 m-3 shadow-none bg-transparent mb-0">
+              <div class="card-body p-sm-5">
+                <div class="">
+                  <div class="mb-3 text-center">
+                    <img src="{{ asset('backend/assets/images/logo-icon.png') }}" width="60" alt="Logo">
+                  </div>
+                  <div class="text-center mb-4">
+                    <h5>Admin Register</h5>
+                    <p class="mb-0">Create an admin account</p>
+                  </div>
+                  <div class="form-body">
+                    <form class="row g-3" method="POST" action="{{ route('admin.register') }}">
+                      @csrf
+
+                      <!-- Name Field -->
+                      <div class="col-12">
+                        <label for="name" class="form-label">Name</label>
+                        <input type="text" id="name" name="name" class="form-control @error('name') is-invalid @enderror" placeholder="Admin name" value="{{ old('name') }}" required>
+                        @error('name')
+                        <span class="text-danger">{{ $message }}</span>
+                        @enderror
+                      </div>
+
+                      <!-- Email Field -->
+                      <div class="col-12">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" id="email" name="email" class="form-control @error('email') is-invalid @enderror" placeholder="Admin email" value="{{ old('email') }}" required>
+                        @error('email')
+                        <span class="text-danger">{{ $message }}</span>
+                        @enderror
+                      </div>
+
+                      <!-- Secret Code Field -->
+                      <div class="col-12">
+                        <label for="secret_code" class="form-label">Secret Code</label>
+                        <input type="text" id="secret_code" name="secret_code" class="form-control @error('secret_code') is-invalid @enderror" placeholder="Enter secret code" required>
+                        @error('secret_code')
+                        <span class="text-danger">{{ $message }}</span>
+                        @enderror
+                      </div>
+
+                      <!-- Password Field -->
+                      <div class="col-12">
+                        <label for="password" class="form-label">Password</label>
+                        <div class="input-group" id="show_hide_password">
+                          <input type="password" id="password" name="password" class="form-control border-end-0 @error('password') is-invalid @enderror" placeholder="Password" required>
+                          <a href="javascript:;" class="input-group-text bg-transparent"><i class="bx bx-hide"></i></a>
+                          @error('password')
+                          <span class="text-danger">{{ $message }}</span>
+                          @enderror
+                        </div>
+                      </div>
+
+                      <!-- Confirm Password Field -->
+                      <div class="col-12">
+                        <label for="password_confirmation" class="form-label">Confirm Password</label>
+                        <div class="input-group" id="show_hide_confirm_password">
+                          <input type="password" id="password_confirmation" name="password_confirmation" class="form-control border-end-0" placeholder="Confirm Password" required>
+                          <a href="javascript:;" class="input-group-text bg-transparent"><i class="bx bx-hide"></i></a>
+                        </div>
+                      </div>
+
+                      <!-- Checkboxes -->
+                      <div class="col-12">
+                        <div class="form-check mb-2">
+                          <input class="form-check-input" type="checkbox" id="receiveCheckbox" name="receive_emails" required>
+                          <label class="form-check-label" for="receiveCheckbox">Yes! I want to get the most out of Aduca by receiving emails with exclusive deals, personal recommendations and learning tips!</label>
+                        </div>
+                        <div class="form-check mb-4">
+                          <input class="form-check-input" type="checkbox" id="agreeCheckbox" name="agree_terms" required>
+                          <label class="form-check-label" for="agreeCheckbox">By signing up, I agree to the
+                            <a href="{{ url('terms-and-conditions') }}" class="text-primary">terms and conditions</a> and
+                            <a href="{{ url('privacy-policy') }}" class="text-primary">privacy policy</a>
+                          </label>
+                        </div>
+                      </div>
+
+                      <!-- Submit Button -->
+                      <div class="col-12">
+                        <div class="d-grid">
+                          <button type="submit" class="btn btn-primary">Register Admin Account</button>
+                        </div>
+                      </div>
+
+                      <!-- Login Link -->
+                      <div class="col-12">
+                        <div class="text-center">
+                          <p class="mb-0">Already have an admin account? <a href="{{ route('admin.login') }}">Log in</a></p>
+                        </div>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- End Row -->
       </div>
-      <ul class="generic-list-item generic-list-item-white generic-list-item-arrow d-flex flex-wrap align-items-center">
-        <li><a href="{{ route('home') }}">Home</a></li>
-        <li>Admin Pages</li>
-        <li>Sign Up</li>
-      </ul>
-    </div><!-- end breadcrumb-content -->
-  </div><!-- end container -->
-</section><!-- end breadcrumb-area -->
-<!-- ================================
-    END BREADCRUMB AREA
-================================= -->
+    </div>
+  </div>
+  <!-- End Wrapper -->
 
-<!-- ================================
-       START CONTACT AREA
-================================= -->
-<section class="contact-area section--padding position-relative">
-  <span class="ring-shape ring-shape-1"></span>
-  <span class="ring-shape ring-shape-2"></span>
-  <span class="ring-shape ring-shape-3"></span>
-  <span class="ring-shape ring-shape-4"></span>
-  <span class="ring-shape ring-shape-5"></span>
-  <span class="ring-shape ring-shape-6"></span>
-  <span class="ring-shape ring-shape-7"></span>
-  <div class="container">
-    <div class="row">
-      <div class="col-lg-7 mx-auto">
-        <div class="card card-item">
-          <div class="card-body">
-            <h3 class="card-title text-center fs-24 lh-35 pb-4">Create an Admin Account</h3>
-            <div class="section-block"></div>
+  <!-- Bootstrap JS -->
+  <script src="{{ asset('backend/assets/js/bootstrap.bundle.min.js') }}"></script>
+  <!-- Plugins -->
+  <script src="{{ asset('backend/assets/js/jquery.min.js') }}"></script>
+  <script src="{{ asset('backend/assets/plugins/simplebar/js/simplebar.min.js') }}" defer></script>
+  <script src="{{ asset('backend/assets/plugins/metismenu/js/metisMenu.min.js') }}" defer></script>
+  <script src="{{ asset('backend/assets/plugins/perfect-scrollbar/js/perfect-scrollbar.js') }}" defer></script>
+  <!-- Password Show/Hide JS -->
+  <script>
+    $(document).ready(function() {
+      function togglePassword(inputId, iconId) {
+        $(`#${iconId} a`).on('click', function(event) {
+          event.preventDefault();
+          var input = $(`#${inputId} input`);
+          var icon = $(`#${iconId} i`);
+          if (input.attr("type") === "text") {
+            input.attr('type', 'password');
+            icon.addClass("bx-hide").removeClass("bx-show");
+          } else if (input.attr("type") === "password") {
+            input.attr('type', 'text');
+            icon.removeClass("bx-hide").addClass("bx-show");
+          }
+        });
+      }
+      togglePassword('show_hide_password', 'show_hide_password');
+      togglePassword('show_hide_confirm_password', 'show_hide_confirm_password');
+    });
+  </script>
+  <!-- App JS -->
+  <script src="{{ asset('backend/assets/js/app.js') }}" defer></script>
+  <!-- Toastr JS -->
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js" defer></script>
+  <script>
+    @if(Session::has('message'))
+    var type = "{{ Session::get('alert-type', 'info') }}";
+    switch (type) {
+      case 'info':
+        toastr.info("{{ Session::get('message') }}");
+        break;
+      case 'success':
+        toastr.success("{{ Session::get('message') }}");
+        break;
+      case 'warning':
+        toastr.warning("{{ Session::get('message') }}");
+        break;
+      case 'error':
+        toastr.error("{{ Session::get('message') }}");
+        break;
+    }
+    @endif
+  </script>
+</body>
 
-            <form method="POST" class="pt-4" action="{{ route('admin.register') }}">
-              @csrf
-
-              <div class="d-flex flex-wrap align-items-center pb-4">
-                <button class="btn theme-btn flex-grow-1 mx-2 mb-2"><i class="la la-google mr-2"></i>Google</button>
-                <button class="btn theme-btn flex-grow-1 mx-2 mb-2"><i class="la la-facebook mr-2"></i>Facebook</button>
-                <button class="btn theme-btn flex-grow-1 mx-2 mb-2"><i class="la la-twitter mr-2"></i>Twitter</button>
-              </div>
-              <div class="text-center pt-3 pb-4">
-                <div class="icon-element icon-element-md fs-25 shadow-sm">Or</div>
-              </div>
-              <div class="input-box">
-                <label class="label-text">Name</label>
-                <div class="form-group">
-                  <input class="form-control form--control" id="name" type="text" name="name" placeholder="Admin name" value="{{ old('name') }}" required>
-                  <span class="la la-user input-icon"></span>
-                  @error('name')
-                  <span class="text-danger">{{ $message }}</span>
-                  @enderror
-                </div>
-              </div><!-- end input-box -->
-              <div class="input-box">
-                <label class="label-text">Email</label>
-                <div class="form-group">
-                  <input class="form-control form--control" id="email" type="email" name="email" placeholder="Admin email" value="{{ old('email') }}" required>
-                  <span class="la la-envelope input-icon"></span>
-                  @error('email')
-                  <span class="text-danger">{{ $message }}</span>
-                  @enderror
-                </div>
-              </div><!-- end input-box -->
-              <div class="input-box">
-                <label class="label-text">Secret Code</label>
-                <div class="form-group">
-                  <input class="form-control form--control" id="secret_code" type="text" name="secret_code" placeholder="Enter secret code" required>
-                  <span class="la la-key input-icon"></span>
-                  @error('secret_code')
-                  <span class="text-danger">{{ $message }}</span>
-                  @enderror
-                </div>
-              </div><!-- end input-box -->
-              <div class="input-box">
-                <label class="label-text">Password</label>
-                <div class="form-group">
-                  <input class="form-control form--control" id="password" type="password" name="password" placeholder="Password" required>
-                  <span class="la la-lock input-icon"></span>
-                  @error('password')
-                  <span class="text-danger">{{ $message }}</span>
-                  @enderror
-                </div>
-              </div><!-- end input-box -->
-              <div class="input-box">
-                <label class="label-text">Confirm Password</label>
-                <div class="form-group">
-                  <input class="form-control form--control" id="password_confirmation" type="password" name="password_confirmation" placeholder="Confirm Password" required>
-                  <span class="la la-lock input-icon"></span>
-                </div>
-              </div><!-- end input-box -->
-
-              <div class="btn-box">
-                <div class="custom-control custom-checkbox mb-2 fs-15">
-                  <input type="checkbox" class="custom-control-input" id="receiveCheckbox" required>
-                  <label class="custom-control-label custom--control-label lh-20" for="receiveCheckbox">Yes! I want to get the most out of Aduca by receiving emails with exclusive deals, personal recommendations and learning tips!</label>
-                </div><!-- end custom-control -->
-                <div class="custom-control custom-checkbox mb-4 fs-15">
-                  <input type="checkbox" class="custom-control-input" id="agreeCheckbox" required>
-                  <label class="custom-control-label custom--control-label" for="agreeCheckbox">By signing up, I agree to the
-                    <a href="terms-and-conditions.html" class="text-color hover-underline">terms and conditions</a> and
-                    <a href="privacy-policy.html" class="text-color hover-underline">privacy policy</a>
-                  </label>
-                </div><!-- end custom-control -->
-                <button class="btn theme-btn" type="submit">Register Admin Account <i class="la la-arrow-right icon ml-1"></i></button>
-                <p class="fs-14 pt-2">Already have an admin account? <a href="{{ route('admin.login') }}" class="text-color hover-underline">Log in</a></p>
-              </div><!-- end btn-box -->
-            </form>
-          </div><!-- end card-body -->
-        </div><!-- end card -->
-      </div><!-- end col-lg-7 -->
-    </div><!-- end row -->
-  </div><!-- end container -->
-</section><!-- end contact-area -->
-<!-- ================================
-       END CONTACT AREA
-================================= -->
-
-@endsection
+</html>

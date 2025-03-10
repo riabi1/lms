@@ -20,11 +20,11 @@ Route::name('')->group(function () {
     ->name('dashboard');
 
   // Profile
-  Route::middleware(['auth:web', 'verified'])->group(function () {
+Route::middleware(['auth:web', 'verified'])->group(function () {
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::put('/password', [ProfileController::class, 'updatePassword'])->name('profile.updatePassword');
-  });
+});
 });
 
 // Admin Routes

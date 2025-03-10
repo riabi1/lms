@@ -2,57 +2,49 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Redirect;
-use Illuminate\Validation\Rules\Password;
-use Illuminate\View\View;
+use Illuminate\Support\Facades\Storage;
+use Intervention\Image\Facades\Image;
 
 class ProfileController extends Controller
 {
-  /**
-   * Display the user's profile form.
-   */
-  public function edit(Request $request): View
-  {
-    return view('profile.edit', [
-      'user' => $request->user(),
-    ]);
-  }
+    public function edit()
+    {
+        $profileData = Auth::guard('web')->user();
+        return view('frontend.dashboard.edit_profile', compact('profileData'));
+    }
 
-  /**
-   * Update the user's name.
-   */
-  public function update(Request $request): RedirectResponse
-  {
+   public function update(Request $request)
+{
     $request->validate([
-      'name' => ['required', 'string', 'max:255'],
+        'name' => 'required|string|max:255',
+        'email' => 'required|string|email|max:255|unique:users,email,' . Auth::guard('web')->id(),
+        'phone' => 'nullable|string|max:20',
+        'address' => 'nullable|string|max:255',
+        'photo' => 'nullable|image|max:5120|mimes:jpg,png',
     ]);
 
-    $user = $request->user();
-    $user->name = $request->input('name');
-    $user->save();
+    $user = Auth::guard('web')->user();
 
-    return Redirect::route('profile.edit')->with('status', 'profile-updated');
-  }
+    if ($request->hasFile('photo')) {
+        if ($user->photo && Storage::exists('public/upload/user_images/' . $user->photo)) {
+            Storage::delete('public/upload/user_images/' . $user->photo);
+        }
+        $photo = $request->file('photo');
+        $filename = uniqid() . '.' . $photo->getClientOriginalExtension();
+        $image = Image::make($photo)->resize(200, 200, function ($constraint) {
+            $constraint->aspectRatio();
+            $constraint->upsize();
+        })->save(storage_path('app/public/upload/user_images/' . $filename));
+        $user->photo = $filename;
+    }
 
-  /**
-   * Update the user's password.
-   */
-  public function updatePassword(Request $request): RedirectResponse
-  {
-    $request->validate([
-      'current_password' => ['required', 'string', 'current_password:web'],
-      'password' => ['required', 'string', Password::defaults(), 'confirmed'],
-    ]);
+    $user->update($request->only('name', 'email', 'phone', 'address'));
+    $profileData = $user->fresh();
 
-    $user = $request->user();
-    $user->password = Hash::make($request->input('password'));
-    $user->save();
-
-    return Redirect::route('profile.edit')->with('status', 'password-updated');
-  }
+    return view('frontend.dashboard.edit_profile', compact('profileData'))
+        ->with('status', 'Profile updated successfully!');
+}
 
 }
