@@ -18,6 +18,10 @@ use App\Http\Controllers\Auth\Instructor\InstructorRegisteredUserController;
 use App\Http\Controllers\Auth\Instructor\InstructorEmailVerificationController;
 use App\Http\Controllers\Auth\Instructor\InstructorPasswordResetLinkController;
 use App\Http\Controllers\Auth\Instructor\InstructorAuthenticatedSessionController;
+use App\Http\Controllers\Auth\Admin\AdminNewPasswordController;
+use App\Http\Controllers\Auth\NewPasswordController;
+use App\Http\Controllers\Auth\Instructor\InstructorNewPasswordController;
+
 
 // Welcome Route
 // Route::get('/', fn() => view('welcome'))->name('welcome');
@@ -34,6 +38,8 @@ Route::middleware('guest:web')->group(function () {
   Route::post('/register', [RegisteredUserController::class, 'store']);
   Route::get('/forgot-password', [PasswordResetLinkController::class, 'create'])->name('password.request');
   Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])->name('password.email');
+Route::get('/reset-password/{token}', [NewPasswordController::class, 'create'])->name('password.reset');
+    Route::post('/reset-password', [NewPasswordController::class, 'store'])->name('password.update');
 });
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
   ->middleware('auth:web')
@@ -71,6 +77,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('/register', [AdminRegisteredUserController::class, 'store']);
     Route::get('/forgot-password', [AdminPasswordResetLinkController::class, 'create'])->name('password.request');
     Route::post('/forgot-password', [AdminPasswordResetLinkController::class, 'store'])->name('password.email');
+    Route::get('/reset-password/{token}', [AdminNewPasswordController::class, 'create'])->name('password.reset');
+    Route::post('/reset-password', [AdminNewPasswordController::class, 'store'])->name('password.update');
   });
   Route::post('/logout', [AdminAuthenticatedSessionController::class, 'destroy'])
     ->middleware('auth:admin')
@@ -108,6 +116,8 @@ Route::prefix('instructor')->name('instructor.')->group(function () {
     Route::post('/register', [InstructorRegisteredUserController::class, 'store']);
     Route::get('/forgot-password', [InstructorPasswordResetLinkController::class, 'create'])->name('password.request');
     Route::post('/forgot-password', [InstructorPasswordResetLinkController::class, 'store'])->name('password.email');
+    Route::get('/reset-password/{token}', [InstructorNewPasswordController::class, 'create'])->name('password.reset');
+    Route::post('/reset-password', [InstructorNewPasswordController::class, 'store'])->name('password.update');
   });
   Route::post('/logout', [InstructorAuthenticatedSessionController::class, 'destroy'])
     ->middleware('auth:instructor')

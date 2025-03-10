@@ -1,62 +1,103 @@
-@extends('frontend.dashboard.user_dashboard')
-@section('userdashboard')
+@extends('frontend.master')
+@section('home')
+@section('title')
+Change Password | Easy Learning
+@endsection
 
- 
+<!-- ================================
+    START BREADCRUMB AREA
+================================= -->
+<section class="breadcrumb-area section-padding img-bg-2">
+    <div class="overlay"></div>
+    <div class="container">
+        <div class="breadcrumb-content d-flex flex-wrap align-items-center justify-content-between">
+            <div class="section-heading">
+                <h2 class="section__title text-white">Reset Password</h2>
+            </div>
+            <ul class="generic-list-item generic-list-item-white generic-list-item-arrow d-flex flex-wrap align-items-center">
+                <li><a href="{{ route('home') }}">Home</a></li>
+                <li>Pages</li>
+                <li>Reset Password</li>
+            </ul>
+        </div><!-- end breadcrumb-content -->
+    </div><!-- end container -->
+</section><!-- end breadcrumb-area -->
+<!-- ================================
+    END BREADCRUMB AREA
+================================= -->
 
+<!-- ================================
+       START CONTACT AREA
+================================= -->
+<section class="contact-area section--padding position-relative">
+    <span class="ring-shape ring-shape-1"></span>
+    <span class="ring-shape ring-shape-2"></span>
+    <span class="ring-shape ring-shape-3"></span>
+    <span class="ring-shape ring-shape-4"></span>
+    <span class="ring-shape ring-shape-5"></span>
+    <span class="ring-shape ring-shape-6"></span>
+    <span class="ring-shape ring-shape-7"></span>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-7 mx-auto">
+                <div class="card card-item">
+                    <div class="card-body">
+                        <h3 class="card-title text-center fs-24 lh-35 pb-4">Set a New Password</h3>
+                        <div class="section-block"></div>
+                        
+                        <div class="pt-4">
+                            @if (session('status'))
+                                <div class="alert alert-success mb-3">
+                                    {{ session('status') }}
+                                </div>
+                            @endif
 
-<div class="tab-pane fade show active" id="edit-profile" role="tabpanel" aria-labelledby="edit-profile-tab">
-    <div class="setting-body">
-        <h3 class="fs-17 font-weight-semi-bold pb-4">Change Password </h3>
-       
-       
-        <form method="post" action="{{ route('user.password.update') }}" enctype="multipart/form-data" class="row pt-40px">
-        @csrf
-        
-        
-            <div class="input-box col-lg-12">
-                <label class="label-text"> Old Password</label>
-                <div class="form-group">
-                    <input class="form-control form--control @error('old_password') is-invalid @enderror" type="password" name="old_password" id="old_password" >
-                    <span class="la la-user input-icon"></span>
+                            <form method="POST" action="{{ route('password.update') }}">
+                                @csrf
+                                <input type="hidden" name="token" value="{{ $token }}">
 
-                    @error('old_password')
-                        <span class="text-danger">{{ $message }}</span>
-                    @enderror
+                                <div class="input-box">
+                                    <label class="label-text">Email</label>
+                                    <div class="form-group">
+                                        <input class="form-control form--control" id="email" type="email" name="email" value="{{ $email }}" required>
+                                        <span class="la la-envelope input-icon"></span>
+                                        @error('email')
+                                            <span class="text-danger">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+                                </div><!-- end input-box -->
+                                <div class="input-box">
+                                    <label class="label-text">New Password</label>
+                                    <div class="form-group">
+                                        <input class="form-control form--control" id="password" type="password" name="password" placeholder="New password" required>
+                                        <span class="la la-lock input-icon"></span>
+                                        @error('password')
+                                            <span class="text-danger">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+                                </div><!-- end input-box -->
+                                <div class="input-box">
+                                    <label class="label-text">Confirm Password</label>
+                                    <div class="form-group">
+                                        <input class="form-control form--control" id="password_confirmation" type="password" name="password_confirmation" placeholder="Confirm password" required>
+                                        <span class="la la-lock input-icon"></span>
+                                    </div>
+                                </div><!-- end input-box -->
 
-                </div>
-            </div><!-- end input-box -->
-
-
-            <div class="input-box col-lg-12">
-                <label class="label-text"> New Password</label>
-                <div class="form-group">
-                    <input class="form-control form--control @error('new_password') is-invalid @enderror" type="password" name="new_password" id="new_password" >
-                    <span class="la la-user input-icon"></span>
-                    
-                    @error('new_password')
-                        <span class="text-danger">{{ $message }}</span>
-                    @enderror
-
-                </div>
-            </div><!-- end input-box -->
-
-            <div class="input-box col-lg-12">
-                <label class="label-text"> Confirm New Password</label>
-                <div class="form-group">
-                    <input class="form-control form--control" type="password" name="new_password_confirmation" id="new_password_confirmation" >
-                    <span class="la la-user input-icon"></span> 
-                </div>
-            </div><!-- end input-box -->
-             
-
-  
-            <div class="input-box col-lg-12 py-2">
-                <button class="btn theme-btn">Save Changes</button>
-            </div><!-- end input-box -->
-        </form>
-    </div><!-- end setting-body -->
-</div><!-- end tab-pane -->
-
-
+                                <div class="btn-box">
+                                    <button class="btn theme-btn" type="submit">Reset Password <i class="la la-arrow-right icon ml-1"></i></button>
+                                    <p class="fs-14 pt-2">Back to <a href="{{ route('login') }}" class="text-color hover-underline">Login</a></p>
+                                </div><!-- end btn-box -->
+                            </form>
+                        </div>
+                    </div><!-- end card-body -->
+                </div><!-- end card -->
+            </div><!-- end col-lg-7 -->
+        </div><!-- end row -->
+    </div><!-- end container -->
+</section><!-- end contact-area -->
+<!-- ================================
+       END CONTACT AREA
+================================= -->
 
 @endsection

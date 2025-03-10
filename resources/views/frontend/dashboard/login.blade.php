@@ -84,7 +84,7 @@ Login Page | Easy Learning
                     <input type="checkbox" class="custom-control-input" id="rememberMeCheckbox" required>
                     <label class="custom-control-label custom--control-label" for="rememberMeCheckbox">Remember Me</label>
                 </div><!-- end custom-control -->
-                <a href="recover.html" class="btn-text">Forgot my password?</a>
+                <a href="{{ route('password.request') }}" class="btn-text">Forgot my password?</a>
             </div>
             <button class="btn theme-btn" type="submit">Login Account <i class="la la-arrow-right icon ml-1"></i></button>
             <p class="fs-14 pt-2">Don't have an account? <a href="/register" class="text-color hover-underline">Register</a></p>

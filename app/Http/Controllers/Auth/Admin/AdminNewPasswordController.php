@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Auth;
+namespace App\Http\Controllers\Auth\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -8,12 +8,12 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
-class NewPasswordController extends Controller
+class AdminNewPasswordController extends Controller
 {
-    public function create(Request $request)
+    public function create(Request $request, $token)
     {
-        return view('frontend.dashboard.change_password', [
-            'token' => $request->route('token'),
+        return view('admin.admin_change_password', [
+            'token' => $token,
             'email' => $request->email,
         ]);
     }
@@ -26,7 +26,7 @@ class NewPasswordController extends Controller
             'password' => 'required|string|min:8|confirmed',
         ]);
 
-        $status = Password::reset(
+        $status = Password::broker('admins')->reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function ($user, $password) {
                 $user->forceFill([
@@ -37,7 +37,7 @@ class NewPasswordController extends Controller
         );
 
         return $status == Password::PASSWORD_RESET
-            ? redirect()->route('login')->with('status', __($status))
+            ? redirect()->route('admin.login')->with('status', __($status))
             : back()->withErrors(['email' => [__($status)]]);
     }
 }
