@@ -1,76 +1,102 @@
-@extends('frontend.master')
-@section('home')
-@section('title')
-Verify Instructor Email | Easy Learning
+@extends('backend.layouts.app') <!-- Assuming there's a backend master layout -->
+@section('title', 'Verify Instructor Email | Easy Learning')
+
+@section('content')
+<div class="wrapper">
+    <div class="section-authentication-cover">
+        <div class="">
+            <div class="row g-0">
+                <!-- Left Section (Image) -->
+                <div class="col-12 col-xl-7 col-xxl-8 auth-cover-left align-items-center justify-content-center d-none d-xl-flex">
+                    <div class="card shadow-none bg-transparent rounded-0 mb-0">
+                        <div class="card-body">
+                            <img src="{{ asset('backend/assets/images/login-images/login-cover.svg') }}" 
+                                 class="img-fluid auth-img-cover-login" 
+                                 width="650" 
+                                 alt="Verify Email Cover" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Section (Verification Content) -->
+                <div class="col-12 col-xl-5 col-xxl-4 auth-cover-right align-items-center justify-content-center">
+                    <div class="card rounded-0 m-3 shadow-none bg-transparent mb-0">
+                        <div class="card-body p-sm-5">
+                            <div class="">
+                                <div class="mb-3 text-center">
+                                    <img src="{{ asset('backend/assets/images/logo-icon.png') }}" 
+                                         width="60" 
+                                         alt="Logo">
+                                </div>
+                                <div class="text-center mb-4">
+                                    <h5 class="">Verify Your Instructor Email</h5>
+                                    <p class="mb-0">Please verify your email address</p>
+                                </div>
+
+                                <div class="form-body">
+                                    <div class="text-center">
+                                        <p class="mb-3">We've sent a verification link to your email address. Please check your inbox (and spam/junk folder) to verify your instructor account.</p>
+
+                                        @if (session('status') === 'verification-link-sent')
+                                        <div class="alert alert-success mb-3">
+                                            A new verification link has been sent to your email address.
+                                        </div>
+                                        @endif
+
+                                        <form class="row g-3" method="POST" action="{{ route('instructor.verification.send') }}">
+                                            @csrf
+                                            <div class="col-12">
+                                                <div class="d-grid">
+                                                    <button type="submit" class="btn btn-primary">
+                                                        Resend Verification Email
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="col-12">
+                                                <div class="text-center">
+                                                    <p class="mb-0">Already verified? 
+                                                        <a href="{{ route('instructor.login') }}">Login here</a>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
-<!-- ================================
-    START BREADCRUMB AREA
-================================= -->
-<section class="breadcrumb-area section-padding img-bg-2">
-  <div class="overlay"></div>
-  <div class="container">
-    <div class="breadcrumb-content d-flex flex-wrap align-items-center justify-content-between">
-      <div class="section-heading">
-        <h2 class="section__title text-white">Verify Your Instructor Email</h2>
-      </div>
-      <ul class="generic-list-item generic-list-item-white generic-list-item-arrow d-flex flex-wrap align-items-center">
-        <li><a href="{{ route('home') }}">Home</a></li>
-        <li>Instructor Pages</li>
-        <li>Verify Email</li>
-      </ul>
-    </div><!-- end breadcrumb-content -->
-  </div><!-- end container -->
-</section><!-- end breadcrumb-area -->
-<!-- ================================
-    END BREADCRUMB AREA
-================================= -->
-
-<!-- ================================
-       START CONTACT AREA
-================================= -->
-<section class="contact-area section--padding position-relative">
-  <span class="ring-shape ring-shape-1"></span>
-  <span class="ring-shape ring-shape-2"></span>
-  <span class="ring-shape ring-shape-3"></span>
-  <span class="ring-shape ring-shape-4"></span>
-  <span class="ring-shape ring-shape-5"></span>
-  <span class="ring-shape ring-shape-6"></span>
-  <span class="ring-shape ring-shape-7"></span>
-  <div class="container">
-    <div class="row">
-      <div class="col-lg-7 mx-auto">
-        <div class="card card-item">
-          <div class="card-body">
-            <h3 class="card-title text-center fs-24 lh-35 pb-4">Verify Your Instructor Email Address</h3>
-            <div class="section-block"></div>
-
-            <div class="text-center pt-4">
-              <p class="fs-16 pb-3">We've sent a verification link to your email address. Please check your inbox (and spam/junk folder) to verify your instructor account.</p>
-
-              @if (session('status') === 'verification-link-sent')
-              <div class="alert alert-success mb-3">
-                A new verification link has been sent to your email address.
-              </div>
-              @endif
-
-              <form method="POST" action="{{ route('instructor.verification.send') }}" class="pt-2">
-                @csrf
-                <button class="btn theme-btn" type="submit">
-                  Resend Verification Email <i class="la la-arrow-right icon ml-1"></i>
-                </button>
-              </form>
-
-              <p class="fs-14 pt-4">Already verified? <a href="{{ route('instructor.login') }}" class="text-color hover-underline">Login here</a></p>
-            </div>
-          </div><!-- end card-body -->
-        </div><!-- end card -->
-      </div><!-- end col-lg-7 -->
-    </div><!-- end row -->
-  </div><!-- end container -->
-</section><!-- end contact-area -->
-<!-- ================================
-       END CONTACT AREA
-================================= -->
-
+@section('scripts')
+<script src="{{ asset('backend/assets/js/bootstrap.bundle.min.js') }}"></script>
+<script src="{{ asset('backend/assets/js/jquery.min.js') }}"></script>
+<script src="{{ asset('backend/assets/plugins/simplebar/js/simplebar.min.js') }}"></script>
+<script src="{{ asset('backend/assets/plugins/metismenu/js/metisMenu.min.js') }}"></script>
+<script src="{{ asset('backend/assets/plugins/perfect-scrollbar/js/perfect-scrollbar.js') }}"></script>
+<script src="{{ asset('backend/assets/js/app.js') }}"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+<script>
+    @if(Session::has('message'))
+    var type = "{{ Session::get('alert-type','info') }}"
+    switch(type){
+        case 'info':
+            toastr.info("{{ Session::get('message') }}");
+            break;
+        case 'success':
+            toastr.success("{{ Session::get('message') }}");
+            break;
+        case 'warning':
+            toastr.warning("{{ Session::get('message') }}");
+            break;
+        case 'error':
+            toastr.error("{{ Session::get('message') }}");
+            break;
+    }
+    @endif
+</script>
 @endsection
