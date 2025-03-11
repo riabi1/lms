@@ -1,8 +1,7 @@
 @extends('frontend.dashboard.user_dashboard')
 @section('userdashboard')
 <?php
-    // Get the authenticated user - this assumes $profileData is passed from controller
-    // If not passed, you might need to use Auth::user() directly
+  
     $user = $profileData ?? Auth::guard('web')->user();
 ?>
 
