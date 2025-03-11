@@ -58,7 +58,7 @@
                       <!-- Email Field -->
                       <div class="col-12">
                         <label for="email" class="form-label">Email</label>
-                        <input type="email" id="email" name="email" class="form-control @error('email') is-invalid @enderror" placeholder="jhon@example.com">
+                        <input type="email" id="email" name="email" class="form-control @error('email') is-invalid @enderror" placeholder="you email">
                         @error('email')
                         <span class="text-danger">{{ $message }}</span>
                         @enderror

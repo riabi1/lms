@@ -10,26 +10,28 @@ use Illuminate\Support\Facades\Auth;
 
 class InstructorAuthenticatedSessionController extends Controller
 {
-  public function create()
-  {
-    return view('instructor.instructor_login');
-  }
-
-  public function store(InstructorLoginRequest $request): RedirectResponse
-  {
-    $credentials = $request->only('email', 'password');
-    if (Auth::guard('instructor')->attempt($credentials)) {
-      $request->session()->regenerate();
-      return redirect()->intended(route('instructor.dashboard'));
+    public function create()
+    {
+        return view('instructor.instructor_login');
     }
-    return back()->withErrors(['email' => 'Invalid credentials'])->onlyInput('email');
-  }
 
-  public function destroy(Request $request): RedirectResponse
-  {
-    Auth::guard('instructor')->logout();
-    $request->session()->invalidate();
-    $request->session()->regenerateToken();
-    return redirect('/instructor/login');
-  }
+    public function store(InstructorLoginRequest $request): RedirectResponse
+    {
+        $credentials = $request->only('email', 'password');
+        if (Auth::guard('instructor')->attempt($credentials)) {
+            $request->session()->regenerate();
+            return redirect()->intended(route('instructor.dashboard'))
+                ->with('success', 'Logged in successfully');
+        }
+        return back()->withErrors(['email' => 'Invalid credentials'])->onlyInput('email');
+    }
+
+    public function destroy(Request $request): RedirectResponse
+    {
+        Auth::guard('instructor')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        return redirect()->route('instructor.login')
+            ->with('success', 'Logged out successfully');
+    }
 }

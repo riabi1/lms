@@ -4,13 +4,14 @@ namespace App\Http\Controllers\Auth\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class AdminNewPasswordController extends Controller
 {
-    public function create(Request $request, $token)
+    public function create(Request $request, $token): \Illuminate\Contracts\View\View
     {
         return view('admin.admin_change_password', [
             'token' => $token,
@@ -18,7 +19,7 @@ class AdminNewPasswordController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $request->validate([
             'token' => 'required',
@@ -36,8 +37,8 @@ class AdminNewPasswordController extends Controller
             }
         );
 
-        return $status == Password::PASSWORD_RESET
-            ? redirect()->route('admin.login')->with('status', __($status))
+        return $status === Password::PASSWORD_RESET
+            ? redirect()->route('admin.login')->with('status', 'Password reset successfully!')
             : back()->withErrors(['email' => [__($status)]]);
     }
 }
