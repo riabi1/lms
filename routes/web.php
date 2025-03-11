@@ -34,8 +34,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         ->middleware(['auth:admin', 'verified'])
         ->name('dashboard');
     Route::middleware(['auth:admin', 'verified'])->group(function () {
-        Route::get('/profile/edit', [AdminProfileController::class, 'edit'])->name('profile.edit');
-        Route::patch('/profile', [AdminProfileController::class, 'update'])->name('profile.update');
+Route::get('/profile/edit', [AdminProfileController::class, 'edit'])->name('profile.edit');
+        Route::patch('/profile/update', [AdminProfileController::class, 'update'])->name('profile.update');
+        Route::post('/logout', [AdminProfileController::class, 'logout'])->name('logout');
         Route::put('/password', [AdminProfileController::class, 'updatePassword'])->name('profile.updatePassword');
     });
 });

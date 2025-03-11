@@ -11,18 +11,17 @@ use Illuminate\Notifications\Messages\MailMessage;
 
 class Admin extends Authenticatable implements MustVerifyEmail
 {
-    use Notifiable;
+   use Notifiable;
 
     protected $guard = 'admin';
 
     protected $fillable = [
-        'name', 'email', 'password',
+        'name', 'email', 'phone', 'address', 'photo', 'password',
     ];
 
     protected $hidden = [
         'password', 'remember_token',
     ];
-
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
