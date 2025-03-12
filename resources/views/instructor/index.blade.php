@@ -1,13 +1,13 @@
 @extends('instructor.instructor_dashboard')
 @section('instructor')
-
 <div class="container py-4">
     <div class="card p-4">
         <h3 class="mb-4">Instructor Dashboard</h3>
 
-        <?php
+        @php
             $instructor = Auth::guard('instructor')->user();
-        ?>
+            $status = $instructor->status; // 0 = inactive, 1 = active
+        @endphp
 
         @if(!$instructor->hasVerifiedEmail())
             <div class="alert alert-warning mb-4">
@@ -22,7 +22,18 @@
                      src="{{ $instructor->photo ? Storage::url('upload/instructor_images/' . $instructor->photo) : asset('upload/no_image.jpg') }}"
                      alt="{{ $instructor->name }}'s Profile"
                      style="width: 100px; height: 100px; object-fit: cover;">
-                <h2>Hello, {{ $instructor->name }}</h2>
+                <div>
+                    <h2>Hello, {{ $instructor->name }}</h2>
+                    <p>Account Status: 
+                        @if ($status == 1)
+                            <span class="badge bg-success">Active</span>
+                        @else
+                            <span class="badge bg-danger">Inactive</span>
+                            <br>
+                            <small>Please contact an admin to activate your account.</small>
+                        @endif
+                    </p>
+                </div>
             </div>
         </div>
 

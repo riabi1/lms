@@ -12,13 +12,12 @@
   <!--navigation-->
   <ul class="metismenu" id="menu">
 
-    <li>
-      <a href="#">
-        <div class="parent-icon"><i class='bx bx-home-alt'></i>
-        </div>
+  <li>
+    <a href="{{ route('admin.dashboard') }}">
+        <div class="parent-icon"><i class='bx bx-home-alt'></i></div>
         <div class="menu-title">Dashboard</div>
-      </a>
-    </li>
+    </a>
+</li>
 
 
 
@@ -47,7 +46,7 @@
         <div class="menu-title">Manage Instructor</div>
       </a>
       <ul>
-        <li> <a href="#"><i class='bx bx-radio-circle'></i>All Instructor</a>
+       <a href="{{ route('admin.instructors.index') }}"><i class='bx bx-radio-circle'></i>All Instructor</a>
         </li>
 
 

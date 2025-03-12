@@ -6,6 +6,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Backend\CategoryController;
 use App\Http\Controllers\Admin\AdminProfileController;
 use App\Http\Controllers\Instructor\InstructorProfileController;
+use App\Http\Controllers\Admin\InstructorManagementController;
 
 // Home Page Route
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -31,13 +32,14 @@ Route::name('')->group(function () {
 // Admin Routes
 Route::prefix('admin')->name('admin.')->group(function () {
   require base_path('routes/auth/admin.php');
-  Route::get('/dashboard', fn() => view('admin.admin_dashboard'))
+  Route::get('/dashboard', fn() => view('admin.index'))
     ->middleware(['auth:admin', 'verified'])
     ->name('dashboard');
   Route::middleware(['auth:admin', 'verified'])->group(function () {
     Route::get('/profile/edit', [AdminProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile/update', [AdminProfileController::class, 'update'])->name('profile.update');
     Route::put('/password', [AdminProfileController::class, 'updatePassword'])->name('profile.updatePassword');
+   
   });
 });
 // Instructor Routes
@@ -78,4 +80,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth:admin', 'verified'])->
     Route::post('/update/subcategory', 'UpdateSubCategory')->name('update.subcategory');
     Route::delete('/delete/subcategory/{id}', 'DeleteSubCategory')->name('delete.subcategory');
   });
+
+   // update instructor status
+    Route::get('/instructors', [InstructorManagementController::class, 'index'])
+            ->name('instructors.index');
+    Route::post('/instructors/status', [InstructorManagementController::class, 'updateStatus'])
+            ->name('update.instructor.status');
 });
