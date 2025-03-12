@@ -36,7 +36,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::middleware(['auth:admin', 'verified'])->group(function () {
 Route::get('/profile/edit', [AdminProfileController::class, 'edit'])->name('profile.edit');
         Route::patch('/profile/update', [AdminProfileController::class, 'update'])->name('profile.update');
-        Route::post('/logout', [AdminProfileController::class, 'logout'])->name('logout');
         Route::put('/password', [AdminProfileController::class, 'updatePassword'])->name('profile.updatePassword');
     });
 });
@@ -46,14 +45,14 @@ Route::prefix('instructor')->name('instructor.')->group(function () {
     require base_path('routes/auth/instructor.php');
 
     // Dashboard
-    Route::get('/dashboard', fn() => view('instructor.instructor_dashboard'))
-        ->middleware(['auth:instructor', 'verified'])
-        ->name('dashboard');
+  Route::get('/dashboard', function () {
+        return view('instructor.index');
+    })->middleware(['auth:instructor', 'verified'])->name('dashboard');
 
     // Profile
     Route::middleware(['auth:instructor', 'verified'])->group(function () {
-        Route::get('/profile/edit', [InstructorProfileController::class, 'edit'])->name('profile.edit');
-        Route::patch('/profile', [InstructorProfileController::class, 'update'])->name('profile.update');
+       Route::get('/profile/edit', [InstructorProfileController::class, 'edit'])->name('profile.edit');
+        Route::patch('/profile/update', [InstructorProfileController::class, 'update'])->name('profile.update');
         Route::put('/password', [InstructorProfileController::class, 'updatePassword'])->name('profile.updatePassword');
     });
 });

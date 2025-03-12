@@ -4,54 +4,77 @@ namespace App\Http\Controllers\Instructor;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules\Password;
 
 class InstructorProfileController extends Controller
 {
-  /**
-   * Display the instructor profile edit form.
-   */
-  public function edit(Request $request)
-  {
-    return view('auth.instructor-profile-edit', [
-      'instructor' => $request->user('instructor'),
-    ]);
-  }
+    public function __construct()
+    {
+        $this->middleware('auth:instructor');
+    }
 
-  /**
-   * Update the instructor's profile information (name).
-   */
-  public function update(Request $request): RedirectResponse
-  {
-    $request->validate([
-      'name' => ['required', 'string', 'max:255'],
-    ]);
+    public function edit()
+    {
+        $instructor = Auth::guard('instructor')->user();
+        return view('instructor.instructor_edit_profile', compact('instructor'));
+    }
 
-    $instructor = $request->user('instructor');
-    $instructor->name = $request->input('name');
-    $instructor->save();
+    public function update(Request $request)
+    {
+        try {
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|string|email|max:255|unique:instructors,email,' . Auth::guard('instructor')->id(),
+                'phone' => 'nullable|string|max:20',
+                'address' => 'nullable|string|max:255',
+                'photo' => 'nullable|image|max:5120|mimes:jpg,png',
+            ]);
 
-    return redirect()->route('instructor.profile.edit')->with('status', 'Profil mis à jour avec succès.');
-  }
+            $instructor = Auth::guard('instructor')->user();
 
-  /**
-   * Update the instructor's password.
-   */
-  public function updatePassword(Request $request): RedirectResponse
-  {
-    $request->validate([
-      'current_password' => ['required', 'string', 'current_password:instructor'],
-      'password' => ['required', 'string', Password::defaults(), 'confirmed'],
-    ]);
+            $instructor->name = $request->name;
+            $instructor->email = $request->email;
+            $instructor->phone = $request->phone;
+            $instructor->address = $request->address;
 
-    $instructor = $request->user('instructor');
-    $instructor->password = Hash::make($request->input('password'));
-    $instructor->save();
+            if ($request->hasFile('photo')) {
+                if ($instructor->photo && Storage::exists('public/upload/instructor_images/' . $instructor->photo)) {
+                    Storage::delete('public/upload/instructor_images/' . $instructor->photo);
+                }
+                $file = $request->file('photo');
+                $filename = date('YmdHi') . $file->getClientOriginalName();
+                $file->storeAs('public/upload/instructor_images', $filename);
+                $instructor->photo = $filename;
+            }
 
-    return redirect()->route('instructor.profile.edit')->with('status', 'Mot de passe mis à jour avec succès.');
-  }
+            $instructor->save();
 
+            return redirect()->route('instructor.profile.edit')->with('status', 'Profile updated successfully!');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Failed to update profile: ' . $e->getMessage());
+        }
+    }
+
+    public function updatePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required',
+            'new_password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $instructor = Auth::guard('instructor')->user();
+
+        if (!Hash::check($request->current_password, $instructor->password)) {
+            return redirect()->back()->with('error', 'Current password is incorrect.');
+        }
+
+        $instructor->password = Hash::make($request->new_password);
+        $instructor->save();
+
+        return redirect()->route('instructor.profile.edit')->with('status', 'Password updated successfully!');
+    }
 }

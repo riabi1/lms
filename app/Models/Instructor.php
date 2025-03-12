@@ -16,7 +16,7 @@ class Instructor extends Authenticatable implements MustVerifyEmail
     protected $guard = 'instructor';
 
     protected $fillable = [
-        'name', 'email', 'password',
+        'name', 'email', 'phone', 'address', 'photo', 'password',
     ];
 
     protected $hidden = [
