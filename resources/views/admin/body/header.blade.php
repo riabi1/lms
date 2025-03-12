@@ -3,28 +3,25 @@
         <nav class="navbar navbar-expand gap-3">
             <div class="top-menu ms-auto">
                 <ul class="navbar-nav align-items-center gap-1">
-                    <!-- Mode Sombre / Clair -->
-                    <li class="nav-item dark-mode d-none d-sm-flex">
-                        <a class="nav-link dark-mode-icon" href="#"><i class="bx bx-moon"></i></a>
-                    </li>
-
                     <!-- Notifications -->
                     <li class="nav-item dropdown dropdown-large">
-                        <a class="nav-link dropdown-toggle dropdown-toggle-nocaret position-relative" href="#" data-bs-toggle="dropdown">
+                        <a class="nav-link dropdown-toggle dropdown-toggle-nocaret position-relative" href="#" 
+                           data-bs-toggle="dropdown" data-bs-target="#notificationDropdown" aria-expanded="false">
                             <i class="bx bx-bell"></i>
                         </a>
+                        <ul class="dropdown-menu" id="notificationDropdown">
+                            <li><a class="dropdown-item" href="#">No notifications yet</a></li>
+                        </ul>
                     </li>
                 </ul>
             </div>
-
-            <!-- Récupération des données administrateur -->
             @php
                 $admin = Auth::guard('admin')->user();
             @endphp
-
             <!-- Profil administrateur -->
             <div class="user-box dropdown px-3">
-                <a class="d-flex align-items-center nav-link dropdown-toggle gap-3 dropdown-toggle-nocaret" href="#" role="button" data-bs-toggle="dropdown">
+                <a class="d-flex align-items-center nav-link dropdown-toggle gap-3 dropdown-toggle-nocaret" href="#" 
+                   role="button" data-bs-toggle="dropdown" data-bs-target="#userDropdown" aria-expanded="false">
                     <img src="{{ $admin && $admin->photo ? Storage::url('upload/admin_images/' . $admin->photo) : asset('upload/no_image.jpg') }}"
                          class="user-img" alt="Profil">
                     <div class="user-info">
@@ -32,7 +29,7 @@
                     </div>
                 </a>
 
-                <ul class="dropdown-menu dropdown-menu-end">
+                <ul class="dropdown-menu dropdown-menu-end" id="userDropdown">
                     <li>
                         <a class="dropdown-item d-flex align-items-center" href="{{ route('admin.profile.edit') }}">
                             <i class="bx bx-user fs-5"></i>
