@@ -57,7 +57,7 @@
 
                       <div class="col-12">
                         <label for="inputEmailAddress" class="form-label">Email</label>
-                        <input type="email" id="email" name="email" class="form-control @error('email') is-invalid @enderror" id="inputEmailAddress" placeholder="jhon@example.com">
+                        <input type="email" id="email" name="email" class="form-control @error('email') is-invalid @enderror" id="inputEmailAddress" placeholder="email@example.com">
                         @error('email')
                         <span class="text-danger">{{ $message }}</span> <!-- Fixed: Display error message -->
                         @enderror
@@ -98,10 +98,10 @@
                     <hr>
                   </div>
                   <div class="list-inline contacts-social text-center">
-                    <a href="javascript:;" class="list-inline-item bg-facebook text-white border-0 rounded-3"><i class="bx bxl-facebook"></i></a>
-                    <a href="javascript:;" class="list-inline-item bg-twitter text-white border-0 rounded-3"><i class="bx bxl-twitter"></i></a>
+                   
+                   
                     <a href="javascript:;" class="list-inline-item bg-google text-white border-0 rounded-3"><i class="bx bxl-google"></i></a>
-                    <a href="javascript:;" class="list-inline-item bg-linkedin text-white border-0 rounded-3"><i class="bx bxl-linkedin"></i></a>
+                  
                   </div>
                 </div>
               </div>

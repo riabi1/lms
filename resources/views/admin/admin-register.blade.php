@@ -108,7 +108,7 @@
                       <div class="col-12">
                         <div class="form-check mb-2">
                           <input class="form-check-input" type="checkbox" id="receiveCheckbox" name="receive_emails" required>
-                          <label class="form-check-label" for="receiveCheckbox">Yes! I want to get the most out of Aduca by receiving emails with exclusive deals, personal recommendations and learning tips!</label>
+                          <label class="form-check-label" for="receiveCheckbox">Yes! I want to get the most out of LearnFlow by receiving emails with exclusive deals, personal recommendations and learning tips!</label>
                         </div>
                         <div class="form-check mb-4">
                           <input class="form-check-input" type="checkbox" id="agreeCheckbox" name="agree_terms" required>

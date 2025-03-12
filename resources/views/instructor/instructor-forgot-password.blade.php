@@ -57,7 +57,7 @@
 
                       <div class="col-12">
                         <label for="inputEmailAddress" class="form-label">Email</label>
-                        <input type="email" id="email" name="email" class="form-control @error('email') is-invalid @enderror" placeholder="jhon@example.com" value="{{ old('email') }}" required>
+                        <input type="email" id="email" name="email" class="form-control @error('email') is-invalid @enderror" placeholder="email@example.com" value="{{ old('email') }}" required>
                         @error('email')
                         <span class="text-danger">{{ $message }}</span>
                         @enderror

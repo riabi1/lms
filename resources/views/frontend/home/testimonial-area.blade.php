@@ -29,7 +29,7 @@
             </div>
           </div><!-- end media -->
           <p class="card-text">
-            My children and I LOVE Aduca! The courses are fantastic and the
+            My children and I LOVE EasyLearning! The courses are fantastic and the
             instructors are so fun and knowledgeable.
             I only wish we found it sooner.
           </p>
@@ -112,7 +112,7 @@
             </div>
           </div><!-- end media -->
           <p class="card-text">
-            Thank you Aduca! You've renewed my passion for
+            Thank you EasyLearningFlow! You've renewed my passion for
             learning and my dream of becoming a web developer.
           </p>
         </div><!-- end card-body -->
@@ -166,7 +166,7 @@
             </div>
           </div><!-- end media -->
           <p class="card-text">
-            My children and I LOVE Aduca! The courses are fantastic and the
+            My children and I LOVE EasyLearningFlow! The courses are fantastic and the
             instructors are so fun and knowledgeable.
             I only wish we found it sooner.
           </p>
@@ -249,7 +249,7 @@
             </div>
           </div><!-- end media -->
           <p class="card-text">
-            Thank you Aduca! You've renewed my passion for
+            Thank you EasyLearningFlow! You've renewed my passion for
             learning and my dream of becoming a web developer.
           </p>
         </div><!-- end card-body -->

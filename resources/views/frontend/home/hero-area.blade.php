@@ -24,7 +24,7 @@
       <div class="container">
         <div class="hero-content text-center">
           <div class="section-heading">
-            <h2 class="section__title text-white fs-65 lh-80 pb-3">Join Aduca & Get <br> Free Courses!</h2>
+            <h2 class="section__title text-white fs-65 lh-80 pb-3">Join EasyLearning & Get <br> Free Courses!</h2>
             <p class="section__desc text-white pb-4">Unlock your learning potential with free, high-quality courses across multiple disciplines. Start your journey today!</p>
           </div>
           <div class="hero-btn-box d-flex flex-wrap align-items-center pt-1 justify-content-center">

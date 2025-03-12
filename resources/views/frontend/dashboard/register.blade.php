@@ -50,8 +50,7 @@ Register Page | Easy Learning
 
         <div class="d-flex flex-wrap align-items-center pb-4">
             <button class="btn theme-btn flex-grow-1 mx-2 mb-2"><i class="la la-google mr-2"></i>Google</button>
-            <button class="btn theme-btn flex-grow-1 mx-2 mb-2"><i class="la la-facebook mr-2"></i>Facebook</button>
-            <button class="btn theme-btn flex-grow-1 mx-2 mb-2"><i class="la la-twitter mr-2"></i>Twitter</button>
+           
         </div>
         <div class="text-center pt-3 pb-4">
             <div class="icon-element icon-element-md fs-25 shadow-sm">Or</div>
@@ -89,7 +88,7 @@ Register Page | Easy Learning
         <div class="btn-box">
             <div class="custom-control custom-checkbox mb-2 fs-15">
                 <input type="checkbox" class="custom-control-input" id="receiveCheckbox" required>
-                <label class="custom-control-label custom--control-label lh-20" for="receiveCheckbox">Yes! I want to get the most out of Aduca by receiving emails with exclusive deals, personal recommendations and learning tips!</label>
+                <label class="custom-control-label custom--control-label lh-20" for="receiveCheckbox">Yes! I want to get the most out of LearnFlow by receiving emails with exclusive deals, personal recommendations and learning tips!</label>
             </div><!-- end custom-control -->
             <div class="custom-control custom-checkbox mb-4 fs-15">
                 <input type="checkbox" class="custom-control-input" id="agreeCheckbox" required>
