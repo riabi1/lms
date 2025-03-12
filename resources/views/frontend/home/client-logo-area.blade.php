@@ -8,7 +8,7 @@
     <div class="container">
         <div class="section-heading">
             <h5 class="ribbon ribbon-lg mb-2">Our partners</h5>
-            <h2 class="section__title">Top companies choose Aduca for Business to build
+            <h2 class="section__title">Top companies EasyLearning for Business to build
                 <br> in-demand career skills</h2>
             <span class="section-divider"></span>
         </div><!-- end section-heading -->
