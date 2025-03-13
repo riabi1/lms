@@ -10,15 +10,6 @@
                 $instructor = Auth::guard('instructor')->user();
                 $status = $instructor->status ?? null;
             @endphp
-            @if ($instructor)
-                <small>Status: 
-                    @if ($status == 1)
-                        <span class="badge bg-success">Active</span>
-                    @else
-                        <span class="badge bg-danger">Inactive</span>
-                    @endif
-                </small>
-            @endif
         </div>
         <div class="toggle-icon ms-auto"><i class='bx bx-arrow-back'></i></div>
     </div>
@@ -38,7 +29,7 @@
                     <div class="menu-title">Course Manage</div>
                 </a>
                 <ul class="mm-collapse">
-                    <li><a href="#"><i class='bx bx-radio-circle'></i>All Course</a></li>
+                    <li><a href="{{ route('instructor.all.course') }}"><i class='bx bx-radio-circle'></i>All Course</a></li>
                 </ul>
             </li>
             <li>
