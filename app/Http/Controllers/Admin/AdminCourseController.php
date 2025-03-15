@@ -8,34 +8,49 @@ use App\Models\Course;
 
 class AdminCourseController extends Controller
 {
-  public function __construct()
-  {
-    $this->middleware('auth:admin');
-  }
+    public function __construct()
+    {
+        $this->middleware('auth:admin');
+    }
 
-  public function AdminAllCourse()
-  {
-    $courses = Course::latest()->get();
-    return view('admin.backend.courses.all_course', compact('courses'));
-  }
+    public function AdminAllCourse()
+    {
+        $courses = Course::with(['instructor', 'category'])
+            ->whereNotNull('instructor_id')
+            ->whereExists(function ($query) {
+                $query->select('*')
+                      ->from('instructors')
+                      ->whereColumn('instructors.id', 'courses.instructor_id');
+            })
+            ->whereNotNull('category_id')
+            ->whereExists(function ($query) {
+                $query->select('*')
+                      ->from('categories')
+                      ->whereColumn('categories.id', 'courses.category_id');
+            })
+            ->latest()
+            ->get();
 
-  public function UpdateCourseStatus(Request $request)
-  {
-    $request->validate([
-      'course_id' => 'required|exists:courses,id',
-      'is_checked' => 'boolean'
-    ]);
+        return view('admin.backend.courses.all_course', compact('courses'));
+    }
 
-    $course = Course::findOrFail($request->input('course_id'));
-    $course->status = $request->input('is_checked', 0);
-    $course->save();
+    public function UpdateCourseStatus(Request $request)
+    {
+        $request->validate([
+            'course_id' => 'required|exists:courses,id',
+            'is_checked' => 'boolean'
+        ]);
 
-    return response()->json(['message' => 'Course Status Updated Successfully']);
-  }
+        $course = Course::findOrFail($request->input('course_id'));
+        $course->status = $request->input('is_checked', 0);
+        $course->save();
 
-  public function AdminCourseDetails($id)
-  {
-    $course = Course::findOrFail($id);
-    return view('admin.backend.courses.course_details', compact('course'));
-  }
+        return response()->json(['message' => 'Course Status Updated Successfully']);
+    }
+
+    public function AdminCourseDetails($id)
+    {
+        $course = Course::findOrFail($id);
+        return view('admin.backend.courses.course_details', compact('course'));
+    }
 }

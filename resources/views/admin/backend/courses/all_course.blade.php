@@ -1,6 +1,8 @@
 @extends('admin.admin_dashboard')
 @section('admin')
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 
 <style>
   .large-checkbox {
@@ -14,14 +16,12 @@
     <div class="ps-3">
       <nav aria-label="breadcrumb">
         <ol class="breadcrumb mb-0 p-0">
-          <li class="breadcrumb-item"><a href="javascript:;"><i class="bx bx-home-alt"></i></a>
-          </li>
-          <li class="breadcrumb-item active" aria-current="page">All Courses </li>
+          <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}"><i class="bx bx-home-alt"></i></a></li>
+          <li class="breadcrumb-item active" aria-current="page">All Courses</li>
         </ol>
       </nav>
     </div>
     <div class="ms-auto">
-
     </div>
   </div>
   <!--end breadcrumb-->
@@ -33,49 +33,38 @@
           <thead>
             <tr>
               <th>Sl</th>
-              <th>Image </th>
-              <th>Course Name </th>
-              <th>Instrutor </th>
-              <th>Category </th>
-              <th>Price </th>
+              <th>Image</th>
+              <th>Course Name</th>
+              <th>Instructor</th>
+              <th>Category</th>
+              <th>Price</th>
               <th>Action</th>
               <th>Status</th>
             </tr>
           </thead>
           <tbody>
-
-            @foreach ($course as $key=> $item)
+            @foreach ($courses as $key => $item)
             <tr>
-              <td>{{ $key+1 }}</td>
-              <td> <img src="{{ asset($item->course_image) }}" alt="" style="width: 70px; height:40px;"> </td>
+              <td>{{ $key + 1 }}</td>
+              <td><img src="{{ asset($item->course_image) }}" alt="" style="width: 70px; height:40px;"></td>
               <td>{{ $item->course_name }}</td>
-              <td>{{ $item['user']['name'] }}</td>
-              <td>{{ $item['category']['category_name'] }}</td>
+              <td>{{ $item->instructor->name }}</td>
+              <td>{{ $item->category->category_name }}</td>
               <td>{{ $item->selling_price }}</td>
-
-              <td> <a href="{{ route('admin.course.details',$item->id) }}" class="btn btn-info"><i class="lni lni-eye"></i> </a>
-              </td>
-
-
+              <td><a href="{{ route('admin.course.details', $item->id) }}" class="btn btn-info"><i class="lni lni-eye"></i></a></td>
               <td>
                 <div class="form-check-danger form-check form-switch">
-                  <input class="form-check-input status-toggle large-checkbox" type="checkbox" id="flexSwitchCheckCheckedDanger" data-course-id="{{ $item->id }}" {{ $item->status ? 'checked' : ''}}>
-                  <label class="form-check-label" for="flexSwitchCheckCheckedDanger"> </label>
+                  <input class="form-check-input status-toggle large-checkbox" type="checkbox" id="flexSwitchCheckCheckedDanger{{ $item->id }}" data-course-id="{{ $item->id }}" {{ $item->status ? 'checked' : '' }}>
+                  <label class="form-check-label" for="flexSwitchCheckCheckedDanger{{ $item->id }}"></label>
                 </div>
               </td>
             </tr>
             @endforeach
-
           </tbody>
-
         </table>
       </div>
     </div>
   </div>
-
-
-
-
 </div>
 
 <script>
@@ -86,11 +75,10 @@
       let isChecked = $toggle.is(':checked');
       let originalState = !isChecked;
 
-      // Disable toggle and show loading state
       $toggle.prop('disabled', true);
 
       $.ajax({
-        url: "{{ route('update.course.status') }}",
+        url: "{{ route('admin.update.course.status') }}",
         method: "POST",
         data: {
           course_id: courseId,
@@ -103,7 +91,7 @@
         },
         error: function(xhr) {
           toastr.error('Failed to update status');
-          $toggle.prop('checked', originalState); // Revert on error
+          $toggle.prop('checked', originalState);
           $toggle.prop('disabled', false);
         }
       });
