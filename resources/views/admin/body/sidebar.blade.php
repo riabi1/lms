@@ -98,8 +98,8 @@
         <div class="menu-title">Manage Review</div>
       </a>
       <ul class="mm-collapse">
-        <li><a href="#"><i class='bx bx-radio-circle'></i>Pending Review</a></li>
-        <li><a href="#"><i class='bx bx-radio-circle'></i>Active Review</a></li>
+        <li><a href="{{ route('admin.pending.review') }}"><i class='bx bx-radio-circle'></i>Pending Review</a></li>
+        <li><a href="{{ route('admin.active.review') }}"><i class='bx bx-radio-circle'></i>Active Review</a></li>
       </ul>
     </li>
 
