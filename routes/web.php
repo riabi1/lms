@@ -10,7 +10,7 @@ use App\Http\Controllers\Admin\AdminCourseController;
 use App\Http\Controllers\Admin\AdminProfileController;
 use App\Http\Controllers\Admin\InstructorManagementController;
 use App\Http\Controllers\Instructor\InstructorProfileController;
-
+use App\Http\Controllers\Backend\ReviewController;
 // Home Page Route
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
@@ -29,8 +29,10 @@ Route::name('')->group(function () {
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::put('/password', [ProfileController::class, 'updatePassword'])->name('profile.updatePassword');
-  });
+    Route::post('/store/review', [ReviewController::class, 'StoreReview'])->name('store.review');
 });
+  });
+
 
 // Admin Routes
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -43,6 +45,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::patch('/profile/update', [AdminProfileController::class, 'update'])->name('profile.update');
     Route::put('/password', [AdminProfileController::class, 'updatePassword'])->name('profile.updatePassword');
   });
+
+
 });
 // Instructor Routes
 Route::prefix('instructor')->name('instructor.')->group(function () {
@@ -54,6 +58,9 @@ Route::prefix('instructor')->name('instructor.')->group(function () {
     return view('instructor.index');
   })->middleware(['auth:instructor', 'verified'])->name('dashboard');
 
+
+
+  
   // Profile
   Route::middleware(['auth:instructor', 'verified'])->group(function () {
     Route::get('/profile/edit', [InstructorProfileController::class, 'edit'])->name('profile.edit');
@@ -95,6 +102,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth:admin', 'verified'])->
     Route::post('/update/course/status', 'UpdateCourseStatus')->name('update.course.status');
     Route::get('/course/details/{id}', 'AdminCourseDetails')->name('course.details');
   });
+    Route::get('/pending/review', [ReviewController::class, 'AdminPendingReview'])->name('pending.review');
+    Route::get('/active/review', [ReviewController::class, 'AdminActiveReview'])->name('active.review');
+    Route::post('/update/review/status', [ReviewController::class, 'UpdateReviewStatus'])->name('update.review.status');
 });
 
 
@@ -122,7 +132,9 @@ Route::prefix('instructor')->name('instructor.')->middleware(['auth:instructor',
     Route::get('/delete/lecture/{id}', 'DeleteLecture')->name('delete.lecture');
     Route::post('/delete/section/{id}', 'DeleteSection')->name('delete.section');
   });
+  Route::get('/all/review', [ReviewController::class, 'InstructorAllReview'])->name('all.review');
 });
+
 
 Route::get('/course/details/{id}/{slug}', [IndexController::class, 'CourseDetails']);
 Route::get('/category/{id}/{slug}', [IndexController::class, 'CategoryCourse']);
