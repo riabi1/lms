@@ -13,7 +13,7 @@
     </div>
     <div class="ms-auto">
       <div class="btn-group">
-        <a href="{{ route('admin.add.category') }}" class="btn btn-primary px-5">Add Category</a>
+        <a href="{{ route('admin.categories.create') }}" class="btn btn-primary px-5">Add Category</a>
       </div>
     </div>
   </div>
@@ -34,11 +34,13 @@
             @foreach ($categories as $key => $item)
             <tr>
               <td>{{ $key + 1 }}</td>
-              <td><img src="{{ asset($item->image) }}" alt="{{ $item->category_name }}" style="width: 70px; height: 40px;"></td>
+              <td>
+                <img src="{{ asset('storage/' . $item->image) }}" alt="{{ $item->category_name }}" style="width: 70px; height: 40px;">
+              </td>
               <td>{{ $item->category_name }}</td>
               <td>
-                <a href="{{ route('admin.edit.category', $item->id) }}" class="btn btn-info px-5">Edit</a>
-                <form action="{{ route('admin.delete.category', $item->id) }}" method="POST" style="display:inline;">
+                <a href="{{ route('admin.categories.edit', $item->id) }}" class="btn btn-info px-5">Edit</a>
+                <form action="{{ route('admin.categories.destroy', $item->id) }}" method="POST" style="display:inline;">
                   @csrf
                   @method('DELETE')
                   <button type="submit" class="btn btn-danger px-5" onclick="return confirm('Are you sure you want to delete this category?')">Delete</button>

@@ -25,11 +25,11 @@
         <div class="menu-title">Manage Category</div>
       </a>
       <ul class="mm-collapse">
-        <li><a href="{{ route('admin.all.category') }}"><i class='bx bx-radio-circle'></i>All Category</a></li>
-        <li><a href="{{ route('admin.all.subcategory') }}"><i class='bx bx-radio-circle'></i>All SubCategory</a></li>
+        <li><a href="{{ route('admin.categories.index') }}"><i class='bx bx-radio-circle'></i>All Category</a></li>
+        <li><a href="{{ route('admin.subcategories.index') }}"><i class='bx bx-radio-circle'></i>All SubCategory</a></li>
       </ul>
     </li>
-
+    
     <li>
       <a class="has-arrow" href="javascript:;">
         <div class="parent-icon"><i class='bx bx-bookmark-heart'></i></div>

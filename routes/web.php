@@ -4,13 +4,14 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Backend\CourseController;
+use App\Http\Controllers\Backend\ReviewController;
 use App\Http\Controllers\Frontend\IndexController;
-use App\Http\Controllers\Backend\CategoryController;
+use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\AdminCourseController;
+use App\Http\Controllers\Admin\SubCategoryController;
 use App\Http\Controllers\Admin\AdminProfileController;
 use App\Http\Controllers\Admin\InstructorManagementController;
 use App\Http\Controllers\Instructor\InstructorProfileController;
-use App\Http\Controllers\Backend\ReviewController;
 // Home Page Route
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
@@ -31,7 +32,17 @@ Route::name('')->group(function () {
     Route::put('/password', [ProfileController::class, 'updatePassword'])->name('profile.updatePassword');
     Route::post('/store/review', [ReviewController::class, 'StoreReview'])->name('store.review');
 });
-  });
+});
+
+//user routes
+Route::middleware(['auth:web'])->group(function () {
+  Route::get('/my/reviews', [ReviewController::class, 'UserReviews'])->name('user.reviews');
+  Route::get('/review/edit/{id}', [ReviewController::class, 'UserReviewEdit'])->name('user.review.edit');
+  Route::put('/review/update/{id}', [ReviewController::class, 'UserReviewUpdate'])->name('user.review.update');
+  Route::delete('/review/delete/{id}', [ReviewController::class, 'UserReviewDelete'])->name('user.review.delete');
+
+
+});
 
 
 // Admin Routes
@@ -58,9 +69,6 @@ Route::prefix('instructor')->name('instructor.')->group(function () {
     return view('instructor.index');
   })->middleware(['auth:instructor', 'verified'])->name('dashboard');
 
-
-
-  
   // Profile
   Route::middleware(['auth:instructor', 'verified'])->group(function () {
     Route::get('/profile/edit', [InstructorProfileController::class, 'edit'])->name('profile.edit');
@@ -69,27 +77,35 @@ Route::prefix('instructor')->name('instructor.')->group(function () {
   });
 });
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 Route::prefix('admin')->name('admin.')->middleware(['auth:admin', 'verified'])->group(function () {
-  // Category Routes
-  Route::controller(CategoryController::class)->group(function () {
-    Route::get('/all/category', 'AllCategory')->name('all.category');
-    Route::get('/add/category', 'AddCategory')->name('add.category');
-    Route::post('/store/category', 'StoreCategory')->name('store.category');
-    Route::get('/edit/category/{id}', 'EditCategory')->name('edit.category');
-    Route::post('/update/category', 'UpdateCategory')->name('update.category');
-    Route::delete('/delete/category/{id}', 'DeleteCategory')->name('delete.category');
-  });
+  // Category Resource Routes
+  Route::resource('categories', CategoryController::class)->except(['show']); // Pas de "show" si inutile
 
-  // SubCategory Routes
-  Route::controller(CategoryController::class)->group(function () {
-    Route::get('/all/subcategory', 'AllSubCategory')->name('all.subcategory');
-    Route::get('/add/subcategory', 'AddSubCategory')->name('add.subcategory');
-    Route::post('/store/subcategory', 'StoreSubCategory')->name('store.subcategory');
-    Route::get('/edit/subcategory/{id}', 'EditSubCategory')->name('edit.subcategory');
-    Route::post('/update/subcategory', 'UpdateSubCategory')->name('update.subcategory');
-    Route::delete('/delete/subcategory/{id}', 'DeleteSubCategory')->name('delete.subcategory');
-  });
+  // SubCategory Resource Routes
+  Route::resource('subcategories', SubCategoryController::class)->except(['show']); // Pas de "show" si inutile
 
+
+    
   // update instructor status
   Route::get('/instructors', [InstructorManagementController::class, 'index'])
     ->name('instructors.index');
@@ -106,6 +122,23 @@ Route::prefix('admin')->name('admin.')->middleware(['auth:admin', 'verified'])->
     Route::get('/active/review', [ReviewController::class, 'AdminActiveReview'])->name('active.review');
     Route::post('/update/review/status', [ReviewController::class, 'UpdateReviewStatus'])->name('update.review.status');
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 // Instructor Course Routes

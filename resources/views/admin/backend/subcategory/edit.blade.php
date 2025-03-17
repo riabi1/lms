@@ -16,8 +16,9 @@
   <div class="card">
     <div class="card-body p-4">
       <h5 class="mb-4">Edit SubCategory</h5>
-      <form id="myForm" action="{{ route('admin.update.subcategory') }}" method="POST" class="row g-3">
+      <form id="myForm" action="{{ route('admin.subcategories.update', $subcategory->id) }}" method="POST" class="row g-3">
         @csrf
+        @method('PATCH')
         <input type="hidden" name="id" value="{{ $subcategory->id }}">
 
         <div class="form-group col-md-6">
@@ -44,7 +45,7 @@
         <div class="col-md-12">
           <div class="d-md-flex d-grid align-items-center gap-3">
             <button type="submit" class="btn btn-primary px-4">Save Changes</button>
-            <a href="{{ route('admin.all.subcategory') }}" class="btn btn-secondary px-4">Cancel</a>
+            <a href="{{ route('admin.subcategories.index') }}" class="btn btn-secondary px-4">Cancel</a>
           </div>
         </div>
       </form>
