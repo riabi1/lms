@@ -6,7 +6,7 @@
           <div class="header-widget">
             <ul class="generic-list-item d-flex flex-wrap align-items-center fs-14">
               <li class="d-flex align-items-center pr-3 mr-3 border-right border-right-gray"><i class="la la-phone mr-1"></i><a href="tel:+216 28-587-753"> +216 28-587-753</a></li>
-              <li class="d-flex align-items-center"><i class="la la-envelope-o mr-1"></i><a href="lmspfee@gmail.com"> lmspfee@gmail.com</a></li>
+              <li class="d-flex align-items-center"><i class="la la-envelope-o mr-1"></i><a href="mailto:lmspfee@gmail.com"> lmspfee@gmail.com</a></li>
             </ul>
           </div><!-- end header-widget -->
         </div><!-- end col-lg-6 -->
@@ -32,29 +32,40 @@
                 </svg>
               </button>
             </div>
+
+            <!-- Gestion dynamique des liens selon l'état de connexion -->
             <ul class="generic-list-item d-flex flex-wrap align-items-center fs-14 border-left border-left-gray pl-3 ml-3">
-              <li class="d-flex align-items-center pr-3 mr-3 border-right border-right-gray">
-                <i class="la la-sign-in mr-1"></i>
-                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Login</a>
-                <ul class="dropdown-menu">
-                  <li><a href="{{ route('login') }}">User Login</a></li>
-                  <li><a href="{{ route('instructor.login') }}">Instructor Login</a></li>
-                </ul>
-              </li>
-              <li class="d-flex align-items-center">
-                <i class="la la-user mr-1"></i>
-                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Register</a>
-                <ul class="dropdown-menu">
-                  <li><a href="{{ route('register') }}">User Register</a></li>
-                  <li><a href="{{ route('instructor.register') }}">Instructor Register</a></li>
-                </ul>
-              </li>
+              @guest
+                <!-- Si l'utilisateur n'est pas connecté -->
+                <li class="d-flex align-items-center pr-3 mr-3 border-right border-right-gray">
+                  <i class="la la-sign-in mr-1"></i>
+                  <a href="{{ route('login') }}">Login</a>
+                </li>
+                <li class="d-flex align-items-center">
+                  <i class="la la-user mr-1"></i>
+                  <a href="{{ route('register') }}">Register</a>
+                </li>
+              @else
+                <!-- Si l'utilisateur est connecté -->
+                <li class="d-flex align-items-center pr-3 mr-3 border-right border-right-gray">
+                  <i class="la la-tachometer mr-1"></i>
+                  <a href="{{ route('dashboard') }}">Dashboard</a>
+                </li>
+                <li class="d-flex align-items-center">
+                  <i class="la la-sign-out mr-1"></i>
+                  <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Logout</a>
+                  <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                    @csrf
+                  </form>
+                </li>
+              @endguest
             </ul>
           </div><!-- end header-widget -->
         </div><!-- end col-lg-6 -->
       </div><!-- end row -->
     </div><!-- end container-fluid -->
   </div><!-- end header-top -->
+</header><!-- end header-menu-area -->
   <!-- Rest of your header code remains unchanged -->
 
   <div class="header-menu-content pr-150px pl-150px bg-white">

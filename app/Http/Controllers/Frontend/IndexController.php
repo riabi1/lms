@@ -17,22 +17,21 @@ use Carbon\Carbon;
 
 class IndexController extends Controller
 {
-    public function CourseDetails($id,$slug){
+   public function CourseDetails($id, $slug)
+    {
+        $course = Course::with(['instructor', 'category', 'subcategory', 'sections', 'lectures'])->findOrFail($id);
+        $goals = explode(',', $course->course_goals ?? ''); // Gestion des goals null
+        $categories = Category::orderBy('category_name', 'ASC')->get();
+        $instructorId = $course->instructor_id;
+        $instructorCourses = Course::where('instructor_id', $instructorId)->latest()->get();
+        $relatedCourses = Course::where('category_id', $course->category_id)
+            ->where('id', '!=', $id)
+            ->latest()
+            ->limit(5)
+            ->get();
 
-        $course = Course::find($id);
-        $goals = Course_goal::where('course_id',$id)->orderBy('id','DESC')->get();
-
-        $ins_id = $course->instructor_id; 
-        $instructorCourses = Course::where('instructor_id',$ins_id)->orderBy('id','DESC')->get();
-
-        $categories = Category::latest()->get();
-
-        $cat_id = $course->category_id; 
-        $relatedCourses = Course::where('category_id',$cat_id)->where('id','!=',$id)->orderBy('id','DESC')->limit(3)->get();
-
-        return view('frontend.course.course_details',compact('course','goals','instructorCourses','categories','relatedCourses'));
-
-    } // End Method 
+        return view('frontend.course.course_details', compact('course', 'goals', 'categories', 'instructorCourses', 'relatedCourses'));
+    }
 
     public function CategoryCourse($id, $slug){
 
