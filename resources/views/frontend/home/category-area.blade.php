@@ -22,26 +22,26 @@ $category = App\Models\Category::latest()->limit(6)->get();
     </div><!-- end row -->
     <div class="category-wrapper mt-30px">
       <div class="row">
-
         @foreach ($category as $cat)
-        @php
-        $course = App\Models\Course::where('category_id',$cat->id)->get();
-        @endphp
-        <div class="col-lg-4 responsive-column-half">
-          <div class="category-item">
-            <img class="cat__img lazy" src="{{ asset($cat->image) }}" data-src="{{ asset($cat->image) }}" alt="Category image">
-            <div class="category-content">
-              <div class="category-inner">
-                <h3 class="cat__title"><a href="{{ url('category/'.$cat->id.'/'.$cat->category_slug) }}">{{ $cat->category_name }}</a></h3>
-                <p class="cat__meta">{{ count($course ) }} courses</p>
-                <a href="{{ url('category/'.$cat->id.'/'.$cat->category_slug) }}" class="btn theme-btn theme-btn-sm theme-btn-white">Explore<i class="la la-arrow-right icon ml-1"></i></a>
-              </div>
-            </div><!-- end category-content -->
-          </div><!-- end category-item -->
-        </div><!-- end col-lg-4 -->
+          @php
+          $course = App\Models\Course::where('category_id', $cat->id)->get();
+          @endphp
+          <div class="col-lg-4 responsive-column-half">
+            <div class="category-item">
+              <img class="cat__img lazy" 
+                   src="{{ !empty($cat->image) ? Storage::url('upload/category_images/' . $cat->image) : url('upload/no_image.jpg') }}" 
+                   data-src="{{ !empty($cat->image) ? Storage::url('upload/category_images/' . $cat->image) : url('upload/no_image.jpg') }}" 
+                   alt="Category image">
+              <div class="category-content">
+                <div class="category-inner">
+                  <h3 class="cat__title"><a href="{{ url('category/'.$cat->id.'/'.$cat->category_slug) }}">{{ $cat->category_name }}</a></h3>
+                  <p class="cat__meta">{{ count($course) }} courses</p>
+                  <a href="{{ url('category/'.$cat->id.'/'.$cat->category_slug) }}" class="btn theme-btn theme-btn-sm theme-btn-white">Explore<i class="la la-arrow-right icon ml-1"></i></a>
+                </div>
+              </div><!-- end category-content -->
+            </div><!-- end category-item -->
+          </div><!-- end col-lg-4 -->
         @endforeach
-
-
       </div><!-- end row -->
     </div><!-- end category-wrapper -->
   </div><!-- end container -->
