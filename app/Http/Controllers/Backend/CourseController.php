@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
@@ -10,18 +9,20 @@ use App\Models\Course;
 use App\Models\Course_goal;
 use App\Models\CourseSection;
 use App\Models\CourseLecture;
-use Intervention\Image\Facades\Image;
-use Illuminate\Support\Facades\Auth;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
 class CourseController extends Controller
 {
     public function AllCourse()
     {
-        $id = Auth::guard('instructor')->user()->id; // Use 'instructor' guard
-        $courses = Course::where('instructor_id', $id)->orderBy('id', 'desc')->get();
+        $courses = Course::where('instructor_id', Auth::guard('instructor')->id())
+            ->with('category')
+            ->latest('id')
+            ->get();
         return view('instructor.courses.all_course', compact('courses'));
     }
 
@@ -31,84 +32,98 @@ class CourseController extends Controller
         return view('instructor.courses.add_course', compact('categories'));
     }
 
-  public function getSubCategory($category_id)
+    public function getSubCategory($category_id)
     {
-        $subcat = SubCategory::where('category_id', $category_id)->orderBy('subcategory_name', 'ASC')->get(['id', 'subcategory_name']);
-        \Log::info("Fetching subcategories for category_id: $category_id, Result: " . $subcat->toJson());
-        return response()->json($subcat);
+        $subcategories = SubCategory::where('category_id', $category_id)
+            ->orderBy('subcategory_name')
+            ->get(['id', 'subcategory_name']);
+        \Log::info("Fetching subcategories for category_id: $category_id, Result: " . $subcategories->toJson());
+        return response()->json($subcategories);
     }
 
     public function StoreCourse(Request $request)
     {
-        if ($request->file('image')) {
-            $manager = new ImageManager(new Driver());
-            $name_gen = hexdec(uniqid()) . '.' . $request->file('image')->getClientOriginalExtension();
-            $img = $manager->read($request->file('image'));
-            $img = $img->resize(370, 246);
-            $img->toJpeg(80)->save(base_path('public/upload/course/thambnail/' . $name_gen));
-            $save_url = 'upload/course/thambnail/' . $name_gen;
-        } else {
-            $save_url = "upload/category/1824328589204901.jpg"; // Default image
+        \Log::info('StoreCourse Request Data:', $request->all());
+
+        if (!Auth::guard('instructor')->check()) {
+            \Log::error('Instructor not authenticated');
+            return redirect()->back()->with(['message' => 'You must be logged in as an instructor', 'alert-type' => 'error']);
         }
 
-        if ($request->file('video')) {
-            $video = $request->file('video');
-            $videoName = time() . '.' . $video->getClientOriginalExtension();
-            $video->move(base_path('public/upload/course/video/'), $videoName);
-            $save_video = 'upload/course/video/' . $videoName;
-        } else {
-            $save_video = null; // Default or null
+        try {
+            $validated = $request->validate([
+                'category_id' => 'required|exists:categories,id',
+                'subcategory_id' => 'required|exists:sub_categories,id',
+                'course_title' => 'required|string|max:255',
+                'course_name' => 'required|string|max:255',
+                'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                'video' => 'nullable|mimes:mp4,avi,mov|max:102400',
+                'description' => 'nullable|string',
+                'label' => 'nullable|string|in:Beginner,Intermediate,Advanced',
+                'duration' => 'nullable|string',
+                'resources' => 'nullable|string',
+                'certificate' => 'nullable|in:Yes,No',
+                'selling_price' => 'nullable|numeric',
+                'discount_price' => 'nullable|numeric',
+                'prerequisites' => 'nullable|string',
+                'bestseller' => 'nullable|boolean',
+                'featured' => 'nullable|boolean',
+                'highestrated' => 'nullable|boolean',
+                'course_goals.*' => 'nullable|string',
+            ]);
+            \Log::info('Validated Data:', $validated);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Validation Failed:', $e->errors());
+            return redirect()->back()->withErrors($e->errors())->withInput();
         }
 
-        $course_id = Course::insertGetId([
-            'category_id' => $request->category_id,
-            'subcategory_id' => $request->subcategory_id,
-            'instructor_id' => Auth::guard('instructor')->user()->id, // Use 'instructor' guard
-            'course_title' => $request->course_title,
-            'course_name' => $request->course_name,
-            'course_name_slug' => strtolower(str_replace(' ', '-', $request->course_name)),
-            'description' => $request->description,
-            'video' => $save_video,
-            'label' => $request->label,
-            'duration' => $request->duration,
-            'resources' => $request->resources,
-            'certificate' => $request->certificate,
-            'selling_price' => $request->selling_price,
-            'discount_price' => $request->discount_price,
-            'prerequisites' => $request->prerequisites,
-            'bestseller' => $request->request->bestseller ?? 0,
-            'featured' => $request->featured ?? 0,
-            'highestrated' => $request->highestrated ?? 0,
-            'status' => 1,
-            'course_image' => $save_url,
-            'created_at' => Carbon::now(),
-        ]);
+        try {
+            $courseImage = $this->uploadFile($request->file('image'), 'upload/course/thumbnail');
+            $courseVideo = $this->uploadFile($request->file('video'), 'upload/course/video', false);
 
-        // Course Goals
-        $goals = $request->course_goals;
-        if (!empty($goals)) {
-            foreach ($goals as $goal) {
-                Course_goal::create([
-                    'course_id' => $course_id,
-                    'goal_name' => $goal,
-                ]);
-            }
+            $course = Course::create([
+                'category_id' => $request->category_id,
+                'subcategory_id' => $request->subcategory_id,
+                'instructor_id' => Auth::guard('instructor')->id(),
+                'course_title' => $request->course_title,
+                'course_name' => $request->course_name,
+                'course_name_slug' => strtolower(str_replace(' ', '-', $request->course_name)),
+                'description' => $request->description,
+                'video' => $courseVideo,
+                'label' => $request->label,
+                'duration' => $request->duration,
+                'resources' => $request->resources,
+                'certificate' => $request->certificate,
+                'selling_price' => $request->selling_price,
+                'discount_price' => $request->discount_price,
+                'prerequisites' => $request->prerequisites,
+                'bestseller' => $request->bestseller ?? 0,
+                'featured' => $request->featured ?? 0,
+                'highestrated' => $request->highestrated ?? 0,
+                'status' => 1,
+                'course_image' => $courseImage,
+                'created_at' => Carbon::now(),
+            ]);
+
+            \Log::info('Course Created:', ['id' => $course->id, 'data' => $course->toArray()]);
+            $this->saveGoals($course->id, $request->course_goals);
+
+            return redirect()->route('instructor.all.course')->with([
+                'message' => 'Course Inserted Successfully',
+                'alert-type' => 'success'
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Course Creation Failed:', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return redirect()->back()->with([
+                'message' => 'Failed to create course: ' . $e->getMessage(),
+                'alert-type' => 'error'
+            ])->withInput();
         }
-
-        $notification = [
-            'message' => 'Course Inserted Successfully',
-            'alert-type' => 'success'
-        ];
-        return redirect()->route('instructor.all.course')->with($notification);
     }
 
     public function EditCourse($id)
     {
-        $course = Course::findOrFail($id);
-        // Ensure the course belongs to the authenticated instructor
-        if ($course->instructor_id !== Auth::guard('instructor')->user()->id) {
-            abort(403, 'Unauthorized action.');
-        }
+        $course = $this->authorizeCourse($id);
         $goals = Course_goal::where('course_id', $id)->get();
         $categories = Category::latest()->get();
         $subcategories = SubCategory::latest()->get();
@@ -117,75 +132,27 @@ class CourseController extends Controller
 
     public function UpdateCourse(Request $request)
     {
-        $cid = $request->course_id;
-        $course = Course::findOrFail($cid);
-        // Ensure the course belongs to the authenticated instructor
-        if ($course->instructor_id !== Auth::guard('instructor')->user()->id) {
-            abort(403, 'Unauthorized action.');
-        }
-
-        $course->update([
-            'category_id' => $request->category_id,
-            'subcategory_id' => $request->subcategory_id,
-            'instructor_id' => Auth::guard('instructor')->user()->id, // Use 'instructor' guard
-            'course_title' => $request->course_title,
-            'course_name' => $request->course_name,
+        $course = $this->authorizeCourse($request->course_id);
+        $course->update($request->except('course_goals') + [
             'course_name_slug' => strtolower(str_replace(' ', '-', $request->course_name)),
-            'description' => $request->description,
-            'label' => $request->label,
-            'duration' => $request->duration,
-            'resources' => $request->resources,
-            'certificate' => $request->certificate,
-            'selling_price' => $request->selling_price,
-            'discount_price' => $request->discount_price,
-            'prerequisites' => $request->prerequisites,
-            'bestseller' => $request->bestseller ?? 0,
-            'featured' => $request->featured ?? 0,
-            'highestrated' => $request->highestrated ?? 0,
         ]);
 
-        $notification = [
+        return redirect()->route('instructor.all.course')->with([
             'message' => 'Course Updated Successfully',
             'alert-type' => 'success'
-        ];
-        return redirect()->route('instructor.all.course')->with($notification);
+        ]);
     }
 
     public function UpdateCourseImage(Request $request)
     {
-        $course_id = $request->id;
-        $course = Course::findOrFail($course_id);
-        if ($course->instructor_id !== Auth::guard('instructor')->user()->id) {
-            abort(403, 'Unauthorized action.');
-        }
+        $course = $this->authorizeCourse($request->id);
 
-        $oldImage = $request->old_img;
-        if ($request->file('course_image')) {
-            $manager = new ImageManager(new Driver());
-            $name_gen = hexdec(uniqid()) . '.' . $request->file('course_image')->getClientOriginalExtension();
-            $img = $manager->read($request->file('course_image'));
-            $img = $img->resize(370, 246);
-            $img->toJpeg(80)->save(base_path('public/upload/course/thambnail/' . $name_gen));
-            $save_url = 'upload/course/thambnail/' . $name_gen;
-
-            if (file_exists(base_path('public/' . $oldImage))) {
-                unlink(base_path('public/' . $oldImage));
-            }
-
-            $course->update([
-                'course_image' => $save_url,
-                'updated_at' => Carbon::now(),
-            ]);
-
-            $notification = [
-                'message' => 'Course Image Updated Successfully',
-                'alert-type' => 'success'
-            ];
+        if ($request->hasFile('course_image')) {
+            $this->deleteFile($course->course_image);
+            $course->update(['course_image' => $this->uploadFile($request->file('course_image'), 'upload/course/thumbnail')]);
+            $notification = ['message' => 'Course Image Updated Successfully', 'alert-type' => 'success'];
         } else {
-            $notification = [
-                'message' => 'No Image Uploaded',
-                'alert-type' => 'error'
-            ];
+            $notification = ['message' => 'No Image Uploaded', 'alert-type' => 'error'];
         }
 
         return redirect()->back()->with($notification);
@@ -193,37 +160,14 @@ class CourseController extends Controller
 
     public function UpdateCourseVideo(Request $request)
     {
-        $course_id = $request->vid;
-        $course = Course::findOrFail($course_id);
-        if ($course->instructor_id !== Auth::guard('instructor')->user()->id) {
-            abort(403, 'Unauthorized action.');
-        }
+        $course = $this->authorizeCourse($request->vid);
 
-        $oldVideo = $request->old_vid;
-        if ($request->file('video')) {
-            $video = $request->file('video');
-            $videoName = time() . '.' . $video->getClientOriginalExtension();
-            $video->move(public_path('upload/course/video/'), $videoName);
-            $save_video = 'upload/course/video/' . $videoName;
-
-            if (file_exists($oldVideo)) {
-                unlink($oldVideo);
-            }
-
-            $course->update([
-                'video' => $save_video,
-                'updated_at' => Carbon::now(),
-            ]);
-
-            $notification = [
-                'message' => 'Course Video Updated Successfully',
-                'alert-type' => 'success'
-            ];
+        if ($request->hasFile('video')) {
+            $this->deleteFile($course->video);
+            $course->update(['video' => $this->uploadFile($request->file('video'), 'upload/course/video', false)]);
+            $notification = ['message' => 'Course Video Updated Successfully', 'alert-type' => 'success'];
         } else {
-            $notification = [
-                'message' => 'No Video Uploaded',
-                'alert-type' => 'error'
-            ];
+            $notification = ['message' => 'No Video Uploaded', 'alert-type' => 'error'];
         }
 
         return redirect()->back()->with($notification);
@@ -231,169 +175,161 @@ class CourseController extends Controller
 
     public function UpdateCourseGoal(Request $request)
     {
-        $cid = $request->id;
-        $course = Course::findOrFail($cid);
-        if ($course->instructor_id !== Auth::guard('instructor')->user()->id) {
-            abort(403, 'Unauthorized action.');
-        }
-
-        if (empty($request->course_goals)) {
-            return redirect()->back();
-        }
-
-        Course_goal::where('course_id', $cid)->delete();
-        foreach ($request->course_goals as $goal) {
-            Course_goal::create([
-                'course_id' => $cid,
-                'goal_name' => $goal,
-            ]);
-        }
-
-        $notification = [
+        $course = $this->authorizeCourse($request->id);
+        $this->saveGoals($course->id, $request->course_goals);
+        return redirect()->back()->with([
             'message' => 'Course Goals Updated Successfully',
             'alert-type' => 'success'
-        ];
-        return redirect()->back()->with($notification);
+        ]);
     }
 
     public function DeleteCourse($id)
     {
-        $course = Course::findOrFail($id);
-        if ($course->instructor_id !== Auth::guard('instructor')->user()->id) {
-            abort(403, 'Unauthorized action.');
-        }
-
-        if (file_exists(base_path('public/' . $course->course_image))) {
-            unlink(base_path('public/' . $course->course_image));
-        }
-        if (file_exists(base_path('public/' . $course->video))) {
-            unlink(base_path('public/' . $course->video));
-        }
-
+        $course = $this->authorizeCourse($id);
+        $this->deleteFile($course->course_image);
+        $this->deleteFile($course->video);
         Course_goal::where('course_id', $id)->delete();
         $course->delete();
 
-        $notification = [
+        return redirect()->back()->with([
             'message' => 'Course Deleted Successfully',
             'alert-type' => 'success'
-        ];
-        return redirect()->back()->with($notification);
+        ]);
     }
 
     public function AddCourseLecture($id)
     {
-        $course = Course::findOrFail($id);
-        if ($course->instructor_id !== Auth::guard('instructor')->user()->id) {
-            abort(403, 'Unauthorized action.');
-        }
-
-        $section = CourseSection::where('course_id', $id)->latest()->get();
-        return view('instructor.courses.section.add_course_lecture', compact('course', 'section'));
+        $course = $this->authorizeCourse($id);
+        $sections = CourseSection::where('course_id', $id)->latest()->get();
+        return view('instructor.courses.section.add_course_lecture', compact('course', 'sections'));
     }
 
     public function AddCourseSection(Request $request)
     {
-        $cid = $request->id;
-        $course = Course::findOrFail($cid);
-        if ($course->instructor_id !== Auth::guard('instructor')->user()->id) {
-            abort(403, 'Unauthorized action.');
-        }
-
-        CourseSection::create([
-            'course_id' => $cid,
-            'section_title' => $request->section_title,
-        ]);
-
-        $notification = [
+        $course = $this->authorizeCourse($request->id);
+        CourseSection::create(['course_id' => $course->id, 'section_title' => $request->section_title]);
+        return redirect()->back()->with([
             'message' => 'Course Section Added Successfully',
             'alert-type' => 'success'
-        ];
-        return redirect()->back()->with($notification);
+        ]);
     }
 
-   public function SaveLecture(Request $request)
-{
-    $course = Course::findOrFail($request->course_id);
-    if ($course->instructor_id !== Auth::guard('instructor')->user()->id) {
-        abort(403, 'Unauthorized action.');
+    public function SaveLecture(Request $request)
+    {
+        $course = $this->authorizeCourse($request->course_id);
+        CourseLecture::create([
+            'course_id' => $course->id,
+            'section_id' => $request->section_id,
+            'lecture_title' => $request->lecture_title,
+            'url' => $request->lecture_url,
+            'content' => $request->content,
+        ]);
+        return response()->json(['success' => 'Lecture Saved Successfully']);
     }
-
-    $lecture = CourseLecture::create([
-        'course_id' => $request->course_id,
-        'section_id' => $request->section_id,
-        'lecture_title' => $request->lecture_title,
-        'url' => $request->lecture_url,
-        'content' => $request->content,
-    ]);
-
-    return response()->json(['success' => 'Lecture Saved Successfully']);
-}
 
     public function EditLecture($id)
     {
-        $clecture = CourseLecture::findOrFail($id);
-        $course = Course::findOrFail($clecture->course_id);
-        if ($course->instructor_id !== Auth::guard('instructor')->user()->id) {
-            abort(403, 'Unauthorized action.');
-        }
-
-        return view('instructor.courses.lecture.edit_course_lecture', compact('clecture'));
+        $lecture = CourseLecture::findOrFail($id);
+        $this->authorizeCourse($lecture->course_id);
+        return view('instructor.courses.lecture.edit_course_lecture', compact('lecture'));
     }
 
     public function UpdateCourseLecture(Request $request)
     {
-        $lid = $request->id;
-        $lecture = CourseLecture::findOrFail($lid);
-        $course = Course::findOrFail($lecture->course_id);
-        if ($course->instructor_id !== Auth::guard('instructor')->user()->id) {
-            abort(403, 'Unauthorized action.');
-        }
-
+        $lecture = CourseLecture::findOrFail($request->id);
+        $this->authorizeCourse($lecture->course_id);
         $lecture->update([
             'lecture_title' => $request->lecture_title,
             'url' => $request->url,
             'content' => $request->content,
         ]);
-
-        $notification = [
+        return redirect()->back()->with([
             'message' => 'Course Lecture Updated Successfully',
             'alert-type' => 'success'
-        ];
-        return redirect()->back()->with($notification);
+        ]);
     }
 
     public function DeleteLecture($id)
     {
         $lecture = CourseLecture::findOrFail($id);
-        $course = Course::findOrFail($lecture->course_id);
-        if ($course->instructor_id !== Auth::guard('instructor')->user()->id) {
-            abort(403, 'Unauthorized action.');
-        }
-
+        $this->authorizeCourse($lecture->course_id);
         $lecture->delete();
-
-        $notification = [
+        return redirect()->back()->with([
             'message' => 'Course Lecture Deleted Successfully',
             'alert-type' => 'success'
-        ];
-        return redirect()->back()->with($notification);
+        ]);
     }
 
     public function DeleteSection($id)
     {
         $section = CourseSection::findOrFail($id);
-        $course = Course::findOrFail($section->course_id);
-        if ($course->instructor_id !== Auth::guard('instructor')->user()->id) {
-            abort(403, 'Unauthorized action.');
-        }
-
+        $this->authorizeCourse($section->course_id);
         $section->lectures()->delete();
         $section->delete();
-
-        $notification = [
+        return redirect()->back()->with([
             'message' => 'Course Section Deleted Successfully',
             'alert-type' => 'success'
-        ];
-        return redirect()->back()->with($notification);
+        ]);
+    }
+
+    // Helper Methods
+    private function authorizeCourse($id)
+    {
+        $course = Course::findOrFail($id);
+        if ($course->instructor_id !== Auth::guard('instructor')->id()) {
+            abort(403, 'Unauthorized action.');
+        }
+        return $course;
+    }
+
+    private function uploadFile($file, $path, $resize = true)
+    {
+        if (!$file) {
+            return $resize ? 'upload/course/thumbnail/default.jpg' : null;
+        }
+
+        $name = ($resize ? hexdec(uniqid()) : time()) . '.' . $file->getClientOriginalExtension();
+        $relativePath = "$path/$name";
+        $fullPath = public_path($relativePath);
+
+        // Ensure the directory exists
+        if (!file_exists(dirname($fullPath))) {
+            mkdir(dirname($fullPath), 0755, true);
+        }
+
+        if ($resize) {
+            $manager = new ImageManager(new Driver());
+            $img = $manager->read($file)->resize(370, 246)->toJpeg(80);
+            \Log::info('Uploading image to:', ['path' => $fullPath]);
+            file_put_contents($fullPath, $img);
+            if (!file_exists($fullPath)) {
+                \Log::error('Image upload failed:', ['path' => $fullPath]);
+                return 'upload/no_image.jpg';
+            }
+        } else {
+            $file->move(public_path($path), $name);
+        }
+
+        return $relativePath;
+    }
+
+    private function deleteFile($path)
+    {
+        $fullPath = public_path($path);
+        if ($path && file_exists($fullPath)) {
+            unlink($fullPath);
+        }
+    }
+
+    private function saveGoals($courseId, $goals)
+    {
+        if ($goals) {
+            Course_goal::where('course_id', $courseId)->delete();
+            foreach ($goals as $goal) {
+                if ($goal) {
+                    Course_goal::create(['course_id' => $courseId, 'goal_name' => $goal]);
+                }
+            }
+        }
     }
 }
