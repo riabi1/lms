@@ -3,15 +3,15 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\Backend\CourseController;
-use App\Http\Controllers\Backend\ReviewController;
-use App\Http\Controllers\Backend\CourseSectionController;
-use App\Http\Controllers\Backend\CourseLectureController;
-use App\Http\Controllers\Frontend\IndexController;
+use App\Http\Controllers\Instructor\CourseLectureController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Student\ReviewController;
+use App\Http\Controllers\Frontend\IndexController;
 use App\Http\Controllers\Admin\AdminCourseController;
 use App\Http\Controllers\Admin\SubCategoryController;
+use App\Http\Controllers\Instructor\CourseController;
 use App\Http\Controllers\Admin\AdminProfileController;
+use App\Http\Controllers\Instructor\CourseSectionController;
 use App\Http\Controllers\Admin\InstructorManagementController;
 use App\Http\Controllers\Instructor\InstructorProfileController;
 
@@ -20,104 +20,103 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // User Routes (web guard)
 Route::name('')->group(function () {
-    // Include authentication routes
-    require base_path('routes/auth/web.php');
+    // Authentication Routes for Users Only (pas d'instructor ici)
+    Route::get('/login', [App\Http\Controllers\Auth\LoginController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [App\Http\Controllers\Auth\LoginController::class, 'login']);
+    Route::post('/logout', [App\Http\Controllers\Auth\LoginController::class, 'logout'])->name('logout');
+    Route::get('/register', [App\Http\Controllers\Auth\RegisterController::class, 'showRegistrationForm'])->name('register');
+    Route::post('/register', [App\Http\Controllers\Auth\RegisterController::class, 'register']);
 
-    // Dashboard
-    Route::get('/dashboard', fn() => view('frontend.dashboard.index'))
-        ->middleware(['auth:web', 'verified'])
-        ->name('dashboard');
+    // Dashboard for authenticated users
+    Route::get('/dashboard', function () {
+        return view('frontend.dashboard.index');
+    })->middleware(['auth:web', 'verified'])->name('dashboard');
 
-    // Profile
+    // Profile Routes
     Route::middleware(['auth:web', 'verified'])->group(function () {
         Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::put('/password', [ProfileController::class, 'updatePassword'])->name('profile.updatePassword');
         Route::post('/store/review', [ReviewController::class, 'StoreReview'])->name('store.review');
     });
-});
 
-// User routes
-Route::middleware(['auth:web'])->group(function () {
-    Route::get('/my/reviews', [ReviewController::class, 'UserReviews'])->name('user.reviews');
-    Route::get('/review/edit/{id}', [ReviewController::class, 'UserReviewEdit'])->name('user.review.edit');
-    Route::put('/review/update/{id}', [ReviewController::class, 'UserReviewUpdate'])->name('user.review.update');
-    Route::delete('/review/delete/{id}', [ReviewController::class, 'UserReviewDelete'])->name('user.review.delete');
+    // User Review Routes
+    Route::middleware(['auth:web'])->group(function () {
+        Route::get('/my/reviews', [ReviewController::class, 'UserReviews'])->name('user.reviews');
+        Route::get('/review/edit/{id}', [ReviewController::class, 'UserReviewEdit'])->name('user.review.edit');
+        Route::put('/review/update/{id}', [ReviewController::class, 'UserReviewUpdate'])->name('user.review.update');
+        Route::delete('/review/delete/{id}', [ReviewController::class, 'UserReviewDelete'])->name('user.review.delete');
+    });
 });
 
 // Admin Routes
 Route::prefix('admin')->name('admin.')->group(function () {
+    // Admin Authentication Routes
     require base_path('routes/auth/admin.php');
-    Route::get('/dashboard', fn() => view('admin.index'))
-        ->middleware(['auth:admin', 'verified'])
-        ->name('dashboard');
+
+    // Admin Dashboard
+    Route::get('/dashboard', function () {
+        return view('admin.index');
+    })->middleware(['auth:admin', 'verified'])->name('dashboard');
+
+    // Admin Profile Routes
     Route::middleware(['auth:admin', 'verified'])->group(function () {
         Route::get('/profile/edit', [AdminProfileController::class, 'edit'])->name('profile.edit');
         Route::patch('/profile/update', [AdminProfileController::class, 'update'])->name('profile.update');
         Route::put('/password', [AdminProfileController::class, 'updatePassword'])->name('profile.updatePassword');
     });
+
+    // Admin Resource and Custom Routes
+    Route::middleware(['auth:admin', 'verified'])->group(function () {
+        Route::resource('categories', CategoryController::class)->except(['show']);
+        Route::resource('subcategories', SubCategoryController::class)->except(['show']);
+
+        // Instructor Management
+        Route::get('/instructors', [InstructorManagementController::class, 'index'])->name('instructors.index');
+        Route::post('/instructors/status', [InstructorManagementController::class, 'updateStatus'])->name('update.instructor.status');
+
+        // Admin Course Routes
+        Route::controller(AdminCourseController::class)->group(function () {
+            Route::get('/all/course', 'AdminAllCourse')->name('all.course');
+            Route::post('/update/course/status', 'UpdateCourseStatus')->name('update.course.status');
+            Route::get('/course/details/{id}', 'AdminCourseDetails')->name('course.details');
+        });
+
+        // Reviews
+        Route::get('/pending/review', [ReviewController::class, 'AdminPendingReview'])->name('pending.review');
+        Route::get('/active/review', [ReviewController::class, 'AdminActiveReview'])->name('active.review');
+        Route::post('/update/review/status', [ReviewController::class, 'UpdateReviewStatus'])->name('update.review.status');
+    });
 });
 
 // Instructor Routes
 Route::prefix('instructor')->name('instructor.')->group(function () {
-    // Include authentication routes
+    // Instructor Authentication Routes
     require base_path('routes/auth/instructor.php');
 
-    // Dashboard
+    // Instructor Dashboard
     Route::get('/dashboard', function () {
         return view('instructor.index');
     })->middleware(['auth:instructor', 'verified'])->name('dashboard');
 
-    // Profile
+    // Instructor Profile Routes
     Route::middleware(['auth:instructor', 'verified'])->group(function () {
         Route::get('/profile/edit', [InstructorProfileController::class, 'edit'])->name('profile.edit');
         Route::patch('/profile/update', [InstructorProfileController::class, 'update'])->name('profile.update');
         Route::put('/password', [InstructorProfileController::class, 'updatePassword'])->name('profile.updatePassword');
     });
-});
 
-// Admin Routes (Resource and Custom Routes)
-Route::prefix('admin')->name('admin.')->middleware(['auth:admin', 'verified'])->group(function () {
-    // Category Resource Routes
-    Route::resource('categories', CategoryController::class)->except(['show']);
-
-    // SubCategory Resource Routes
-    Route::resource('subcategories', SubCategoryController::class)->except(['show']);
-
-    // Instructor Management
-    Route::get('/instructors', [InstructorManagementController::class, 'index'])->name('instructors.index');
-    Route::post('/instructors/status', [InstructorManagementController::class, 'updateStatus'])->name('update.instructor.status');
-
-    // Admin Course Routes
-    Route::controller(AdminCourseController::class)->group(function () {
-        Route::get('/all/course', 'AdminAllCourse')->name('all.course');
-        Route::post('/update/course/status', 'UpdateCourseStatus')->name('update.course.status');
-        Route::get('/course/details/{id}', 'AdminCourseDetails')->name('course.details');
+    // Instructor Course Routes
+    Route::middleware(['auth:instructor', 'verified'])->group(function () {
+        Route::resource('courses', CourseController::class)->names('courses');
+        Route::get('/courses/subcategory/ajax/{category_id}', [CourseController::class, 'getSubCategory'])->name('subcategory.ajax');
+        Route::resource('courses.sections', CourseSectionController::class)->names('course_sections');
+        Route::resource('courses.lectures', CourseLectureController::class)->names('course_lectures');
+        Route::get('/all/review', [ReviewController::class, 'InstructorAllReview'])->name('all.review');
     });
-
-    // Reviews
-    Route::get('/pending/review', [ReviewController::class, 'AdminPendingReview'])->name('pending.review');
-    Route::get('/active/review', [ReviewController::class, 'AdminActiveReview'])->name('active.review');
-    Route::post('/update/review/status', [ReviewController::class, 'UpdateReviewStatus'])->name('update.review.status');
 });
 
-// Instructor Course Routes (Resource-Based)
-Route::prefix('instructor')->name('instructor.')->middleware(['auth:instructor', 'verified'])->group(function () {
-    // Course Resource
-    Route::resource('courses', CourseController::class)->names('courses');
-    Route::get('/courses/subcategory/ajax/{category_id}', [CourseController::class, 'getSubCategory'])->name('subcategory.ajax');
-
-    // Course Sections Resource (Nested under Courses)
-    Route::resource('courses.sections', CourseSectionController::class)->names('course_sections');
-
-    // Course Lectures Resource (Nested under Courses)
-    Route::resource('courses.lectures', CourseLectureController::class)->names('course_lectures');
-
-    // Reviews
-    Route::get('/all/review', [ReviewController::class, 'InstructorAllReview'])->name('all.review');
-});
-
-// Frontend Routes
-Route::get('/course/details/{id}/{slug}', [IndexController::class, 'CourseDetails']);
-Route::get('/category/{id}/{slug}', [IndexController::class, 'CategoryCourse']);
-Route::get('/subcategory/{id}/{slug}', [IndexController::class, 'SubCategoryCourse']);
+// Frontend Routes (Public)
+Route::get('/course/details/{id}/{slug}', [IndexController::class, 'CourseDetails'])->name('course.details');
+Route::get('/category/{id}/{slug}', [IndexController::class, 'CategoryCourse'])->name('category.course');
+Route::get('/subcategory/{id}/{slug}', [IndexController::class, 'SubCategoryCourse'])->name('subcategory.course');

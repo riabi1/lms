@@ -31,7 +31,7 @@
                         $average = App\Models\Review::where('course_id', $course->id)->where('status', 1)->avg('rating');
                     @endphp                 
                     
-                    <div class="rating-wrap d-flex flex-wrap  align-items-center">
+                    <div class="rating-wrap d-flex flex-wrap align-items-center">
                         <div class="review-stars">
                             <span class="rating-number">{{ round($average, 1) }}</span>
                             @if ($average == 0)
@@ -73,11 +73,9 @@
                             @endif 
                         </div>
                         <span class="rating-total pl-1">({{ count($reviewcount) }} ratings)</span>
-                       
-                       
                     </div>
                 </div><!-- end d-flex -->
-                <p class="pt-2 pb-1">Created by <a href="" class="text-color hover-underline">{{ $course->user->name ?? 'Unknown Instructor' }}</a></p>
+                <p class="pt-2 pb-1">Created by <a href="#" class="text-color hover-underline">{{ $course->instructor->name ?? 'Unknown Instructor' }}</a></p>
                 <div class="d-flex flex-wrap align-items-center">
                     <p class="pr-3 d-flex align-items-center">
                         <svg class="svg-icon-color-gray mr-1" width="16px" viewBox="0 0 24 24"><path d="M23 12l-2.44-2.78.34-3.68-3.61-.82-1.89-3.18L12 3 8.6 1.54 6.71 4.72l-3.61.81.34 3.68L1 12l2.44 2.78-.34 3.69 3.61.82 1.89 3.18L12 21l3.4 1.46 1.89-3.18 3.61-.82-.34-3.68L23 12zm-10 5h-2v-2h2v2zm0-4h-2V7h2v6z"></path></svg>
@@ -120,7 +118,7 @@
                        <h3 class="fs-24 font-weight-semi-bold pb-3">What you'll learn?</h3>
                        <ul class="generic-list-item overview-list-item">
                            @foreach ($goals as $goal) 
-                               <li><i class="la la-check mr-1 text-black"></i> {{ $goal->goal_name }}</li>
+                               <li><i class="la la-check mr-1 text-black"></i> {{ $goal }}</li>
                            @endforeach  
                        </ul>
                    </div><!-- end course-overview-card -->
@@ -157,41 +155,31 @@
                        </a>
                    </div><!-- end course-overview-card -->
 
-                   @php
-                       $lecture = App\Models\CourseLecture::where('course_id', $course->id)->get();
-                   @endphp               
                    <div class="course-overview-card">
                        <div class="curriculum-header d-flex align-items-center justify-content-between pb-4">
                            <h3 class="fs-24 font-weight-semi-bold">Course content</h3>
                            <div class="curriculum-duration fs-15">
-                               <span class="curriculum-total__text mr-2"><strong class="text-black font-weight-semi-bold">Total:</strong> {{ count($lecture) }} lectures</span>
+                               <span class="curriculum-total__text mr-2"><strong class="text-black font-weight-semi-bold">Total:</strong> {{ $course->lectures->count() }} lectures</span>
                                <span class="curriculum-total__hours"><strong class="text-black font-weight-semi-bold">Total hours:</strong> {{ $course->duration }}</span>
                            </div>
                        </div>
 
-                       @php
-                           $section = App\Models\CourseSection::where('course_id', $course->id)->orderBy('id', 'asc')->get();
-                       @endphp
-
                        <div class="curriculum-content">
                            <div id="accordion" class="generic-accordion">
-                               @foreach ($section as $sec)
-                                   @php
-                                       $lecture = App\Models\CourseLecture::where('section_id', $sec->id)->get();
-                                   @endphp
+                               @foreach ($course->sections as $sec)
                                    <div class="card">
                                        <div class="card-header" id="heading{{ $sec->id }}">
                                            <button class="btn btn-link d-flex align-items-center justify-content-between" data-toggle="collapse" data-target="#collapse{{ $sec->id }}" aria-expanded="true" aria-controls="collapse{{ $sec->id }}">
                                                <i class="la la-plus"></i>
                                                <i class="la la-minus"></i>
                                                {{ $sec->section_title }}
-                                               <span class="fs-15 text-gray font-weight-medium">{{ count($lecture) }} lectures</span>
+                                               <span class="fs-15 text-gray font-weight-medium">{{ $sec->lectures->count() }} lectures</span>
                                            </button>
                                        </div><!-- end card-header -->
                                        <div id="collapse{{ $sec->id }}" class="collapse" aria-labelledby="heading{{ $sec->id }}" data-parent="#accordion">
                                            <div class="card-body">
                                                <ul class="generic-list-item">
-                                                   @foreach ($lecture as $lect) 
+                                                   @foreach ($sec->lectures as $lect) 
                                                        <li>
                                                            <div class="d-flex align-items-center justify-content-between">
                                                                <span>
@@ -216,21 +204,21 @@
                        <div class="instructor-wrap">
                            <div class="media media-card">
                                <div class="instructor-img">
-                                   <a href="" class="media-img d-block">
-                                       <img class="lazy" src="{{ !empty($course->user->photo) ? url('upload/instructor_images/'.$course->user->photo) : url('upload/no_image.jpg') }}" data-src="images/small-avatar-1.jpg" alt="Avatar image">
+                                   <a href="#" class="media-img d-block">
+                                     <img class="lazy" src="{{ !empty($course->instructor->photo) ? Storage::url('upload/instructor_images/' . $course->instructor->photo) : url('upload/no_image.jpg') }}" alt="Instructor image">
                                    </a>
                                    <ul class="generic-list-item pt-3">
                                        <li><i class="la la-star mr-2 text-color-3"></i> 4.6 Instructor Rating</li>
                                        <li><i class="la la-user mr-2 text-color-3"></i> 45,786 Students</li>
                                        <li><i class="la la-comment-o mr-2 text-color-3"></i> 2,533 Reviews</li>
-                                       <li><i class="la la-play-circle-o mr-2 text-color-3"></i> {{ count($instructorCourses) }} Courses</li>
-                                       <li><a href="">View all Courses</a></li>
+                                       <li><i class="la la-play-circle-o mr-2 text-color-3"></i> {{ $instructorCourses->count() }} Courses</li>
+                                       <li><a href="#">View all Courses</a></li>
                                    </ul>
                                </div><!-- end instructor-img -->
                                <div class="media-body">
-                                   <h5><a href="">{{ $course->user->name ?? 'Unknown Instructor' }}</a></h5>
-                                   <span class="d-block lh-18 pt-2 pb-3">Joined {{ $course->user && $course->user->created_at ? \Carbon\Carbon::parse($course->user->created_at)->diffForHumans() : 'N/A' }}</span>
-                                   <p class="text-black lh-18 pb-3">{{ $course->user->email ?? 'No email available' }}</p>
+                                   <h5><a href="#">{{ $course->instructor->name ?? 'Unknown Instructor' }}</a></h5>
+                                   <span class="d-block lh-18 pt-2 pb-3">Joined {{ $course->instructor && $course->instructor->created_at ? \Carbon\Carbon::parse($course->instructor->created_at)->diffForHumans() : 'N/A' }}</span>
+                                   <p class="text-black lh-18 pb-3">{{ $course->instructor->email ?? 'No email available' }}</p>
                                    <p class="pb-3">Lorem Ipsum is simply dummy text of the printing and typesetting industry.</p>
                                    <div class="collapse" id="collapseMoreTwo">
                                        <p class="pb-3">After learning the hard way, Tim was determined to become the best teacher he could...</p>
@@ -347,7 +335,7 @@
                            @foreach ($reviews as $item)
                                <div class="media media-card border-bottom border-bottom-gray pb-4 mb-4">
                                    <div class="media-img mr-4 rounded-full">
-                                       <img class="rounded-full lazy" src="{{ !empty($item->user->photo) ? url('upload/user_images/'.$item->user->photo) : url('upload/no_image.jpg') }}" data-src="images/small-avatar-1.jpg" alt="User image">
+                                     <img class="rounded-full lazy" src="{{ !empty($item->user->photo) ? Storage::url('upload/user_images/' . $item->user->photo) : url('upload/no_image.jpg') }}" alt="User image">
                                    </div>
                                    <div class="media-body">
                                        <div class="d-flex flex-wrap align-items-center justify-content-between pb-1">
@@ -452,7 +440,7 @@
                        <div class="card-body">
                            <div class="preview-course-video">
                                <a href="javascript:void(0)" data-toggle="modal" data-target="#previewModal">
-                                   <img src="{{ asset($course->course_image) }}" data-src="{{ asset($course->course_image) }}" alt="course-img" class="w-100 rounded lazy">
+                                   <img src="{{ asset($course->course_image) }}" alt="course-img" class="w-100 rounded lazy">
                                    <div class="preview-course-video-content">
                                        <div class="overlay"></div>
                                        <div class="play-button">
@@ -555,11 +543,11 @@
                            @foreach ($relatedCourses as $related)
                                <div class="media media-card border-bottom border-bottom-gray pb-4 mb-4">
                                    <a href="{{ url('course/details/'.$related->id.'/'.$related->course_name_slug) }}" class="media-img">
-                                       <img class="mr-3 lazy" src="{{ asset($related->course_image) }}" data-src="{{ asset($related->course_image) }}" alt="Related course image">
+                                       <img class="mr-3 lazy" src="{{ asset($related->course_image) }}" alt="Related course image">
                                    </a>
                                    <div class="media-body">
                                        <h5 class="fs-15"><a href="{{ url('course/details/'.$related->id.'/'.$related->course_name_slug) }}">{{ $related->course_name }}</a></h5>
-                                       <span class="d-block lh-18 py-1 fs-14">{{ $related->user->name ?? 'Unknown Instructor' }}</span>
+                                       <span class="d-block lh-18 py-1 fs-14">{{ $related->instructor->name ?? 'Unknown Instructor' }}</span>
                                        @if ($related->discount_price == null)
                                            <p class="text-black font-weight-semi-bold lh-18 fs-15">${{ $related->selling_price }}</p>
                                        @else
@@ -588,7 +576,7 @@
 <section class="related-course-area bg-gray pt-60px pb-60px">
     <div class="container">
         <div class="related-course-wrap">
-            <h3 class="fs-28 font-weight-semi-bold pb-35px">More Courses by <a href="" class="text-color hover-underline">{{ $course->user->name ?? 'Unknown Instructor' }}</a></h3>
+            <h3 class="fs-28 font-weight-semi-bold pb-35px">More Courses by <a href="#" class="text-color hover-underline">{{ $course->instructor->name ?? 'Unknown Instructor' }}</a></h3>
             <div class="view-more-carousel-2 owl-action-styled">
                 @foreach ($instructorCourses as $inscourse)
                     @php
@@ -614,7 +602,7 @@
                         <div class="card-body">
                             <h6 class="ribbon ribbon-blue-bg fs-14 mb-3">{{ $inscourse->label }}</h6>
                             <h5 class="card-title"><a href="{{ url('course/details/'.$inscourse->id.'/'.$inscourse->course_name_slug) }}">{{ $inscourse->course_name }}</a></h5>
-                            <p class="card-text"><a href="">{{ $inscourse->user->name ?? 'Unknown Instructor' }}</a></p>
+                            <p class="card-text"><a href="#">{{ $inscourse->instructor->name ?? 'Unknown Instructor' }}</a></p>
                             <div class="rating-wrap d-flex align-items-center py-2">
                                 <div class="review-stars">
                                     <span class="rating-number">4.4</span>
