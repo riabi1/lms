@@ -20,99 +20,142 @@
         <div class="card-body p-4">
             <h5 class="mb-4">Add Course</h5>
             
-            <form id="myForm" action="{{ route('instructor.store.course') }}" method="post" class="row g-3" enctype="multipart/form-data">
+            <form id="myForm" action="{{ route('instructor.courses.store') }}" method="POST" class="row g-3" enctype="multipart/form-data">
                 @csrf
 
                 <div class="form-group col-md-6">
                     <label for="course_name" class="form-label">Course Name</label>
-                    <input type="text" name="course_name" class="form-control" id="course_name">
+                    <input type="text" name="course_name" class="form-control @error('course_name') is-invalid @enderror" id="course_name" value="{{ old('course_name') }}">
+                    @error('course_name')
+                        <span class="invalid-feedback">{{ $message }}</span>
+                    @enderror
                 </div>
 
                 <div class="form-group col-md-6">
                     <label for="course_title" class="form-label">Course Title</label>
-                    <input type="text" name="course_title" class="form-control" id="course_title">
+                    <input type="text" name="course_title" class="form-control @error('course_title') is-invalid @enderror" id="course_title" value="{{ old('course_title') }}">
+                    @error('course_title')
+                        <span class="invalid-feedback">{{ $message }}</span>
+                    @enderror
                 </div>
 
                 <div class="form-group col-md-6">
                     <label for="image" class="form-label">Course Image</label>
-                    <input class="form-control" name="image" type="file" id="image">
+                    <input class="form-control @error('image') is-invalid @enderror" name="image" type="file" id="image">
+                    @error('image')
+                        <span class="invalid-feedback">{{ $message }}</span>
+                    @enderror
                 </div>
 
                 <div class="col-md-6"> 
-                    <img id="showImage" src="{{ url('upload/no_image.jpg') }}" alt="Preview" class="rounded-circle p-1 bg-primary" width="100">  
+                    <img id="showImage" src="{{ asset('upload/no_image.jpg') }}" alt="Preview" class="rounded-circle p-1 bg-primary" width="100">  
                 </div>
 
                 <div class="form-group col-md-6">
                     <label for="video" class="form-label">Course Intro Video</label>
-                    <input type="file" name="video" class="form-control" accept="video/mp4, video/webm">
+                    <input type="file" name="video" class="form-control @error('video') is-invalid @enderror" accept="video/mp4,video/webm">
+                    @error('video')
+                        <span class="invalid-feedback">{{ $message }}</span>
+                    @enderror
                 </div>
 
                 <div class="form-group col-md-6"></div>
 
                 <div class="form-group col-md-6">
                     <label for="category_id" class="form-label">Course Category</label>
-                    <select name="category_id" id="category_id" class="form-select mb-3" aria-label="Default select example">
+                    <select name="category_id" id="category_id" class="form-select mb-3 @error('category_id') is-invalid @enderror" aria-label="Default select example">
                         <option value="" selected disabled>Select a category</option>
                         @foreach ($categories as $cat) 
-                            <option value="{{ $cat->id }}">{{ $cat->category_name }}</option>
+                            <option value="{{ $cat->id }}" {{ old('category_id') == $cat->id ? 'selected' : '' }}>{{ $cat->category_name }}</option>
                         @endforeach
                     </select>
+                    @error('category_id')
+                        <span class="invalid-feedback">{{ $message }}</span>
+                    @enderror
                 </div>
 
                 <div class="form-group col-md-6">
                     <label for="subcategory_id" class="form-label">Course Subcategory</label>
-                    <select name="subcategory_id" id="subcategory_id" class="form-select mb-3" aria-label="Default select example">
+                    <select name="subcategory_id" id="subcategory_id" class="form-select mb-3 @error('subcategory_id') is-invalid @enderror" aria-label="Default select example">
                         <option value="" selected>Select a subcategory</option>
+                        <!-- Populated via AJAX -->
                     </select>
+                    @error('subcategory_id')
+                        <span class="invalid-feedback">{{ $message }}</span>
+                    @enderror
                 </div>
 
                 <div class="form-group col-md-6">
                     <label for="certificate" class="form-label">Certificate Available</label>
-                    <select name="certificate" class="form-select mb-3" aria-label="Default select example">
+                    <select name="certificate" class="form-select mb-3 @error('certificate') is-invalid @enderror" aria-label="Default select example">
                         <option value="" selected disabled>Select an option</option> 
-                        <option value="Yes">Yes</option>
-                        <option value="No">No</option>
+                        <option value="Yes" {{ old('certificate') == 'Yes' ? 'selected' : '' }}>Yes</option>
+                        <option value="No" {{ old('certificate') == 'No' ? 'selected' : '' }}>No</option>
                     </select>
+                    @error('certificate')
+                        <span class="invalid-feedback">{{ $message }}</span>
+                    @enderror
                 </div>
 
                 <div class="form-group col-md-6">
                     <label for="label" class="form-label">Course Label</label>
-                    <select name="label" class="form-select mb-3" aria-label="Default select example">
+                    <select name="label" class="form-select mb-3 @error('label') is-invalid @enderror" aria-label="Default select example">
                         <option value="" selected disabled>Select an option</option> 
-                        <option value="Beginner">Beginner</option>
-                        <option value="Intermediate">Intermediate</option>
-                        <option value="Advanced">Advanced</option>
+                        <option value="Beginner" {{ old('label') == 'Beginner' ? 'selected' : '' }}>Beginner</option>
+                        <option value="Intermediate" {{ old('label') == 'Intermediate' ? 'selected' : '' }}>Intermediate</option>
+                        <option value="Advanced" {{ old('label') == 'Advanced' ? 'selected' : '' }}>Advanced</option>
                     </select>
+                    @error('label')
+                        <span class="invalid-feedback">{{ $message }}</span>
+                    @enderror
                 </div>
 
                 <div class="form-group col-md-3">
                     <label for="selling_price" class="form-label">Course Price</label>
-                    <input type="text" name="selling_price" class="form-control" id="selling_price">
+                    <input type="text" name="selling_price" class="form-control @error('selling_price') is-invalid @enderror" id="selling_price" value="{{ old('selling_price') }}">
+                    @error('selling_price')
+                        <span class="invalid-feedback">{{ $message }}</span>
+                    @enderror
                 </div>
 
                 <div class="form-group col-md-3">
                     <label for="discount_price" class="form-label">Discount Price</label>
-                    <input type="text" name="discount_price" class="form-control" id="discount_price">
+                    <input type="text" name="discount_price" class="form-control @error('discount_price') is-invalid @enderror" id="discount_price" value="{{ old('discount_price') }}">
+                    @error('discount_price')
+                        <span class="invalid-feedback">{{ $message }}</span>
+                    @enderror
                 </div>
 
                 <div class="form-group col-md-3">
                     <label for="duration" class="form-label">Duration</label>
-                    <input type="text" name="duration" class="form-control" id="duration">
+                    <input type="text" name="duration" class="form-control @error('duration') is-invalid @enderror" id="duration" value="{{ old('duration') }}">
+                    @error('duration')
+                        <span class="invalid-feedback">{{ $message }}</span>
+                    @enderror
                 </div>
 
                 <div class="form-group col-md-3">
                     <label for="resources" class="form-label">Resources</label>
-                    <input type="text" name="resources" class="form-control" id="resources">
+                    <input type="text" name="resources" class="form-control @error('resources') is-invalid @enderror" id="resources" value="{{ old('resources') }}">
+                    @error('resources')
+                        <span class="invalid-feedback">{{ $message }}</span>
+                    @enderror
                 </div>
 
                 <div class="form-group col-md-12">
                     <label for="prerequisites" class="form-label">Course Prerequisites</label>
-                    <textarea name="prerequisites" class="form-control" id="prerequisites" placeholder="Prerequisites ..." rows="3"></textarea>
+                    <textarea name="prerequisites" class="form-control @error('prerequisites') is-invalid @enderror" id="prerequisites" placeholder="Prerequisites ..." rows="3">{{ old('prerequisites') }}</textarea>
+                    @error('prerequisites')
+                        <span class="invalid-feedback">{{ $message }}</span>
+                    @enderror
                 </div>
 
                 <div class="form-group col-md-12">
                     <label for="description" class="form-label">Course Description</label>
-                    <textarea name="description" class="form-control" id="myeditorinstance"></textarea>
+                    <textarea name="description" class="form-control @error('description') is-invalid @enderror" id="myeditorinstance">{{ old('description') }}</textarea>
+                    @error('description')
+                        <span class="invalid-feedback">{{ $message }}</span>
+                    @enderror
                 </div>
 
                 <p>Course Goals</p>
@@ -120,7 +163,7 @@
                     <div class="col-md-6">
                         <div class="mb-3">
                             <label for="goals" class="form-label">Goals</label>
-                            <input type="text" name="course_goals[]" id="goals" class="form-control" placeholder="Goals">
+                            <input type="text" name="course_goals[]" id="goals" class="form-control" placeholder="Goals" value="{{ old('course_goals.0') }}">
                         </div>
                     </div>
                     <div class="form-group col-md-6" style="padding-top: 30px;">
@@ -132,19 +175,19 @@
                 <div class="row">
                     <div class="col-md-4">
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="bestseller" value="1" id="bestseller">
+                            <input class="form-check-input" type="checkbox" name="bestseller" value="1" id="bestseller" {{ old('bestseller') ? 'checked' : '' }}>
                             <label class="form-check-label" for="bestseller">BestSeller</label>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="featured" value="1" id="featured">
+                            <input class="form-check-input" type="checkbox" name="featured" value="1" id="featured" {{ old('featured') ? 'checked' : '' }}>
                             <label class="form-check-label" for="featured">Featured</label>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="highestrated" value="1" id="highestrated">
+                            <input class="form-check-input" type="checkbox" name="highestrated" value="1" id="highestrated" {{ old('highestrated') ? 'checked' : '' }}>
                             <label class="form-check-label" for="highestrated">Highest Rated</label>
                         </div>
                     </div>
@@ -200,14 +243,14 @@
     $(document).ready(function(){
         $('select[name="category_id"]').on('change', function(){
             var category_id = $(this).val();
-            console.log('Selected Category ID:', category_id); // Debug
+            console.log('Selected Category ID:', category_id);
             if (category_id) {
                 $.ajax({
                     url: "{{ route('instructor.subcategory.ajax', '') }}/" + category_id,
                     type: "GET",
                     dataType: "json",
                     success: function(data) {
-                        console.log('Subcategories:', data); // Debug
+                        console.log('Subcategories:', data);
                         var $subcategorySelect = $('select[name="subcategory_id"]');
                         $subcategorySelect.empty();
                         $subcategorySelect.append('<option value="" selected>Select a subcategory</option>');
@@ -220,7 +263,7 @@
                         }
                     },
                     error: function(xhr, status, error) {
-                        console.error('AJAX Error:', status, error, xhr.responseText); // Debug
+                        console.error('AJAX Error:', status, error, xhr.responseText);
                         $('select[name="subcategory_id"]').html('<option value="">Error loading subcategories</option>');
                     }
                 });
