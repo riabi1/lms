@@ -45,8 +45,24 @@ class Course extends Model
     {
         return $this->belongsTo(Instructor::class, 'instructor_id', 'id');
     }
+
+    /**
+     * Define the relationship with the Review model.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
     public function reviews()
-{
-    return $this->hasMany(Review::class, 'course_id');
-}
+    {
+        return $this->hasMany(Review::class, 'course_id');
+    }
+
+    /**
+     * Define the relationship with the Course_goal model.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function goals()
+    {
+        return $this->hasMany(Course_goal::class, 'course_id', 'id');
+    }
 }

@@ -29,7 +29,7 @@
         <div class="menu-title">Course Manage</div>
       </a>
       <ul class="mm-collapse">
-        <li><a href="{{ route('instructor.all.course') }}"><i class='bx bx-radio-circle'></i>All Course</a></li>
+        <li><a href="{{ route('instructor.courses.index') }}"><i class='bx bx-radio-circle'></i>All Course</a></li>
       </ul>
     </li>
     <li>
