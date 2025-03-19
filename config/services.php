@@ -1,7 +1,11 @@
 <?php
 
 return [
-
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),        // Your Google Client ID
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'), // Your Google Client Secret
+        'redirect' => env('GOOGLE_REDIRECT_URL','http://127.0.0.1:8000/auth/google/callback'),      // Your Google Redirect URL
+    ],
     /*
     |--------------------------------------------------------------------------
     | Third Party Services

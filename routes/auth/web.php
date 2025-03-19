@@ -1,11 +1,11 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Auth\RegisteredUserController;
-use App\Http\Controllers\Auth\EmailVerificationController;
-use App\Http\Controllers\Auth\PasswordResetLinkController;
-use App\Http\Controllers\Auth\AuthenticatedSessionController;
-use App\Http\Controllers\Auth\NewPasswordController;
+use App\Http\Controllers\Auth\User\RegisteredUserController;
+use App\Http\Controllers\Auth\User\EmailVerificationController;
+use App\Http\Controllers\Auth\User\PasswordResetLinkController;
+use App\Http\Controllers\Auth\User\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\User\NewPasswordController;
 
 Route::middleware('guest:web')->group(function () {
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');

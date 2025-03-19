@@ -10,30 +10,40 @@ use Illuminate\Support\Facades\Auth;
 
 class AdminEmailVerificationController extends Controller
 {
+    /**
+     * Affiche la page de vérification si l'email n'est pas vérifié.
+     */
     public function notice(Request $request)
     {
-        if ($request->user('admin')->hasVerifiedEmail()) {
-            return redirect()->route('admin.dashboard')
-                ->with('message', 'Email already verified.');
+        if ($request->user('admin') && $request->user('admin')->hasVerifiedEmail()) {
+            return redirect()->route('admin.dashboard')->with('message', 'Email already verified.');
         }
         return view('admin.admin-verify-email');
     }
 
+    /**
+     * Vérifie l'email via le lien et redirige vers le dashboard.
+     */
     public function verify($id, $hash, Request $request): RedirectResponse
     {
         $admin = Admin::findOrFail($id);
+
         if (!hash_equals((string) $hash, sha1($admin->getEmailForVerification()))) {
             return redirect()->route('admin.login')->with('error', 'Invalid verification link.');
         }
+
         if (!$admin->hasVerifiedEmail()) {
             $admin->markEmailAsVerified();
             Auth::guard('admin')->login($admin);
             $request->session()->regenerate();
         }
-        return redirect()->route('admin.dashboard')
-            ->with('message', 'Email verified successfully!');
+
+        return redirect()->route('admin.dashboard')->with('message', 'Email verified successfully!');
     }
 
+    /**
+     * Renvoie un email de vérification.
+     */
     public function resend(Request $request): RedirectResponse
     {
         $request->user('admin')->sendEmailVerificationNotification();
