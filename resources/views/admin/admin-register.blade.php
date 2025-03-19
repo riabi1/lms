@@ -74,14 +74,7 @@
                         @enderror
                       </div>
 
-                      <!-- Secret Code Field -->
-                      <div class="col-12">
-                        <label for="secret_code" class="form-label">Secret Code</label>
-                        <input type="text" id="secret_code" name="secret_code" class="form-control @error('secret_code') is-invalid @enderror" placeholder="Enter secret code" required>
-                        @error('secret_code')
-                        <span class="text-danger">{{ $message }}</span>
-                        @enderror
-                      </div>
+                     
 
                       <!-- Password Field -->
                       <div class="col-12">

@@ -52,15 +52,28 @@
                     <h5>Admin Login</h5>
                     <p class="mb-0">Please log in to your account</p>
                   </div>
+
+                  <!-- Messages de feedback -->
+                  @if (session('error'))
+                    <div class="alert alert-danger text-center">
+                      {{ session('error') }}
+                    </div>
+                  @endif
+                  @if (session('success'))
+                    <div class="alert alert-success text-center">
+                      {{ session('success') }}
+                    </div>
+                  @endif
+
                   <div class="form-body">
                     <form class="row g-3" method="POST" action="{{ route('admin.login') }}">
                       @csrf
                       <!-- Email Field -->
                       <div class="col-12">
                         <label for="email" class="form-label">Email</label>
-                        <input type="email" id="email" name="email" class="form-control @error('email') is-invalid @enderror" placeholder="you email">
+                        <input type="email" id="email" name="email" class="form-control @error('email') is-invalid @enderror" placeholder="Your email" value="{{ old('email') }}">
                         @error('email')
-                        <span class="text-danger">{{ $message }}</span>
+                          <span class="text-danger">{{ $message }}</span>
                         @enderror
                       </div>
                       <!-- Password Field -->
@@ -70,7 +83,7 @@
                           <input type="password" id="password" name="password" class="form-control border-end-0 @error('password') is-invalid @enderror" placeholder="Enter Password">
                           <a href="javascript:;" class="input-group-text bg-transparent"><i class="bx bx-hide"></i></a>
                           @error('password')
-                          <span class="text-danger">{{ $message }}</span>
+                            <span class="text-danger">{{ $message }}</span>
                           @enderror
                         </div>
                       </div>
@@ -90,13 +103,23 @@
                           <button type="submit" class="btn btn-primary">Sign in</button>
                         </div>
                       </div>
-                      <!-- Sign Up Link -->
-                      <div class="col-12">
-                        <div class="text-center">
-                          <p class="mb-0">Don't have an account yet? <a href="{{ route('admin.register') }}">Sign up here</a></p>
-                        </div>
-                      </div>
                     </form>
+
+                    <!-- Google Login Button -->
+                    <div class="col-12 mt-3">
+                      <div class="d-grid">
+                        <a href="{{ route('admin.social.google.redirect') }}" class="btn btn-outline-danger">
+                          <i class="bx bxl-google mr-2"></i> Login with Google
+                        </a>
+                      </div>
+                    </div>
+
+                    <!-- Sign Up Link -->
+                    <div class="col-12 mt-3">
+                      <div class="text-center">
+                        <p class="mb-0">Don't have an account yet? <a href="{{ route('admin.register') }}">Sign up here</a></p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
