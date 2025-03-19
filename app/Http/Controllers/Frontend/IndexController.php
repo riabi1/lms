@@ -17,10 +17,15 @@ use Carbon\Carbon;
 
 class IndexController extends Controller
 {
-   public function CourseDetails($id, $slug)
+ public function CourseDetails($id, $slug)
     {
-        $course = Course::with(['instructor', 'category', 'subcategory', 'sections', 'lectures'])->findOrFail($id);
-        $goals = explode(',', $course->course_goals ?? ''); // Gestion des goals null
+        // Charger le cours avec toutes ses relations, y compris les objectifs
+        $course = Course::with(['instructor', 'category', 'subcategory', 'sections', 'lectures', 'goals'])->findOrFail($id);
+
+        // Récupérer les objectifs comme un tableau de chaînes à partir de la relation
+        $goals = $course->goals->pluck('goal')->toArray(); // Suppose que la colonne dans `course_goals` s'appelle `goal`
+
+        // Charger les autres données
         $categories = Category::orderBy('category_name', 'ASC')->get();
         $instructorId = $course->instructor_id;
         $instructorCourses = Course::where('instructor_id', $instructorId)->latest()->get();
@@ -30,6 +35,7 @@ class IndexController extends Controller
             ->limit(5)
             ->get();
 
+        // Passer les données à la vue
         return view('frontend.course.course_details', compact('course', 'goals', 'categories', 'instructorCourses', 'relatedCourses'));
     }
 

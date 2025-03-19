@@ -1,10 +1,11 @@
 @extends('instructor.instructor_dashboard')
 @section('instructor')
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
 
 <div class="page-content">
     <!--breadcrumb-->
-    <div class="page-breadcrumb d-none d-sm-flex align-items-center mb-3"> 
+    <div class="page-breadcrumb d-none d-sm-flex align-items-center mb-3">
         <div class="ps-3">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0 p-0">
@@ -15,11 +16,11 @@
         </div>
     </div>
     <!--end breadcrumb-->
- 
+
     <div class="card">
         <div class="card-body p-4">
             <h5 class="mb-4">Add Course</h5>
-            
+
             <form id="myForm" action="{{ route('instructor.courses.store') }}" method="POST" class="row g-3" enctype="multipart/form-data">
                 @csrf
 
@@ -41,31 +42,34 @@
 
                 <div class="form-group col-md-6">
                     <label for="image" class="form-label">Course Image</label>
-                    <input class="form-control @error('image') is-invalid @enderror" name="image" type="file" id="image">
+                    <input class="form-control @error('image') is-invalid @enderror" name="image" type="file" id="image" accept="image/jpeg,image/png,image/jpg">
                     @error('image')
                         <span class="invalid-feedback">{{ $message }}</span>
                     @enderror
                 </div>
 
-                <div class="col-md-6"> 
-                    <img id="showImage" src="{{ asset('upload/no_image.jpg') }}" alt="Preview" class="rounded-circle p-1 bg-primary" width="100">  
+                <div class="form-group col-md-6">
+                    <label class="form-label">&nbsp;</label> <!-- Placeholder pour alignement -->
+                    <img id="showImage" src="{{ asset('upload/no_image.jpg') }}" alt="Preview" class="rounded-circle p-1 bg-primary" style="width: 100px; height: 100px; object-fit: cover;">
                 </div>
 
                 <div class="form-group col-md-6">
                     <label for="video" class="form-label">Course Intro Video</label>
-                    <input type="file" name="video" class="form-control @error('video') is-invalid @enderror" accept="video/mp4,video/webm">
+                    <input type="file" name="video" class="form-control @error('video') is-invalid @enderror" id="video" accept="video/mp4,video/avi,video/mov">
                     @error('video')
                         <span class="invalid-feedback">{{ $message }}</span>
                     @enderror
                 </div>
 
-                <div class="form-group col-md-6"></div>
+                <div class="form-group col-md-6">
+                    <!-- Espace vide pour alignement -->
+                </div>
 
                 <div class="form-group col-md-6">
                     <label for="category_id" class="form-label">Course Category</label>
-                    <select name="category_id" id="category_id" class="form-select mb-3 @error('category_id') is-invalid @enderror" aria-label="Default select example">
+                    <select name="category_id" id="category_id" class="form-select @error('category_id') is-invalid @enderror">
                         <option value="" selected disabled>Select a category</option>
-                        @foreach ($categories as $cat) 
+                        @foreach ($categories as $cat)
                             <option value="{{ $cat->id }}" {{ old('category_id') == $cat->id ? 'selected' : '' }}>{{ $cat->category_name }}</option>
                         @endforeach
                     </select>
@@ -76,7 +80,7 @@
 
                 <div class="form-group col-md-6">
                     <label for="subcategory_id" class="form-label">Course Subcategory</label>
-                    <select name="subcategory_id" id="subcategory_id" class="form-select mb-3 @error('subcategory_id') is-invalid @enderror" aria-label="Default select example">
+                    <select name="subcategory_id" id="subcategory_id" class="form-select @error('subcategory_id') is-invalid @enderror">
                         <option value="" selected>Select a subcategory</option>
                         <!-- Populated via AJAX -->
                     </select>
@@ -87,8 +91,8 @@
 
                 <div class="form-group col-md-6">
                     <label for="certificate" class="form-label">Certificate Available</label>
-                    <select name="certificate" class="form-select mb-3 @error('certificate') is-invalid @enderror" aria-label="Default select example">
-                        <option value="" selected disabled>Select an option</option> 
+                    <select name="certificate" class="form-select @error('certificate') is-invalid @enderror">
+                        <option value="" selected disabled>Select an option</option>
                         <option value="Yes" {{ old('certificate') == 'Yes' ? 'selected' : '' }}>Yes</option>
                         <option value="No" {{ old('certificate') == 'No' ? 'selected' : '' }}>No</option>
                     </select>
@@ -99,8 +103,8 @@
 
                 <div class="form-group col-md-6">
                     <label for="label" class="form-label">Course Label</label>
-                    <select name="label" class="form-select mb-3 @error('label') is-invalid @enderror" aria-label="Default select example">
-                        <option value="" selected disabled>Select an option</option> 
+                    <select name="label" class="form-select @error('label') is-invalid @enderror">
+                        <option value="" selected disabled>Select an option</option>
                         <option value="Beginner" {{ old('label') == 'Beginner' ? 'selected' : '' }}>Beginner</option>
                         <option value="Intermediate" {{ old('label') == 'Intermediate' ? 'selected' : '' }}>Intermediate</option>
                         <option value="Advanced" {{ old('label') == 'Advanced' ? 'selected' : '' }}>Advanced</option>
@@ -158,16 +162,18 @@
                     @enderror
                 </div>
 
-                <p>Course Goals</p>
-                <div class="row add_item">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="goals" class="form-label">Goals</label>
-                            <input type="text" name="course_goals[]" id="goals" class="form-control" placeholder="Goals" value="{{ old('course_goals.0') }}">
+                <div class="form-group col-md-12">
+                    <p class="mb-2">Course Goals</p>
+                    <div class="row add_item">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="goals" class="form-label">Goals</label>
+                                <input type="text" name="course_goals[]" id="goals" class="form-control" placeholder="Goals" value="{{ old('course_goals.0') }}">
+                            </div>
                         </div>
-                    </div>
-                    <div class="form-group col-md-6" style="padding-top: 30px;">
-                        <a class="btn btn-success addeventmore"><i class="fa fa-plus-circle"></i> Add More..</a>
+                        <div class="form-group col-md-6" style="padding-top: 30px;">
+                            <a class="btn btn-success addeventmore"><i class="fa fa-plus-circle"></i> Add More</a>
+                        </div>
                     </div>
                 </div>
 
@@ -203,7 +209,7 @@
     </div>
 </div>
 
-<!-- Add Multiple Goals -->
+<!-- Add Multiple Goals Template -->
 <div style="visibility: hidden">
     <div class="whole_extra_item_add" id="whole_extra_item_add">
         <div class="whole_extra_item_delete" id="whole_extra_item_delete">
@@ -214,8 +220,8 @@
                         <input type="text" name="course_goals[]" id="goals" class="form-control" placeholder="Goals">
                     </div>
                     <div class="form-group col-md-6" style="padding-top: 20px">
-                        <span class="btn btn-success btn-sm addeventmore"><i class="fa fa-plus-circle">Add</i></span>
-                        <span class="btn btn-danger btn-sm removeeventmore"><i class="fa fa-minus-circle">Remove</i></span>
+                        <span class="btn btn-success btn-sm addeventmore"><i class="fa fa-plus-circle"></i> Add</span>
+                        <span class="btn btn-danger btn-sm removeeventmore"><i class="fa fa-minus-circle"></i> Remove</span>
                     </div>
                 </div>
             </div>
@@ -225,37 +231,42 @@
 
 <!-- Scripts -->
 <script type="text/javascript">
-    $(document).ready(function(){
+    $(document).ready(function() {
+        // Ajouter/Supprimer des objectifs
         var counter = 0;
-        $(document).on("click", ".addeventmore", function(){
+        $(document).on("click", ".addeventmore", function() {
             var whole_extra_item_add = $("#whole_extra_item_add").html();
             $(this).closest(".add_item").append(whole_extra_item_add);
             counter++;
         });
-        $(document).on("click", ".removeeventmore", function(event){
+        $(document).on("click", ".removeeventmore", function(event) {
             $(this).closest("#whole_extra_item_delete").remove();
             counter -= 1;
         });
-    });
-</script>
 
-<script type="text/javascript">
-    $(document).ready(function(){
-        $('select[name="category_id"]').on('change', function(){
+        // Prévisualisation de l'image
+        $('#image').change(function(e) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                $('#showImage').attr('src', e.target.result);
+            }
+            reader.readAsDataURL(e.target.files[0]);
+        });
+
+        // Chargement des sous-catégories via AJAX
+        $('select[name="category_id"]').on('change', function() {
             var category_id = $(this).val();
-            console.log('Selected Category ID:', category_id);
             if (category_id) {
                 $.ajax({
                     url: "{{ route('instructor.subcategory.ajax', '') }}/" + category_id,
                     type: "GET",
                     dataType: "json",
                     success: function(data) {
-                        console.log('Subcategories:', data);
                         var $subcategorySelect = $('select[name="subcategory_id"]');
                         $subcategorySelect.empty();
                         $subcategorySelect.append('<option value="" selected>Select a subcategory</option>');
                         if (data.length > 0) {
-                            $.each(data, function(key, value){
+                            $.each(data, function(key, value) {
                                 $subcategorySelect.append('<option value="' + value.id + '">' + value.subcategory_name + '</option>');
                             });
                         } else {
@@ -263,7 +274,7 @@
                         }
                     },
                     error: function(xhr, status, error) {
-                        console.error('AJAX Error:', status, error, xhr.responseText);
+                        console.error('AJAX Error:', status, error);
                         $('select[name="subcategory_id"]').html('<option value="">Error loading subcategories</option>');
                     }
                 });
@@ -271,11 +282,8 @@
                 $('select[name="subcategory_id"]').html('<option value="" selected>Select a subcategory</option>');
             }
         });
-    });
-</script>
 
-<script type="text/javascript">
-    $(document).ready(function(){
+        // Validation du formulaire
         $('#myForm').validate({
             rules: {
                 course_name: { required: true },
@@ -294,24 +302,12 @@
                 error.addClass('invalid-feedback');
                 element.closest('.form-group').append(error);
             },
-            highlight: function(element, errorClass, validClass){
+            highlight: function(element) {
                 $(element).addClass('is-invalid');
             },
-            unhighlight: function(element, errorClass, validClass){
+            unhighlight: function(element) {
                 $(element).removeClass('is-invalid');
             }
-        });
-    });
-</script>
-
-<script type="text/javascript">
-    $(document).ready(function(){
-        $('#image').change(function(e){
-            var reader = new FileReader();
-            reader.onload = function(e){
-                $('#showImage').attr('src', e.target.result);
-            }
-            reader.readAsDataURL(e.target.files[0]);
         });
     });
 </script>

@@ -1,10 +1,11 @@
 @extends('instructor.instructor_dashboard')
 @section('instructor')
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
 
 <div class="page-content">
     <!--breadcrumb-->
-    <div class="page-breadcrumb d-none d-sm-flex align-items-center mb-3"> 
+    <div class="page-breadcrumb d-none d-sm-flex align-items-center mb-3">
         <div class="ps-3">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0 p-0">
@@ -15,15 +16,14 @@
         </div>
     </div>
     <!--end breadcrumb-->
- 
+
     <div class="card">
         <div class="card-body p-4">
             <h5 class="mb-4">Edit Course</h5>
-            
+
             <form id="myForm" action="{{ route('instructor.courses.update', $course->id) }}" method="POST" class="row g-3" enctype="multipart/form-data">
                 @csrf
                 @method('PATCH')
-                <input type="hidden" name="course_id" value="{{ $course->id }}">
 
                 <div class="form-group col-md-6">
                     <label for="course_name" class="form-label">Course Name</label>
@@ -43,7 +43,7 @@
 
                 <div class="form-group col-md-6">
                     <label for="category_id" class="form-label">Course Category</label>
-                    <select name="category_id" class="form-select mb-3 @error('category_id') is-invalid @enderror" aria-label="Default select example">
+                    <select name="category_id" id="category_id" class="form-select @error('category_id') is-invalid @enderror">
                         <option value="" selected disabled>Select a category</option>
                         @foreach ($categories as $cat)
                             <option value="{{ $cat->id }}" {{ old('category_id', $course->category_id) == $cat->id ? 'selected' : '' }}>{{ $cat->category_name }}</option>
@@ -56,7 +56,7 @@
 
                 <div class="form-group col-md-6">
                     <label for="subcategory_id" class="form-label">Course Subcategory</label>
-                    <select name="subcategory_id" class="form-select mb-3 @error('subcategory_id') is-invalid @enderror" aria-label="Default select example">
+                    <select name="subcategory_id" id="subcategory_id" class="form-select @error('subcategory_id') is-invalid @enderror">
                         <option value="" selected disabled>Select a subcategory</option>
                         @foreach ($subcategories as $subcat)
                             <option value="{{ $subcat->id }}" {{ old('subcategory_id', $course->subcategory_id) == $subcat->id ? 'selected' : '' }}>{{ $subcat->subcategory_name }}</option>
@@ -69,7 +69,7 @@
 
                 <div class="form-group col-md-6">
                     <label for="certificate" class="form-label">Certificate Available</label>
-                    <select name="certificate" class="form-select mb-3 @error('certificate') is-invalid @enderror" aria-label="Default select example">
+                    <select name="certificate" class="form-select @error('certificate') is-invalid @enderror">
                         <option value="" selected disabled>Select an option</option>
                         <option value="Yes" {{ old('certificate', $course->certificate) == 'Yes' ? 'selected' : '' }}>Yes</option>
                         <option value="No" {{ old('certificate', $course->certificate) == 'No' ? 'selected' : '' }}>No</option>
@@ -81,7 +81,7 @@
 
                 <div class="form-group col-md-6">
                     <label for="label" class="form-label">Course Label</label>
-                    <select name="label" class="form-select mb-3 @error('label') is-invalid @enderror" aria-label="Default select example">
+                    <select name="label" class="form-select @error('label') is-invalid @enderror">
                         <option value="" selected disabled>Select an option</option>
                         <option value="Beginner" {{ old('label', $course->label) == 'Beginner' ? 'selected' : '' }}>Beginner</option>
                         <option value="Intermediate" {{ old('label', $course->label) == 'Intermediate' ? 'selected' : '' }}>Intermediate</option>
@@ -134,10 +134,68 @@
 
                 <div class="form-group col-md-12">
                     <label for="description" class="form-label">Course Description</label>
-                    <textarea name="description" class="form-control @error('description') is-invalid @enderror" id="myeditorinstance">{!! old('description', $course->description) !!}</textarea>
+                    <textarea name="description" class="form-control @error('description') is-invalid @enderror" id="myeditorinstance">{{ old('description', $course->description) }}</textarea>
                     @error('description')
                         <span class="invalid-feedback">{{ $message }}</span>
                     @enderror
+                </div>
+
+                <!-- Course Image -->
+                <div class="form-group col-md-6">
+                    <label for="image" class="form-label">Course Image</label>
+                    <input class="form-control @error('image') is-invalid @enderror" name="image" type="file" id="image" accept="image/jpeg,image/png,image/jpg">
+                    @error('image')
+                        <span class="invalid-feedback">{{ $message }}</span>
+                    @enderror
+                </div>
+
+                <div class="form-group col-md-6">
+                    <label class="form-label">Current Image</label>
+                    <img id="showImage" src="{{ $course->course_image ? asset('storage/upload/course_images/thumbnail/' . $course->course_image) : asset('upload/no_image.jpg') }}" alt="Course" class="rounded-circle p-1 bg-primary" style="width: 100px; height: 100px; object-fit: cover;">
+                </div>
+
+                <!-- Course Video -->
+                <div class="form-group col-md-6">
+                    <label for="video" class="form-label">Course Intro Video</label>
+                    <input type="file" name="video" class="form-control @error('video') is-invalid @enderror" id="video" accept="video/mp4,video/avi,video/mov">
+                    @error('video')
+                        <span class="invalid-feedback">{{ $message }}</span>
+                    @enderror
+                </div>
+
+                <div class="form-group col-md-6">
+                    <label class="form-label">Current Video</label>
+                    @if ($course->video)
+                        <video width="300" height="130" controls>
+                            <source src="{{ asset('storage/upload/course_images/video/' . $course->video) }}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    @else
+                        <p>No video available</p>
+                    @endif
+                </div>
+
+                <!-- Course Goals -->
+                <div class="form-group col-md-12">
+                    <p class="mb-2">Course Goals</p>
+                    <div class="row add_item">
+                        @foreach ($goals as $item)
+                            <div class="whole_extra_item_delete" id="whole_extra_item_delete">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="goals" class="form-label">Goals</label>
+                                        <input type="text" name="course_goals[]" class="form-control" value="{{ $item->goal_name }}">
+                                    </div>
+                                    <div class="col-md-6" style="padding-top: 30px;">
+                                        <span class="btn btn-danger btn-sm removeeventmore"><i class="fa fa-minus-circle"></i> Remove</span>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                        <div class="col-md-6">
+                            <a class="btn btn-success addeventmore"><i class="fa fa-plus-circle"></i> Add More</a>
+                        </div>
+                    </div>
                 </div>
 
                 <hr>
@@ -170,122 +228,19 @@
             </form>
         </div>
     </div>
-
-    <!-- Course Image Update -->
-    <div class="card mt-4">
-        <div class="card-body">
-            <h5 class="mb-4">Update Course Image</h5>
-            <form action="{{ route('instructor.courses.update', $course->id) }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                @method('PATCH')
-                <input type="hidden" name="id" value="{{ $course->id }}">
-                <div class="row">
-                    <div class="form-group col-md-6">
-                        <label for="course_image" class="form-label">Course Image</label>
-                        <input class="form-control @error('course_image') is-invalid @enderror" name="image" type="file" id="course_image">
-                        @error('course_image')
-                            <span class="invalid-feedback">{{ $message }}</span>
-                        @enderror
-                    </div>
-                    <div class="col-md-6"> 
-                        <img id="showImage" src="{{ asset($course->course_image) }}" alt="Course" class="rounded-circle p-1 bg-primary" width="100">  
-                    </div>
-                </div>
-                <br>
-                <div class="col-md-12">
-                    <button type="submit" class="btn btn-primary px-4">Update Image</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Course Video Update -->
-    <div class="card mt-4">
-        <div class="card-body">
-            <h5 class="mb-4">Update Course Video</h5>
-            <form action="{{ route('instructor.courses.update', $course->id) }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                @method('PATCH')
-                <input type="hidden" name="vid" value="{{ $course->id }}">
-                <div class="row">
-                    <div class="form-group col-md-6">
-                        <label for="video" class="form-label">Course Intro Video</label>
-                        <input type="file" name="video" class="form-control @error('video') is-invalid @enderror" accept="video/mp4,video/webm">
-                        @error('video')
-                            <span class="invalid-feedback">{{ $message }}</span>
-                        @enderror
-                    </div>
-                    <div class="col-md-6"> 
-                        @if ($course->video)
-                            <video width="300" height="130" controls>
-                                <source src="{{ asset($course->video) }}" type="video/mp4">
-                            </video>
-                        @else
-                            <p>No video available</p>
-                        @endif
-                    </div>
-                </div>
-                <br>
-                <div class="col-md-12">
-                    <button type="submit" class="btn btn-primary px-4">Update Video</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Course Goals Update -->
-    <div class="card mt-4">
-        <div class="card-body">
-            <h5 class="mb-4">Update Course Goals</h5>
-            <form action="{{ route('instructor.courses.update', $course->id) }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                @method('PATCH')
-                <input type="hidden" name="id" value="{{ $course->id }}">
-
-                <div class="row add_item">
-                    @foreach ($goals as $item)
-                        <div class="whole_extra_item_delete" id="whole_extra_item_delete">
-                            <div class="container mt-2">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label for="goals" class="form-label">Goals</label>
-                                            <input type="text" name="course_goals[]" id="goals" class="form-control" value="{{ $item->goal_name }}">
-                                        </div>
-                                    </div>
-                                    <div class="form-group col-md-6" style="padding-top: 30px;">
-                                        <a class="btn btn-success addeventmore"><i class="fa fa-plus-circle"></i> Add More</a>
-                                        <span class="btn btn-danger btn-sm removeeventmore"><i class="fa fa-minus-circle">Remove</i></span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-
-                <br>
-                <div class="col-md-12">
-                    <button type="submit" class="btn btn-primary px-4">Update Goals</button>
-                </div>
-            </form>
-        </div>
-    </div>
 </div>
 
-<!-- Add Multiple Goals -->
+<!-- Add Multiple Goals Template -->
 <div style="visibility: hidden">
     <div class="whole_extra_item_add" id="whole_extra_item_add">
         <div class="whole_extra_item_delete" id="whole_extra_item_delete">
-            <div class="container mt-2">
-                <div class="row">
-                    <div class="form-group col-md-6">
-                        <label for="goals">Goals</label>
-                        <input type="text" name="course_goals[]" id="goals" class="form-control" placeholder="Goals">
-                    </div>
-                    <div class="form-group col-md-6" style="padding-top: 20px">
-                        <span class="btn btn-success btn-sm addeventmore"><i class="fa fa-plus-circle">Add</i></span>
-                        <span class="btn btn-danger btn-sm removeeventmore"><i class="fa fa-minus-circle">Remove</i></span>
-                    </div>
+            <div class="row mb-3">
+                <div class="form-group col-md-6">
+                    <label for="goals">Goals</label>
+                    <input type="text" name="course_goals[]" class="form-control" placeholder="Goals">
+                </div>
+                <div class="form-group col-md-6" style="padding-top: 30px">
+                    <span class="btn btn-danger btn-sm removeeventmore"><i class="fa fa-minus-circle"></i> Remove</span>
                 </div>
             </div>
         </div>
@@ -294,23 +249,30 @@
 
 <!-- Scripts -->
 <script type="text/javascript">
-    $(document).ready(function(){
-        var counter = 0;
-        $(document).on("click", ".addeventmore", function(){
+    $(document).ready(function() {
+        // Ajouter/Supprimer des objectifs
+        var counter = {{ $goals->count() }};
+        $(document).on("click", ".addeventmore", function() {
             var whole_extra_item_add = $("#whole_extra_item_add").html();
             $(this).closest(".add_item").append(whole_extra_item_add);
             counter++;
         });
-        $(document).on("click", ".removeeventmore", function(event){
-            $(this).closest("#whole_extra_item_delete").remove();
-            counter -= 1;
+        $(document).on("click", ".removeeventmore", function(event) {
+            $(this).closest(".whole_extra_item_delete").remove();
+            counter--;
         });
-    });
-</script>
 
-<script type="text/javascript">
-    $(document).ready(function(){
-        $('select[name="category_id"]').on('change', function(){
+        // Prévisualisation de l'image
+        $('#image').change(function(e) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                $('#showImage').attr('src', e.target.result);
+            }
+            reader.readAsDataURL(e.target.files[0]);
+        });
+
+        // Chargement des sous-catégories via AJAX
+        $('select[name="category_id"]').on('change', function() {
             var category_id = $(this).val();
             if (category_id) {
                 $.ajax({
@@ -321,23 +283,21 @@
                         var $subcategorySelect = $('select[name="subcategory_id"]');
                         $subcategorySelect.empty();
                         $subcategorySelect.append('<option value="" selected>Select a subcategory</option>');
-                        $.each(data, function(key, value){
+                        $.each(data, function(key, value) {
                             $subcategorySelect.append('<option value="' + value.id + '">' + value.subcategory_name + '</option>');
                         });
                     },
                     error: function(xhr, status, error) {
                         console.error('AJAX Error:', status, error);
+                        $('select[name="subcategory_id"]').html('<option value="">Error loading subcategories</option>');
                     }
                 });
             } else {
                 $('select[name="subcategory_id"]').html('<option value="" selected>Select a subcategory</option>');
             }
         });
-    });
-</script>
 
-<script type="text/javascript">
-    $(document).ready(function(){
+        // Validation du formulaire
         $('#myForm').validate({
             rules: {
                 course_name: { required: true },
@@ -356,24 +316,12 @@
                 error.addClass('invalid-feedback');
                 element.closest('.form-group').append(error);
             },
-            highlight: function(element, errorClass, validClass){
+            highlight: function(element) {
                 $(element).addClass('is-invalid');
             },
-            unhighlight: function(element, errorClass, validClass){
+            unhighlight: function(element) {
                 $(element).removeClass('is-invalid');
             }
-        });
-    });
-</script>
-
-<script type="text/javascript">
-    $(document).ready(function(){
-        $('#course_image').change(function(e){
-            var reader = new FileReader();
-            reader.onload = function(e){
-                $('#showImage').attr('src', e.target.result);
-            }
-            reader.readAsDataURL(e.target.files[0]);
         });
     });
 </script>
