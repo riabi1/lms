@@ -114,14 +114,16 @@
         <div class="row">
            <div class="col-lg-8 pb-5">
                <div class="course-details-content-wrap pt-90px">
-                   <div class="course-overview-card bg-gray p-4 rounded">
-                       <h3 class="fs-24 font-weight-semi-bold pb-3">What you'll learn?</h3>
-                       <ul class="generic-list-item overview-list-item">
-                           @foreach ($goals as $goal) 
-                               <li><i class="la la-check mr-1 text-black"></i> {{ $goal }}</li>
-                           @endforeach  
-                       </ul>
-                   </div><!-- end course-overview-card -->
+                 <div class="course-overview-card bg-gray p-4 rounded">
+    <h3 class="fs-24 font-weight-semi-bold pb-3">What you'll learn</h3>
+    <ul class="generic-list-item overview-list-item">
+        @forelse ($goals as $goal)
+            <li><i class="la la-check mr-1 text-black"></i> {{ trim($goal) }}</li>
+        @empty
+            <li>No goals specified for this course.</li>
+        @endforelse
+    </ul>
+</div><!-- end course-overview-card -->
                    <div class="course-overview-card bg-gray p-4 rounded">
                        <h3 class="fs-16 font-weight-semi-bold">Curated for the <a href="for-business.html" class="text-color hover-underline">Aduca for Business</a> collection</h3>
                    </div><!-- end course-overview-card -->

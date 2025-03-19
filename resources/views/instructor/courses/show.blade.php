@@ -3,7 +3,7 @@
 
 <div class="page-content">
     <!--breadcrumb-->
-    <div class="page-breadcrumb d-none d-sm-flex align-items-center mb-3"> 
+    <div class="page-breadcrumb d-none d-sm-flex align-items-center mb-3">
         <div class="ps-3">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0 p-0">
@@ -28,13 +28,13 @@
                     <p><strong>Course Title:</strong> {{ $course->course_title }}</p>
                     <p><strong>Category:</strong> {{ optional($course->category)->category_name ?? 'No Category' }}</p>
                     <p><strong>Subcategory:</strong> {{ optional($course->subCategory)->subcategory_name ?? 'No Subcategory' }}</p>
-                    <p><strong>Price:</strong> ${{ $course->selling_price }}</p>
-                    <p><strong>Discount Price:</strong> ${{ $course->discount_price }}</p>
-                    <p><strong>Duration:</strong> {{ $course->duration }}</p>
-                    <p><strong>Resources:</strong> {{ $course->resources }}</p>
-                    <p><strong>Certificate:</strong> {{ $course->certificate }}</p>
-                    <p><strong>Label:</strong> {{ $course->label }}</p>
-                    <p><strong>Prerequisites:</strong> {{ $course->prerequisites }}</p>
+                    <p><strong>Price:</strong> ${{ $course->selling_price ?? 'N/A' }}</p>
+                    <p><strong>Discount Price:</strong> ${{ $course->discount_price ?? 'N/A' }}</p>
+                    <p><strong>Duration:</strong> {{ $course->duration ?? 'N/A' }}</p>
+                    <p><strong>Resources:</strong> {{ $course->resources ?? 'N/A' }}</p>
+                    <p><strong>Certificate:</strong> {{ $course->certificate ?? 'N/A' }}</p>
+                    <p><strong>Label:</strong> {{ $course->label ?? 'N/A' }}</p>
+                    <p><strong>Prerequisites:</strong> {{ $course->prerequisites ?? 'N/A' }}</p>
                     <p><strong>Bestseller:</strong> {{ $course->bestseller ? 'Yes' : 'No' }}</p>
                     <p><strong>Featured:</strong> {{ $course->featured ? 'Yes' : 'No' }}</p>
                     <p><strong>Highest Rated:</strong> {{ $course->highestrated ? 'Yes' : 'No' }}</p>
@@ -42,11 +42,12 @@
 
                 <div class="col-md-6">
                     <p><strong>Course Image:</strong></p>
-                    <img src="{{ asset($course->course_image) }}" alt="{{ $course->course_name }}" style="max-width: 300px;" onerror="this.src='{{ asset('upload/no_image.jpg') }}'">
+                    <img src="{{ $course->course_image ? asset('storage/upload/course_images/thumbnail/' . $course->course_image) : asset('upload/no_image.jpg') }}" alt="{{ $course->course_name }}" style="max-width: 300px; height: auto;" class="img-fluid">
+                    
                     <p class="mt-3"><strong>Course Video:</strong></p>
                     @if ($course->video)
-                        <video width="300" height="200" controls>
-                            <source src="{{ asset($course->video) }}" type="video/mp4">
+                        <video width="300" height="200" controls class="img-fluid">
+                            <source src="{{ asset('storage/upload/course_images/video/' . $course->video) }}" type="video/mp4">
                             Your browser does not support the video tag.
                         </video>
                     @else
@@ -57,7 +58,7 @@
 
             <div class="mt-4">
                 <p><strong>Description:</strong></p>
-                <div>{!! $course->description !!}</div>
+                <div>{!! $course->description ?? 'No description available' !!}</div>
             </div>
 
             <div class="mt-4">

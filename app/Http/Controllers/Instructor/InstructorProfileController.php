@@ -49,7 +49,7 @@ class InstructorProfileController extends Controller
 
                 $file = $request->file('photo');
                 $filename = date('YmdHi') . '_' . $file->getClientOriginalName(); // Ajout d'un underscore pour éviter les conflits
-                $file->storeAs('public/instructor_images', $filename);
+                $file->storeAs('public/upload/instructor_images', $filename);
                 $instructor->photo = $filename;
             }
 

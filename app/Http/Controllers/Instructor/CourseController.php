@@ -10,6 +10,7 @@ use App\Models\Course_goal;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
 class CourseController extends Controller
@@ -61,8 +62,8 @@ class CourseController extends Controller
             ]);
             \Log::info('Validated Data:', $validated);
 
-            $courseImage = $this->uploadFile($request->file('image'), 'upload/course/thumbnail');
-            $courseVideo = $this->uploadFile($request->file('video'), 'upload/course/video', false);
+            $courseImage = $this->uploadFile($request->file('image'), 'upload/course_images/thumbnail');
+            $courseVideo = $this->uploadFile($request->file('video'), 'upload/course_images/video');
 
             $course = Course::create([
                 'category_id' => $request->category_id,
@@ -104,12 +105,12 @@ class CourseController extends Controller
         }
     }
 
-   public function show(Course $course)
-  {
-    $this->authorizeCourse($course);
-    $course->load('goals'); 
-    return view('instructor.courses.show', compact('course'));
-  }
+    public function show(Course $course)
+    {
+        $this->authorizeCourse($course);
+        $course->load('goals');
+        return view('instructor.courses.show', compact('course'));
+    }
 
     public function edit(Course $course)
     {
@@ -120,37 +121,37 @@ class CourseController extends Controller
         return view('instructor.courses.edit', compact('course', 'categories', 'subcategories', 'goals'));
     }
 
-   public function update(Request $request, Course $course)
-{
-    $this->authorizeCourse($course);
+    public function update(Request $request, Course $course)
+    {
+        $this->authorizeCourse($course);
 
-    $course->update($request->except('course_goals', 'image', 'video', 'course_id') + [
-        'course_name_slug' => strtolower(str_replace(' ', '-', $request->course_name)),
-    ]);
+        $course->update($request->except('course_goals', 'image', 'video', 'course_id') + [
+            'course_name_slug' => strtolower(str_replace(' ', '-', $request->course_name)),
+        ]);
 
-    if ($request->hasFile('image')) {
-        $this->deleteFile($course->course_image);
-        $course->update(['course_image' => $this->uploadFile($request->file('image'), 'upload/course/thumbnail')]);
+        if ($request->hasFile('image')) {
+            $this->deleteFile($course->course_image, 'upload/course_images/thumbnail');
+            $course->update(['course_image' => $this->uploadFile($request->file('image'), 'upload/course_images/thumbnail')]);
+        }
+
+        if ($request->hasFile('video')) {
+            $this->deleteFile($course->video, 'upload/course_images/video');
+            $course->update(['video' => $this->uploadFile($request->file('video'), 'upload/course_images/video')]);
+        }
+
+        $this->saveGoals($course->id, $request->course_goals);
+
+        return redirect()->route('instructor.courses.index')->with([
+            'message' => 'Course Updated Successfully',
+            'alert-type' => 'success'
+        ]);
     }
-
-    if ($request->hasFile('video')) {
-        $this->deleteFile($course->video);
-        $course->update(['video' => $this->uploadFile($request->file('video'), 'upload/course/video', false)]);
-    }
-
-    $this->saveGoals($course->id, $request->course_goals);
-
-    return redirect()->route('instructor.courses.index')->with([
-        'message' => 'Course Updated Successfully',
-        'alert-type' => 'success'
-    ]);
-}
 
     public function destroy(Course $course)
     {
         $this->authorizeCourse($course);
-        $this->deleteFile($course->course_image);
-        $this->deleteFile($course->video);
+        $this->deleteFile($course->course_image, 'upload/course_images/thumbnail');
+        $this->deleteFile($course->video, 'upload/course_images/video');
         Course_goal::where('course_id', $course->id)->delete();
         $course->delete();
 
@@ -177,41 +178,43 @@ class CourseController extends Controller
         }
     }
 
-    private function uploadFile($file, $path, $resize = true)
+    private function uploadFile($file, $path)
     {
         if (!$file) {
-            return $resize ? 'upload/course/thumbnail/default.jpg' : null;
+            return null;
         }
 
-        $name = ($resize ? hexdec(uniqid()) : time()) . '.' . $file->getClientOriginalExtension();
-        $relativePath = "$path/$name";
-        $fullPath = public_path($relativePath);
+        // Générer un nom unique basé sur la date et le nom original
+        $filename = date('YmdHi') . '_' . $file->getClientOriginalName();
 
-        if (!file_exists(dirname($fullPath))) {
-            mkdir(dirname($fullPath), 0755, true);
-        }
-
-        if ($resize) {
+        // Stocker dans storage/app/public/<path>/
+        if (str_contains($path, 'thumbnail')) {
+            // Traitement des images avec Intervention Image
             $manager = new ImageManager(new Driver());
             $img = $manager->read($file)->resize(370, 246)->toJpeg(80);
-            \Log::info('Uploading image to:', ['path' => $fullPath]);
-            file_put_contents($fullPath, $img);
-            if (!file_exists($fullPath)) {
-                \Log::error('Image upload failed:', ['path' => $fullPath]);
-                return 'upload/no_image.jpg';
-            }
+            Storage::disk('public')->put("$path/$filename", (string) $img);
         } else {
-            $file->move(public_path($path), $name);
+            // Stocker les vidéos directement
+            $file->storeAs($path, $filename, 'public');
         }
 
-        return $relativePath;
+        // Vérifier si le fichier a été créé
+        if (!Storage::disk('public')->exists("$path/$filename")) {
+            \Log::error('File upload failed:', ['path' => "$path/$filename"]);
+            return null;
+        }
+
+        \Log::info('File uploaded successfully:', ['path' => "$path/$filename"]);
+
+        // Retourner uniquement le nom du fichier pour la base de données
+        return $filename;
     }
 
-    private function deleteFile($path)
+    private function deleteFile($filename, $path)
     {
-        $fullPath = public_path($path);
-        if ($path && file_exists($fullPath)) {
-            unlink($fullPath);
+        if ($filename && Storage::disk('public')->exists("$path/$filename")) {
+            Storage::disk('public')->delete("$path/$filename");
+            \Log::info('Deleted file:', ['path' => "$path/$filename"]);
         }
     }
 
