@@ -1,7 +1,7 @@
 @php
 $popularCourses = App\Models\Course::where('status', 1)->orderBy('id', 'ASC')->limit(6)->get();
 @endphp
-
+<!--courses  -->
 <section class="course-area pb-90px">
   <div class="course-wrapper">
     <div class="container">
