@@ -1,4 +1,4 @@
-@extends('frontend.dashboard.user_dashboard')
+@extends('User.layout.User_layout')
 
 @section('userdashboard')
 <div class="container py-4">

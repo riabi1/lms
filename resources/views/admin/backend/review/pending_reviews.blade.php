@@ -1,6 +1,8 @@
 @extends('admin.layout.Admin_layout')
 @section('admin')
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 
 <style>
   .large-checkbox {
@@ -14,15 +16,12 @@
     <div class="ps-3">
       <nav aria-label="breadcrumb">
         <ol class="breadcrumb mb-0 p-0">
-          <li class="breadcrumb-item"><a href="javascript:;"><i class="bx bx-home-alt"></i></a>
-          </li>
-          <li class="breadcrumb-item active" aria-current="page">All Active Review </li>
+          <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}"><i class="bx bx-home-alt"></i></a></li>
+          <li class="breadcrumb-item active" aria-current="page">All Pending Reviews</li>
         </ol>
       </nav>
     </div>
-    <div class="ms-auto">
-
-    </div>
+    <div class="ms-auto"></div>
   </div>
   <!--end breadcrumb-->
 
@@ -33,23 +32,22 @@
           <thead>
             <tr>
               <th>Sl</th>
-              <th>Course Name </th>
-              <th>Username </th>
-              <th>Comment </th>
-              <th>Rating </th>
+              <th>Course Name</th>
+              <th>Username</th>
+              <th>Comment</th>
+              <th>Rating</th>
               <th>Action</th>
             </tr>
           </thead>
           <tbody>
-
-            @foreach ($reviews as $key=> $item)
+            @foreach ($reviews as $key => $item)
             <tr>
-              <td>{{ $key+1 }}</td>
-              <td>{{ $item['course']['course_name'] }}</td>
-              <td>{{ $item['user']['name'] }}</td>
+              <td>{{ $key + 1 }}</td>
+              <td>{{ $item->course->course_name }}</td>
+              <td>{{ $item->user->name ?? 'N/A' }}</td>
               <td>{{ $item->comment }}</td>
               <td>
-                @if($item->rating == NULL)
+                @if($item->rating == null)
                 <i class="bx bxs-star text-secondary"></i>
                 <i class="bx bxs-star text-secondary"></i>
                 <i class="bx bxs-star text-secondary"></i>
@@ -87,36 +85,30 @@
                 <i class="bx bxs-star text-warning"></i>
                 @endif
               </td>
-
-
               <td>
                 <div class="form-check-danger form-check form-switch">
-                  <input class="form-check-input status-toggle large-checkbox" type="checkbox" id="flexSwitchCheckCheckedDanger" data-review-id="{{ $item->id }}" {{ $item->status ? 'checked' : ''}}>
-                  <label class="form-check-label" for="flexSwitchCheckCheckedDanger"> </label>
+                  <input class="form-check-input status-toggle large-checkbox" type="checkbox" id="flexSwitchCheckCheckedDanger{{ $item->id }}" data-review-id="{{ $item->id }}" {{ $item->status ? 'checked' : '' }}>
+                  <label class="form-check-label" for="flexSwitchCheckCheckedDanger{{ $item->id }}"></label>
                 </div>
               </td>
             </tr>
             @endforeach
-
           </tbody>
-
         </table>
       </div>
     </div>
   </div>
-
-
-
-
 </div>
 
 <script>
   $(document).ready(function() {
     $('.status-toggle').on('change', function() {
-      var reviewId = $(this).data('review-id');
-      var isChecked = $(this).is(':checked');
+      var $toggle = $(this);
+      var reviewId = $toggle.data('review-id');
+      var isChecked = $toggle.is(':checked');
+      var originalState = !isChecked;
 
-      // send an ajax request to update status 
+      $toggle.prop('disabled', true);
 
       $.ajax({
         url: "{{ route('admin.update.review.status') }}",
@@ -128,15 +120,15 @@
         },
         success: function(response) {
           toastr.success(response.message);
+          $toggle.prop('disabled', false);
         },
-        error: function() {
-
+        error: function(xhr) {
+          toastr.error('Failed to update status');
+          $toggle.prop('checked', originalState);
+          $toggle.prop('disabled', false);
         }
       });
-
     });
   });
 </script>
-
-
 @endsection

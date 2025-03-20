@@ -115,15 +115,15 @@
            <div class="col-lg-8 pb-5">
                <div class="course-details-content-wrap pt-90px">
                  <div class="course-overview-card bg-gray p-4 rounded">
-    <h3 class="fs-24 font-weight-semi-bold pb-3">What you'll learn</h3>
-    <ul class="generic-list-item overview-list-item">
-        @forelse ($goals as $goal)
-            <li><i class="la la-check mr-1 text-black"></i> {{ trim($goal) }}</li>
-        @empty
-            <li>No goals specified for this course.</li>
-        @endforelse
-    </ul>
-</div><!-- end course-overview-card -->
+                    <h3 class="fs-24 font-weight-semi-bold pb-3">What you'll learn</h3>
+                    <ul class="generic-list-item overview-list-item">
+                        @forelse ($goals as $goal)
+                            <li><i class="la la-check mr-1 text-black"></i> {{ trim($goal) }}</li>
+                        @empty
+                            <li>No goals specified for this course.</li>
+                        @endforelse
+                    </ul>
+                 </div><!-- end course-overview-card -->
                    <div class="course-overview-card bg-gray p-4 rounded">
                        <h3 class="fs-16 font-weight-semi-bold">Curated for the <a href="for-business.html" class="text-color hover-underline">Aduca for Business</a> collection</h3>
                    </div><!-- end course-overview-card -->
@@ -442,7 +442,7 @@
                        <div class="card-body">
                            <div class="preview-course-video">
                                <a href="javascript:void(0)" data-toggle="modal" data-target="#previewModal">
-                                   <img src="{{ asset($course->course_image) }}" alt="course-img" class="w-100 rounded lazy">
+                                   <img src="{{ !empty($course->course_image) ? Storage::url('upload/course_images/thumbnail/' . $course->course_image) : url('upload/no_image.jpg') }}" alt="course-img" class="w-100 rounded lazy">
                                    <div class="preview-course-video-content">
                                        <div class="overlay"></div>
                                        <div class="play-button">
@@ -545,7 +545,7 @@
                            @foreach ($relatedCourses as $related)
                                <div class="media media-card border-bottom border-bottom-gray pb-4 mb-4">
                                    <a href="{{ url('course/details/'.$related->id.'/'.$related->course_name_slug) }}" class="media-img">
-                                       <img class="mr-3 lazy" src="{{ asset($related->course_image) }}" alt="Related course image">
+                                       <img class="mr-3 lazy" src="{{ !empty($related->course_image) ? Storage::url('upload/course_images/thumbnail/' . $related->course_image) : url('upload/no_image.jpg') }}" alt="Related course image">
                                    </a>
                                    <div class="media-body">
                                        <h5 class="fs-15"><a href="{{ url('course/details/'.$related->id.'/'.$related->course_name_slug) }}">{{ $related->course_name }}</a></h5>
@@ -588,7 +588,7 @@
                     <div class="card card-item">
                         <div class="card-image">
                             <a href="{{ url('course/details/'.$inscourse->id.'/'.$inscourse->course_name_slug) }}" class="d-block">
-                                <img class="card-img-top" src="{{ asset($inscourse->course_image) }}" alt="Card image cap">
+                                <img class="card-img-top" src="{{ !empty($inscourse->course_image) ? Storage::url('upload/course_images/thumbnail/' . $inscourse->course_image) : url('upload/no_image.jpg') }}" alt="Card image cap">
                             </a>
                             <div class="course-badge-labels">
                                 @if ($inscourse->bestseller == 1)
@@ -714,8 +714,9 @@
                 </button>
             </div><!-- end modal-header -->
             <div class="modal-body">
-                <video controls crossorigin playsinline poster="{{ asset($course->course_image) }}" id="player">
-                    <source src="{{ asset($course->video) }}" type="video/mp4"/>
+                <video controls crossorigin playsinline poster="{{ !empty($course->course_image) ? Storage::url('upload/course_images/thumbnail/' . $course->course_image) : url('upload/no_image.jpg') }}" id="player">
+                    <source src="{{ !empty($course->video) ? Storage::url('upload/course_images/video/' . $course->video) : '' }}" type="video/mp4"/>
+                    <p>Your browser doesn't support HTML5 video. Here is a <a href="{{ !empty($course->video) ? Storage::url('upload/course_images/video/' . $course->video) : '#' }}">link to the video</a> instead.</p>
                 </video>
             </div><!-- end modal-body -->
         </div><!-- end modal-content -->

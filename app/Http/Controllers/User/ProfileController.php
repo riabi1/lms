@@ -15,7 +15,7 @@ class ProfileController extends Controller
     public function edit()
     {
         $profileData = Auth::guard('web')->user();
-        return view('frontend.dashboard.edit_profile', compact('profileData'));
+        return view('User.edit_profile', compact('profileData'));
     }
 
     public function update(Request $request)

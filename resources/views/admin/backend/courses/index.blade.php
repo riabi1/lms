@@ -21,8 +21,7 @@
         </ol>
       </nav>
     </div>
-    <div class="ms-auto">
-    </div>
+   
   </div>
   <!--end breadcrumb-->
 
@@ -46,12 +45,14 @@
             @foreach ($courses as $key => $item)
             <tr>
               <td>{{ $key + 1 }}</td>
-              <td><img src="{{ asset($item->course_image) }}" alt="" style="width: 70px; height:40px;"></td>
+              <td><img src="{{ asset('storage/upload/course_images/thumbnail/' . $item->course_image) }}" alt="" style="width: 70px; height:40px;"></td>
               <td>{{ $item->course_name }}</td>
               <td>{{ $item->instructor->name }}</td>
               <td>{{ $item->category->category_name }}</td>
               <td>{{ $item->selling_price }}</td>
-              <td><a href="{{ route('admin.course.details', $item->id) }}" class="btn btn-info"><i class="lni lni-eye"></i></a></td>
+              <td>
+                <a href="{{ route('admin.courses.show', $item->id) }}" class="btn btn-info"><i class="lni lni-eye"></i></a>
+              </td>
               <td>
                 <div class="form-check-danger form-check form-switch">
                   <input class="form-check-input status-toggle large-checkbox" type="checkbox" id="flexSwitchCheckCheckedDanger{{ $item->id }}" data-course-id="{{ $item->id }}" {{ $item->status ? 'checked' : '' }}>
