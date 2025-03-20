@@ -12,13 +12,13 @@ class SubCategoryController extends Controller
   public function index()
   {
     $subcategories = SubCategory::latest()->get();
-    return view('admin.backend.subcategory.index', compact('subcategories'));
+    return view('admin.subcategory.index', compact('subcategories'));
   }
 
   public function create()
   {
     $categories = Category::latest()->get();
-    return view('admin.backend.subcategory.create', compact('categories'));
+    return view('admin.subcategory.create', compact('categories'));
   }
 
   public function store(Request $request)
@@ -43,14 +43,14 @@ class SubCategoryController extends Controller
   public function show($id)
   {
     $subcategory = SubCategory::findOrFail($id);
-    return view('admin.backend.subcategory.show', compact('subcategory'));
+    return view('admin.subcategory.show', compact('subcategory'));
   }
 
   public function edit($id)
   {
     $categories = Category::latest()->get();
     $subcategory = SubCategory::findOrFail($id);
-    return view('admin.backend.subcategory.edit', compact('categories', 'subcategory'));
+    return view('admin.subcategory.edit', compact('categories', 'subcategory'));
   }
 
   public function update(Request $request, $id)
@@ -82,9 +82,4 @@ class SubCategoryController extends Controller
     ]);
   }
 
-  // public function getSubcategories($category_id)
-  // {
-  //   $subcategories = SubCategory::where('category_id', $category_id)->get(['id', 'subcategory_name']);
-  //   return response()->json($subcategories);
-  // }
 }

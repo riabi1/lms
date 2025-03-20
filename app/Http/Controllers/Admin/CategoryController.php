@@ -12,31 +12,31 @@ class CategoryController extends Controller
     public function index()
     {
         $categories = Category::latest()->get();
-        return view('admin.backend.category.index', compact('categories'));
+        return view('admin.category.index', compact('categories'));
     }
 
     public function create()
     {
-        return view('admin.backend.category.create');
+        return view('admin.category.create');
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'category_name' => 'required|string|max:255|unique:categories,category_name',
-            'image' => 'required|image|mimes:jpg,png,jpeg|max:5120', // Ajout de 'jpeg'
+            'image' => 'required|image|mimes:jpg,png,jpeg|max:5120',
         ]);
 
         try {
             // Stocker l'image dans storage/app/public/upload/category_images/
             $image = $request->file('image');
-            $filename = date('YmdHi') . '_' . $image->getClientOriginalName(); // Nom unique
+            $filename = date('YmdHi') . '_' . $image->getClientOriginalName(); 
             $imagePath = $image->storeAs('upload/category_images', $filename, 'public');
 
             Category::create([
                 'category_name' => $request->category_name,
                 'category_slug' => strtolower(str_replace(' ', '-', $request->category_name)),
-                'image' => $filename, // Stocker uniquement le nom du fichier
+                'image' => $filename, 
             ]);
 
             return redirect()->route('admin.categories.index')->with([
@@ -54,7 +54,7 @@ class CategoryController extends Controller
     public function edit($id)
     {
         $category = Category::findOrFail($id);
-        return view('admin.backend.category.edit', compact('category'));
+        return view('admin.category.edit', compact('category'));
     }
 
     public function update(Request $request, $id)
@@ -63,7 +63,7 @@ class CategoryController extends Controller
 
         $request->validate([
             'category_name' => 'required|string|max:255|unique:categories,category_name,' . $id,
-            'image' => 'sometimes|image|mimes:jpg,png,jpeg|max:5120', // Ajout de 'jpeg'
+            'image' => 'sometimes|image|mimes:jpg,png,jpeg|max:5120', 
         ]);
 
         try {
@@ -73,7 +73,6 @@ class CategoryController extends Controller
             ];
 
             if ($request->hasFile('image')) {
-                // Supprimer l'ancienne image si elle existe
                 if ($category->image && Storage::disk('public')->exists('upload/category_images/' . $category->image)) {
                     Storage::disk('public')->delete('upload/category_images/' . $category->image);
                 }
@@ -82,7 +81,7 @@ class CategoryController extends Controller
                 $image = $request->file('image');
                 $filename = date('YmdHi') . '_' . $image->getClientOriginalName();
                 $imagePath = $image->storeAs('upload/category_images', $filename, 'public');
-                $data['image'] = $filename; // Mettre à jour avec le nouveau nom de fichier
+                $data['image'] = $filename; 
             }
 
             $category->update($data);

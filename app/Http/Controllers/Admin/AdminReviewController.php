@@ -11,7 +11,7 @@ class AdminReviewController extends Controller
     public function pending()
     {
         $reviews = Review::where('status', 0)->orderBy('id', 'DESC')->get();
-        return view('admin.backend.review.pending_reviews', compact('reviews'));
+        return view('admin.review.pending_reviews', compact('reviews'));
     }
 
     public function updateStatus(Request $request)
@@ -31,6 +31,6 @@ class AdminReviewController extends Controller
     public function active()
     {
         $reviews = Review::where('status', 1)->orderBy('id', 'DESC')->get();
-        return view('admin.backend.review.active_reviews', compact('reviews'));
+        return view('admin.review.active_reviews', compact('reviews'));
     }
 }

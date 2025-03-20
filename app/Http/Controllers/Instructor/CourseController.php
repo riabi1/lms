@@ -184,7 +184,7 @@ class CourseController extends Controller
             return null;
         }
 
-        // Générer un nom unique basé sur la date et le nom original
+        // Générer un nom unique 
         $filename = date('YmdHi') . '_' . $file->getClientOriginalName();
 
         // Stocker dans storage/app/public/<path>/
@@ -194,11 +194,11 @@ class CourseController extends Controller
             $img = $manager->read($file)->resize(370, 246)->toJpeg(80);
             Storage::disk('public')->put("$path/$filename", (string) $img);
         } else {
-            // Stocker les vidéos directement
+            
             $file->storeAs($path, $filename, 'public');
         }
 
-        // Vérifier si le fichier a été créé
+       
         if (!Storage::disk('public')->exists("$path/$filename")) {
             \Log::error('File upload failed:', ['path' => "$path/$filename"]);
             return null;
@@ -206,7 +206,6 @@ class CourseController extends Controller
 
         \Log::info('File uploaded successfully:', ['path' => "$path/$filename"]);
 
-        // Retourner uniquement le nom du fichier pour la base de données
         return $filename;
     }
 

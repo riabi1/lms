@@ -7,11 +7,6 @@ use App\Models\Course;
 
 class AdminCourseController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth:admin');
-    }
-
     /**
      * Display a listing of the courses.
      */
@@ -33,29 +28,10 @@ class AdminCourseController extends Controller
             ->latest()
             ->get();
 
-        return view('admin.backend.courses.index', compact('courses'));
+        return view('admin.courses.index', compact('courses'));
     }
 
-    /**
-     * Show the form for creating a new course.
-     */
-    public function create()
-    {
-        return view('admin.backend.courses.create');
-    }
 
-    /**
-     * Store a newly created course in storage.
-     */
-    public function store(Request $request)
-    {
-        // Pour l'instant, pas de logique d'ajout côté admin.
-        // Si vous voulez permettre la création, ajoutez la validation et la logique ici.
-        return redirect()->route('admin.courses.index')->with([
-            'message' => 'Course creation not implemented yet.',
-            'alert-type' => 'info'
-        ]);
-    }
 
     /**
      * Display the specified course.
@@ -63,24 +39,13 @@ class AdminCourseController extends Controller
     public function show($id)
     {
         $course = Course::findOrFail($id);
-        return view('admin.backend.courses.show', compact('course'));
+        return view('admin.courses.show', compact('course'));
     }
 
-    /**
-     * Remove the specified course from storage.
-     */
-    public function destroy($id)
-    {
-        // Pour l'instant, pas de logique de suppression.
-        // Si vous voulez permettre la suppression, ajoutez la logique ici.
-        return redirect()->route('admin.courses.index')->with([
-            'message' => 'Course deletion not implemented yet.',
-            'alert-type' => 'info'
-        ]);
-    }
+
 
     /**
-     * Update the status of a course (méthode personnalisée).
+     * Update the status of a course 
      */
     public function UpdateCourseStatus(Request $request)
     {

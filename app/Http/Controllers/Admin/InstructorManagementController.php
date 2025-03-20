@@ -15,18 +15,18 @@ class InstructorManagementController extends Controller
     public function index(Request $request)
     {
         $allinstructor = Instructor::all();
-        $section = $request->query('section', 'list'); // Par défaut : liste
+        $section = $request->query('section', 'list'); 
         $instructor = null;
 
         if ($section === 'show') {
             $instructor = Instructor::find($request->query('id'));
         }
 
-        return view('admin.backend.instructor.index', compact('allinstructor', 'section', 'instructor'));
+        return view('admin.instructor.index', compact('allinstructor', 'section', 'instructor'));
     }
 
     /**
-     * Display the specified instructor (handled in index).
+     * Display the specified instructor .
      */
     public function show($id)
     {

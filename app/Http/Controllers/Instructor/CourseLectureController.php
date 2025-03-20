@@ -33,7 +33,7 @@ class CourseLectureController extends Controller
         'lecture_title' => 'required|string|max:255',
         'section_id' => 'required|exists:course_sections,id',
         'url' => 'nullable|url',
-        'video' => 'nullable|file|mimes:mp4,webm|max:102400', // 100MB max
+        'video' => 'nullable|file|mimes:mp4,webm|max:102400',
         'content' => 'nullable|string',
     ]);
 
