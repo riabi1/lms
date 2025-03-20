@@ -1,4 +1,4 @@
-@extends('admin.admin_dashboard')
+@extends('admin.layout.Admin_layout')
 @section('admin')
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
@@ -17,12 +17,11 @@
       <nav aria-label="breadcrumb">
         <ol class="breadcrumb mb-0 p-0">
           <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}"><i class="bx bx-home-alt"></i></a></li>
-          <li class="breadcrumb-item active" aria-current="page">All Pending Reviews</li>
+          <li class="breadcrumb-item active" aria-current="page">All Active Reviews</li>
         </ol>
       </nav>
     </div>
-    <div class="ms-auto">
-    </div>
+    <div class="ms-auto"></div>
   </div>
   <!--end breadcrumb-->
 
@@ -45,7 +44,7 @@
             <tr>
               <td>{{ $key + 1 }}</td>
               <td>{{ $item->course->course_name }}</td>
-              <td>{{ $item->user->name }}</td>
+              <td>{{ $item->user->name ?? 'N/A' }}</td>
               <td>{{ $item->comment }}</td>
               <td>
                 @if($item->rating == null)
@@ -112,7 +111,7 @@
       $toggle.prop('disabled', true);
 
       $.ajax({
-        url: "{{ route('admin.update.review.status') }}", // Fixed route typo
+        url: "{{ route('admin.update.review.status') }}",
         method: "POST",
         data: {
           review_id: reviewId,
@@ -132,5 +131,4 @@
     });
   });
 </script>
-
 @endsection

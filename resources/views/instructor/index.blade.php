@@ -1,4 +1,4 @@
-@extends('instructor.instructor_dashboard')
+@extends('Instructor.layout.Instructor_layout')
 @section('instructor')
 <div class="container py-4">
     <div class="card p-4">

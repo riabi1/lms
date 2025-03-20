@@ -3,21 +3,19 @@
 namespace App\Http\Controllers\User;
 
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class ProfileController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth:web');
-    }
+   
 
     public function edit()
     {
         $profileData = Auth::guard('web')->user();
-        return view('frontend.dashboard.edit_profile', compact('profileData'));
+        return view('User.edit_profile', compact('profileData'));
     }
 
     public function update(Request $request)

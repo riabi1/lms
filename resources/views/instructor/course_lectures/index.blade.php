@@ -1,4 +1,4 @@
-@extends('instructor.instructor_dashboard')
+@extends('Instructor.layout.Instructor_layout')
 @section('instructor')
 
 <div class="page-content">

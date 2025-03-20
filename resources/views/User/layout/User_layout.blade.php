@@ -46,7 +46,7 @@
 <!--======================================
         START HEADER AREA
     ======================================-->
-  @include('frontend.dashboard.body.header')
+  @include('User.body.header')
 <!--======================================
         END HEADER AREA
 ======================================-->
@@ -57,7 +57,7 @@
 <section class="dashboard-area">
     <div class="off-canvas-menu dashboard-off-canvas-menu off--canvas-menu custom-scrollbar-styled pt-20px">
         
-    @include('frontend.dashboard.body.sidebar')
+    @include('User.body.sidebar')
       
     </div><!-- end off-canvas-menu -->
    
@@ -74,7 +74,7 @@
            
             @yield('userdashboard')
 
-            @include('frontend.dashboard.body.footer') 
+            @include('User.body.footer') 
 
 
         </div><!-- end container-fluid -->

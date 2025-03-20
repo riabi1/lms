@@ -1,4 +1,4 @@
-@extends('frontend.dashboard.user_dashboard')
+@extends('User.layout.User_layout')
 @section('userdashboard')
 <div class="container">
   <div class="row justify-content-center">
@@ -8,7 +8,7 @@
           <h4>Edit Review for {{ $review->course->course_name }}</h4>
         </div>
         <div class="card-body">
-          <form action="{{ route('user.review.update', $review->id) }}" method="POST">
+          <form action="{{ route('user.reviews.update', $review->id) }}" method="POST">
             @csrf
             @method('PUT')
 
@@ -16,7 +16,7 @@
               <label for="comment">Comment</label>
               <textarea class="form-control @error('comment') is-invalid @enderror" id="comment" name="comment" rows="3" required>{{ old('comment', $review->comment) }}</textarea>
               @error('comment')
-              <div class="invalid-feedback">{{ $message }}</div>
+                <div class="invalid-feedback">{{ $message }}</div>
               @enderror
             </div>
 
@@ -25,15 +25,15 @@
               <select class="form-control @error('rate') is-invalid @enderror" id="rate" name="rate" required>
                 @for ($i = 1; $i <= 5; $i++)
                   <option value="{{ $i }}" {{ old('rate', $review->rating) == $i ? 'selected' : '' }}>{{ $i }} Star{{ $i > 1 ? 's' : '' }}</option>
-                  @endfor
+                @endfor
               </select>
               @error('rate')
-              <div class="invalid-feedback">{{ $message }}</div>
+                <div class="invalid-feedback">{{ $message }}</div>
               @enderror
             </div>
 
             <button type="submit" class="btn btn-primary">Update Review</button>
-            <a href="{{ route('user.reviews') }}" class="btn btn-secondary">Cancel</a>
+            <a href="{{ route('user.reviews.index') }}" class="btn btn-secondary">Cancel</a>
           </form>
         </div>
       </div>
