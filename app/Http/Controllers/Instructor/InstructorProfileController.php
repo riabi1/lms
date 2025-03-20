@@ -10,11 +10,7 @@ use Illuminate\Support\Facades\Hash;
 
 class InstructorProfileController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth:instructor');
-    }
-
+    
     public function edit()
     {
         $instructor = Auth::guard('instructor')->user();
