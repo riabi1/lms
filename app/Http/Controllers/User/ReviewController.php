@@ -18,7 +18,7 @@ class ReviewController extends Controller
             ->orderBy('id', 'DESC')
             ->get();
 
-        return view('User.review.index', compact('reviews'));
+        return view('User.reviews.index', compact('reviews'));
     }
 
     public function create()
