@@ -94,8 +94,8 @@
                     </form>
                   </div>
                  <div class="col-12 mt-3">
-                                   <div class="d-grid">
-                                 <a href="{{ route('instructor.social.google.redirect') }}" class="btn btn-outline-danger">
+                   <div class="d-grid">
+                  <a href="{{ route('instructor.social.google.redirect') }}" class="btn btn-outline-danger">
                                   <i class="bx bxl-google mr-2"></i> Login with Google
                                   </a>
                                     </div>
