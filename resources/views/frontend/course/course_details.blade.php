@@ -484,10 +484,12 @@
                                    <span class="text-color-3">4 days</span> left at this price!
                                </p>
                                <div class="buy-course-btn-box">
-                                   <form action="{{ route('cart.add', $course->id) }}" method="POST" class="w-100 mb-2">
-                                       @csrf
-                                       <button type="submit" class="btn theme-btn w-100"><i class="la la-shopping-cart fs-18 mr-1"></i> Add to Cart</button>
-                                   </form>
+                                   <form action="{{ route('cart.add', $course->id) }}" method="POST">
+                                        @csrf
+                                        <button type="submit" class="btn theme-btn w-100">
+                                            <i class="la la-shopping-cart fs-18 mr-1"></i> Add to Cart
+                                        </button>
+                                    </form>
                                    <button type="button" class="btn theme-btn w-100 theme-btn-white mb-2" onclick="buyCourse({{ $course->id }}, '{{ $course->course_name }}', '{{ $course->instructor_id }}', '{{ $course->course_name_slug }}')"><i class="la la-shopping-bag mr-1"></i> Buy this course</button>
                                    <div class="input-group mb-2" id="couponField">
                                        <input class="form-control form--control pl-3" type="text" id="coupon_name" placeholder="Coupon code">

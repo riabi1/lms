@@ -36,7 +36,6 @@
             <!-- Gestion dynamique des liens selon l'état de connexion -->
             <ul class="generic-list-item d-flex flex-wrap align-items-center fs-14 border-left border-left-gray pl-3 ml-3">
               @guest
-                <!-- Si l'utilisateur n'est pas connecté -->
                 <li class="d-flex align-items-center pr-3 mr-3 border-right border-right-gray">
                   <i class="la la-sign-in mr-1"></i>
                   <a href="{{ route('login') }}">Login</a>
@@ -46,7 +45,6 @@
                   <a href="{{ route('register') }}">Register</a>
                 </li>
               @else
-                <!-- Si l'utilisateur est connecté -->
                 <li class="d-flex align-items-center pr-3 mr-3 border-right border-right-gray">
                   <i class="la la-tachometer mr-1"></i>
                   <a href="{{ route('dashboard') }}">Dashboard</a>
@@ -144,19 +142,31 @@
                     <ul class="cart-dropdown-menu">
                       @if ($cartQty > 0)
                         @foreach ($cart as $item)
-                          <li class="media media-card">
-                            <a href="{{ url('course/details/'.$item['course_id'].'/'.Str::slug($item['course_name'])) }}" class="media-img mr-3">
-                              @php
-                                $course = App\Models\Course::find($item['course_id']);
-                              @endphp
-                              <img src="{{ !empty($course->course_image) ? Storage::url('upload/course_images/thumbnail/' . $course->course_image) : url('upload/no_image.jpg') }}" alt="{{ $item['course_name'] }}" class="lazy">
-                            </a>
-                            <div class="media-body">
-                              <h5 class="fs-15"><a href="{{ url('course/details/'.$item['course_id'].'/'.Str::slug($item['course_name'])) }}">{{ Str::limit($item['course_name'], 20) }}</a></h5>
-                              <p class="text-black font-weight-semi-bold lh-18 fs-15">${{ number_format($item['price'], 2) }}</p>
-                              <a href="{{ route('cart.remove', $item['course_id']) }}" class="text-danger fs-13">Remove</a>
-                            </div>
-                          </li>
+                          @if (isset($item['course_id']))
+                            <li class="media media-card">
+                              <a href="{{ url('course/details/'.$item['course_id'].'/'.Str::slug($item['course_name'] ?? 'course')) }}" class="media-img mr-3">
+                                @php
+                                  $course = App\Models\Course::find($item['course_id']);
+                                @endphp
+                                <img src="{{ !empty($course->course_image) ? Storage::url('upload/course_images/thumbnail/' . $course->course_image) : url('upload/no_image.jpg') }}" 
+                                     alt="{{ $item['course_name'] ?? 'Unknown Course' }}" 
+                                     class="lazy">
+                              </a>
+                              <div class="media-body">
+                                <h5 class="fs-15">
+                                  <a href="{{ url('course/details/'.$item['course_id'].'/'.Str::slug($item['course_name'] ?? 'course')) }}">{{ Str::limit($item['course_name'] ?? 'N/A', 20) }}</a>
+                                </h5>
+                                <p class="text-black font-weight-semi-bold lh-18 fs-15">${{ number_format($item['price'] ?? 0, 2) }}</p>
+                                <a href="{{ route('cart.remove', $item['course_id']) }}" class="text-danger fs-13">Remove</a>
+                              </div>
+                            </li>
+                          @else
+                            <li class="media media-card">
+                              <div class="media-body fs-16">
+                                <p class="text-black lh-18">Invalid cart item</p>
+                              </div>
+                            </li>
+                          @endif
                         @endforeach
                       @else
                         <li class="media media-card">
@@ -172,7 +182,7 @@
                         </div>
                       </li>
                       <li>
-                        <a href="{{ route('cart.view') }}" class="btn theme-btn w-100">Go to cart <i class="la la-arrow-right icon ml-1"></i></a>
+                        <a href="{{ route('cart') }}" class="btn theme-btn w-100">Go to cart <i class="la la-arrow-right icon ml-1"></i></a>
                       </li>
                     </ul>
                   </li>
