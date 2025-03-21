@@ -98,7 +98,7 @@ class CartController extends Controller
 
     public function MyCart()
     {
-        return view('frontend.mycart.view_mycart');
+        return view('User.mycart.view_mycart');
     }
 
     public function GetCartCourse()
@@ -215,7 +215,7 @@ class CartController extends Controller
                 $cartTotal = Cart::total();
                 $cartQty = Cart::count();
 
-                return view('frontend.checkout.checkout_view', compact('carts', 'cartTotal', 'cartQty'));
+                return view('User.checkout.checkout_view', compact('carts', 'cartTotal', 'cartQty'));
             } else {
                 $notification = [
                     'message' => 'Add At Least One Course',
@@ -248,7 +248,7 @@ class CartController extends Controller
     $carts = Cart::content();
 
     if ($request->cash_delivery == 'stripe') {
-        return view('frontend.payment.stripe', compact('data', 'cartTotal', 'carts'));
+        return view('User.payment.stripe', compact('data', 'cartTotal', 'carts'));
     } elseif ($request->cash_delivery == 'handcash') {
         $payment = new Payment();
         $payment->name = $request->name;
