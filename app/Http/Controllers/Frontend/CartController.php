@@ -12,7 +12,7 @@ use Carbon\Carbon;
 
 class CartController extends Controller
 {
-public function AddToCart(Request $request, $id)
+    public function AddToCart(Request $request, $id)
     {
         $course = Course::with('instructor')->find($id);
         if (!$course) {
@@ -50,17 +50,16 @@ public function AddToCart(Request $request, $id)
         }
 
         $cart = Session::get('cart', []);
-        $subtotal = array_sum(array_column($cart, 'price')); // Sum of effective prices
+        $subtotal = array_sum(array_column($cart, 'price'));
 
+        $coupons = Session::get('coupons', []); // Array of applied coupons
         $couponDiscount = 0;
-        if (Session::has('coupon')) {
-            $coupon = Session::get('coupon');
-            $couponDiscount = $coupon['discount_amount'];
+        foreach ($coupons as $coupon) {
+            $couponDiscount += $coupon['discount_amount'];
         }
-
         $total = $subtotal - $couponDiscount;
 
-        return view('User.mycart.view_mycart', compact('cart', 'subtotal', 'couponDiscount', 'total'));
+        return view('User.mycart.view_mycart', compact('cart', 'subtotal', 'couponDiscount', 'total', 'coupons'));
     }
 
     public function CartRemove($id)
@@ -70,15 +69,20 @@ public function AddToCart(Request $request, $id)
             unset($cart[$id]);
             Session::put('cart', $cart);
 
-            if (Session::has('coupon')) {
-                $coupon = Coupon::where('coupon_name', Session::get('coupon')['coupon_name'])->first();
-                if ($coupon) {
-                    $newSubtotal = array_sum(array_column($cart, 'price'));
-                    Session::put('coupon', [
-                        'coupon_name' => $coupon->coupon_name,
-                        'discount_amount' => round($newSubtotal * $coupon->coupon_discount / 100),
-                    ]);
+            $coupons = Session::get('coupons', []);
+            if (!empty($coupons)) {
+                $newSubtotal = array_sum(array_column($cart, 'price'));
+                $updatedCoupons = [];
+                foreach ($coupons as $couponData) {
+                    $coupon = Coupon::where('coupon_name', $couponData['coupon_name'])->first();
+                    if ($coupon) {
+                        $updatedCoupons[$coupon->coupon_name] = [
+                            'coupon_name' => $coupon->coupon_name,
+                            'discount_amount' => round($newSubtotal * $coupon->coupon_discount / 100),
+                        ];
+                    }
                 }
+                Session::put('coupons', $updatedCoupons);
             }
         }
 
@@ -112,15 +116,33 @@ public function AddToCart(Request $request, $id)
             return redirect()->route('cart')->with('error', 'Coupon not applicable to any course in cart');
         }
 
+        $coupons = Session::get('coupons', []);
+        if (isset($coupons[$coupon->coupon_name])) {
+            return redirect()->route('cart')->with('info', 'Coupon already applied');
+        }
+
         $subtotal = array_sum(array_column($cart, 'price'));
         $discount = round($subtotal * $coupon->coupon_discount / 100);
 
-        Session::put('coupon', [
+        $coupons[$coupon->coupon_name] = [
             'coupon_name' => $coupon->coupon_name,
             'discount_amount' => $discount,
-        ]);
+        ];
+        Session::put('coupons', $coupons);
 
         return redirect()->route('cart')->with('success', 'Coupon applied!');
+    }
+
+    public function CouponRemove($couponName)
+    {
+        $coupons = Session::get('coupons', []);
+        if (isset($coupons[$couponName])) {
+            unset($coupons[$couponName]);
+            Session::put('coupons', $coupons);
+            return redirect()->route('cart')->with('success', 'Coupon removed!');
+        }
+
+        return redirect()->route('cart')->with('info', 'No such coupon was applied.');
     }
 
     public function CheckoutCreate()
@@ -135,7 +157,8 @@ public function AddToCart(Request $request, $id)
         }
 
         $subtotal = array_sum(array_column($cart, 'price'));
-        $couponDiscount = Session::has('coupon') ? Session::get('coupon')['discount_amount'] : 0;
+        $coupons = Session::get('coupons', []);
+        $couponDiscount = array_sum(array_column($coupons, 'discount_amount'));
         $total = $subtotal - $couponDiscount;
 
         return view('User.checkout.checkout_view', compact('cart', 'subtotal', 'couponDiscount', 'total'));
