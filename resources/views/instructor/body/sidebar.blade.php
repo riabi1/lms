@@ -56,7 +56,7 @@
         <div class="menu-title">Manage Coupon</div>
       </a>
       <ul class="mm-collapse">
-        <li><a href="#"><i class='bx bx-radio-circle'></i>All Coupon</a></li>
+        <li><a href="{{ route('instructor.coupon.index') }}"><i class='bx bx-radio-circle'></i>All Coupon</a></li>
       </ul>
     </li>
     <li>

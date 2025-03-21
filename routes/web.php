@@ -13,6 +13,7 @@ use App\Http\Controllers\Instructor\CourseController;
 use App\Http\Controllers\Instructor\CourseSectionController;
 use App\Http\Controllers\Admin\InstructorManagementController;
 use App\Http\Controllers\Instructor\ReviewController as InstructorReviewController;
+use App\Http\Controllers\Instructor\CouponController; // Ajout explicite du CouponController
 
 // Home Page Route
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -52,7 +53,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
     });
 });
 
-
 // Instructor Routes
 Route::prefix('instructor')->name('instructor.')->group(function () {
     require base_path('routes/auth/instructor.php');
@@ -66,10 +66,10 @@ Route::prefix('instructor')->name('instructor.')->group(function () {
         Route::resource('courses.sections', CourseSectionController::class)->names('course_sections');
         Route::resource('courses.lectures', CourseLectureController::class)->names('course_lectures');
         Route::get('/all/review', [InstructorReviewController::class, 'index'])->name('all.review');
+        // Coupon Resource Route
+        Route::resource('coupon', CouponController::class)->names('coupon');
     });
 });
-
-
 
 // Frontend Routes (Public)
 Route::get('/course/details/{id}/{slug}', [IndexController::class, 'CourseDetails'])->name('course.details');
@@ -77,3 +77,16 @@ Route::get('/category/{id}/{slug}', [IndexController::class, 'CategoryCourse'])-
 Route::get('/subcategory/{id}/{slug}', [IndexController::class, 'SubCategoryCourse'])->name('subcategory.course');
 Route::get('/instructor/details/{id}', [IndexController::class, 'InstructorDetails'])->name('instructor.details');
 Route::get('/courses', [IndexController::class, 'AllCourses'])->name('courses.all');
+
+// Cart Routes
+Route::post('/cart/add/{courseId}', [IndexController::class, 'addToCart'])->name('cart.add');
+Route::get('/cart', [IndexController::class, 'viewCart'])->name('cart.view');
+Route::get('/cart/remove/{courseId}', [IndexController::class, 'removeFromCart'])->name('cart.remove');
+Route::get('/cart/checkout', [IndexController::class, 'cartCheckout'])->name('cart.checkout'); // Renommé pour éviter le conflit
+
+// Coupon Routes 
+Route::post('/apply-coupon', [IndexController::class, 'applyCoupon'])->name('apply.coupon');
+Route::get('/remove-coupon', [IndexController::class, 'removeCoupon'])->name('remove.coupon');
+
+// Checkout Route
+Route::post('/checkout', [IndexController::class, 'checkout'])->name('checkout'); // Nom distinct

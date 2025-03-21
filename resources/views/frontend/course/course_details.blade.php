@@ -75,7 +75,7 @@
                         <span class="rating-total pl-1">({{ count($reviewcount) }} ratings)</span>
                     </div>
                 </div><!-- end d-flex -->
-                <p class="pt-2 pb-1">Created by <a href="#" class="text-color hover-underline">{{ $course->instructor->name ?? 'Unknown Instructor' }}</a></p>
+                <p class="pt-2 pb-1">Created by <a href="{{ route('instructor.details', $course->instructor_id) }}" class="text-color hover-underline">{{ $course->instructor->name ?? 'Unknown Instructor' }}</a></p>
                 <div class="d-flex flex-wrap align-items-center">
                     <p class="pr-3 d-flex align-items-center">
                         <svg class="svg-icon-color-gray mr-1" width="16px" viewBox="0 0 24 24"><path d="M23 12l-2.44-2.78.34-3.68-3.61-.82-1.89-3.18L12 3 8.6 1.54 6.71 4.72l-3.61.81.34 3.68L1 12l2.44 2.78-.34 3.69 3.61.82 1.89 3.18L12 21l3.4 1.46 1.89-3.18 3.61-.82-.34-3.68L23 12zm-10 5h-2v-2h2v2zm0-4h-2V7h2v6z"></path></svg>
@@ -206,7 +206,7 @@
                        <div class="instructor-wrap">
                            <div class="media media-card">
                                <div class="instructor-img">
-                                   <a href="#" class="media-img d-block">
+                                   <a href="{{ route('instructor.details', $course->instructor_id) }}" class="media-img d-block">
                                      <img class="lazy" src="{{ !empty($course->instructor->photo) ? Storage::url('upload/instructor_images/' . $course->instructor->photo) : url('upload/no_image.jpg') }}" alt="Instructor image">
                                    </a>
                                    <ul class="generic-list-item pt-3">
@@ -214,11 +214,11 @@
                                        <li><i class="la la-user mr-2 text-color-3"></i> 45,786 Students</li>
                                        <li><i class="la la-comment-o mr-2 text-color-3"></i> 2,533 Reviews</li>
                                        <li><i class="la la-play-circle-o mr-2 text-color-3"></i> {{ $instructorCourses->count() }} Courses</li>
-                                       <li><a href="#">View all Courses</a></li>
+                                       <li><a href="{{ route('instructor.details', $course->instructor_id) }}">View all Courses</a></li>
                                    </ul>
                                </div><!-- end instructor-img -->
                                <div class="media-body">
-                                   <h5><a href="#">{{ $course->instructor->name ?? 'Unknown Instructor' }}</a></h5>
+                                   <h5><a href="{{ route('instructor.details', $course->instructor_id) }}">{{ $course->instructor->name ?? 'Unknown Instructor' }}</a></h5>
                                    <span class="d-block lh-18 pt-2 pb-3">Joined {{ $course->instructor && $course->instructor->created_at ? \Carbon\Carbon::parse($course->instructor->created_at)->diffForHumans() : 'N/A' }}</span>
                                    <p class="text-black lh-18 pb-3">{{ $course->instructor->email ?? 'No email available' }}</p>
                                    <p class="pb-3">Lorem Ipsum is simply dummy text of the printing and typesetting industry.</p>
@@ -461,24 +461,33 @@
                                </a>
                            </div><!-- end preview-course-video -->
                            @php
-                               $amount = $course->selling_price - $course->discount_price;
-                               $discount = ($course->selling_price > 0) ? ($amount / $course->selling_price) * 100 : 0;
+                               $finalPrice = $course->discount_price !== null 
+                                   ? max(0, $course->selling_price - $course->discount_price) 
+                                   : $course->selling_price;
+                               $discountPercentage = ($course->selling_price > 0 && $course->discount_price !== null) 
+                                   ? round(($course->discount_price / $course->selling_price) * 100) 
+                                   : 0;
                            @endphp            
                            <div class="preview-course-feature-content pt-40px">
                                <p class="d-flex align-items-center pb-2">
-                                   @if ($course->discount_price == null)
-                                       <span class="fs-35 font-weight-semi-bold text-black">${{ $course->selling_price }}</span>
+                                   @if ($finalPrice < $course->selling_price)
+                                       <span class="fs-35 font-weight-semi-bold text-black">${{ number_format($finalPrice, 2) }}</span>
+                                       <span class="before-price mx-1">${{ number_format($course->selling_price, 2) }}</span>
                                    @else
-                                       <span class="fs-35 font-weight-semi-bold text-black">${{ $course->discount_price }}</span>
-                                       <span class="before-price mx-1">${{ $course->selling_price }}</span>
+                                       <span class="fs-35 font-weight-semi-bold text-black">${{ number_format($finalPrice, 2) }}</span>
                                    @endif
-                                   <span class="price-discount">{{ round($discount) }}% off</span>
+                                   @if ($discountPercentage > 0)
+                                       <span class="price-discount">{{ $discountPercentage }}% off</span>
+                                   @endif
                                </p>
                                <p class="preview-price-discount-text pb-35px">
                                    <span class="text-color-3">4 days</span> left at this price!
                                </p>
                                <div class="buy-course-btn-box">
-                                   <button type="submit" class="btn theme-btn w-100 mb-2" onclick="addToCart({{ $course->id }}, '{{ $course->course_name }}', '{{ $course->instructor_id }}', '{{ $course->course_name_slug }}')"><i class="la la-shopping-cart fs-18 mr-1"></i> Add to cart</button>
+                                   <form action="{{ route('cart.add', $course->id) }}" method="POST" class="w-100 mb-2">
+                                       @csrf
+                                       <button type="submit" class="btn theme-btn w-100"><i class="la la-shopping-cart fs-18 mr-1"></i> Add to Cart</button>
+                                   </form>
                                    <button type="button" class="btn theme-btn w-100 theme-btn-white mb-2" onclick="buyCourse({{ $course->id }}, '{{ $course->course_name }}', '{{ $course->instructor_id }}', '{{ $course->course_name_slug }}')"><i class="la la-shopping-bag mr-1"></i> Buy this course</button>
                                    <div class="input-group mb-2" id="couponField">
                                        <input class="form-control form--control pl-3" type="text" id="coupon_name" placeholder="Coupon code">
@@ -543,6 +552,11 @@
                            <h3 class="card-title fs-18 pb-2">Related Courses</h3>
                            <div class="divider"><span></span></div>
                            @foreach ($relatedCourses as $related)
+                               @php
+                                   $relatedFinalPrice = $related->discount_price !== null 
+                                       ? max(0, $related->selling_price - $related->discount_price) 
+                                       : $related->selling_price;
+                               @endphp
                                <div class="media media-card border-bottom border-bottom-gray pb-4 mb-4">
                                    <a href="{{ url('course/details/'.$related->id.'/'.$related->course_name_slug) }}" class="media-img">
                                        <img class="mr-3 lazy" src="{{ !empty($related->course_image) ? Storage::url('upload/course_images/thumbnail/' . $related->course_image) : url('upload/no_image.jpg') }}" alt="Related course image">
@@ -550,10 +564,10 @@
                                    <div class="media-body">
                                        <h5 class="fs-15"><a href="{{ url('course/details/'.$related->id.'/'.$related->course_name_slug) }}">{{ $related->course_name }}</a></h5>
                                        <span class="d-block lh-18 py-1 fs-14">{{ $related->instructor->name ?? 'Unknown Instructor' }}</span>
-                                       @if ($related->discount_price == null)
-                                           <p class="text-black font-weight-semi-bold lh-18 fs-15">${{ $related->selling_price }}</p>
+                                       @if ($relatedFinalPrice < $related->selling_price)
+                                           <p class="text-black font-weight-semi-bold lh-18 fs-15">${{ number_format($relatedFinalPrice, 2) }} <span class="before-price fs-14">${{ number_format($related->selling_price, 2) }}</span></p>
                                        @else
-                                           <p class="text-black font-weight-semi-bold lh-18 fs-15">${{ $related->discount_price }} <span class="before-price fs-14">${{ $related->selling_price }}</span></p>
+                                           <p class="text-black font-weight-semi-bold lh-18 fs-15">${{ number_format($relatedFinalPrice, 2) }}</p>
                                        @endif
                                    </div>
                                </div><!-- end media -->
@@ -578,12 +592,16 @@
 <section class="related-course-area bg-gray pt-60px pb-60px">
     <div class="container">
         <div class="related-course-wrap">
-            <h3 class="fs-28 font-weight-semi-bold pb-35px">More Courses by <a href="#" class="text-color hover-underline">{{ $course->instructor->name ?? 'Unknown Instructor' }}</a></h3>
+            <h3 class="fs-28 font-weight-semi-bold pb-35px">More Courses by <a href="{{ route('instructor.details', $course->instructor_id) }}" class="text-color hover-underline">{{ $course->instructor->name ?? 'Unknown Instructor' }}</a></h3>
             <div class="view-more-carousel-2 owl-action-styled">
                 @foreach ($instructorCourses as $inscourse)
                     @php
-                        $amount = $inscourse->selling_price - $inscourse->discount_price;
-                        $discount = ($inscourse->selling_price > 0) ? ($amount / $inscourse->selling_price) * 100 : 0;
+                        $insFinalPrice = $inscourse->discount_price !== null 
+                            ? max(0, $inscourse->selling_price - $inscourse->discount_price) 
+                            : $inscourse->selling_price;
+                        $insDiscountPercentage = ($inscourse->selling_price > 0 && $inscourse->discount_price !== null) 
+                            ? round(($inscourse->discount_price / $inscourse->selling_price) * 100) 
+                            : 0;
                     @endphp
                     <div class="card card-item">
                         <div class="card-image">
@@ -594,17 +612,17 @@
                                 @if ($inscourse->bestseller == 1)
                                     <div class="course-badge">Bestseller</div>
                                 @endif
-                                @if ($inscourse->discount_price == null)
-                                    <div class="course-badge blue">New</div>
+                                @if ($insDiscountPercentage > 0)
+                                    <div class="course-badge blue">{{ $insDiscountPercentage }}%</div>
                                 @else
-                                    <div class="course-badge blue">{{ round($discount) }}%</div>
+                                    <div class="course-badge blue">New</div>
                                 @endif
                             </div>
                         </div><!-- end card-image -->
                         <div class="card-body">
                             <h6 class="ribbon ribbon-blue-bg fs-14 mb-3">{{ $inscourse->label }}</h6>
                             <h5 class="card-title"><a href="{{ url('course/details/'.$inscourse->id.'/'.$inscourse->course_name_slug) }}">{{ $inscourse->course_name }}</a></h5>
-                            <p class="card-text"><a href="#">{{ $inscourse->instructor->name ?? 'Unknown Instructor' }}</a></p>
+                            <p class="card-text"><a href="{{ route('instructor.details', $inscourse->instructor_id) }}">{{ $inscourse->instructor->name ?? 'Unknown Instructor' }}</a></p>
                             <div class="rating-wrap d-flex align-items-center py-2">
                                 <div class="review-stars">
                                     <span class="rating-number">4.4</span>
@@ -617,10 +635,10 @@
                                 <span class="rating-total pl-1">(20,230)</span>
                             </div><!-- end rating-wrap -->
                             <div class="d-flex justify-content-between align-items-center">
-                                @if ($inscourse->discount_price == null)
-                                    <p class="card-price text-black font-weight-bold">${{ $inscourse->selling_price }}</p>
+                                @if ($insFinalPrice < $inscourse->selling_price)
+                                    <p class="card-price text-black font-weight-bold">${{ number_format($insFinalPrice, 2) }} <span class="before-price font-weight-medium">${{ number_format($inscourse->selling_price, 2) }}</span></p>
                                 @else
-                                    <p class="card-price text-black font-weight-bold">${{ $inscourse->discount_price }} <span class="before-price font-weight-medium">${{ $inscourse->selling_price }}</span></p> 
+                                    <p class="card-price text-black font-weight-bold">${{ number_format($insFinalPrice, 2) }}</p>
                                 @endif
                                 <div class="icon-element icon-element-sm shadow-sm cursor-pointer" title="Add to Wishlist"><i class="la la-heart-o"></i></div>
                             </div>
@@ -649,7 +667,7 @@
         <div class="row align-items-center">
             <div class="col-lg-9">
                 <div class="cta-content-wrap py-4 d-flex flex-wrap align-items-center">
-                    <svg class="flex-shrink-0 mr-4" width="70" viewBox="0 -48 496 496" xmlns="http://www.w3.org/2000/svg"><path d="m472 0h-448c-13.230469 0-24 10.769531-24 24v352c0 13.230469 10.769531 24 24 24h448c13.230469 0 24-10.769531 24-24v-352c0-13.230469-10.769531-24-24-24zm8 376c0 4.414062-3.59375 8-8 8h-448c-4.40625 0-8-3.585938-8-8v-352c0-4.40625 3.59375-8 8-8h448c4.40625 0 8 3.59375 8 8zm0 0"></path><path d="m448 32h-400v240h400zm-16 224h-368v-208h368zm0 0"></path><path d="m328 200.136719c0-17.761719-11.929688-33.578125-29.007812-38.464844l-26.992188-7.703125v-2.128906c9.96875-7.511719 16-19.328125 16-31.832032v-14.335937c0-21.503906-16.007812-39.726563-36.449219-41.503906-11.183593-.96875-22.34375 2.800781-30.574219 10.351562-8.25 7.550781-12.976562 18.304688-12.976562 29.480469v16c0 12.503906 6.03125 24.328125 16 31.832031v2.128907l-26.992188 7.710937c-17.078124 4.886719-29.007812 20.703125-29.007812 38.464844v39.863281h160zm-16 23.863281h-128v-23.863281c0-10.664063 7.160156-20.152344 17.40625-23.082031l38.59375-11.023438v-23.070312l-3.976562-2.3125c-7.527344-4.382813-12.023438-12.105469-12.023438-20.648438v-16c0-6.703125 2.839844-13.160156 7.792969-17.695312 5.007812-4.601563 11.496093-6.832032 18.382812-6.207032 12.230469 1.0625 21.824219 12.285156 21.824219 25.566406v14.335938c0 8.542969-4.496094 16.265625-12.023438 20.648438l-3.976562 2.3125v23.070312l38.59375 11.023438c10.246094 2.9375 17.40625 12.425781 17.40625 23.082031zm0 0"></path><path d="m32 364.945312 73.886719-36.945312-73.886719-36.945312zm16-48 22.113281 11.054688-22.113281 11.054688zm0 0"></path><path d="m152 288h16v80h-16zm0 0"></path><path d="m120 288h16v80h-16zm0 0"></path><path d="m336 288h-48v32h-104v16h104v32h48v-32h128v-16h-128zm-16 64h-16v-48h16zm0 0"></path></svg>
+                    <svg class="flex-shrink-0 mr-4" width="70" viewBox="0 -48 496 496" xmlns="http://www.w3.org/2000/svg"><path d="m472 0h-448c-13.230469 0-24 10.769531-24 24v352c0 13.230469 10.769531 24 24 24h448c13.230469 0 24-10.769531 24-24v-352c0-13.230469-10.769531-24-24-24zm8 376c0 4.414062-3.59375 8-8 8h-448c-4.40625 0-8-3.585938-8-8v-352c0-4.40625 3.59375-8 8-8h448c4.40625 0 8 3.59375 8 8zm0 0"></path><path d="m448 32h-400v240h400zm-16 224h-368v-208h368zm0 0"></path><path d="m328 200.136719c0-17.761719-11.929688-33.578125-29.007812-38.464844l-26.992188-7.703125v sanc-2.128906c9.96875-7.511719 16-19.328125 16-31.832032v-14.335937c0-21.503906-16.007812-39.726563-36.449219-41.503906-11.183593-.96875-22.34375 2.800781-30.574219 10.351562-8.25 7.550781-12.976562 18.304688-12.976562 29.480469v16c0 12.503906 6.03125 24.328125 16 31.832031v2.128907l-26.992188 7.710937c-17.078124 4.886719-29.007812 20.703125-29.007812 38.464844v39.863281h160zm-16 23.863281h-128v-23.863281c0-10.664063 7.160156-20.152344 17.40625-23.082031l38.59375-11.023438v-23.070312l-3.976562-2.3125c-7.527344-4.382813-12.023438-12.105469-12.023438-20.648438v-16c0-6.703125 2.839844-13.160156 7.792969-17.695312 5.007812-4.601563 11.496093-6.832032 18.382812-6.207032 12.230469 1.0625 21.824219 12.285156 21.824219 25.566406v14.335938c0 8.542969-4.496094 16.265625-12.023438 20.648438l-3.976562 2.3125v23.070312l38.59375 11.023438c10.246094 2.9375 17.40625 12.425781 17.40625 23.082031zm0 0"></path><path d="m32 364.945312 73.886719-36.945312-73.886719-36.945312zm16-48 22.113281 11.054688-22.113281 11.054688zm0 0"></path><path d="m152 288h16v80h-16zm0 0"></path><path d="m120 288h16v80h-16zm0 0"></path><path d="m336 288h-48v32h-104v16h104v32h48v-32h128v-16h-128zm-16 64h-16v-48h16zm0 0"></path></svg>
                     <div class="section-heading">
                         <h2 class="section__title mb-1 fs-22">Become a Teacher, Share your knowledge</h2>
                         <p class="section__desc">Create an online video course, reach students across the globe, and earn money</p>
