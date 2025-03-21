@@ -2,18 +2,19 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
-use App\Http\Controllers\Instructor\CourseLectureController;
-use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\User\ReviewController;
-use App\Http\Controllers\Admin\AdminReviewController;
+use App\Http\Controllers\Frontend\CartController;
+use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Frontend\IndexController;
 use App\Http\Controllers\Admin\AdminCourseController;
+use App\Http\Controllers\Admin\AdminReviewController;
 use App\Http\Controllers\Admin\SubCategoryController;
 use App\Http\Controllers\Instructor\CourseController;
+use App\Http\Controllers\Instructor\CouponController; 
+use App\Http\Controllers\Instructor\CourseLectureController;
 use App\Http\Controllers\Instructor\CourseSectionController;
 use App\Http\Controllers\Admin\InstructorManagementController;
 use App\Http\Controllers\Instructor\ReviewController as InstructorReviewController;
-use App\Http\Controllers\Instructor\CouponController; // Ajout explicite du CouponController
 
 // Home Page Route
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -26,6 +27,13 @@ Route::name('')->group(function () {
         return view('User.index');
     })->middleware(['auth:web', 'verified'])->name('dashboard');
     Route::middleware(['auth:web'])->group(function () {
+
+        // Cart Routes
+        Route::post('/cart/add/{id}', [CartController::class, 'AddToCart'])->name('cart.add');
+        Route::get('/cart', [CartController::class, 'MyCart'])->name('cart');
+        Route::delete('/cart/remove/{id}', [CartController::class, 'CartRemove'])->name('cart.remove');
+        Route::post('/coupon/apply', [CartController::class, 'CouponApply'])->name('coupon.apply');
+        Route::get('/checkout', [CartController::class, 'CheckoutCreate'])->name('checkout.create');
         Route::resource('reviews', ReviewController::class)->names('user.reviews')->except(['create', 'store', 'show']);
     });
 });
@@ -78,15 +86,4 @@ Route::get('/subcategory/{id}/{slug}', [IndexController::class, 'SubCategoryCour
 Route::get('/instructor/details/{id}', [IndexController::class, 'InstructorDetails'])->name('instructor.details');
 Route::get('/courses', [IndexController::class, 'AllCourses'])->name('courses.all');
 
-// Cart Routes
-Route::post('/cart/add/{courseId}', [IndexController::class, 'addToCart'])->name('cart.add');
-Route::get('/cart', [IndexController::class, 'viewCart'])->name('cart.view');
-Route::get('/cart/remove/{courseId}', [IndexController::class, 'removeFromCart'])->name('cart.remove');
-Route::get('/cart/checkout', [IndexController::class, 'cartCheckout'])->name('cart.checkout'); // Renommé pour éviter le conflit
 
-// Coupon Routes 
-Route::post('/apply-coupon', [IndexController::class, 'applyCoupon'])->name('apply.coupon');
-Route::get('/remove-coupon', [IndexController::class, 'removeCoupon'])->name('remove.coupon');
-
-// Checkout Route
-Route::post('/checkout', [IndexController::class, 'checkout'])->name('checkout'); // Nom distinct

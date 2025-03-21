@@ -14,8 +14,28 @@ class Course extends Model
      *
      * @var array
      */
-    protected $guarded = [];
-
+  protected $fillable = [
+        'category_id',
+        'subcategory_id',
+        'instructor_id',
+        'course_image',
+        'course_title',
+        'course_name',
+        'course_name_slug',
+        'description',
+        'video',
+        'label',
+        'duration',
+        'resources',
+        'certificate',
+        'selling_price',
+        'discount_price',
+        'prerequisites',
+        'bestseller',
+        'featured',
+        'highestrated',
+        'status',
+    ];
     /**
      * Define the relationship with the Category model.
      *
@@ -41,10 +61,10 @@ class Course extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function instructor()
-    {
-        return $this->belongsTo(Instructor::class, 'instructor_id', 'id');
-    }
+  public function instructor()
+{
+    return $this->belongsTo(Instructor::class, 'instructor_id');
+}
 
     /**
      * Define the relationship with the Review model.
