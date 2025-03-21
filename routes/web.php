@@ -23,19 +23,19 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::name('')->group(function () {
     require base_path('routes/auth/web.php');
 
-    Route::get('/dashboard', function () {
-        return view('User.index');
-    })->middleware(['auth:web', 'verified'])->name('dashboard');
-    Route::middleware(['auth:web'])->group(function () {
+ Route::get('/dashboard', function () {
+    return view('User.index');
+})->middleware(['auth:web', 'verified'])->name('dashboard');
 
-        // Cart Routes
-        Route::post('/cart/add/{id}', [CartController::class, 'AddToCart'])->name('cart.add');
-        Route::get('/cart', [CartController::class, 'MyCart'])->name('cart');
-        Route::delete('/cart/remove/{id}', [CartController::class, 'CartRemove'])->name('cart.remove');
-        Route::post('/coupon/apply', [CartController::class, 'CouponApply'])->name('coupon.apply');
-        Route::get('/checkout', [CartController::class, 'CheckoutCreate'])->name('checkout.create');
-        Route::resource('reviews', ReviewController::class)->names('user.reviews')->except(['create', 'store', 'show']);
-    });
+Route::middleware(['auth:web'])->group(function () {
+    Route::post('/cart/add/{id}', [CartController::class, 'AddToCart'])->name('cart.add');
+    Route::get('/cart', [CartController::class, 'MyCart'])->name('cart');
+    Route::delete('/cart/remove/{id}', [CartController::class, 'CartRemove'])->name('cart.remove');
+    Route::post('/coupon/apply', [CartController::class, 'CouponApply'])->name('coupon.apply');
+    Route::post('/coupon/remove/{couponName}', [CartController::class, 'CouponRemove'])->name('coupon.remove'); 
+    Route::get('/checkout', [CartController::class, 'CheckoutCreate'])->name('checkout.create');
+    Route::resource('reviews', ReviewController::class)->names('user.reviews')->except(['create', 'store', 'show']);
+});
 });
 
 // Admin Routes

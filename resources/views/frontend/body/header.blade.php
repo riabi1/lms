@@ -32,8 +32,6 @@
                 </svg>
               </button>
             </div>
-
-            <!-- Gestion dynamique des liens selon l'état de connexion -->
             <ul class="generic-list-item d-flex flex-wrap align-items-center fs-14 border-left border-left-gray pl-3 ml-3">
               @guest
                 <li class="d-flex align-items-center pr-3 mr-3 border-right border-right-gray">
@@ -135,54 +133,50 @@
                 <ul>
                   <li>
                     <p class="shop-cart-btn d-flex align-items-center">
-                      <i class="la la-shopping-cart"></i>
-                      <span class="product-count" id="cartQty">{{ $cartQty }}</span>
+                      <i class="la la-shopping-cart fs-20"></i>
+                      <span class="product-count ml-1" id="cartQty">{{ $cartQty }}</span>
                     </p>
 
-                    <ul class="cart-dropdown-menu">
+                    <ul class="cart-dropdown-menu p-3 shadow-sm" style="min-width: 300px;">
                       @if ($cartQty > 0)
-                        @foreach ($cart as $item)
-                          @if (isset($item['course_id']))
-                            <li class="media media-card">
-                              <a href="{{ url('course/details/'.$item['course_id'].'/'.Str::slug($item['course_name'] ?? 'course')) }}" class="media-img mr-3">
-                                @php
-                                  $course = App\Models\Course::find($item['course_id']);
-                                @endphp
-                                <img src="{{ !empty($course->course_image) ? Storage::url('upload/course_images/thumbnail/' . $course->course_image) : url('upload/no_image.jpg') }}" 
-                                     alt="{{ $item['course_name'] ?? 'Unknown Course' }}" 
-                                     class="lazy">
-                              </a>
-                              <div class="media-body">
-                                <h5 class="fs-15">
-                                  <a href="{{ url('course/details/'.$item['course_id'].'/'.Str::slug($item['course_name'] ?? 'course')) }}">{{ Str::limit($item['course_name'] ?? 'N/A', 20) }}</a>
-                                </h5>
-                                <p class="text-black font-weight-semi-bold lh-18 fs-15">${{ number_format($item['price'] ?? 0, 2) }}</p>
-                                <a href="{{ route('cart.remove', $item['course_id']) }}" class="text-danger fs-13">Remove</a>
+                        @foreach ($cart as $id => $item)
+                          <li class="media media-card border-bottom pb-2 mb-2">
+                            <a href="{{ url('course/details/'.$item['id'].'/'.Str::slug($item['name'] ?? 'course')) }}" class="media-img mr-3">
+                              <img src="{{ !empty($item['image']) ? Storage::url('upload/course_images/thumbnail/' . $item['image']) : url('upload/no_image.jpg') }}" 
+                                   alt="{{ $item['name'] ?? 'Unknown Course' }}" 
+                                   class="lazy rounded" 
+                                   style="width: 60px; height: auto;">
+                            </a>
+                            <div class="media-body">
+                              <h5 class="fs-14 font-weight-bold">
+                                <a href="{{ url('course/details/'.$item['id'].'/'.Str::slug($item['name'] ?? 'course')) }}">{{ Str::limit($item['name'] ?? 'N/A', 25) }}</a>
+                              </h5>
+                              <p class="text-muted fs-13 lh-18">{{ $item['instructor_name'] ?? 'Unknown Instructor' }}</p>
+                              <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-black font-weight-semi-bold fs-14">${{ number_format($item['price'] ?? 0, 2) }}</span>
+                                <form action="{{ route('cart.remove', $id) }}" method="POST" class="d-inline">
+                                  @csrf
+                                  @method('DELETE')
+                                  <button type="submit" class="btn btn-link text-danger fs-13 p-0">Remove</button>
+                                </form>
                               </div>
-                            </li>
-                          @else
-                            <li class="media media-card">
-                              <div class="media-body fs-16">
-                                <p class="text-black lh-18">Invalid cart item</p>
-                              </div>
-                            </li>
-                          @endif
+                            </div>
+                          </li>
                         @endforeach
+                        <li class="media media-card border-top pt-2 mt-2">
+                          <div class="media-body fs-15">
+                            <p class="text-black font-weight-bold lh-18">Total: <span class="cart-total" id="cartSubTotal">${{ number_format($cartSubTotal, 2) }}</span></p>
+                          </div>
+                        </li>
                       @else
                         <li class="media media-card">
-                          <div class="media-body fs-16">
-                            <p class="text-black lh-18">Your cart is empty</p>
+                          <div class="media-body fs-15 text-center">
+                            <p class="text-muted lh-18">Your cart is empty</p>
                           </div>
                         </li>
                       @endif
-
-                      <li class="media media-card">
-                        <div class="media-body fs-16">
-                          <p class="text-black font-weight-semi-bold lh-18">Total: $<span class="cart-total" id="cartSubTotal">{{ number_format($cartSubTotal, 2) }}</span></p>
-                        </div>
-                      </li>
-                      <li>
-                        <a href="{{ route('cart') }}" class="btn theme-btn w-100">Go to cart <i class="la la-arrow-right icon ml-1"></i></a>
+                      <li class="mt-3">
+                        <a href="{{ route('cart') }}" class="btn theme-btn w-100 py-2">Go to Cart <i class="la la-arrow-right icon ml-1"></i></a>
                       </li>
                     </ul>
                   </li>
