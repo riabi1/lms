@@ -27,8 +27,26 @@ class Instructor extends Authenticatable implements MustVerifyEmail
      *
      * @var array<string>
      */
-    protected $fillable = [
-        'name', 'email', 'phone', 'address', 'photo', 'password', 'status',
+   protected $fillable = [
+        'name',
+        'email',
+        'phone',
+        'address',
+        'photo',
+        'bio',           
+        'experience',    
+        'skills',        
+        'education',     
+        'website',       
+        'location',      
+        'email_verified_at',
+        'password',
+        'provider_name',
+        'provider_id',
+        'status',
+        'remember_token',
+        'created_at',
+        'updated_at',
     ];
 
     /**

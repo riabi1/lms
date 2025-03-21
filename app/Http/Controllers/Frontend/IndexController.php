@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Category;
 use App\Models\SubCategory;
 use App\Models\Course;
-use App\Models\User;
+use App\Models\Instructor; // Changé de User à Instructor
 use App\Models\Course_goal;
 use App\Models\CourseSection;
 use App\Models\CourseLecture;
@@ -80,9 +80,16 @@ class IndexController extends Controller
      */
     public function InstructorDetails($id)
     {
-        $instructor = User::findOrFail($id);
-        $courses = Course::where('instructor_id', $id)->get();
-        return view('frontend.instructor.instructor_details', compact('instructor', 'courses'));
+        $instructor = Instructor::find($id); // Changé de User à Instructor
+        if (!$instructor) {
+            return redirect()->route('home')->with('error', 'Instructor not found.');
+        }
+        $courses = Course::where('instructor_id', $id)->where('status', '1')->get();
+        $totalStudents = Order::whereIn('course_id', $courses->pluck('id'))->distinct('user_id')->count();
+        $totalReviews = $courses->sum(function ($course) {
+            return $course->reviews_count ?? 0; // À adapter si tu as une table de reviews
+        });
+        return view('instructor.instructor_details', compact('instructor', 'courses', 'totalStudents', 'totalReviews'));
     }
 
     /**
@@ -156,7 +163,7 @@ class IndexController extends Controller
     }
 
     /**
-     * Apply a coupon to the cart.
+     * Apply a single coupon to the cart.
      */
     public function applyCoupon(Request $request)
     {
@@ -184,6 +191,10 @@ class IndexController extends Controller
         $applicableCourseIds = array_column($cartItems, 'course_id');
         if (!in_array($coupon->course_id, $applicableCourseIds)) {
             return redirect()->route('cart.view')->withErrors(['coupon_name' => 'This coupon is not applicable to any course in your cart.']);
+        }
+
+        if (Session::has('coupon')) {
+            return redirect()->route('cart.view')->withErrors(['coupon_name' => 'A coupon is already applied. Only one coupon is allowed.']);
         }
 
         $subtotal = array_sum(array_column($cartItems, 'price'));
