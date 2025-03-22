@@ -34,26 +34,26 @@
             </div>
             <ul class="generic-list-item d-flex flex-wrap align-items-center fs-14 border-left border-left-gray pl-3 ml-3">
               @guest
-                <li class="d-flex align-items-center pr-3 mr-3 border-right border-right-gray">
-                  <i class="la la-sign-in mr-1"></i>
-                  <a href="{{ route('login') }}">Login</a>
-                </li>
-                <li class="d-flex align-items-center">
-                  <i class="la la-user mr-1"></i>
-                  <a href="{{ route('register') }}">Register</a>
-                </li>
+              <li class="d-flex align-items-center pr-3 mr-3 border-right border-right-gray">
+                <i class="la la-sign-in mr-1"></i>
+                <a href="{{ route('login') }}">Login</a>
+              </li>
+              <li class="d-flex align-items-center">
+                <i class="la la-user mr-1"></i>
+                <a href="{{ route('register') }}">Register</a>
+              </li>
               @else
-                <li class="d-flex align-items-center pr-3 mr-3 border-right border-right-gray">
-                  <i class="la la-tachometer mr-1"></i>
-                  <a href="{{ route('dashboard') }}">Dashboard</a>
-                </li>
-                <li class="d-flex align-items-center">
-                  <i class="la la-sign-out mr-1"></i>
-                  <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Logout</a>
-                  <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-                    @csrf
-                  </form>
-                </li>
+              <li class="d-flex align-items-center pr-3 mr-3 border-right border-right-gray">
+                <i class="la la-tachometer mr-1"></i>
+                <a href="{{ route('dashboard') }}">Dashboard</a>
+              </li>
+              <li class="d-flex align-items-center">
+                <i class="la la-sign-out mr-1"></i>
+                <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Logout</a>
+                <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                  @csrf
+                </form>
+              </li>
               @endguest
             </ul>
           </div><!-- end header-widget -->
@@ -85,10 +85,10 @@
           </div><!-- end col-lg-2 -->
 
           @php
-            $categories = App\Models\Category::orderBy('category_name', 'ASC')->get();
-            $cart = Session::get('cart', []);
-            $cartQty = count($cart);
-            $cartSubTotal = array_sum(array_column($cart, 'price'));
+          $categories = App\Models\Category::orderBy('category_name', 'ASC')->get();
+          $cart = Session::get('cart', []);
+          $cartQty = count($cart);
+          $cartSubTotal = array_sum(array_column($cart, 'price'));
           @endphp
 
           <div class="col-lg-10">
@@ -99,17 +99,17 @@
                     <a href="#">Categories <i class="la la-angle-down fs-12"></i></a>
                     <ul class="cat-dropdown-menu">
                       @foreach ($categories as $cat)
-                        @php
-                          $subcategories = App\Models\SubCategory::where('category_id', $cat->id)->get();
-                        @endphp
-                        <li>
-                          <a href="{{ url('category/'.$cat->id.'/'.$cat->category_slug) }}">{{ $cat->category_name }}<i class="la la-angle-right"></i></a>
-                          <ul class="sub-menu">
-                            @foreach ($subcategories as $subcat)
-                              <li><a href="{{ url('subcategory/'.$subcat->id.'/'.$subcat->subcategory_slug) }}">{{ $subcat->subcategory_name }}</a></li>
-                            @endforeach
-                          </ul>
-                        </li>
+                      @php
+                      $subcategories = App\Models\SubCategory::where('category_id', $cat->id)->get();
+                      @endphp
+                      <li>
+                        <a href="{{ url('category/'.$cat->id.'/'.$cat->category_slug) }}">{{ $cat->category_name }}<i class="la la-angle-right"></i></a>
+                        <ul class="sub-menu">
+                          @foreach ($subcategories as $subcat)
+                          <li><a href="{{ url('subcategory/'.$subcat->id.'/'.$subcat->subcategory_slug) }}">{{ $subcat->subcategory_name }}</a></li>
+                          @endforeach
+                        </ul>
+                      </li>
                       @endforeach
                     </ul>
                   </li>
@@ -139,41 +139,43 @@
 
                     <ul class="cart-dropdown-menu p-3 shadow-sm" style="min-width: 300px;">
                       @if ($cartQty > 0)
-                        @foreach ($cart as $id => $item)
-                          <li class="media media-card border-bottom pb-2 mb-2">
-                            <a href="{{ url('course/details/'.$item['id'].'/'.Str::slug($item['name'] ?? 'course')) }}" class="media-img mr-3">
-                              <img src="{{ !empty($item['image']) ? Storage::url('upload/course_images/thumbnail/' . $item['image']) : url('upload/no_image.jpg') }}" 
-                                   alt="{{ $item['name'] ?? 'Unknown Course' }}" 
-                                   class="lazy rounded" 
-                                   style="width: 60px; height: auto;">
-                            </a>
-                            <div class="media-body">
-                              <h5 class="fs-14 font-weight-bold">
-                                <a href="{{ url('course/details/'.$item['id'].'/'.Str::slug($item['name'] ?? 'course')) }}">{{ Str::limit($item['name'] ?? 'N/A', 25) }}</a>
-                              </h5>
-                              <p class="text-muted fs-13 lh-18">{{ $item['instructor_name'] ?? 'Unknown Instructor' }}</p>
-                              <div class="d-flex justify-content-between align-items-center">
-                                <span class="text-black font-weight-semi-bold fs-14">${{ number_format($item['price'] ?? 0, 2) }}</span>
-                                <form action="{{ route('cart.remove', $id) }}" method="POST" class="d-inline">
-                                  @csrf
-                                  @method('DELETE')
-                                  <button type="submit" class="btn btn-link text-danger fs-13 p-0">Remove</button>
-                                </form>
-                              </div>
-                            </div>
-                          </li>
-                        @endforeach
-                        <li class="media media-card border-top pt-2 mt-2">
-                          <div class="media-body fs-15">
-                            <p class="text-black font-weight-bold lh-18">Total: <span class="cart-total" id="cartSubTotal">${{ number_format($cartSubTotal, 2) }}</span></p>
+                      @foreach ($cart as $id => $item)
+                      <li class="media media-card border-bottom pb-2 mb-2">
+                        <a href="{{ url('course/details/'.$item['id'].'/'.Str::slug($item['name'] ?? 'course')) }}" class="media-img mr-3">
+                          <img src="{{ $item['image'] ? asset('storage/upload/course_images/thumbnail/' . $item['image']) : asset('images/no_image.jpg') }}"
+                            alt="{{ $item['name'] ?? 'Unknown Course' }}"
+                            class="lazy rounded"
+                            style="width: 60px; height: auto;"
+                            loading="lazy"
+                            onerror="this.src='{{ asset('images/no_image.jpg') }}'">
+                        </a>
+                        <div class="media-body">
+                          <h5 class="fs-14 font-weight-bold">
+                            <a href="{{ url('course/details/'.$item['id'].'/'.Str::slug($item['name'] ?? 'course')) }}">{{ Str::limit($item['name'] ?? 'N/A', 25) }}</a>
+                          </h5>
+                          <p class="text-muted fs-13 lh-18">{{ $item['instructor_name'] ?? 'Unknown Instructor' }}</p>
+                          <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-black font-weight-semi-bold fs-14">${{ number_format($item['price'] ?? 0, 2) }}</span>
+                            <form action="{{ route('cart.remove', $id) }}" method="POST" class="d-inline">
+                              @csrf
+                              @method('DELETE')
+                              <button type="submit" class="btn btn-link text-danger fs-13 p-0">Remove</button>
+                            </form>
                           </div>
-                        </li>
+                        </div>
+                      </li>
+                      @endforeach
+                      <li class="media media-card border-top pt-2 mt-2">
+                        <div class="media-body fs-15">
+                          <p class="text-black font-weight-bold lh-18">Total: <span class="cart-total" id="cartSubTotal">${{ number_format($cartSubTotal, 2) }}</span></p>
+                        </div>
+                      </li>
                       @else
-                        <li class="media media-card">
-                          <div class="media-body fs-15 text-center">
-                            <p class="text-muted lh-18">Your cart is empty</p>
-                          </div>
-                        </li>
+                      <li class="media media-card">
+                        <div class="media-body fs-15 text-center">
+                          <p class="text-muted lh-18">Your cart is empty</p>
+                        </div>
+                      </li>
                       @endif
                       <li class="mt-3">
                         <a href="{{ route('cart') }}" class="btn theme-btn w-100 py-2">Go to Cart <i class="la la-arrow-right icon ml-1"></i></a>

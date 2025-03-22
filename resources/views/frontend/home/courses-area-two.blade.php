@@ -15,7 +15,7 @@ $popularCourses = App\Models\Course::where('status', 1)->orderBy('id', 'ASC')->l
         <div class="card card-item card-preview" data-tooltip-content="#tooltip_content_{{ $course->id }}">
           <div class="card-image">
             <a href="{{ route('course.details', ['id' => $course->id, 'slug' => $course->course_name_slug]) }}" class="d-block">
-              <img class="card-img-top" src="{{ asset('storage/upload/course_images/thumbnail/' . $course->course_image) }}" alt="{{ $course->course_name }}" onerror="this.src='{{ asset('images/default-course.jpg') }}'">
+              <img class="card-img-top lazy" src="{{ asset('storage/upload/course_images/thumbnail/' . $course->course_image) }}" alt="{{ $course->course_name }}" loading="lazy" onerror="this.src='{{ asset('images/default-course.jpg') }}'">
             </a>
             <div class="course-badge-labels">
               @if ($course->bestseller == 1)
@@ -49,8 +49,8 @@ $popularCourses = App\Models\Course::where('status', 1)->orderBy('id', 'ASC')->l
               <div class="review-stars">
                 <span class="rating-number">{{ $course->rating ?? '4.0' }}</span>
                 @for ($i = 1; $i <= 5; $i++)
-                <span class="la la-star{{ $i <= ($course->rating ?? 4) ? '' : '-o' }}"></span>
-                @endfor
+                  <span class="la la-star{{ $i <= ($course->rating ?? 4) ? '' : '-o' }}"></span>
+                  @endfor
               </div>
               <span class="rating-total pl-1">({{ $course->enroll_count ?? '0' }})</span>
             </div><!-- end rating-wrap -->
