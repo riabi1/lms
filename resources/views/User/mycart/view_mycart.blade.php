@@ -108,7 +108,8 @@
                         @else
                             <h4>Total: ${{ number_format($subtotal, 2) }}</h4>
                         @endif
-                        <a href="{{ route('checkout.create') }}" class="btn theme-btn w-100">Checkout <i class="la la-arrow-right"></i></a>
+                        <!-- Lien corrigé pour le checkout -->
+                        <a href="{{ route('checkout.create') }}" class="btn theme-btn w-100 mt-3">Checkout <i class="la la-arrow-right"></i></a>
                     </div>
                 </div>
             @endif
