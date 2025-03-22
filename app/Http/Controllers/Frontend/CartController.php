@@ -15,36 +15,38 @@ use Stripe\Stripe;
 
 class CartController extends Controller
 {
-    public function AddToCart(Request $request, $id)
-    {
-        $course = Course::with('instructor')->find($id);
-        if (!$course) {
-            return redirect()->back()->with('error', 'Course not found');
-        }
-
-        $cart = Session::get('cart', []);
-        if (isset($cart[$id])) {
-            return redirect()->route('cart')->with('info', 'Course already in cart');
-        }
-
-        $effectivePrice = $course->discount_price !== null && $course->discount_price > 0 
-            ? ($course->selling_price - $course->discount_price) 
-            : $course->selling_price;
-
-        $cart[$id] = [
-            'id' => $course->id,
-            'name' => $course->course_name,
-            'instructor_name' => $course->instructor ? ($course->instructor->name ?? 'Unknown Instructor') : 'Unknown Instructor',
-            'selling_price' => $course->selling_price ?? 0,
-            'discount_price' => $course->discount_price ?? 0,
-            'price' => $effectivePrice,
-            'image' => $course->course_image,
-            'instructor_id' => $course->instructor_id,
-        ];
-
-        Session::put('cart', $cart);
-        return redirect()->route('cart')->with('success', 'Course added to cart!');
+   public function AddToCart(Request $request, $id)
+{
+    $course = Course::with('instructor')->find($id);
+    if (!$course) {
+        return redirect()->back()->with('error', 'Course not found');
     }
+
+    $cart = Session::get('cart', []);
+    if (isset($cart[$id])) {
+        return redirect()->back()->with('info', 'Course already in cart');
+    }
+
+    $effectivePrice = $course->discount_price !== null && $course->discount_price > 0 
+        ? ($course->selling_price - $course->discount_price) 
+        : $course->selling_price;
+
+    $cart[$id] = [
+        'id' => $course->id,
+        'name' => $course->course_name,
+        'instructor_name' => $course->instructor ? ($course->instructor->name ?? 'Unknown Instructor') : 'Unknown Instructor',
+        'selling_price' => $course->selling_price ?? 0,
+        'discount_price' => $course->discount_price ?? 0,
+        'price' => $effectivePrice,
+        'image' => $course->course_image,
+        'instructor_id' => $course->instructor_id,
+    ];
+
+    Session::put('cart', $cart);
+
+    // Redirige vers la page précédente (détails du cours) avec un message flash
+    return redirect()->back()->with('success', 'Course added to the cart successfully!');
+}
 
     public function MyCart()
     {

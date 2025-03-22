@@ -35,8 +35,29 @@
 
 
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    @if (session('success'))
+        Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: '{{ session('success') }}',
+            timer: 1500,
+            showConfirmButton: false
+        });
+    @elseif (session('info'))
+        Swal.fire({
+            icon: 'info',
+            title: 'Info',
+            text: '{{ session('info') }}',
+            timer: 1500,
+            showConfirmButton: false
+        });
+    @endif
+</script>
 
-
+@yield('scripts')
 </head>
 
 <body>
