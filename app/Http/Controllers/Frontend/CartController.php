@@ -64,32 +64,45 @@ class CartController extends Controller
         return view('User.mycart.view_mycart', compact('cart', 'subtotal', 'couponDiscount', 'total', 'coupons'));
     }
 
-    public function CartRemove($id)
-    {
-        $cart = Session::get('cart', []);
-        if (isset($cart[$id])) {
-            unset($cart[$id]);
-            Session::put('cart', $cart);
+   public function CartRemove($id)
+{
+    $cart = Session::get('cart', []);
+    if (isset($cart[$id])) {
+        unset($cart[$id]);
+        Session::put('cart', $cart);
 
-            $coupons = Session::get('coupons', []);
-            if (!empty($coupons)) {
-                $newSubtotal = array_sum(array_column($cart, 'price'));
-                $updatedCoupons = [];
-                foreach ($coupons as $couponData) {
-                    $coupon = Coupon::where('coupon_name', $couponData['coupon_name'])->first();
-                    if ($coupon) {
-                        $updatedCoupons[$coupon->coupon_name] = [
-                            'coupon_name' => $coupon->coupon_name,
-                            'discount_amount' => round($newSubtotal * $coupon->coupon_discount / 100),
-                        ];
-                    }
+        // Recalcule le sous-total après suppression
+        $subtotal = array_sum(array_column($cart, 'price'));
+
+        // Gère les coupons si nécessaire
+        $coupons = Session::get('coupons', []);
+        if (!empty($coupons)) {
+            $newSubtotal = array_sum(array_column($cart, 'price'));
+            $updatedCoupons = [];
+            foreach ($coupons as $couponData) {
+                $coupon = Coupon::where('coupon_name', $couponData['coupon_name'])->first();
+                if ($coupon) {
+                    $updatedCoupons[$coupon->coupon_name] = [
+                        'coupon_name' => $coupon->coupon_name,
+                        'discount_amount' => round($newSubtotal * $coupon->coupon_discount / 100),
+                    ];
                 }
-                Session::put('coupons', $updatedCoupons);
             }
+            Session::put('coupons', $updatedCoupons);
         }
 
-        return redirect()->route('cart')->with('success', 'Course removed!');
+        return response()->json([
+            'success' => true,
+            'subtotal' => $subtotal,
+            'message' => 'Item removed from cart!'
+        ], 200);
     }
+
+    return response()->json([
+        'success' => false,
+        'message' => 'Item not found in cart'
+    ], 404);
+}
 
     public function CouponApply(Request $request)
     {

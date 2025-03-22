@@ -25,6 +25,12 @@
           @if ($course->bestseller == 1)
           <h6 class="ribbon ribbon-lg mr-2 bg-3 text-white">Bestseller</h6>
           @endif
+           @if ($course->featured == 1)
+          <h6 class="ribbon ribbon-lg mr-2 bg-3 text-white">Featured</h6>
+          @endif
+           @if ($course->highestrated == 1)
+          <h6 class="ribbon ribbon-lg mr-2 bg-3 text-white">Highest Rated</h6>
+          @endif
 
           @php
           $reviewcount = App\Models\Review::where('course_id', $course->id)->where('status', 1)->latest()->get();
@@ -83,12 +89,7 @@
             </svg>
             Last updated {{ $course->created_at ? $course->created_at->format('M d Y') : 'N/A' }}
           </p>
-          <p class="pr-3 d-flex align-items-center">
-            <svg class="svg-icon-color-gray mr-1" width="16px" viewBox="0 0 24 24">
-              <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm6.93 6h-2.95a15.65 15.65 0 00-1.38-3.56A8.03 8.03 0 0118.92 8zM12 4.04c.83 1.2 1.48 2.53 1.91 3.96h-3.82c.43-1.43 1.08-2.76 1.91-3.96zM4.26 14C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2s.06 1.34.14 2H4.26zm.82 2h2.95c.32 1.25.78 2.45 1.38 3.56A7.987 7.987 0 015.08 16zm2.95-8H5.08a7.987 7.987 0 014.33-3.56A15.65 15.65 0 008.03 8zM12 19.96c-.83-1.2-1.48-2.53-1.91-3.96h3.82c-.43 1.43-1.08 2.76-1.91 3.96zM14.34 14H9.66c-.09-.66-.16-1.32-.16-2s.07-1.35.16-2h4.68c.09.65.16 1.32.16 2s-.07 1.34-.16 2zm.25 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95a8.03 8.03 0 01-4.33 3.56zM16.36 14c.08-.66.14-1.32.14-2s-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2h-3.38z"></path>
-            </svg>
-            English
-          </p>
+         
         </div><!-- end d-flex -->
         <div class="bread-btn-box pt-3">
           <button class="btn theme-btn theme-btn-sm theme-btn-transparent lh-28 mr-2 mb-2">
@@ -128,26 +129,14 @@
               @endforelse
             </ul>
           </div><!-- end course-overview-card -->
-          <div class="course-overview-card bg-gray p-4 rounded">
-            <h3 class="fs-16 font-weight-semi-bold">Curated for the <a href="for-business.html" class="text-color hover-underline">Aduca for Business</a> collection</h3>
-          </div><!-- end course-overview-card -->
+       
           <div class="course-overview-card">
             <h3 class="fs-24 font-weight-semi-bold pb-3">Requirements</h3>
             <ul class="generic-list-item generic-list-item-bullet fs-15">
               <li>{{ $course->prerequisites }}</li>
             </ul>
           </div><!-- end course-overview-card -->
-          <div class="course-overview-card border border-gray p-4 rounded">
-            <h3 class="fs-20 font-weight-semi-bold">Top companies trust Aduca</h3>
-            <p class="fs-15 pb-1">Get your team access to Aduca's top 5,000+ courses</p>
-            <div class="pb-3">
-              <img width="85" class="mr-3" src="{{ asset('frontend/images/sponsor-img.png') }}" alt="company logo">
-              <img width="80" class="mr-3" src="{{ asset('frontend/images/sponsor-img2.png') }}" alt="company logo">
-              <img width="80" class="mr-3" src="{{ asset('frontend/images/sponsor-img3.png') }}" alt="company logo">
-              <img width="70" class="mr-3" src="{{ asset('frontend/images/sponsor-img4.png') }}" alt="company logo">
-            </div>
-            <a href="for-business.html" class="btn theme-btn theme-btn-sm">Try Aduca for Business</a>
-          </div><!-- end course-overview-card -->
+          
           <div class="course-overview-card">
             <h3 class="fs-24 font-weight-semi-bold pb-3">Description</h3>
             <p class="fs-15 pb-2">{!! $course->description !!}</p>
@@ -214,9 +203,7 @@
                     <img class="lazy" src="{{ $course->instructor->photo ? asset('storage/upload/instructor_images/' . $course->instructor->photo) : asset('images/no_image.jpg') }}" alt="Instructor image" loading="lazy" onerror="this.src='{{ asset('images/no_image.jpg') }}'">
                   </a>
                   <ul class="generic-list-item pt-3">
-                    <li><i class="la la-star mr-2 text-color-3"></i> 4.6 Instructor Rating</li>
-                    <li><i class="la la-user mr-2 text-color-3"></i> 45,786 Students</li>
-                    <li><i class="la la-comment-o mr-2 text-color-3"></i> 2,533 Reviews</li>
+                    
                     <li><i class="la la-play-circle-o mr-2 text-color-3"></i> {{ $instructorCourses->count() }} Courses</li>
                     <li><a href="{{ route('instructor.details', $course->instructor_id) }}">View all Courses</a></li>
                   </ul>
@@ -225,14 +212,7 @@
                   <h5><a href="{{ route('instructor.details', $course->instructor_id) }}">{{ $course->instructor->name ?? 'Unknown Instructor' }}</a></h5>
                   <span class="d-block lh-18 pt-2 pb-3">Joined {{ $course->instructor && $course->instructor->created_at ? \Carbon\Carbon::parse($course->instructor->created_at)->diffForHumans() : 'N/A' }}</span>
                   <p class="text-black lh-18 pb-3">{{ $course->instructor->email ?? 'No email available' }}</p>
-                  <p class="pb-3">Lorem Ipsum is simply dummy text of the printing and typesetting industry.</p>
-                  <div class="collapse" id="collapseMoreTwo">
-                    <p class="pb-3">After learning the hard way, Tim was determined to become the best teacher he could...</p>
-                    <p class="pb-3">If you want to become a financial analyst, Tim Buchalka's courses are the perfect course to start.</p>
-                  </div>
-                  <a class="collapse-btn collapse--btn fs-15" data-toggle="collapse" href="#collapseMoreTwo" role="button" aria-expanded="false" aria-controls="collapseMoreTwo">
-                    <span class="collapse-btn-hide">Show more<i class="la la-angle-down ml-1 fs-14"></i></span>
-                    <span class="collapse-btn-show">Show less<i class="la la-angle-up ml-1 fs-14"></i></span>
+                
                   </a>
                 </div>
               </div>
@@ -388,19 +368,12 @@
                   </div>
                   <span class="d-block lh-18 pb-2">{{ $item->created_at ? \Carbon\Carbon::parse($item->created_at)->diffForHumans() : 'N/A' }}</span>
                   <p class="pb-2">{{ $item->comment }}</p>
-                  <div class="helpful-action">
-                    <span class="d-block fs-13">Was this review helpful?</span>
-                    <button class="btn">Yes</button>
-                    <button class="btn">No</button>
-                    <span class="btn-text fs-14 cursor-pointer pl-1" data-toggle="modal" data-target="#reportModal">Report</span>
-                  </div>
+                 
                 </div>
               </div><!-- end media -->
               @endforeach
             </div><!-- end review-wrap -->
-            <div class="see-more-review-btn text-center">
-              <button type="button" class="btn theme-btn theme-btn-transparent">Load more reviews</button>
-            </div>
+            
           </div><!-- end course-overview-card -->
 
           @guest
@@ -500,57 +473,25 @@
         <button type="submit" class="btn theme-btn w-100">
             <i class="la la-shopping-cart fs-18 mr-1"></i> Add to Cart
         </button>
-    </form>
-    <button type="button" class="btn theme-btn w-100 theme-btn-white mb-2" onclick="buyCourse({{ $course->id }}, '{{ $course->course_name }}', '{{ $course->instructor_id }}', '{{ $course->course_name_slug }}')">
-        <i class="la la-shopping-bag mr-1"></i> Buy this course
-    </button>
-    <div class="input-group mb-2" id="couponField">
-        <input class="form-control form--control pl-3" type="text" id="coupon_name" placeholder="Coupon code">
-        <div class="input-group-append">
-            <input type="hidden" id="course_id" name="course_id" value="{{ $course->id }}">
-            <input type="hidden" id="instructor_id" name="instructor_id" value="{{ $course->instructor_id }}">
-            <a type="submit" onclick="applyInsCoupon()" class="btn theme-btn">Apply Code</a>
-        </div>
-    </div>
+                        </form> 
 </div>
-                <p class="fs-14 text-center pb-4">30-Day Money-Back Guarantee</p>
+                
                 <div class="preview-course-incentives">
                   <h3 class="card-title fs-18 pb-2">This course includes</h3>
                   <ul class="generic-list-item pb-3">
-                    <li><i class="la la-play-circle-o mr-2 text-color"></i>{{ $course->duration }} hours on-demand video</li>
-                    <li><i class="la la-file mr-2 text-color"></i>{{ $course->resources }} articles</li>
-                    <li><i class="la la-file-text mr-2 text-color"></i>12 downloadable resources</li>
-                    <li><i class="la la-code mr-2 text-color"></i>51 coding exercises</li>
+                    <li><i class="la la-play-circle-o mr-2 text-color"></i>{{ $course->duration }} learning hours</li>
+                    <li><i class="la la-file mr-2 text-color"></i>{{ $course->resources }} resources</li>
+                    <li><i class="la la-file mr-2 text-color"></i> certificate : {{ $course->certificate }} </li>
                     <li><i class="la la-key mr-2 text-color"></i>Full lifetime access</li>
-                    <li><i class="la la-television mr-2 text-color"></i>Access on mobile and TV</li>
-                    <li><i class="la la-certificate mr-2 text-color"></i>Certificate of Completion</li>
+                    
                   </ul>
-                  <div class="section-block"></div>
-                  <div class="buy-for-team-container pt-4">
-                    <h3 class="fs-18 font-weight-semi-bold pb-2">Training 5 or more people?</h3>
-                    <p class="lh-24 pb-3">Get your team access to 3,000+ top Aduca courses anytime, anywhere.</p>
-                    <a href="for-business.html" class="btn theme-btn theme-btn-sm theme-btn-transparent lh-30 w-100">Try Aduca for Business</a>
-                  </div>
+                 
+                  
                 </div><!-- end preview-course-incentives -->
               </div><!-- end preview-course-content -->
             </div>
           </div><!-- end card -->
-          <div class="card card-item">
-            <div class="card-body">
-              <h3 class="card-title fs-18 pb-2">Course Features</h3>
-              <div class="divider"><span></span></div>
-              <ul class="generic-list-item generic-list-item-flash">
-                <li class="d-flex align-items-center justify-content-between"><span><i class="la la-clock mr-2 text-color"></i>Duration</span> {{ $course->duration }} hours</li>
-                <li class="d-flex align-items-center justify-content-between"><span><i class="la la-file-text-o mr-2 text-color"></i>Resources</span> {{ $course->resources }}</li>
-                <li class="d-flex align-items-center justify-content-between"><span><i class="la la-bolt mr-2 text-color"></i>Quizzes</span> 26</li>
-                <li class="d-flex align-items-center justify-content-between"><span><i class="la la-eye mr-2 text-color"></i>Preview Lessons</span> 4</li>
-                <li class="d-flex align-items-center justify-content-between"><span><i class="la la-language mr-2 text-color"></i>Language</span> English</li>
-                <li class="d-flex align-items-center justify-content-between"><span><i class="la la-lightbulb mr-2 text-color"></i>Skill level</span> {{ $course->label }}</li>
-                <li class="d-flex align-items-center justify-content-between"><span><i class="la la-users mr-2 text-color"></i>Students</span> 30,506</li>
-                <li class="d-flex align-items-center justify-content-between"><span><i class="la la-certificate mr-2 text-color"></i>Certificate</span> {{ $course->certificate }}</li>
-              </ul>
-            </div>
-          </div><!-- end card -->
+          
           <div class="card card-item">
             <div class="card-body">
               <h3 class="card-title fs-18 pb-2">Course Categories</h3>
@@ -562,36 +503,7 @@
               </ul>
             </div>
           </div><!-- end card -->
-          <div class="card card-item">
-            <div class="card-body">
-              <h3 class="card-title fs-18 pb-2">Related Courses</h3>
-              <div class="divider"><span></span></div>
-              @foreach ($relatedCourses as $related)
-              @php
-              $relatedFinalPrice = $related->discount_price !== null
-              ? max(0, $related->selling_price - $related->discount_price)
-              : $related->selling_price;
-              @endphp
-              <div class="media media-card border-bottom border-bottom-gray pb-4 mb-4">
-                <a href="{{ url('course/details/'.$related->id.'/'.$related->course_name_slug) }}" class="media-img">
-                  <img class="mr-3 lazy" src="{{ $related->course_image ? asset('storage/upload/course_images/thumbnail/' . $related->course_image) : asset('images/no_image.jpg') }}" alt="Related course image" loading="lazy" onerror="this.src='{{ asset('images/no_image.jpg') }}'">
-                </a>
-                <div class="media-body">
-                  <h5 class="fs-15"><a href="{{ url('course/details/'.$related->id.'/'.$related->course_name_slug) }}">{{ $related->course_name }}</a></h5>
-                  <span class="d-block lh-18 py-1 fs-14">{{ $related->instructor->name ?? 'Unknown Instructor' }}</span>
-                  @if ($relatedFinalPrice < $related->selling_price)
-                    <p class="text-black font-weight-semi-bold lh-18 fs-15">${{ number_format($relatedFinalPrice, 2) }} <span class="before-price fs-14">${{ number_format($related->selling_price, 2) }}</span></p>
-                    @else
-                    <p class="text-black font-weight-semi-bold lh-18 fs-15">${{ number_format($relatedFinalPrice, 2) }}</p>
-                    @endif
-                </div>
-              </div><!-- end media -->
-              @endforeach
-              <div class="view-all-course-btn-box">
-                <a href="course-grid.html" class="btn theme-btn w-100">View All Courses <i class="la la-arrow-right icon ml-1"></i></a>
-              </div>
-            </div>
-          </div><!-- end card -->
+         
         </div><!-- end sidebar -->
       </div><!-- end col-lg-4 -->
     </div><!-- end row -->
@@ -668,46 +580,7 @@
         END RELATED COURSE AREA
 ======================================-->
 
-<!--======================================
-        START CTA AREA
-======================================-->
-<section class="cta-area pt-60px pb-60px position-relative overflow-hidden">
-  <span class="stroke-shape stroke-shape-1"></span>
-  <span class="stroke-shape stroke-shape-2"></span>
-  <span class="stroke-shape stroke-shape-3"></span>
-  <span class="stroke-shape stroke-shape-4"></span>
-  <span class="stroke-shape stroke-shape-5"></span>
-  <span class="stroke-shape stroke-shape-6"></span>
-  <div class="container">
-    <div class="row align-items-center">
-      <div class="col-lg-9">
-        <div class="cta-content-wrap py-4 d-flex flex-wrap align-items-center">
-          <svg class="flex-shrink-0 mr-4" width="70" viewBox="0 -48 496 496" xmlns="http://www.w3.org/2000/svg">
-            <path d="m472 0h-448c-13.230469 0-24 10.769531-24 24v352c0 13.230469 10.769531 24 24 24h448c13.230469 0 24-10.769531 24-24v-352c0-13.230469-10.769531-24-24-24zm8 376c0 4.414062-3.59375 8-8 8h-448c-4.40625 0-8-3.585938-8-8v-352c0-4.40625 3.59375-8 8-8h448c4.40625 0 8 3.59375 8 8zm0 0"></path>
-            <path d="m448 32h-400v240h400zm-16 224h-368v-208h368zm0 0"></path>
-            <path d="m328 200.136719c0-17.761719-11.929688-33.578125-29.007812-38.464844l-26.992188-7.703125v sanc-2.128906c9.96875-7.511719 16-19.328125 16-31.832032v-14.335937c0-21.503906-16.007812-39.726563-36.449219-41.503906-11.183593-.96875-22.34375 2.800781-30.574219 10.351562-8.25 7.550781-12.976562 18.304688-12.976562 29.480469v16c0 12.503906 6.03125 24.328125 16 31.832031v2.128907l-26.992188 7.710937c-17.078124 4.886719-29.007812 20.703125-29.007812 38.464844v39.863281h160zm-16 23.863281h-128v-23.863281c0-10.664063 7.160156-20.152344 17.40625-23.082031l38.59375-11.023438v-23.070312l-3.976562-2.3125c-7.527344-4.382813-12.023438-12.105469-12.023438-20.648438v-16c0-6.703125 2.839844-13.160156 7.792969-17.695312 5.007812-4.601563 11.496093-6.832032 18.382812-6.207032 12.230469 1.0625 21.824219 12.285156 21.824219 25.566406v14.335938c0 8.542969-4.496094 16.265625-12.023438 20.648438l-3.976562 2.3125v23.070312l38.59375 11.023438c10.246094 2.9375 17.40625 12.425781 17.40625 23.082031zm0 0"></path>
-            <path d="m32 364.945312 73.886719-36.945312-73.886719-36.945312zm16-48 22.113281 11.054688-22.113281 11.054688zm0 0"></path>
-            <path d="m152 288h16v80h-16zm0 0"></path>
-            <path d="m120 288h16v80h-16zm0 0"></path>
-            <path d="m336 288h-48v32h-104v16h104v32h48v-32h128v-16h-128zm-16 64h-16v-48h16zm0 0"></path>
-          </svg>
-          <div class="section-heading">
-            <h2 class="section__title mb-1 fs-22">Become a Teacher, Share your knowledge</h2>
-            <p class="section__desc">Create an online video course, reach students across the globe, and earn money</p>
-          </div><!-- end section-heading -->
-        </div>
-      </div><!-- end col-lg-9 -->
-      <div class="col-lg-3">
-        <div class="cta-btn-box text-right">
-          <a href="become-a-teacher.html" class="btn theme-btn">Teach on Aduca <i class="la la-arrow-right icon ml-1"></i></a>
-        </div>
-      </div><!-- end col-lg-3 -->
-    </div><!-- end row -->
-  </div><!-- end container -->
-</section><!-- end cta-area -->
-<!--======================================
-        END CTA AREA
-======================================-->
+
 
 <!-- Modal -->
 <div class="modal fade modal-container" id="shareModal" tabindex="-1" role="dialog" aria-labelledby="shareModalTitle" aria-hidden="true">
