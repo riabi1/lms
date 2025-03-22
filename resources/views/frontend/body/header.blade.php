@@ -137,51 +137,50 @@
                       <span class="product-count ml-1" id="cartQty">{{ $cartQty }}</span>
                     </p>
 
-                    <ul class="cart-dropdown-menu p-3 shadow-sm" style="min-width: 300px;">
-                      @if ($cartQty > 0)
-                      @foreach ($cart as $id => $item)
-                      <li class="media media-card border-bottom pb-2 mb-2">
-                        <a href="{{ url('course/details/'.$item['id'].'/'.Str::slug($item['name'] ?? 'course')) }}" class="media-img mr-3">
-                          <img src="{{ $item['image'] ? asset('storage/upload/course_images/thumbnail/' . $item['image']) : asset('images/no_image.jpg') }}"
-                            alt="{{ $item['name'] ?? 'Unknown Course' }}"
-                            class="lazy rounded"
-                            style="width: 60px; height: auto;"
-                            loading="lazy"
-                            onerror="this.src='{{ asset('images/no_image.jpg') }}'">
-                        </a>
-                        <div class="media-body">
-                          <h5 class="fs-14 font-weight-bold">
-                            <a href="{{ url('course/details/'.$item['id'].'/'.Str::slug($item['name'] ?? 'course')) }}">{{ Str::limit($item['name'] ?? 'N/A', 25) }}</a>
-                          </h5>
-                          <p class="text-muted fs-13 lh-18">{{ $item['instructor_name'] ?? 'Unknown Instructor' }}</p>
-                          <div class="d-flex justify-content-between align-items-center">
-                            <span class="text-black font-weight-semi-bold fs-14">${{ number_format($item['price'] ?? 0, 2) }}</span>
-                            <form action="{{ route('cart.remove', $id) }}" method="POST" class="d-inline">
-                              @csrf
-                              @method('DELETE')
-                              <button type="submit" class="btn btn-link text-danger fs-13 p-0">Remove</button>
-                            </form>
-                          </div>
-                        </div>
-                      </li>
-                      @endforeach
-                      <li class="media media-card border-top pt-2 mt-2">
-                        <div class="media-body fs-15">
-                          <p class="text-black font-weight-bold lh-18">Total: <span class="cart-total" id="cartSubTotal">${{ number_format($cartSubTotal, 2) }}</span></p>
-                        </div>
-                      </li>
-                      @else
-                      <li class="media media-card">
-                        <div class="media-body fs-15 text-center">
-                          <p class="text-muted lh-18">Your cart is empty</p>
-                        </div>
-                      </li>
-                      @endif
-                      <li class="mt-3">
-                        <a href="{{ route('cart') }}" class="btn theme-btn w-100 py-2">Go to Cart <i class="la la-arrow-right icon ml-1"></i></a>
-                      </li>
-                    </ul>
+                   <ul class="cart-dropdown-menu p-3 shadow-sm" style="min-width: 300px;">
+                            @if ($cartQty > 0)
+                                @foreach ($cart as $id => $item)
+                                <li class="media media-card border-bottom pb-2 mb-2" id="cart-item-{{ $id }}">
+                                    <a href="{{ url('course/details/'.$item['id'].'/'.Str::slug($item['name'] ?? 'course')) }}" class="media-img mr-3">
+                                        <img src="{{ $item['image'] ? asset('storage/upload/course_images/thumbnail/' . $item['image']) : asset('images/no_image.jpg') }}"
+                                            alt="{{ $item['name'] ?? 'Unknown Course' }}"
+                                            class="lazy rounded"
+                                            style="width: 60px; height: auto;"
+                                            loading="lazy"
+                                            onerror="this.src='{{ asset('images/no_image.jpg') }}'">
+                                    </a>
+                                    <div class="media-body">
+                                        <h5 class="fs-14 font-weight-bold">
+                                            <a href="{{ url('course/details/'.$item['id'].'/'.Str::slug($item['name'] ?? 'course')) }}">{{ Str::limit($item['name'] ?? 'N/A', 25) }}</a>
+                                        </h5>
+                                        <p class="text-muted fs-13 lh-18">{{ $item['instructor_name'] ?? 'Unknown Instructor' }}</p>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="text-black font-weight-semi-bold fs-14">${{ number_format($item['price'] ?? 0, 2) }}</span>
+                                            <button type="button" class="btn btn-link text-danger fs-13 p-0" onclick="removeFromCart('{{ $id }}')">Remove</button>
+                                        </div>
+                                    </div>
+                                </li>
+                                @endforeach
+                                <li class="media media-card border-top pt-2 mt-2">
+                                    <div class="media-body fs-15">
+                                        <p class="text-black font-weight-bold lh-18">Total: <span class="cart-total" id="cartSubTotal">${{ number_format($cartSubTotal, 2) }}</span></p>
+                                    </div>
+                                </li>
+                            @else
+                                <li class="media media-card">
+                                    <div class="media-body fs-15 text-center">
+                                        <p class="text-muted lh-18">Your cart is empty</p>
+                                    </div>
+                                </li>
+                            @endif
+                            <li class="mt-3">
+                                <a href="{{ route('cart') }}" class="btn theme-btn w-100 py-2">Go to Cart <i class="la la-arrow-right icon ml-1"></i></a>
+                            </li>
+                        </ul>
                   </li>
+                  @section('scripts')
+                  
+
                 </ul>
               </div><!-- end shop-cart -->
               <div class="nav-right-button">
