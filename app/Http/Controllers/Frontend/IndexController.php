@@ -56,22 +56,110 @@ class IndexController extends Controller
     /**
      * Display all courses in a specific category.
      */
-    public function CategoryCourse($id, $slug)
+ public function CategoryCourse(Request $request, $id, $slug)
     {
-        $courses = Course::where('category_id', $id)->where('status', '1')->get();
-        $category = Category::where('id', $id)->first();
-        $categories = Category::latest()->get();
+        $category = Category::where('id', $id)->where('category_slug', $slug)->firstOrFail();
+        $query = Course::with(['goals', 'instructor', 'reviews'])
+            ->where('status', 1)
+            ->where('category_id', $category->id);
+
+        // Filtre par niveau (label)
+        if ($request->filled('label')) {
+            $query->where('label', $request->input('label'));
+        }
+
+        // Filtre par prix
+        if ($request->filled('price')) {
+            if ($request->input('price') === 'free') {
+                $query->where(function ($q) {
+                    $q->where('selling_price', 0)->orWhere('discount_price', 0);
+                });
+            } elseif ($request->input('price') === 'paid') {
+                $query->where(function ($q) {
+                    $q->where('selling_price', '>', 0)->orWhere('discount_price', '>', 0);
+                });
+            }
+        }
+
+        // Filtre par "Bestseller"
+        if ($request->filled('bestseller') && $request->input('bestseller') == 1) {
+            $query->where('bestseller', 1);
+        }
+
+        // Filtre par note moyenne
+        if ($request->filled('rating')) {
+            $query->whereHas('reviews', function ($q) use ($request) {
+                $q->havingRaw('AVG(rating) >= ?', [$request->input('rating')]);
+            });
+        }
+
+        // Récupérer les cours paginés
+        $courses = $query->paginate(10);
+
+        // Ajouter la note moyenne et le nombre d'évaluations à chaque cours
+        foreach ($courses as $course) {
+            $course->rating = $course->reviews->avg('rating') ?? 0;
+            $course->reviews_count = $course->reviews->count();
+        }
+
+        // Charger toutes les catégories pour la sidebar
+        $categories = Category::orderBy('category_name', 'ASC')->get();
+
         return view('frontend.category.category_all', compact('courses', 'category', 'categories'));
     }
 
     /**
      * Display all courses in a specific subcategory.
      */
-    public function SubCategoryCourse($id, $slug)
+   public function SubCategoryCourse(Request $request, $id, $slug)
     {
-        $courses = Course::where('subcategory_id', $id)->where('status', '1')->get();
-        $subcategory = SubCategory::where('id', $id)->first();
-        $categories = Category::latest()->get();
+        $subcategory = SubCategory::where('id', $id)->where('subcategory_slug', $slug)->firstOrFail();
+        $query = Course::with(['goals', 'instructor', 'reviews'])
+            ->where('status', 1)
+            ->where('subcategory_id', $subcategory->id);
+
+        // Filtre par niveau (label)
+        if ($request->filled('label')) {
+            $query->where('label', $request->input('label'));
+        }
+
+        // Filtre par prix
+        if ($request->filled('price')) {
+            if ($request->input('price') === 'free') {
+                $query->where(function ($q) {
+                    $q->where('selling_price', 0)->orWhere('discount_price', 0);
+                });
+            } elseif ($request->input('price') === 'paid') {
+                $query->where(function ($q) {
+                    $q->where('selling_price', '>', 0)->orWhere('discount_price', '>', 0);
+                });
+            }
+        }
+
+        // Filtre par "Bestseller"
+        if ($request->filled('bestseller') && $request->input('bestseller') == 1) {
+            $query->where('bestseller', 1);
+        }
+
+        // Filtre par note moyenne
+        if ($request->filled('rating')) {
+            $query->whereHas('reviews', function ($q) use ($request) {
+                $q->havingRaw('AVG(rating) >= ?', [$request->input('rating')]);
+            });
+        }
+
+        // Récupérer les cours paginés
+        $courses = $query->paginate(10);
+
+        // Ajouter la note moyenne et le nombre d'évaluations à chaque cours
+        foreach ($courses as $course) {
+            $course->rating = $course->reviews->avg('rating') ?? 0;
+            $course->reviews_count = $course->reviews->count();
+        }
+
+        // Charger toutes les catégories pour la sidebar
+        $categories = Category::orderBy('category_name', 'ASC')->get();
+
         return view('frontend.category.subcategory_all', compact('courses', 'subcategory', 'categories'));
     }
 
@@ -304,10 +392,58 @@ class IndexController extends Controller
     /**
      * Display all available courses.
      */
-    public function AllCourses()
+public function courses(Request $request)
     {
-        $courses = Course::where('status', '1')->latest()->get();
-        $categories = Category::latest()->get();
-        return view('frontend.course.all_courses', compact('courses', 'categories'));
+        $query = Course::with(['goals', 'instructor', 'reviews'])->where('status', 1);
+
+        // Filtre par catégorie
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->input('category_id'));
+        }
+
+        // Filtre par niveau (label)
+        if ($request->filled('label')) {
+            $query->where('label', $request->input('label'));
+        }
+
+        // Filtre par prix
+        if ($request->filled('price')) {
+            if ($request->input('price') === 'free') {
+                $query->where(function ($q) {
+                    $q->where('selling_price', 0)->orWhere('discount_price', 0);
+                });
+            } elseif ($request->input('price') === 'paid') {
+                $query->where(function ($q) {
+                    $q->where('selling_price', '>', 0)->orWhere('discount_price', '>', 0);
+                });
+            }
+        }
+
+        // Filtre par "Bestseller"
+        if ($request->filled('bestseller') && $request->input('bestseller') == 1) {
+            $query->where('bestseller', 1);
+        }
+
+        // Filtre par note moyenne
+        if ($request->filled('rating')) {
+            $query->whereHas('reviews', function ($q) use ($request) {
+                $q->havingRaw('AVG(rating) >= ?', [$request->input('rating')]);
+            });
+        }
+
+        // Récupérer les cours paginés
+        $courses = $query->paginate(10);
+
+        // Ajouter la note moyenne et le nombre d'évaluations à chaque cours
+        foreach ($courses as $course) {
+            $course->rating = $course->reviews->avg('rating') ?? 0;
+            $course->reviews_count = $course->reviews->count();
+        }
+
+        // Charger les catégories pour le filtre
+        $categories = Category::orderBy('category_name', 'ASC')->get();
+
+        return view('frontend.course.course_list', compact('courses', 'categories'));
     }
+  
 }

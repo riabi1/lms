@@ -11,7 +11,7 @@
         /* Style général du footer */
         .footer-area {
             font-family: 'Poppins', sans-serif; /* Police moderne et élégante */
-            background-color: #1a1a1a; /* Fond sombre pour contraste */
+            background-color: #0e2552; /* Fond sombre pour contraste */
             color: #ffffff; /* Texte blanc pour lisibilité */
             padding-top: 100px;
         }
@@ -37,7 +37,7 @@
         }
 
         .contact-list a:hover {
-            color: #2d63a3; /* Couleur au survol */
+            color: #d3442a; /* Couleur au survol */
         }
 
         .tagline {
@@ -45,16 +45,16 @@
         }
 
         .highlight-text {
-            font-size: 2rem; /* Taille grande pour attirer l'attention */
+            font-size: 2.5rem; /* Taille grande pour attirer l'attention */
             font-weight: 700; /* Gras */
-            color: #2d63a3; /* Couleur vive (cyan) */
+            color: #d3442a; /* Couleur vive (cyan) */
             text-transform: uppercase; /* Majuscules pour impact */
             line-height: 1.2;
             margin: 0;
         }
 
         .section-block {
-            border-top: 1px solid #333333; /* Séparateur subtil */
+            border-top: 1px solid soft blue; /* Séparateur subtil */
             margin: 20px 0;
         }
 
@@ -64,7 +64,7 @@
         }
 
         .copy-desc a {
-            color: #2d63a3;
+            color: #d3442a;
             text-decoration: none;
         }
 
@@ -87,9 +87,7 @@
             transition: color 0.3s ease;
         }
 
-        .footer-links a:hover {
-            color: #2d63a3;
-        }
+        
 
         /* Responsive */
         @media (max-width: 991px) {

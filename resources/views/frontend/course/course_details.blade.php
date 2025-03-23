@@ -160,37 +160,64 @@
             </div>
 
             <div class="curriculum-content">
-              <div id="accordion" class="generic-accordion">
-                @foreach ($course->sections as $sec)
-                <div class="card">
-                  <div class="card-header" id="heading{{ $sec->id }}">
-                    <button class="btn btn-link d-flex align-items-center justify-content-between" data-toggle="collapse" data-target="#collapse{{ $sec->id }}" aria-expanded="true" aria-controls="collapse{{ $sec->id }}">
-                      <i class="la la-plus"></i>
-                      <i class="la la-minus"></i>
-                      {{ $sec->section_title }}
-                      <span class="fs-15 text-gray font-weight-medium">{{ $sec->lectures->count() }} lectures</span>
-                    </button>
-                  </div><!-- end card-header -->
-                  <div id="collapse{{ $sec->id }}" class="collapse" aria-labelledby="heading{{ $sec->id }}" data-parent="#accordion">
-                    <div class="card-body">
-                      <ul class="generic-list-item">
+             <div id="accordion" class="generic-accordion">
+    @foreach ($course->sections as $sec)
+        <div class="card">
+            <div class="card-header" id="heading{{ $sec->id }}">
+                <button class="btn btn-link d-flex align-items-center justify-content-between w-100 section-toggle">
+                    <span class="d-flex align-items-center">
+                        <i class="la la-plus mr-2"></i>
+                        <i class="la la-minus mr-2" style="display: none;"></i>
+                        {{ $sec->section_title }}
+                    </span>
+                    <span class="fs-15 text-gray font-weight-medium">
+                        {{ $sec->lectures->count() }} {{ $sec->lectures->count() === 1 ? 'lecture' : 'lectures' }}
+                    </span>
+                </button>
+            </div><!-- end card-header -->
+            <div id="collapse{{ $sec->id }}" class="section-content" style="display: none;">
+                <div class="card-body">
+                    <ul class="generic-list-item">
                         @foreach ($sec->lectures as $lect)
-                        <li>
-                          <div class="d-flex align-items-center justify-content-between">
-                            <span>
-                              <i class="la la-play-circle mr-1"></i>
-                              {{ $lect->lecture_title }}
-                            </span>
-                            <span>03:09</span>
-                          </div>
-                        </li>
+                            <li class="curriculum-content">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <span>
+                                        <i class="la la-play-circle mr-2"></i>
+                                        {{ $lect->lecture_title }}
+                                    </span>
+                                    <span class="text-muted">03:09</span> <!-- Remplacez par {{ $lect->duration }} si disponible -->
+                                </div>
+                            </li>
                         @endforeach
-                      </ul>
-                    </div><!-- end card-body -->
-                  </div><!-- end collapse -->
-                </div><!-- end card -->
-                @endforeach
-              </div><!-- end generic-accordion -->
+                    </ul>
+                </div><!-- end card-body -->
+            </div><!-- end section-content -->
+        </div><!-- end card -->
+    @endforeach
+</div><!-- end generic-accordion -->
+
+<!-- JavaScript pour gérer l'affichage/masquage -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('.section-toggle').on('click', function() {
+            const content = $(this).closest('.card').find('.section-content');
+            const plusIcon = $(this).find('.la-plus');
+            const minusIcon = $(this).find('.la-minus');
+
+            // Basculer l'affichage du contenu
+            if (content.is(':visible')) {
+                content.hide();
+                plusIcon.show();
+                minusIcon.hide();
+            } else {
+                content.show();
+                plusIcon.hide();
+                minusIcon.show();
+            }
+        });
+    });
+</script>
             </div><!-- end curriculum-content -->
           </div><!-- end course-overview-card -->
 
@@ -468,13 +495,13 @@
                   <span class="text-color-3">4 days</span> left at this price!
                 </p>
               <div class="buy-course-btn-box">
-    <form action="{{ route('cart.add', $course->id) }}" method="POST">
-        @csrf
-        <button type="submit" class="btn theme-btn w-100">
-            <i class="la la-shopping-cart fs-18 mr-1"></i> Add to Cart
-        </button>
-                        </form> 
-</div>
+                          <form action="{{ route('cart.add', $course->id) }}" method="POST">
+                              @csrf
+                              <button type="submit" class="btn theme-btn w-100">
+                                  <i class="la la-shopping-cart fs-18 mr-1"></i> Add to Cart
+                              </button>
+                          </form> 
+                </div>
                 
                 <div class="preview-course-incentives">
                   <h3 class="card-title fs-18 pb-2">This course includes</h3>
