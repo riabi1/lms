@@ -117,12 +117,12 @@
               </div><!-- end menu-category -->
               <nav class="main-menu">
                 <ul>
-                  <li>
-                    <a href="#">courses <i class="la la-angle-down fs-12"></i></a>
+                <li>
+                    <a href="#">Courses <i class="la la-angle-down fs-12"></i></a>
                     <ul class="dropdown-menu-item">
-                      <li><a href="course-list.html">course list</a></li>
+                        <li><a href="{{ route('course.list') }}">Course List</a></li>
                     </ul>
-                  </li>
+                </li>
                   <li>
                     <a href="#">blog</a>
                   </li>

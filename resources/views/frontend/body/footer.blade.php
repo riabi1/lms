@@ -2,6 +2,110 @@
 <html lang="fr">
 
 <head>
+ checkout
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Footer LMS - EasyLearning</title>
+    <style>
+        /* Police personnalisée (Google Fonts) */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap');
+
+        /* Style général du footer */
+        .footer-area {
+            font-family: 'Poppins', sans-serif; /* Police moderne et élégante */
+            background-color: #0e2552; /* Fond sombre pour contraste */
+            color: #ffffff; /* Texte blanc pour lisibilité */
+            padding-top: 100px;
+        }
+
+        .footer__logo {
+            max-width: 150px; /* Ajustez selon la taille de votre logo */
+        }
+
+        .contact-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .contact-list li {
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+
+        .contact-list a {
+            color: #ffffff;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .contact-list a:hover {
+            color: #d3442a; /* Couleur au survol */
+        }
+
+        .tagline {
+            text-align: center; /* Centrer la phrase */
+        }
+
+        .highlight-text {
+            font-size: 2.5rem; /* Taille grande pour attirer l'attention */
+            font-weight: 700; /* Gras */
+            color: #d3442a; /* Couleur vive (cyan) */
+            text-transform: uppercase; /* Majuscules pour impact */
+            line-height: 1.2;
+            margin: 0;
+        }
+
+        .section-block {
+            border-top: 1px solid soft blue; /* Séparateur subtil */
+            margin: 20px 0;
+        }
+
+        .copy-desc {
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        .copy-desc a {
+            color: #d3442a;
+            text-decoration: none;
+        }
+
+        .footer-links {
+            list-style: none;
+            padding-left: 0;
+            margin: 0;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .footer-links li {
+            margin-left: 20px;
+            font-size: 0.9rem;
+        }
+
+        .footer-links a {
+            color: #ffffff;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        
+
+        /* Responsive */
+        @media (max-width: 991px) {
+            .highlight-text {
+                font-size: 1.5rem; /* Réduire la taille sur petits écrans */
+            }
+            .footer-links {
+                justify-content: center !important; /* Centrer les liens en mobile */
+                flex-wrap: wrap;
+            }
+            .footer-links li {
+                margin: 5px 10px;
+            }
+        }
+    </style>
+
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Footer LMS - EasyLearning</title>
@@ -121,6 +225,7 @@
       }
     }
   </style>
+main
 </head>
 
 <body>

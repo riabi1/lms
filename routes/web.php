@@ -95,4 +95,5 @@ Route::get('/subcategory/{id}/{slug}', [IndexController::class, 'SubCategoryCour
 Route::get('/instructor/details/{id}', [IndexController::class, 'InstructorDetails'])->name('instructor.details');
 Route::get('/courses', [IndexController::class, 'AllCourses'])->name('courses.all');
 
+Route::get('/courses', [IndexController::class, 'courses'])->name('course.list');
 
