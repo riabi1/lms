@@ -2,8 +2,10 @@
     <i class="la la-times"></i>
 </div><!-- end off-canvas-menu-close -->
 
-<div class="logo-box px-4 py-3">
-    <a href="{{ route('dashboard') }}" class="logo"><img src="{{ asset('frontend/images/logo.png') }}" alt="Logo" class="img-fluid" style="max-height: 50px;"></a>
+<div class="logo-box px-4 py-4"> <!-- Augmenté le padding vertical avec py-4 -->
+    <a href="{{ route('dashboard') }}" class="logo">
+        <img src="{{ asset('frontend/images/logo.png') }}" alt="Logo" class="img-fluid" style="max-height: 70px; filter: brightness(110%);"> <!-- Taille augmentée et clarté améliorée -->
+    </a>
 </div>
 
 <ul class="generic-list-item off-canvas-menu-list off--canvas-menu-list pt-2 px-3">
@@ -63,8 +65,8 @@
             <span class="badge badge-info p-1 ml-2">2</span>
         </a>
     </li>
-    <li class="nav-item {{ request()->routeIs('user   <li class="nav-item {{ request()->routeIs('user.reviews.index') ? 'page-active' : '' }}">
-        <a href="{{ route('user.reviews.index') }}" class="d-flex align-items-center  rounded">
+    <li class="nav-item {{ request()->routeIs('user.reviews.index') ? 'page-active' : '' }}">
+        <a href="{{ route('user.reviews.index') }}" class="d-flex align-items-center py-2 px-3 rounded">
             <svg class="mr-2" xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 0 24 24" width="18px" aria-hidden="true">
                 <path d="M0 0h24v24H0V0z" fill="none"/>
                 <path d="M22 9.24l-7.19-.62L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.63-7.03L22 9.24zM12 15.4l-3.76 2.27 1-4.28-3.32-2.88 4.38-.38L12 6.1l1.71 4.04 4.38.38-3.32 2.88 1 4.28L12 15.4z"/>
