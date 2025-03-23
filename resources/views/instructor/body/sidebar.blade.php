@@ -2,9 +2,13 @@
 <div class="sidebar-wrapper" data-simplebar="true">
   <div class="sidebar-header">
     <div>
-      <img src="{{ asset('backend/assets/images/logo-icon.png') }}" class="logo-icon" alt="logo icon">
+      <a href="{{ route('dashboard') }}" class="logo">
+        <img src="{{ asset('frontend/images/logo2.png') }}" alt="Logo" class="img-fluid" style="max-height: 70px; filter: brightness(110%);"> <!-- Taille augmentée et clarté améliorée -->
+    </a>
     </div>
+    
     <div>
+     
       <h4 class="logo-text">Instructor</h4>
       @php
       $instructor = Auth::guard('instructor')->user();
