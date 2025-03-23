@@ -28,12 +28,12 @@
             </a>
         </li>
     
-    <li>
-            <a href="#">
-                <div class="parent-icon"><i class='bx bx-book'></i></div>
-                <div class="menu-title">My Courses</div>
-            </a>
-        </li>
+  <li>
+    <a href="{{ route('user.my.courses') }}">
+        <div class="parent-icon"><i class='bx bx-book'></i></div>
+        <div class="menu-title">My Courses</div>
+    </a>
+</li>
 
       <li>
             <a href="#">

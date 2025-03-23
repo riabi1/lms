@@ -6,6 +6,7 @@ use App\Http\Controllers\User\ReviewController;
 use App\Http\Controllers\Frontend\CartController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Frontend\IndexController;
+use App\Http\Controllers\User\UserCoursesController;
 use App\Http\Controllers\Admin\AdminCourseController;
 use App\Http\Controllers\Admin\AdminReviewController;
 use App\Http\Controllers\Admin\SubCategoryController;
@@ -41,9 +42,9 @@ Route::middleware(['auth:web'])->group(function () {
 
 
     Route::resource('reviews', ReviewController::class)->names('user.reviews')->except(['create', 'store', 'show']);
-
-
-    Route::resource('reviews', ReviewController::class)->names('user.reviews')->except(['create', 'store', 'show']);
+   Route::get('/my-courses', [UserCoursesController::class, 'myCourses'])->name('user.my.courses');
+    Route::get('/course/learn/{id}/{slug}', [UserCoursesController::class, 'learnCourse'])->name('user.course.learn');
+  Route::post('/course/lecture/completed', [UserCoursesController::class, 'markLectureCompleted'])->name('user.lecture.completed')->middleware('auth');
 });
 });
 
