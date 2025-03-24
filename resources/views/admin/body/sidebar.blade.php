@@ -1,7 +1,7 @@
 <div class="sidebar-wrapper" data-simplebar="true">
   <div class="sidebar-header">
     <div>
-     <a href="{{ route('dashboard') }}" class="logo">
+     <a href="{{ route('home') }}" class="logo">
         <img src="{{ asset('frontend/images/logo2.png') }}" alt="Logo" class="img-fluid" style="max-height: 70px; filter: brightness(110%);"> <!-- Taille augmentée et clarté améliorée -->
     </a>
     </div>
