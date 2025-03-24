@@ -30,18 +30,22 @@ $categories = App\Models\Category::orderBy('category_name', 'ASC')->get();
         <div class="tab-pane fade show active" id="all" role="tabpanel" aria-labelledby="all-tab">
           <div class="row">
             @foreach($courses as $course)
+            @php
+            $finalPrice = $course->discount_price !== null
+              ? max(0, $course->selling_price - $course->discount_price)
+              : $course->selling_price;
+            $discountPercentage = ($course->selling_price > 0 && $course->discount_price !== null)
+              ? round(($course->discount_price / $course->selling_price) * 100)
+              : 0;
+            $rating = $course->reviews->avg('rating') ?? 0;
+            $reviews_count = $course->reviews->count();
+            @endphp
             <div class="col-lg-4 responsive-column-half">
               <div class="card card-item card-preview" data-tooltip-content="#tooltip_content_{{ $course->id }}">
                 <div class="card-image">
                   <a href="{{ route('course.details', ['id' => $course->id, 'slug' => $course->course_name_slug]) }}" class="d-block">
                     <img class="card-img-top lazy" src="{{ asset('storage/upload/course_images/thumbnail/' . $course->course_image) }}" alt="Course image" onerror="this.src='{{ asset('images/default-course.jpg') }}'">
                   </a>
-                  @php
-                  $amount = $course->selling_price - $course->discount_price;
-                  $discount = $course->selling_price > 0 ? ($amount / $course->selling_price) * 100 : 0;
-                  $rating = $course->reviews->avg('rating') ?? 0;
-                  $reviews_count = $course->reviews->count();
-                  @endphp
                   <div class="course-badge-labels">
                     @if ($course->bestseller == 1)
                     <div class="course-badge">Bestseller</div>
@@ -52,7 +56,7 @@ $categories = App\Models\Category::orderBy('category_name', 'ASC')->get();
                     @if ($course->discount_price == null)
                     <div class="course-badge blue">New</div>
                     @else
-                    <div class="course-badge blue">{{ round($discount) }}%</div>
+                    <div class="course-badge blue">{{ $discountPercentage }}%</div>
                     @endif
                   </div>
                 </div><!-- end card-image -->
@@ -62,12 +66,12 @@ $categories = App\Models\Category::orderBy('category_name', 'ASC')->get();
                     <a href="{{ route('course.details', ['id' => $course->id, 'slug' => $course->course_name_slug]) }}">{{ $course->course_name }}</a>
                   </h5>
                   <div class="d-flex justify-content-between align-items-center">
-                    @if ($course->discount_price == null)
-                    <p class="card-price text-black font-weight-bold">${{ $course->selling_price }}</p>
-                    @else
-                    <p class="card-price text-black font-weight-bold">${{ $course->discount_price }}
-                      <span class="before-price font-weight-medium">${{ $course->selling_price }}</span>
+                    @if ($finalPrice < $course->selling_price)
+                    <p class="card-price text-black font-weight-bold">${{ number_format($finalPrice, 2) }}
+                      <span class="before-price font-weight-medium">${{ number_format($course->selling_price, 2) }}</span>
                     </p>
+                    @else
+                    <p class="card-price text-black font-weight-bold">${{ number_format($finalPrice, 2) }}</p>
                     @endif
                   </div>
                 </div><!-- end card-body -->
@@ -140,18 +144,22 @@ $categories = App\Models\Category::orderBy('category_name', 'ASC')->get();
               ->get();
             @endphp
             @forelse ($catwiseCourse as $course)
+            @php
+            $finalPrice = $course->discount_price !== null
+              ? max(0, $course->selling_price - $course->discount_price)
+              : $course->selling_price;
+            $discountPercentage = ($course->selling_price > 0 && $course->discount_price !== null)
+              ? round(($course->discount_price / $course->selling_price) * 100)
+              : 0;
+            $rating = $course->reviews->avg('rating') ?? 0;
+            $reviews_count = $course->reviews->count();
+            @endphp
             <div class="col-lg-4 responsive-column-half">
               <div class="card card-item card-preview" data-tooltip-content="#tooltip_content_{{ $course->id }}">
                 <div class="card-image">
                   <a href="{{ route('course.details', ['id' => $course->id, 'slug' => $course->course_name_slug]) }}" class="d-block">
                     <img class="card-img-top lazy" src="{{ asset('storage/upload/course_images/thumbnail/' . $course->course_image) }}" alt="Course image" onerror="this.src='{{ asset('images/default-course.jpg') }}'">
                   </a>
-                  @php
-                  $amount = $course->selling_price - $course->discount_price;
-                  $discount = $course->selling_price > 0 ? ($amount / $course->selling_price) * 100 : 0;
-                  $rating = $course->reviews->avg('rating') ?? 0;
-                  $reviews_count = $course->reviews->count();
-                  @endphp
                   <div class="course-badge-labels">
                     @if ($course->bestseller == 1)
                     <div class="course-badge">Bestseller</div>
@@ -162,7 +170,7 @@ $categories = App\Models\Category::orderBy('category_name', 'ASC')->get();
                     @if ($course->discount_price == null)
                     <div class="course-badge blue">New</div>
                     @else
-                    <div class="course-badge blue">{{ round($discount) }}%</div>
+                    <div class="course-badge blue">{{ $discountPercentage }}%</div>
                     @endif
                   </div>
                 </div><!-- end card-image -->
@@ -172,12 +180,12 @@ $categories = App\Models\Category::orderBy('category_name', 'ASC')->get();
                     <a href="{{ route('course.details', ['id' => $course->id, 'slug' => $course->course_name_slug]) }}">{{ $course->course_name }}</a>
                   </h5>
                   <div class="d-flex justify-content-between align-items-center">
-                    @if ($course->discount_price == null)
-                    <p class="card-price text-black font-weight-bold">${{ $course->selling_price }}</p>
-                    @else
-                    <p class="card-price text-black font-weight-bold">${{ $course->discount_price }}
-                      <span class="before-price font-weight-medium">${{ $course->selling_price }}</span>
+                    @if ($finalPrice < $course->selling_price)
+                    <p class="card-price text-black font-weight-bold">${{ number_format($finalPrice, 2) }}
+                      <span class="before-price font-weight-medium">${{ number_format($course->selling_price, 2) }}</span>
                     </p>
+                    @else
+                    <p class="card-price text-black font-weight-bold">${{ number_format($finalPrice, 2) }}</p>
                     @endif
                   </div>
                 </div><!-- end card-body -->

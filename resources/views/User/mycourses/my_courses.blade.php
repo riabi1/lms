@@ -74,7 +74,7 @@ My Courses | Easy Learning
                             @endif
                         @empty
                             <tr>
-                                <td colspan="7" class="text-center">You haven't purchased any courses yet. <a href="{{ route('course.grid') }}" class="text-primary">Explore Courses</a></td>
+                                <td colspan="7" class="text-center">You haven't purchased any courses yet. <a href="{{ route('course.list') }}" class="text-primary">Explore Courses</a></td>
                             </tr>
                         @endforelse
                     </tbody>
