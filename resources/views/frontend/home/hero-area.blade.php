@@ -10,8 +10,8 @@
             <p class="section__desc text-white pb-4">Empower yourself with knowledge. Explore a variety of courses designed to help you follow your passion and achieve your goals.</p>
           </div>
           <div class="hero-btn-box d-flex flex-wrap align-items-center pt-1">
-            <a href="/login" class="btn theme-btn mr-4 mb-4">Join Us <i class="la la-arrow-right icon ml-1"></i></a>
-            <a href="#" class="btn-text video-play-btn mb-4" data-fancybox data-src="https://www.youtube.com/watch?v=cRXm1p-CNyk">
+           
+            <a href="#" class="btn-text video-play-btn mb-4" data-fancybox data-src="https://youtu.be/xFOG_9Y883c?si=nRsi0Ki50nmJ3ZSc">
               Watch Preview <i class="la la-play icon-btn ml-2"></i>
             </a>
           </div>
@@ -28,8 +28,8 @@
             <p class="section__desc text-white pb-4">Unlock your learning potential with free, high-quality courses across multiple disciplines. Start your journey today!</p>
           </div>
           <div class="hero-btn-box d-flex flex-wrap align-items-center pt-1 justify-content-center">
-            <a href="/login" class="btn theme-btn mr-4 mb-4">Get Started <i class="la la-arrow-right icon ml-1"></i></a>
-            <a href="#" class="btn-text video-play-btn mb-4" data-fancybox data-src="https://www.youtube.com/watch?v=cRXm1p-CNyk">
+           
+            <a href="#" class="btn-text video-play-btn mb-4" data-fancybox data-src="https://youtu.be/xFOG_9Y883c?si=nRsi0Ki50nmJ3ZSc">
               Watch Preview <i class="la la-play icon-btn ml-2"></i>
             </a>
           </div>
@@ -49,7 +49,7 @@
             <a href="#" class="btn-text video-play-btn mr-4 mb-4" data-fancybox data-src="https://www.youtube.com/watch?v=cRXm1p-CNyk">
               <i class="la la-play icon-btn mr-2"></i> Watch Preview
             </a>
-            <a href="/login" class="btn theme-btn mb-4"><i class="la la-arrow-left icon mr-1"></i> Get Enrolled</a>
+            
           </div>
         </div>
       </div>

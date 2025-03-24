@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Category;
 use App\Models\SubCategory;
 use App\Models\Course;
-use App\Models\Instructor; // Changé de User à Instructor
+use App\Models\Instructor; 
 use App\Models\Course_goal;
 use App\Models\CourseSection;
 use App\Models\CourseLecture;

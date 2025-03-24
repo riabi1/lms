@@ -9,7 +9,9 @@
             <div class="card radius-10">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
-                        <img src="{{ asset($course->course_image) }}" class="rounded-circle p-1 border" width="90" height="90" alt="{{ $course->course_name }}">
+                        
+
+                         <img src="{{ $course->course_image ? asset('storage/upload/course_images/thumbnail/' . $course->course_image) : asset('upload/no_image.jpg') }}"  class="rounded-circle p-1 border"width= "90" height= "90" alt="{{ $course->course_name }}" >
                         <div class="flex-grow-1 ms-3">
                             <h5 class="mt-0">{{ $course->course_name }}</h5>
                             <p class="mb-0">{{ $course->course_title }}</p>

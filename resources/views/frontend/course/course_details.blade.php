@@ -25,10 +25,10 @@
           @if ($course->bestseller == 1)
           <h6 class="ribbon ribbon-lg mr-2 bg-3 text-white">Bestseller</h6>
           @endif
-           @if ($course->featured == 1)
+          @if ($course->featured == 1)
           <h6 class="ribbon ribbon-lg mr-2 bg-3 text-white">Featured</h6>
           @endif
-           @if ($course->highestrated == 1)
+          @if ($course->highestrated == 1)
           <h6 class="ribbon ribbon-lg mr-2 bg-3 text-white">Highest Rated</h6>
           @endif
 
@@ -40,43 +40,9 @@
           <div class="rating-wrap d-flex flex-wrap align-items-center">
             <div class="review-stars">
               <span class="rating-number">{{ round($average, 1) }}</span>
-              @if ($average == 0)
-              <span class="la la-star-o"></span>
-              <span class="la la-star-o"></span>
-              <span class="la la-star-o"></span>
-              <span class="la la-star-o"></span>
-              <span class="la la-star-o"></span>
-              @elseif ($average >= 1 && $average < 2)
-                <span class="la la-star"></span>
-                <span class="la la-star-o"></span>
-                <span class="la la-star-o"></span>
-                <span class="la la-star-o"></span>
-                <span class="la la-star-o"></span>
-                @elseif ($average >= 2 && $average < 3)
-                  <span class="la la-star"></span>
-                  <span class="la la-star"></span>
-                  <span class="la la-star-o"></span>
-                  <span class="la la-star-o"></span>
-                  <span class="la la-star-o"></span>
-                  @elseif ($average >= 3 && $average < 4)
-                    <span class="la la-star"></span>
-                    <span class="la la-star"></span>
-                    <span class="la la-star"></span>
-                    <span class="la la-star-o"></span>
-                    <span class="la la-star-o"></span>
-                    @elseif ($average >= 4 && $average < 5)
-                      <span class="la la-star"></span>
-                      <span class="la la-star"></span>
-                      <span class="la la-star"></span>
-                      <span class="la la-star"></span>
-                      <span class="la la-star-o"></span>
-                      @elseif ($average >= 5)
-                      <span class="la la-star"></span>
-                      <span class="la la-star"></span>
-                      <span class="la la-star"></span>
-                      <span class="la la-star"></span>
-                      <span class="la la-star"></span>
-                      @endif
+              @for ($i = 1; $i <= 5; $i++)
+                <span class="la la-star{{ $i <= floor($average) ? '' : '-o' }}"></span>
+              @endfor
             </div>
             <span class="rating-total pl-1">({{ count($reviewcount) }} ratings)</span>
           </div>
@@ -87,9 +53,8 @@
             <svg class="svg-icon-color-gray mr-1" width="16px" viewBox="0 0 24 24">
               <path d="M23 12l-2.44-2.78.34-3.68-3.61-.82-1.89-3.18L12 3 8.6 1.54 6.71 4.72l-3.61.81.34 3.68L1 12l2.44 2.78-.34 3.69 3.61.82 1.89 3.18L12 21l3.4 1.46 1.89-3.18 3.61-.82-.34-3.68L23 12zm-10 5h-2v-2h2v2zm0-4h-2V7h2v6z"></path>
             </svg>
-            Last updated {{ $course->created_at ? $course->created_at->format('M d Y') : 'N/A' }}
+            Last updated {{ $course->updated_at ? \Carbon\Carbon::parse($course->updated_at)->format('M d Y') : 'N/A' }}
           </p>
-         
         </div><!-- end d-flex -->
         <div class="bread-btn-box pt-3">
           <button class="btn theme-btn theme-btn-sm theme-btn-transparent lh-28 mr-2 mb-2">
@@ -160,64 +125,41 @@
             </div>
 
             <div class="curriculum-content">
-             <div id="accordion" class="generic-accordion">
-    @foreach ($course->sections as $sec)
-        <div class="card">
-            <div class="card-header" id="heading{{ $sec->id }}">
-                <button class="btn btn-link d-flex align-items-center justify-content-between w-100 section-toggle">
-                    <span class="d-flex align-items-center">
+              <div id="accordion" class="generic-accordion">
+                @foreach ($course->sections as $sec)
+                <div class="card">
+                  <div class="card-header" id="heading{{ $sec->id }}">
+                    <button class="btn btn-link d-flex align-items-center justify-content-between w-100 section-toggle">
+                      <span class="d-flex align-items-center">
                         <i class="la la-plus mr-2"></i>
                         <i class="la la-minus mr-2" style="display: none;"></i>
                         {{ $sec->section_title }}
-                    </span>
-                    <span class="fs-15 text-gray font-weight-medium">
+                      </span>
+                      <span class="fs-15 text-gray font-weight-medium">
                         {{ $sec->lectures->count() }} {{ $sec->lectures->count() === 1 ? 'lecture' : 'lectures' }}
-                    </span>
-                </button>
-            </div><!-- end card-header -->
-            <div id="collapse{{ $sec->id }}" class="section-content" style="display: none;">
-                <div class="card-body">
-                    <ul class="generic-list-item">
+                      </span>
+                    </button>
+                  </div><!-- end card-header -->
+                  <div id="collapse{{ $sec->id }}" class="section-content" style="display: none;">
+                    <div class="card-body">
+                      <ul class="generic-list-item">
                         @foreach ($sec->lectures as $lect)
-                            <li class="curriculum-content">
-                                <div class="d-flex align-items-center justify-content-between">
-                                    <span>
-                                        <i class="la la-play-circle mr-2"></i>
-                                        {{ $lect->lecture_title }}
-                                    </span>
-                                    <span class="text-muted">03:09</span> <!-- Remplacez par {{ $lect->duration }} si disponible -->
-                                </div>
-                            </li>
+                        <li class="curriculum-content">
+                          <div class="d-flex align-items-center justify-content-between">
+                            <span>
+                              <i class="la la-play-circle mr-2"></i>
+                              {{ $lect->lecture_title }}
+                            </span>
+                            <span class="text-muted">{{ $lect->duration ?? '03:09' }}</span>
+                          </div>
+                        </li>
                         @endforeach
-                    </ul>
-                </div><!-- end card-body -->
-            </div><!-- end section-content -->
-        </div><!-- end card -->
-    @endforeach
-</div><!-- end generic-accordion -->
-
-<!-- JavaScript pour gérer l'affichage/masquage -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
-    $(document).ready(function() {
-        $('.section-toggle').on('click', function() {
-            const content = $(this).closest('.card').find('.section-content');
-            const plusIcon = $(this).find('.la-plus');
-            const minusIcon = $(this).find('.la-minus');
-
-            // Basculer l'affichage du contenu
-            if (content.is(':visible')) {
-                content.hide();
-                plusIcon.show();
-                minusIcon.hide();
-            } else {
-                content.show();
-                plusIcon.hide();
-                minusIcon.show();
-            }
-        });
-    });
-</script>
+                      </ul>
+                    </div><!-- end card-body -->
+                  </div><!-- end section-content -->
+                </div><!-- end card -->
+                @endforeach
+              </div><!-- end generic-accordion -->
             </div><!-- end curriculum-content -->
           </div><!-- end course-overview-card -->
 
@@ -230,7 +172,6 @@
                     <img class="lazy" src="{{ $course->instructor->photo ? asset('storage/upload/instructor_images/' . $course->instructor->photo) : asset('images/no_image.jpg') }}" alt="Instructor image" loading="lazy" onerror="this.src='{{ asset('images/no_image.jpg') }}'">
                   </a>
                   <ul class="generic-list-item pt-3">
-                    
                     <li><i class="la la-play-circle-o mr-2 text-color-3"></i> {{ $instructorCourses->count() }} Courses</li>
                     <li><a href="{{ route('instructor.details', $course->instructor_id) }}">View all Courses</a></li>
                   </ul>
@@ -239,8 +180,6 @@
                   <h5><a href="{{ route('instructor.details', $course->instructor_id) }}">{{ $course->instructor->name ?? 'Unknown Instructor' }}</a></h5>
                   <span class="d-block lh-18 pt-2 pb-3">Joined {{ $course->instructor && $course->instructor->created_at ? \Carbon\Carbon::parse($course->instructor->created_at)->diffForHumans() : 'N/A' }}</span>
                   <p class="text-black lh-18 pb-3">{{ $course->instructor->email ?? 'No email available' }}</p>
-                
-                  </a>
                 </div>
               </div>
             </div><!-- end instructor-wrap -->
@@ -254,43 +193,9 @@
                   <span class="stats-average__count">{{ round($average, 1) }}</span>
                   <div class="rating-wrap pt-1">
                     <div class="review-stars">
-                      @if ($average == 0)
-                      <span class="la la-star-o"></span>
-                      <span class="la la-star-o"></span>
-                      <span class="la la-star-o"></span>
-                      <span class="la la-star-o"></span>
-                      <span class="la la-star-o"></span>
-                      @elseif ($average >= 1 && $average < 2)
-                        <span class="la la-star"></span>
-                        <span class="la la-star-o"></span>
-                        <span class="la la-star-o"></span>
-                        <span class="la la-star-o"></span>
-                        <span class="la la-star-o"></span>
-                        @elseif ($average >= 2 && $average < 3)
-                          <span class="la la-star"></span>
-                          <span class="la la-star"></span>
-                          <span class="la la-star-o"></span>
-                          <span class="la la-star-o"></span>
-                          <span class="la la-star-o"></span>
-                          @elseif ($average >= 3 && $average < 4)
-                            <span class="la la-star"></span>
-                            <span class="la la-star"></span>
-                            <span class="la la-star"></span>
-                            <span class="la la-star-o"></span>
-                            <span class="la la-star-o"></span>
-                            @elseif ($average >= 4 && $average < 5)
-                              <span class="la la-star"></span>
-                              <span class="la la-star"></span>
-                              <span class="la la-star"></span>
-                              <span class="la la-star"></span>
-                              <span class="la la-star-o"></span>
-                              @elseif ($average >= 5)
-                              <span class="la la-star"></span>
-                              <span class="la la-star"></span>
-                              <span class="la la-star"></span>
-                              <span class="la la-star"></span>
-                              <span class="la la-star"></span>
-                              @endif
+                      @for ($i = 1; $i <= 5; $i++)
+                        <span class="la la-star{{ $i <= floor($average) ? '' : '-o' }}"></span>
+                      @endfor
                     </div>
                     <span class="rating-total d-block">({{ count($reviewcount) }})</span>
                     <span>Course Rating</span>
@@ -299,22 +204,22 @@
                 <div class="media-body">
                   @php
                   $reviewcount = App\Models\Review::where('course_id', $course->id)
-                  ->where('status', 1)
-                  ->select('rating', DB::raw('count(*) as count'))
-                  ->groupBy('rating')
-                  ->orderBy('rating', 'desc')
-                  ->get();
+                    ->where('status', 1)
+                    ->select('rating', DB::raw('count(*) as count'))
+                    ->groupBy('rating')
+                    ->orderBy('rating', 'desc')
+                    ->get();
                   $totalReviews = $reviewcount->sum('count');
                   $percentages = [];
                   for ($i = 5; $i >= 1; $i--) {
-                  $ratingCount = $reviewcount->where('rating', $i)->first();
-                  $count = $ratingCount ? $ratingCount->count : 0;
-                  $percent = $totalReviews > 0 ? ($count / $totalReviews) * 100 : 0;
-                  $percentages[] = [
-                  'rating' => $i,
-                  'percent' => $percent,
-                  'count' => $count,
-                  ];
+                    $ratingCount = $reviewcount->where('rating', $i)->first();
+                    $count = $ratingCount ? $ratingCount->count : 0;
+                    $percent = $totalReviews > 0 ? ($count / $totalReviews) * 100 : 0;
+                    $percentages[] = [
+                      'rating' => $i,
+                      'percent' => $percent,
+                      'count' => $count,
+                    ];
                   }
                   @endphp
 
@@ -326,7 +231,7 @@
                       <div class="skillbar-box">
                         <div class="skillbar" data-percent="{{ $ratingInfo['percent'] }}%">
                           <div class="skillbar-bar bg-3" style="width: {{ $ratingInfo['percent'] }}%;"></div>
-                        </div> <!-- End Skill Bar -->
+                        </div>
                       </div>
                     </div><!-- end review-bars__fill -->
                     <div class="review-bars__percent">{{ number_format($ratingInfo['percent'], 2) }}%</div>
@@ -339,6 +244,7 @@
               </div>
             </div><!-- end feedback-wrap -->
           </div><!-- end course-overview-card -->
+          
           <div class="course-overview-card pt-4">
             <h3 class="fs-24 font-weight-semi-bold pb-4">Reviews</h3>
             <div class="review-wrap">
@@ -354,53 +260,17 @@
                   <div class="d-flex flex-wrap align-items-center justify-content-between pb-1">
                     <h5>{{ $item->user->name ?? 'Anonymous' }}</h5>
                     <div class="review-stars">
-                      @if ($item->rating == null)
-                      <span class="la la-star-o"></span>
-                      <span class="la la-star-o"></span>
-                      <span class="la la-star-o"></span>
-                      <span class="la la-star-o"></span>
-                      <span class="la la-star-o"></span>
-                      @elseif ($item->rating == 1)
-                      <span class="la la-star"></span>
-                      <span class="la la-star-o"></span>
-                      <span class="la la-star-o"></span>
-                      <span class="la la-star-o"></span>
-                      <span class="la la-star-o"></span>
-                      @elseif ($item->rating == 2)
-                      <span class="la la-star"></span>
-                      <span class="la la-star"></span>
-                      <span class="la la-star-o"></span>
-                      <span class="la la-star-o"></span>
-                      <span class="la la-star-o"></span>
-                      @elseif ($item->rating == 3)
-                      <span class="la la-star"></span>
-                      <span class="la la-star"></span>
-                      <span class="la la-star"></span>
-                      <span class="la la-star-o"></span>
-                      <span class="la la-star-o"></span>
-                      @elseif ($item->rating == 4)
-                      <span class="la la-star"></span>
-                      <span class="la la-star"></span>
-                      <span class="la la-star"></span>
-                      <span class="la la-star"></span>
-                      <span class="la la-star-o"></span>
-                      @elseif ($item->rating == 5)
-                      <span class="la la-star"></span>
-                      <span class="la la-star"></span>
-                      <span class="la la-star"></span>
-                      <span class="la la-star"></span>
-                      <span class="la la-star"></span>
-                      @endif
+                      @for ($i = 1; $i <= 5; $i++)
+                        <span class="la la-star{{ $i <= $item->rating ? '' : '-o' }}"></span>
+                      @endfor
                     </div>
                   </div>
                   <span class="d-block lh-18 pb-2">{{ $item->created_at ? \Carbon\Carbon::parse($item->created_at)->diffForHumans() : 'N/A' }}</span>
                   <p class="pb-2">{{ $item->comment }}</p>
-                 
                 </div>
               </div><!-- end media -->
               @endforeach
             </div><!-- end review-wrap -->
-            
           </div><!-- end course-overview-card -->
 
           @guest
@@ -452,14 +322,8 @@
                     <div class="play-button">
                       <svg version="1.1" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="-307.4 338.8 91.8 91.8" style="enable-background:new -307.4 338.8 91.8 91.8;" xml:space="preserve">
                         <style type="text/css">
-                          .st0 {
-                            fill: #ffffff;
-                            border-radius: 100px;
-                          }
-
-                          .st1 {
-                            fill: #000000;
-                          }
+                          .st0 { fill: #ffffff; border-radius: 100px; }
+                          .st1 { fill: #000000; }
                         </style>
                         <g>
                           <circle class="st0" cx="-261.5" cy="384.7" r="45.9"></circle>
@@ -473,36 +337,35 @@
               </div><!-- end preview-course-video -->
               @php
               $finalPrice = $course->discount_price !== null
-              ? max(0, $course->selling_price - $course->discount_price)
-              : $course->selling_price;
+                ? max(0, $course->selling_price - $course->discount_price)
+                : $course->selling_price;
               $discountPercentage = ($course->selling_price > 0 && $course->discount_price !== null)
-              ? round(($course->discount_price / $course->selling_price) * 100)
-              : 0;
+                ? round(($course->discount_price / $course->selling_price) * 100)
+                : 0;
               @endphp
               <div class="preview-course-feature-content pt-40px">
                 <p class="d-flex align-items-center pb-2">
                   @if ($finalPrice < $course->selling_price)
                     <span class="fs-35 font-weight-semi-bold text-black">${{ number_format($finalPrice, 2) }}</span>
                     <span class="before-price mx-1">${{ number_format($course->selling_price, 2) }}</span>
-                    @else
+                  @else
                     <span class="fs-35 font-weight-semi-bold text-black">${{ number_format($finalPrice, 2) }}</span>
-                    @endif
-                    @if ($discountPercentage > 0)
+                  @endif
+                  @if ($discountPercentage > 0)
                     <span class="price-discount">{{ $discountPercentage }}% off</span>
-                    @endif
+                  @endif
                 </p>
                 <p class="preview-price-discount-text pb-35px">
                   <span class="text-color-3">4 days</span> left at this price!
                 </p>
-              <div class="buy-course-btn-box">
-                          <form action="{{ route('cart.add', $course->id) }}" method="POST">
-                              @csrf
-                              <button type="submit" class="btn theme-btn w-100">
-                                  <i class="la la-shopping-cart fs-18 mr-1"></i> Add to Cart
-                              </button>
-                          </form> 
+                <div class="buy-course-btn-box">
+                  <form action="{{ route('cart.add', $course->id) }}" method="POST">
+                    @csrf
+                    <button type="submit" class="btn theme-btn flex-grow-1 mr-3">
+                      <i class="la la-shopping-cart fs-18 mr-1"></i> Add to Cart
+                    </button>
+                  </form>
                 </div>
-                
                 <div class="preview-course-incentives">
                   <h3 class="card-title fs-18 pb-2">This course includes</h3>
                   <ul class="generic-list-item pb-3">
@@ -510,10 +373,7 @@
                     <li><i class="la la-file mr-2 text-color"></i>{{ $course->resources }} resources</li>
                     <li><i class="la la-file mr-2 text-color"></i> certificate : {{ $course->certificate }} </li>
                     <li><i class="la la-key mr-2 text-color"></i>Full lifetime access</li>
-                    
                   </ul>
-                 
-                  
                 </div><!-- end preview-course-incentives -->
               </div><!-- end preview-course-content -->
             </div>
@@ -530,7 +390,6 @@
               </ul>
             </div>
           </div><!-- end card -->
-         
         </div><!-- end sidebar -->
       </div><!-- end col-lg-4 -->
     </div><!-- end row -->
@@ -551,13 +410,15 @@
         @foreach ($instructorCourses as $inscourse)
         @php
         $insFinalPrice = $inscourse->discount_price !== null
-        ? max(0, $inscourse->selling_price - $inscourse->discount_price)
-        : $inscourse->selling_price;
+          ? max(0, $inscourse->selling_price - $inscourse->discount_price)
+          : $inscourse->selling_price;
         $insDiscountPercentage = ($inscourse->selling_price > 0 && $inscourse->discount_price !== null)
-        ? round(($inscourse->discount_price / $inscourse->selling_price) * 100)
-        : 0;
+          ? round(($inscourse->discount_price / $inscourse->selling_price) * 100)
+          : 0;
+        $insRating = $inscourse->reviews->avg('rating') ?? 0;
+        $insReviewsCount = $inscourse->reviews->count();
         @endphp
-        <div class="card card-item">
+        <div class="card card-item card-preview" data-tooltip-content="#tooltip_content_{{ $inscourse->id }}">
           <div class="card-image">
             <a href="{{ url('course/details/'.$inscourse->id.'/'.$inscourse->course_name_slug) }}" class="d-block">
               <img class="card-img-top lazy" src="{{ $inscourse->course_image ? asset('storage/upload/course_images/thumbnail/' . $inscourse->course_image) : asset('images/no_image.jpg') }}" alt="Card image cap" loading="lazy" onerror="this.src='{{ asset('images/no_image.jpg') }}'">
@@ -579,22 +440,20 @@
             <p class="card-text"><a href="{{ route('instructor.details', $inscourse->instructor_id) }}">{{ $inscourse->instructor->name ?? 'Unknown Instructor' }}</a></p>
             <div class="rating-wrap d-flex align-items-center py-2">
               <div class="review-stars">
-                <span class="rating-number">4.4</span>
-                <span class="la la-star"></span>
-                <span class="la la-star"></span>
-                <span class="la la-star"></span>
-                <span class="la la-star"></span>
-                <span class="la la-star-o"></span>
+                <span class="rating-number">{{ number_format($insRating, 1) }}</span>
+                @for ($i = 1; $i <= 5; $i++)
+                  <span class="la la-star{{ $i <= floor($insRating) ? '' : '-o' }}"></span>
+                @endfor
               </div>
-              <span class="rating-total pl-1">(20,230)</span>
+              <span class="rating-total pl-1">({{ number_format($insReviewsCount) }})</span>
             </div><!-- end rating-wrap -->
             <div class="d-flex justify-content-between align-items-center">
               @if ($insFinalPrice < $inscourse->selling_price)
                 <p class="card-price text-black font-weight-bold">${{ number_format($insFinalPrice, 2) }} <span class="before-price font-weight-medium">${{ number_format($inscourse->selling_price, 2) }}</span></p>
-                @else
+              @else
                 <p class="card-price text-black font-weight-bold">${{ number_format($insFinalPrice, 2) }}</p>
-                @endif
-                <div class="icon-element icon-element-sm shadow-sm cursor-pointer" title="Add to Wishlist"><i class="la la-heart-o"></i></div>
+              @endif
+              <div class="icon-element icon-element-sm shadow-sm cursor-pointer" title="Add to Wishlist"><i class="la la-heart-o"></i></div>
             </div>
           </div><!-- end card-body -->
         </div><!-- end card -->
@@ -607,9 +466,68 @@
         END RELATED COURSE AREA
 ======================================-->
 
+<!-- Tooltip Templates -->
+@foreach ($instructorCourses as $inscourse)
+  @php
+  $insFinalPrice = $inscourse->discount_price !== null
+    ? max(0, $inscourse->selling_price - $inscourse->discount_price)
+    : $inscourse->selling_price;
+  $insRating = $inscourse->reviews->avg('rating') ?? 0;
+  $insReviewsCount = $inscourse->reviews->count();
+  $goals = App\Models\Course_goal::where('course_id', $inscourse->id)->orderBy('id', 'DESC')->get();
+  @endphp
+  <div class="tooltip_templates" style="display: none;">
+    <div id="tooltip_content_{{ $inscourse->id }}">
+      <div class="card card-item">
+        <div class="card-body">
+          <p class="card-text pb-2">By <a href="{{ route('instructor.details', $inscourse->instructor_id) }}">{{ $inscourse->instructor->name ?? 'Unknown Instructor' }}</a></p>
+          <h5 class="card-title pb-1"><a href="{{ url('course/details/'.$inscourse->id.'/'.$inscourse->course_name_slug) }}">{{ $inscourse->course_name }}</a></h5>
+          <div class="d-flex align-items-center pb-1">
+            @if ($inscourse->bestseller == 1)
+              <h6 class="ribbon fs-14 mr-2">Bestseller</h6>
+            @endif
+            <p class="text-success fs-14 font-weight-medium">Updated <span class="font-weight-bold pl-1">{{ $inscourse->updated_at ? \Carbon\Carbon::parse($inscourse->updated_at)->format('F Y') : 'N/A' }}</span></p>
+          </div>
+          <div class="rating-wrap d-flex align-items-center py-2">
+            <div class="review-stars">
+              <span class="rating-number">{{ number_format($insRating, 1) }}</span>
+              @for ($i = 1; $i <= 5; $i++)
+                <span class="la la-star{{ $i <= floor($insRating) ? '' : '-o' }}"></span>
+              @endfor
+            </div>
+            <span class="rating-total pl-1">({{ number_format($insReviewsCount) }})</span>
+          </div>
+          <ul class="generic-list-item generic-list-item-bullet generic-list-item--bullet d-flex align-items-center fs-14">
+            <li>{{ $inscourse->duration ?? 'N/A' }}</li>
+            <li>{{ $inscourse->label ?? 'All Levels' }}</li>
+          </ul>
+          <p class="card-text pt-1 fs-14 lh-22">{{ $inscourse->description ?? 'No description available.' }}</p>
+          <ul class="generic-list-item fs-14 py-3">
+            @foreach ($goals->take(3) as $goal)
+              <li><i class="la la-check mr-1 text-black"></i> {{ $goal->goal_name }}</li>
+            @endforeach
+            @if ($goals->isEmpty())
+              <li><i class="la la-check mr-1 text-black"></i> Learn key skills for this course</li>
+              <li><i class="la la-check mr-1 text-black"></i> Boost your knowledge</li>
+              <li><i class="la la-check mr-1 text-black"></i> Practical exercises included</li>
+            @endif
+          </ul>
+          <div class="d-flex justify-content-between align-items-center">
+            <form action="{{ route('cart.add', $inscourse->id) }}" method="POST">
+              @csrf
+              <button type="submit" class="btn theme-btn flex-grow-1 mr-3">
+                <i class="la la-shopping-cart mr-1 fs-18"></i> Add to Cart
+              </button>
+            </form>
+            <div class="icon-element icon-element-sm shadow-sm cursor-pointer" title="Add to Wishlist"><i class="la la-heart-o"></i></div>
+          </div>
+        </div>
+      </div><!-- end card -->
+    </div>
+  </div><!-- end tooltip_templates -->
+@endforeach
 
-
-<!-- Modal -->
+<!-- Modals -->
 <div class="modal fade modal-container" id="shareModal" tabindex="-1" role="dialog" aria-labelledby="shareModalTitle" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
@@ -641,7 +559,6 @@
   </div><!-- end modal-dialog -->
 </div><!-- end modal -->
 
-<!-- Modal -->
 <div class="modal fade modal-container" id="previewModal" tabindex="-1" role="dialog" aria-labelledby="previewModalTitle" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
@@ -664,7 +581,6 @@
   </div><!-- end modal-dialog -->
 </div><!-- end modal -->
 
-<!-- Modal -->
 <div class="modal fade modal-container" id="reportModal" tabindex="-1" role="dialog" aria-labelledby="reportModalTitle" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
@@ -711,5 +627,35 @@
     </div><!-- end modal-content -->
   </div><!-- end modal-dialog -->
 </div><!-- end modal -->
+
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+  $('.section-toggle').on('click', function() {
+    const content = $(this).closest('.card').find('.section-content');
+    const plusIcon = $(this).find('.la-plus');
+    const minusIcon = $(this).find('.la-minus');
+    if (content.is(':visible')) {
+      content.hide();
+      plusIcon.show();
+      minusIcon.hide();
+    } else {
+      content.show();
+      plusIcon.hide();
+      minusIcon.show();
+    }
+  });
+
+  $('.card-preview').tooltipster({
+    theme: 'tooltipster-shadow',
+    interactive: true,
+    contentAsHTML: true,
+    maxWidth: 400,
+    side: 'right',
+    distance: 10
+  });
+});
+</script>
 
 @endsection
