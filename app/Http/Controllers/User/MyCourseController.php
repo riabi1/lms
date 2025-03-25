@@ -10,7 +10,8 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Course;
 use Illuminate\Support\Facades\Storage;
 use App\Models\UserLectureProgress;
-class UserCoursesController extends Controller
+
+class MyCourseController extends Controller
 {
    
 public function myCourses()
@@ -32,48 +33,15 @@ public function myCourses()
     }
 
 public function learnCourse($id, $slug)
-    {
-        // Charger le cours avec ses sections et leçons
-        $course = Course::with(['sections.lectures'])
-                        ->where('id', $id)
-                        ->where('course_name_slug', $slug)
-                        ->firstOrFail();
-
-        // Vérifier si l'utilisateur a acheté le cours
-        $order = Order::where('user_id', Auth::id())
-                      ->where('course_id', $course->id)
-                      ->where('payment_status', 'paid')
-                      ->first();
-
-        if (!$order) {
-            return redirect()->route('user.my.courses')->with('error', 'You have not purchased this course.');
-        }
-
-        $sections = $course->sections;
-
-        // Construire les URLs des vidéos
-        foreach ($sections as $section) {
-            foreach ($section->lectures as $lecture) {
-                if ($lecture->url && !str_starts_with($lecture->url, '/storage')) {
-                    $lecture->url = Storage::url('upload/course_images/video/' . $lecture->url);
-                }
-            }
-        }
-
-        // Charger ou créer la progression de l'utilisateur pour ce cours
-        $progress = UserCourseProgress::firstOrCreate(
-            ['user_id' => Auth::id(), 'course_id' => $course->id],
-            ['completed_lectures' => []]
-        );
-
-        // Calculer la progression en pourcentage (facultatif)
-        $totalLectures = $sections->pluck('lectures')->flatten()->count();
-        $completedLectures = count($progress->completed_lectures ?? []);
-        $progress->progress = $totalLectures > 0 ? ($completedLectures / $totalLectures) * 100 : 0;
-        $progress->save();
-
-        return view('User.mycourses.learn_course', compact('course', 'sections', 'progress'));
+{
+    $course = Course::with(['sections.lectures'])->where('id', $id)->where('course_name_slug', $slug)->firstOrFail();
+    $sections = $course->sections;
+    foreach ($sections as $section) {
+        $section->total_duration = $section->lectures->sum('duration') ?? 0;
     }
+   
+    return view('User.mycourses.learn_course', compact('course', 'sections'));
+}
 
     public function markLectureCompleted(Request $request)
     {

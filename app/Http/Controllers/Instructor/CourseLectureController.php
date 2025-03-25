@@ -7,6 +7,7 @@ use App\Models\Course;
 use App\Models\CourseSection;
 use App\Models\CourseLecture;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class CourseLectureController extends Controller
 {

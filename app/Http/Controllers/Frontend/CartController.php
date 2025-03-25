@@ -64,8 +64,15 @@ class CartController extends Controller
         return view('User.mycart.view_mycart', compact('cart', 'subtotal', 'couponDiscount', 'total', 'coupons'));
     }
 
-   public function CartRemove($id)
+  public function CartRemove($id)
 {
+    if (!Auth::check()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Please log in to manage your cart.'
+        ], 401);
+    }
+
     $cart = Session::get('cart', []);
     if (isset($cart[$id])) {
         unset($cart[$id]);
@@ -76,16 +83,21 @@ class CartController extends Controller
 
         // Gère les coupons si nécessaire
         $coupons = Session::get('coupons', []);
+        $totalPrice = $subtotal;
+        $couponDiscount = 0;
         if (!empty($coupons)) {
-            $newSubtotal = array_sum(array_column($cart, 'price'));
+            $newSubtotal = $subtotal;
             $updatedCoupons = [];
             foreach ($coupons as $couponData) {
                 $coupon = Coupon::where('coupon_name', $couponData['coupon_name'])->first();
                 if ($coupon) {
+                    $discount = round($newSubtotal * $coupon->coupon_discount / 100);
                     $updatedCoupons[$coupon->coupon_name] = [
                         'coupon_name' => $coupon->coupon_name,
-                        'discount_amount' => round($newSubtotal * $coupon->coupon_discount / 100),
+                        'discount_amount' => $discount,
                     ];
+                    $couponDiscount += $discount;
+                    $totalPrice = max(0, $newSubtotal - $couponDiscount);
                 }
             }
             Session::put('coupons', $updatedCoupons);
@@ -93,7 +105,10 @@ class CartController extends Controller
 
         return response()->json([
             'success' => true,
-            'subtotal' => $subtotal,
+            'subtotal' => number_format($subtotal, 2),
+            'totalPrice' => number_format($totalPrice, 2),
+            'couponDiscount' => number_format($couponDiscount, 2),
+            'cartCount' => count($cart),
             'message' => 'Item removed from cart!'
         ], 200);
     }
