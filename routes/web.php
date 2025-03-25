@@ -6,7 +6,7 @@ use App\Http\Controllers\User\ReviewController;
 use App\Http\Controllers\Frontend\CartController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Frontend\IndexController;
-use App\Http\Controllers\User\UserCoursesController;
+use App\Http\Controllers\User\MyCourseController;
 use App\Http\Controllers\Admin\AdminCourseController;
 use App\Http\Controllers\Admin\AdminReviewController;
 use App\Http\Controllers\Admin\SubCategoryController;
@@ -30,21 +30,21 @@ Route::name('')->group(function () {
 })->middleware(['auth:web', 'verified'])->name('dashboard');
 
 Route::middleware(['auth:web'])->group(function () {
- 
+ // cart rouutes
    Route::post('/cart/add/{id}', [CartController::class, 'AddToCart'])->name('cart.add');
     Route::get('/cart', [CartController::class, 'MyCart'])->name('cart');
-    Route::delete('/cart/remove/{id}', [CartController::class, 'CartRemove'])->name('cart.remove');
+   Route::get('/cart/remove/{id}', [CartController::class, 'CartRemove'])->name('cart.remove');
+   //coupon routes
     Route::post('/coupon/apply', [CartController::class, 'CouponApply'])->name('coupon.apply');
     Route::post('/coupon/remove/{couponName}', [CartController::class, 'CouponRemove'])->name('coupon.remove');
+    // payment routes
     Route::get('/checkout', [CartController::class, 'CheckoutCreate'])->name('checkout.create');
     Route::post('/checkout/process', [CartController::class, 'CheckoutProcess'])->name('checkout.process');
-  
-
-
+  //revious routes
     Route::resource('reviews', ReviewController::class)->names('user.reviews')->except(['create', 'store', 'show']);
-   Route::get('/my-courses', [UserCoursesController::class, 'myCourses'])->name('user.my.courses');
-    Route::get('/course/learn/{id}/{slug}', [UserCoursesController::class, 'learnCourse'])->name('user.course.learn');
-  Route::post('/course/lecture/completed', [UserCoursesController::class, 'markLectureCompleted'])->name('user.lecture.completed')->middleware('auth');
+    //user courses
+   Route::get('/my-courses', [MyCourseController::class, 'myCourses'])->name('user.my.courses');
+    Route::get('/mycourses/learn/{id}/{slug}', [MyCourseController::class, 'learnCourse'])->name('user.mycourse.learn');
 });
 });
 

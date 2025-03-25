@@ -117,14 +117,14 @@
               </div><!-- end menu-category -->
               <nav class="main-menu">
                 <ul>
-                <li>
+                  <li>
                     <a href="#">Courses <i class="la la-angle-down fs-12"></i></a>
                     <ul class="dropdown-menu-item">
-                        <li><a href="{{ route('course.list') }}">Course List</a></li>
+                      <li><a href="{{ route('course.list') }}">Course List</a></li>
                     </ul>
-                </li>
+                  </li>
                   <li>
-                    <a href="#">blog</a>
+                    <a href="#">Blog</a>
                   </li>
                 </ul><!-- end ul -->
               </nav><!-- end main-menu -->
@@ -137,50 +137,47 @@
                       <span class="product-count ml-1" id="cartQty">{{ $cartQty }}</span>
                     </p>
 
-                   <ul class="cart-dropdown-menu p-3 shadow-sm" style="min-width: 300px;">
-                            @if ($cartQty > 0)
-                                @foreach ($cart as $id => $item)
-                                <li class="media media-card border-bottom pb-2 mb-2" id="cart-item-{{ $id }}">
-                                    <a href="{{ url('course/details/'.$item['id'].'/'.Str::slug($item['name'] ?? 'course')) }}" class="media-img mr-3">
-                                        <img src="{{ $item['image'] ? asset('storage/upload/course_images/thumbnail/' . $item['image']) : asset('images/no_image.jpg') }}"
-                                            alt="{{ $item['name'] ?? 'Unknown Course' }}"
-                                            class="lazy rounded"
-                                            style="width: 60px; height: auto;"
-                                            loading="lazy"
-                                            onerror="this.src='{{ asset('images/no_image.jpg') }}'">
-                                    </a>
-                                    <div class="media-body">
-                                        <h5 class="fs-14 font-weight-bold">
-                                            <a href="{{ url('course/details/'.$item['id'].'/'.Str::slug($item['name'] ?? 'course')) }}">{{ Str::limit($item['name'] ?? 'N/A', 25) }}</a>
-                                        </h5>
-                                        <p class="text-muted fs-13 lh-18">{{ $item['instructor_name'] ?? 'Unknown Instructor' }}</p>
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <span class="text-black font-weight-semi-bold fs-14">${{ number_format($item['price'] ?? 0, 2) }}</span>
-                                            <button type="button" class="btn btn-link text-danger fs-13 p-0" onclick="removeFromCart('{{ $id }}')">Remove</button>
-                                        </div>
-                                    </div>
-                                </li>
-                                @endforeach
-                                <li class="media media-card border-top pt-2 mt-2">
-                                    <div class="media-body fs-15">
-                                        <p class="text-black font-weight-bold lh-18">Total: <span class="cart-total" id="cartSubTotal">${{ number_format($cartSubTotal, 2) }}</span></p>
-                                    </div>
-                                </li>
-                            @else
-                                <li class="media media-card">
-                                    <div class="media-body fs-15 text-center">
-                                        <p class="text-muted lh-18">Your cart is empty</p>
-                                    </div>
-                                </li>
-                            @endif
-                            <li class="mt-3">
-                                <a href="{{ route('cart') }}" class="btn theme-btn w-100 py-2">Go to Cart <i class="la la-arrow-right icon ml-1"></i></a>
-                            </li>
-                        </ul>
+                    <ul class="cart-dropdown-menu p-3 shadow-sm" style="min-width: 300px;" id="cartDropdown">
+                      @if ($cartQty > 0)
+                        @foreach ($cart as $id => $item)
+                          <li class="media media-card border-bottom pb-2 mb-2" id="cart-item-{{ $id }}">
+                            <a href="{{ url('course/details/'.$item['id'].'/'.Str::slug($item['name'] ?? 'course')) }}" class="media-img mr-3">
+                              <img src="{{ $item['image'] ? asset('storage/upload/course_images/thumbnail/' . $item['image']) : asset('images/no_image.jpg') }}"
+                                  alt="{{ $item['name'] ?? 'Unknown Course' }}"
+                                  class="lazy rounded"
+                                  style="width: 60px; height: auto;"
+                                  loading="lazy"
+                                  onerror="this.src='{{ asset('images/no_image.jpg') }}'">
+                            </a>
+                            <div class="media-body">
+                              <h5 class="fs-14 font-weight-bold">
+                                <a href="{{ url('course/details/'.$item['id'].'/'.Str::slug($item['name'] ?? 'course')) }}">{{ Str::limit($item['name'] ?? 'N/A', 25) }}</a>
+                              </h5>
+                              <p class="text-muted fs-13 lh-18">{{ $item['instructor_name'] ?? 'Unknown Instructor' }}</p>
+                              <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-black font-weight-semi-bold fs-14">${{ number_format($item['price'] ?? 0, 2) }}</span>
+                                <button type="button" class="btn btn-link text-danger fs-13 p-0 remove-from-cart" data-id="{{ $id }}">Remove</button>
+                              </div>
+                            </div>
+                          </li>
+                        @endforeach
+                        <li class="media media-card border-top pt-2 mt-2">
+                          <div class="media-body fs-15">
+                            <p class="text-black font-weight-bold lh-18">Total: <span class="cart-total" id="cartSubTotal">${{ number_format($cartSubTotal, 2) }}</span></p>
+                          </div>
+                        </li>
+                      @else
+                        <li class="media media-card">
+                          <div class="media-body fs-15 text-center">
+                            <p class="text-muted lh-18">Your cart is empty</p>
+                          </div>
+                        </li>
+                      @endif
+                      <li class="mt-3">
+                        <a href="{{ route('cart') }}" class="btn theme-btn w-100 py-2">Go to Cart <i class="la la-arrow-right icon ml-1"></i></a>
+                      </li>
+                    </ul>
                   </li>
-                  @section('scripts')
-                  
-
                 </ul>
               </div><!-- end shop-cart -->
               <div class="nav-right-button">
@@ -203,3 +200,78 @@
     </div><!-- end off-canvas-menu-close -->
   </div><!-- end off-canvas-menu -->
 </header><!-- end header-menu-area -->
+
+<!-- Scripts pour le header -->
+@section('scripts')
+    @parent <!-- Conserve les scripts existants du parent -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <script>
+    $(document).ready(function() {
+        // Vérifie si jQuery est chargé
+        if (typeof jQuery === 'undefined') {
+            console.error('jQuery is not loaded!');
+            return;
+        }
+
+        // Gestion de la suppression du panier
+        $(document).on('click', '.remove-from-cart', function(e) {
+            e.preventDefault();
+            var courseId = $(this).data('id');
+
+            // Vérifie si courseId est défini
+            if (!courseId) {
+                console.error('Course ID is undefined!');
+                alert('Error: Course ID is missing.');
+                return;
+            }
+
+            console.log('Removing course ID:', courseId); // Debug
+
+            // Construit l'URL avec le paramètre id
+            var url = '{{ route("cart.remove", ":id") }}'.replace(':id', courseId);
+
+            $.ajax({
+                url: url,
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    console.log('Response:', response); // Debug
+                    if (response.success) {
+                        // Supprime l'élément du dropdown
+                        $('#cart-item-' + courseId).remove();
+
+                        // Met à jour le nombre d'articles
+                        $('#cartQty').text(response.cartCount);
+
+                        // Met à jour le sous-total
+                        $('#cartSubTotal').text('$' + response.subtotal);
+
+                        // Vérifie si le panier est vide
+                        if (response.cartCount === 0) {
+                            $('#cartDropdown').html(
+                                '<li class="media media-card">' +
+                                    '<div class="media-body fs-15 text-center">' +
+                                        '<p class="text-muted lh-18">Your cart is empty</p>' +
+                                    '</div>' +
+                                '</li>' +
+                                '<li class="mt-3">' +
+                                    '<a href="{{ route("cart") }}" class="btn theme-btn w-100 py-2">Go to Cart <i class="la la-arrow-right icon ml-1"></i></a>' +
+                                '</li>'
+                            );
+                        }
+
+                        // Message de succès (optionnel)
+                        alert(response.message);
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('AJAX Error:', status, error, xhr.responseText); // Debug
+                    alert('An error occurred: ' + xhr.status + ' - ' + error);
+                }
+            });
+        });
+    });
+    </script>
+@endsection

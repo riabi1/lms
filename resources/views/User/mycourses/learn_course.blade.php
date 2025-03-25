@@ -1,200 +1,552 @@
-@extends('frontend.master')
+@include('User.mycourses.body.header')
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
 
-@section('title')
-    {{ $course->course_name }} | Learn | Easy Learning
-@endsection
-
-@section('home')
-    <!-- En-tête du Cours -->
-    <section class="header-menu-area bg-dark py-3">
-        <div class="container-fluid">
-            <div class="d-flex align-items-center justify-content-between">
-                <h4 class="text-white fs-15 mb-0">
-                    <a href="{{ url('course/details/'.$course->id.'/'.$course->course_name_slug) }}" class="text-white text-decoration-none">{{ $course->course_name }}</a>
-                </h4>
-                <span class="text-white">Progression : {{ round($progress->progress, 2) }}%</span>
-            </div>
+<body>
+    <!-- start cssload-loader -->
+    <div class="preloader">
+        <div class="loader">
+            <svg class="spinner" viewBox="0 0 50 50">
+                <circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="5"></circle>
+            </svg>
         </div>
-    </section>
+    </div>
+    <!-- end cssload-loader -->
 
-    <!-- Contenu Principal -->
-    <section class="course-dashboard py-5 bg-light">
-        <div class="container-fluid">
-            <div class="row">
-                <!-- Colonne Principale -->
-                <div class="col-lg-8">
-                    <!-- Visualiseur de Leçon -->
-                    <div class="lecture-viewer mb-5 bg-white p-4 rounded shadow-sm">
-                        <iframe width="100%" height="500" id="videoContainer" src="" title="Course Lecture" frameborder="0" class="rounded" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-                        <div id="lectureContent" class="mt-4 text-dark" style="font-size: 16px; line-height: 1.6;"></div>
-                        <!-- Débogage : Afficher l'URL actuelle -->
-                        <div id="debugUrl" class="mt-2 text-muted">URL actuelle : <span></span></div>
-                    </div>
-
-                    <!-- Onglet Overview uniquement -->
-                    <div class="lecture-tabs">
-                        <ul class="nav nav-tabs border-0 mb-4" id="courseTabs" role="tablist">
-                            <li class="nav-item">
-                                <a class="nav-link active text-dark font-weight-bold px-4 py-2" id="overview-tab" data-toggle="tab" href="#overview" role="tab" aria-controls="overview" aria-selected="true">Overview</a>
-                            </li>
-                        </ul>
-
-                        <div class="tab-content" id="courseTabsContent">
-                            <!-- Onglet Aperçu -->
-                            <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
-                                <div class="overview-content bg-white p-4 rounded shadow-sm">
-                                    <h3 class="fs-20 font-weight-bold mb-4 text-dark">About this course</h3>
-                                    <p class="text-muted mb-4">{{ $course->course_title }}</p>
-                                    <hr class="my-4">
-                                    <h4 class="fs-16 font-weight-bold mb-3 text-dark">Details</h4>
-                                    <ul class="list-unstyled text-dark">
-                                        <li class="mb-2"><strong>Skill level:</strong> {{ $course->label ?? 'N/A' }}</li>
-                                        <li class="mb-2"><strong>Resources:</strong> {{ $course->resources ?? 'N/A' }}</li>
-                                        <li class="mb-2"><strong>Duration:</strong> {{ $course->duration ?? 'N/A' }}</li>
-                                        <li class="mb-2"><strong>Certificate:</strong> {{ $course->certificate ?? 'N/A' }}</li>
-                                    </ul>
-                                    <hr class="my-4">
-                                    <h4 class="fs-16 font-weight-bold mb-3 text-dark">Description</h4>
-                                    <div class="text-dark">{!! $course->description ?? '<p>No description available.</p>' !!}</div>
+    <!--======================================
+        START HEADER AREA
+    ======================================-->
+    <section class="header-menu-area">
+        <div class="header-menu-content bg-dark">
+            <div class="container-fluid">
+                <div class="main-menu-content d-flex align-items-center">
+                    <div class="logo-box logo--box">
+                        <div class="theme-picker d-flex align-items-center">
+                            <button class="theme-picker-btn dark-mode-btn" title="Dark mode">
+                                <svg class="svg-icon-color-white" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                                </svg>
+                            </button>
+                            <button class="theme-picker-btn light-mode-btn" title="Light mode">
+                                <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="5"></circle>
+                                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                                </svg>
+                            </button>
+                        </div>
+                    </div><!-- end logo-box -->
+                    <div class="course-dashboard-header-title pl-4">
+                        <a href="{{ url('course/details/' . $course->id . '/' . $course->course_slug) }}" class="text-white fs-15">{{ $course->course_name }}</a>
+                    </div><!-- end course-dashboard-header-title -->
+                    <div class="menu-wrapper ml-auto">
+                        <div class="theme-picker d-flex align-items-center mr-3">
+                            <button class="theme-picker-btn dark-mode-btn" title="Dark mode">
+                                <svg class="svg-icon-color-white" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                                </svg>
+                            </button>
+                            <button class="theme-picker-btn light-mode-btn" title="Light mode">
+                                <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="5"></circle>
+                                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="nav-right-button d-flex align-items-center">
+                            <a href="#" class="btn theme-btn theme-btn-sm theme-btn-transparent lh-26 text-white mr-2" data-toggle="modal" data-target="#ratingModal"><i class="la la-star mr-1"></i> leave a rating</a>
+                            <a href="#" class="btn theme-btn theme-btn-sm theme-btn-transparent lh-26 text-white mr-2" data-toggle="modal" data-target="#shareModal"><i class="la la-share mr-1"></i> share</a>
+                            <div class="generic-action-wrap generic--action-wrap">
+                                <div class="dropdown">
+                                    <a class="action-btn" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        <i class="la la-ellipsis-v"></i>
+                                    </a>
+                                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuLink">
+                                        <a class="dropdown-item" href="#">Favorite this course</a>
+                                        <a class="dropdown-item" href="#">Archive this course</a>
+                                        <a class="dropdown-item" href="#">Gift this course</a>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
+                        </div><!-- end nav-right-button -->
+                    </div><!-- end menu-wrapper -->
+                </div><!-- end main-menu-content -->
+            </div><!-- end container-fluid -->
+        </div><!-- end header-menu-content -->
+    </section><!-- end header-menu-area -->
+    <!--======================================
+        END HEADER AREA
+    ======================================-->
 
-                <!-- Barre Latérale avec Course Content -->
-                <div class="col-lg-4">
-                    <div class="course-sidebar sticky-top" style="top: 20px;">
-                        <div class="card border-0 shadow-sm rounded">
-                            <div class="card-header bg-dark text-white p-3 rounded-top">
-                                <h3 class="fs-18 font-weight-bold mb-0">Course Content</h3>
+    <!--======================================
+        START COURSE-DASHBOARD
+    ======================================-->
+              <section class="course-dashboard">
+        <div class="course-dashboard-wrap">
+            <div class="course-dashboard-container d-flex">
+                <div class="course-dashboard-column">
+                    <div class="lecture-viewer-container">
+                        <div class="lecture-video-item">
+                            <iframe width="100%" height="500" id="videoContainer" src="" title="Course Lecture Video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                            <div id="textLesson" class="fs-24 font-weight-semi-bold pb-2 text-center mt-4 d-none">
+                                <h3></h3>
                             </div>
-                            <div class="card-body p-0">
-                                <div class="course-content">
-                                    @foreach ($sections as $section)
-                                        @php
-                                            $lectures = $section->lectures;
-                                            $totalLectures = $lectures->count();
-                                        @endphp
-                                        <div class="card mb-0 border-0">
-                                            <div class="card-header bg-white d-flex justify-content-between align-items-center p-3 border-bottom">
-                                                <h5 class="mb-0 font-weight-bold text-dark">{{ $section->section_title }}</h5>
-                                                <div class="dropdown">
-                                                    <button class="btn btn-outline-dark btn-sm dropdown-toggle" 
-                                                            type="button" 
-                                                            id="dropdownSidebarMenu{{ $section->id }}" 
-                                                            data-toggle="dropdown" 
-                                                            aria-haspopup="true" 
-                                                            aria-expanded="false">
-                                                        {{ $totalLectures }} Lectures
-                                                    </button>
-                                                    <div class="dropdown-menu dropdown-menu-right p-2" aria-labelledby="dropdownSidebarMenu{{ $section->id }}" style="min-width: 300px;">
-                                                        @foreach ($lectures as $lecture)
-                                                            <div class="dropdown-item d-flex align-items-center py-2">
-                                                                <input type="checkbox" 
-                                                                       class="lecture-checkbox mr-3" 
-                                                                       {{ in_array($lecture->id, $progress->completed_lectures ?? []) ? 'checked' : '' }} 
-                                                                       data-lecture-id="{{ $lecture->id }}">
-                                                                <span class="lecture-title flex-grow-1 cursor-pointer text-dark" 
-                                                                      data-video-url="{{ Storage::url('upload/lectures/' . $lecture->url) }}" 
-                                                                      data-content="{!! $lecture->content !!}" 
-                                                                      data-lecture-id="{{ $lecture->id }}">
-                                                                    {{ $lecture->lecture_title }}
-                                                                </span>
-                                                            </div>
-                                                        @endforeach
-                                                    </div>
+                        </div>
+                    </div><!-- end lecture-viewer-container -->
+
+                    <div class="lecture-video-detail">
+                        <div class="lecture-tab-body bg-gray p-4">
+                            <ul class="nav nav-tabs generic-tab" id="myTab" role="tablist">
+                                <li class="nav-item">
+                                    <a class="nav-link" id="search-tab" data-toggle="tab" href="#search" role="tab" aria-controls="search" aria-selected="false">
+                                        <i class="la la-search"></i>
+                                    </a>
+                                </li>
+                                <li class="nav-item mobile-menu-nav-item">
+                                    <a class="nav-link" id="course-content-tab" data-toggle="tab" href="#course-content" role="tab" aria-controls="course-content" aria-selected="false">
+                                        Course Content
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link active" id="overview-tab" data-toggle="tab" href="#overview" role="tab" aria-controls="overview" aria-selected="true">
+                                        Overview
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" id="question-and-ans-tab" data-toggle="tab" href="#question-and-ans" role="tab" aria-controls="question-and-ans" aria-selected="false">
+                                        Question & Ans
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" id="announcements-tab" data-toggle="tab" href="#announcements" role="tab" aria-controls="announcements" aria-selected="false">
+                                        Announcements
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="lecture-video-detail-body">
+                            <div class="tab-content" id="myTabContent">
+                                <div class="tab-pane fade" id="search" role="tabpanel" aria-labelledby="search-tab">
+                                    <div class="search-course-wrap pt-40px">
+                                        <form action="#" class="pb-5">
+                                            <div class="input-group">
+                                                <input class="form-control form--control form--control-gray pl-3" type="text" name="search" placeholder="Search course content">
+                                                <div class="input-group-append">
+                                                    <button class="btn theme-btn"><span class="la la-search"></span></button>
                                                 </div>
                                             </div>
+                                        </form>
+                                        <div class="search-results-message text-center">
+                                            <h3 class="fs-24 font-weight-semi-bold pb-1">Start a new search</h3>
+                                            <p>To find captions, lectures or resources</p>
                                         </div>
-                                    @endforeach
-                                </div>
-                            </div>
-                        </div>
+                                    </div><!-- end search-course-wrap -->
+                                </div><!-- end tab-pane -->
+
+                                <div class="tab-pane fade" id="course-content" role="tabpanel" aria-labelledby="course-content-tab">
+                                  <div class="mobile-course-menu pt-4">
+                                    <div class="accordion generic-accordion generic--accordion" id="mobileCourseAccordionCourseExample">
+                                        @foreach ($sections as $section)
+                                            <div class="card">
+                                                <div class="card-header" id="mobileCourseHeading{{ $section->id }}">
+                                                    <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#mobileCourseCollapse{{ $section->id }}" aria-expanded="true" aria-controls="mobileCourseCollapse{{ $section->id }}">
+                                                        <i class="la la-angle-down"></i>
+                                                        <i class="la la-angle-up"></i>
+                                                        <span class="fs-15">{{ $section->section_title }}</span>
+                                                        <span class="course-duration">
+                                                            <span>{{ count($section->lectures) }}</span>
+                                                            <span>{{ $section->total_duration }}min</span>
+                                                        </span>
+                                                    </button>
+                                                </div><!-- end card-header -->
+                                             
+                                  <div id="mobileCourseCollapse{{ $section->id }}" class="collapse" aria-labelledby="mobileCourseHeading{{ $section->id }}" data-parent="#mobileCourseAccordionCourseExample">
+                    <div class="card-body p-0">
+                        <ul class="curriculum-sidebar-list">
+                            @foreach ($section->lectures as $lecture)
+                                <li class="course-item-link {{ $loop->first ? 'active' : '' }}">
+                                    <div class="course-item-content-wrap">
+                                        <div class="custom-control custom-checkbox">
+                                            <input type="checkbox" class="custom-control-input" id="mobileCourseCheckbox{{ $lecture->id }}" required>
+                                            <label class="custom-control-label custom--control-label" for="mobileCourseCheckbox{{ $lecture->id }}"></label>
+                                        </div><!-- end custom-control -->
+                                        <div class="course-item-content">
+                                            <h4 class="fs-15 lecture-title" 
+                                                data-video-local="{{ $lecture->video ? Storage::url($lecture->video) : '' }}" 
+                                                data-video-url="{{ $lecture->url }}" 
+                                                data-content="{!! $lecture->content !!}">
+                                                {{ $lecture->lecture_title }}
+                                            </h4>
+                                            <div class="courser-item-meta-wrap">
+                                                <p class="course-item-meta"><i class="la la-play-circle"></i>{{ $lecture->duration }}min</p>
+                                            </div>
+                                        </div><!-- end course-item-content -->
+                                    </div><!-- end course-item-content-wrap -->
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div><!-- end card-body -->
+                </div><!-- end collapse -->
+            </div><!-- end card -->
+        @endforeach
+    </div><!-- end accordion-->
+</div><!-- end mobile-course-menu -->
+                                </div><!-- end tab-pane -->
+
+                                <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
+                                    <div class="lecture-overview-wrap">
+                                        <div class="lecture-overview-item">
+                                            <h3 class="fs-24 font-weight-semi-bold pb-2">About this course</h3>
+                                            <p>{{ $course->course_title }}</p>
+                                        </div><!-- end lecture-overview-item -->
+                                        <div class="section-block"></div>
+                                        <div class="lecture-overview-item">
+                                            <div class="lecture-overview-stats-wrap d-flex">
+                                                <div class="lecture-overview-stats-item">
+                                                    <h3 class="fs-16 font-weight-semi-bold pb-2">By the numbers</h3>
+                                                </div><!-- end lecture-overview-stats-item -->
+                                                <div class="lecture-overview-stats-item">
+                                                    <ul class="generic-list-item">
+                                                        <li><span>Skill level:</span>{{ $course->label }}</li>
+                                                        <li><span>Students:</span>{{ $course->students_count }}</li>
+                                                        <li><span>Languages:</span>{{ $course->language ?? 'English' }}</li>
+                                                        <li><span>Captions:</span>{{ $course->captions ? 'Yes' : 'No' }}</li>
+                                                    </ul>
+                                                </div><!-- end lecture-overview-stats-item -->
+                                                <div class="lecture-overview-stats-item">
+                                                    <ul class="generic-list-item">
+                                                        <li><span>Resources:</span>{{ $course->resources }}</li>
+                                                        <li><span>Video length:</span>{{ $course->duration }} total hours</li>
+                                                        <li><span>Certificate:</span>{{ $course->certificate }}</li>
+                                                    </ul>
+                                                </div><!-- end lecture-overview-stats-item -->
+                                            </div><!-- end lecture-overview-stats-wrap -->
+                                        </div><!-- end lecture-overview-item -->
+                                        <div class="section-block"></div>
+                                        <div class="lecture-overview-item">
+                                            <div class="lecture-overview-stats-wrap d-flex">
+                                                <div class="lecture-overview-stats-item">
+                                                    <h3 class="fs-16 font-weight-semi-bold pb-2">Certificates</h3>
+                                                </div><!-- end lecture-overview-stats-item -->
+                                                <div class="lecture-overview-stats-item lecture-overview-stats-wide-item">
+                                                    <p class="pb-3">Get Aduca certificate by completing entire course</p>
+                                                    <a href="#" class="btn theme-btn theme-btn-transparent">Aduca Certificate</a>
+                                                </div><!-- end lecture-overview-stats-item -->
+                                            </div><!-- end lecture-overview-stats-wrap -->
+                                        </div><!-- end lecture-overview-item -->
+                                       
+                                        <div class="section-block"></div>
+                                        <div class="lecture-overview-item">
+                                            <div class="lecture-overview-stats-wrap d-flex">
+                                                <div class="lecture-overview-stats-item">
+                                                    <h3 class="fs-16 font-weight-semi-bold pb-2">Description</h3>
+                                                </div><!-- end lecture-overview-stats-item -->
+                                                <div class="lecture-overview-stats-item lecture-overview-stats-wide-item lecture-description">
+                                                    <h3 class="fs-16 font-weight-semi-bold pb-2">From the Author</h3>
+                                                    <p>{!! $course->description !!}</p>
+                                                </div><!-- end lecture-overview-stats-item -->
+                                            </div><!-- end lecture-overview-stats-wrap -->
+                                        </div><!-- end lecture-overview-item -->
+                                    </div><!-- end lecture-overview-wrap -->
+                                </div><!-- end tab-pane -->
+
+                                <div class="tab-pane fade" id="question-and-ans" role="tabpanel" aria-labelledby="question-and-ans-tab">
+                                    <div class="lecture-overview-wrap lecture-quest-wrap">
+                                        <div class="new-question-wrap">
+                                            <button class="btn theme-btn theme-btn-transparent back-to-question-btn"><i class="la la-reply mr-1"></i>Back to all questions</button>
+                                            <div class="new-question-body pt-40px">
+                                                <h3 class="fs-20 font-weight-semi-bold">My question relates to</h3>
+                                                <form method="post" action="" class="pt-4">
+                                                    @csrf
+                                                    <input type="hidden" name="course_id" value="{{ $course->id }}">
+                                                    <input type="hidden" name="instructor_id" value="{{ $course->instructor_id }}">
+                                                    <div class="custom-control-wrap">
+                                                        <div class="custom-control custom-radio mb-3 pl-0">
+                                                            <input type="text" name="subject" class="form-control form--control pl-3" placeholder="Subject">
+                                                        </div>
+                                                        <div class="custom-control custom-radio mb-3 pl-0">
+                                                            <textarea class="form-control form--control pl-3" name="question" rows="4" placeholder="Write your response..."></textarea>
+                                                        </div>
+                                                    </div>
+                                                    <div class="btn-box text-center">
+                                                        <button type="submit" class="btn theme-btn w-100">Submit Question <i class="la la-arrow-right icon ml-1"></i></button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div><!-- end new-question-wrap -->
+
+                                        <div class="question-overview-result-wrap">
+                                            <div class="lecture-overview-item">
+                                                <div class="question-overview-result-header d-flex align-items-center justify-content-between">
+                                                    <h3 class="fs-17 font-weight-semi-bold"> questions in this course</h3>
+                                                    <button class="btn theme-btn theme-btn-sm theme-btn-transparent ask-new-question-btn">Ask a new question</button>
+                                                </div>
+                                            </div><!-- end lecture-overview-item -->
+                                            <div class="section-block"></div>
+
+                                            <div class="lecture-overview-item mt-0">
+                                                
+                                                <div class="question-btn-box pt-35px text-center">
+                                                    <button class="btn theme-btn theme-btn-transparent w-100" type="button">See More</button>
+                                                </div>
+                                            </div><!-- end lecture-overview-item -->
+                                        </div>
+                                    </div>
+                                </div><!-- end tab-pane -->
+
+                               
+                            </div><!-- end tab-content -->
+                        </div><!-- end lecture-video-detail-body -->
+                    </div><!-- end lecture-video-detail -->
+
+                    
+
+                   
+                </div><!-- end course-dashboard-column -->
+
+                <div class="course-dashboard-sidebar-column">
+                    <button class="sidebar-open" type="button"><i class="la la-angle-left"></i> Course content</button>
+                    <div class="course-dashboard-sidebar-wrap custom-scrollbar-styled">
+                        <div class="course-dashboard-side-heading d-flex align-items-center justify-content-between">
+                            <h3 class="fs-18 font-weight-semi-bold">Course content</h3>
+                            <button class="sidebar-close" type="button"><i class="la la-times"></i></button>
+                        </div><!-- end course-dashboard-side-heading -->
+                        <div class="course-dashboard-side-content">
+                            <div class="accordion generic-accordion generic--accordion" id="accordionCourseExample">
+                                @foreach ($sections as $section)
+                                    <div class="card">
+                                        <div class="card-header" id="headingOne{{ $section->id }}">
+                                            <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseOne{{ $section->id }}" aria-expanded="true" aria-controls="collapseOne{{ $section->id }}">
+                                                <i class="la la-angle-down"></i>
+                                                <i class="la la-angle-up"></i>
+                                                <span class="fs-15">{{ $section->section_title }}</span>
+                                                <span class="course-duration">
+                                                    <span>({{ count($section->lectures) }})</span>
+                                                </span>
+                                            </button>
+                                        </div><!-- end card-header -->
+                                        <div id="collapseOne{{ $section->id }}" class="collapse" aria-labelledby="headingOne{{ $section->id }}" data-parent="#accordionCourseExample">
+                                            <div class="card-body p-0">
+                                                <ul class="curriculum-sidebar-list">
+                                                    @foreach ($section->lectures as $lecture)
+                                                        <li class="course-item-link {{ $loop->first ? 'active' : '' }}">
+                                                            <div class="course-item-content-wrap">
+                                                                <div class="custom-control custom-checkbox">
+                                                                    <input type="checkbox" class="custom-control-input" id="courseCheckbox{{ $lecture->id }}" required>
+                                                                    <label class="custom-control-label custom--control-label" for="courseCheckbox{{ $lecture->id }}"></label>
+                                                                </div><!-- end custom-control -->
+                                                                <div class="course-item-content">
+                                                                    <h4 class="fs-15 lecture-title" data-video-url="{{ $lecture->url }}" data-content="{!! $lecture->content !!}">{{ $lecture->lecture_title }}</h4>
+                                                                </div><!-- end course-item-content -->
+                                                            </div><!-- end course-item-content-wrap -->
+                                                        </li>
+                                                    @endforeach
+                                                </ul>
+                                            </div><!-- end card-body -->
+                                        </div><!-- end collapse -->
+                                    </div><!-- end card -->
+                                @endforeach
+                            </div><!-- end accordion-->
+                        </div><!-- end course-dashboard-side-content -->
+                    </div><!-- end course-dashboard-sidebar-wrap -->
+                </div><!-- end course-dashboard-sidebar-column -->
+            </div><!-- end course-dashboard-container -->
+        </div><!-- end course-dashboard-wrap -->
+    </section><!-- end course-dashboard -->
+    <!--======================================
+        END COURSE-DASHBOARD
+    ======================================-->
+
+    <!-- start scroll top -->
+    <div id="scroll-top">
+        <i class="la la-arrow-up" title="Go top"></i>
+    </div>
+    <!-- end scroll top -->
+
+    <!-- Modals (Rating, Share, Report, etc.) remain unchanged -->
+    <div class="modal fade modal-container" id="ratingModal" tabindex="-1" role="dialog" aria-labelledby="ratingModalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header border-bottom-gray">
+                    <div class="pr-2">
+                        <h5 class="modal-title fs-19 font-weight-semi-bold lh-24" id="ratingModalTitle">How would you rate this course?</h5>
+                    </div>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true" class="la la-times"></span>
+                    </button>
+                </div>
+                <div class="modal-body text-center py-5">
+                    <div class="leave-rating mt-5">
+                        <input type="radio" name='rate' id="star5" />
+                        <label for="star5" class="fs-45"></label>
+                        <input type="radio" name='rate' id="star4" />
+                        <label for="star4" class="fs-45"></label>
+                        <input type="radio" name='rate' id="star3" />
+                        <label for="star3" class="fs-45"></label>
+                        <input type="radio" name='rate' id="star2" />
+                        <label for="star2" class="fs-45"></label>
+                        <input type="radio" name='rate' id="star1" />
+                        <label for="star1" class="fs-45"></label>
+                        <div class="rating-result-text fs-20 pb-4"></div>
                     </div>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
 
-    <!-- Script de Gestion des Leçons et Progression -->
-    <script type="text/javascript">
-        function loadLecture(videoUrl, textContent) {
-            const video = document.getElementById('videoContainer');
-            const contentDiv = document.getElementById('lectureContent');
-            const debugSpan = document.getElementById('debugUrl').querySelector('span');
+    <div class="modal fade modal-container" id="shareModal" tabindex="-1" role="dialog" aria-labelledby="shareModalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header border-bottom-gray">
+                    <h5 class="modal-title fs-19 font-weight-semi-bold" id="shareModalTitle">Share this course</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true" class="la la-times"></span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="copy-to-clipboard">
+                        <span class="success-message">Copied!</span>
+                        <div class="input-group">
+                            <input type="text" class="form-control form--control copy-input pl-3" value="{{ url('course/details/' . $course->id . '/' . $course->course_slug) }}">
+                            <div class="input-group-append">
+                                <button class="btn theme-btn theme-btn-sm copy-btn shadow-none"><i class="la la-copy mr-1"></i> Copy</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-center border-top-gray">
+                    <ul class="social-icons social-icons-styled">
+                        <li><a href="#" class="facebook-bg"><i class="la la-facebook"></i></a></li>
+                        <li><a href="#" class="twitter-bg"><i class="la la-twitter"></i></a></li>
+                        <li><a href="#" class="instagram-bg"><i class="la la-instagram"></i></a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
 
-            // Débogage : Afficher l'URL
-            debugSpan.textContent = videoUrl || 'Aucune URL définie';
+    <!-- Other modals (reportModal, insertLinkModal, uploadPhotoModal) remain unchanged -->
+    <div class="modal fade modal-container" id="reportModal" tabindex="-1" role="dialog" aria-labelledby="reportModalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header border-bottom-gray">
+                    <div class="pr-2">
+                        <h5 class="modal-title fs-19 font-weight-semi-bold lh-24" id="reportModalTitle">Report Abuse</h5>
+                        <p class="pt-1 fs-14 lh-24">Flagged content is reviewed by Aduca staff to determine whether it violates Terms of Service or Community Guidelines. If you have a question or technical issue, please contact our
+                            <a href="contact.html" class="text-color hover-underline">Support team here</a>.
+                        </p>
+                    </div>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true" class="la la-times"></span>
+                    </button>
+                </div><!-- end modal-header -->
+                <div class="modal-body">
+                    <form method="post">
+                        <div class="input-box">
+                            <label class="label-text">Select Report Type</label>
+                            <div class="form-group">
+                                <div class="select-container w-auto">
+                                    <select class="select-container-select">
+                                        <option value>-- Select One --</option>
+                                        <option value="1">Inappropriate Course Content</option>
+                                        <option value="2">Inappropriate Behavior</option>
+                                        <option value="3">Aduca Policy Violation</option>
+                                        <option value="4">Spammy Content</option>
+                                        <option value="5">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="input-box">
+                            <label class="label-text">Write Message</label>
+                            <div class="form-group">
+                                <textarea class="form-control form--control pl-3" name="message" placeholder="Provide additional details here..." rows="5"></textarea>
+                            </div>
+                        </div>
+                        <div class="btn-box text-right pt-2">
+                            <button type="button" class="btn font-weight-medium mr-3" data-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn theme-btn theme-btn-sm lh-30">Submit <i class="la la-arrow-right icon ml-1"></i></button>
+                        </div>
+                    </form>
+                </div><!-- end modal-body -->
+            </div><!-- end modal-content -->
+        </div><!-- end modal-dialog -->
+    </div><!-- end modal -->
 
-            // Charger la vidéo
-            if (videoUrl && videoUrl.trim() !== '') {
-                const fullVideoUrl = videoUrl.startsWith('http') ? videoUrl : window.location.origin + videoUrl;
-                video.classList.remove('d-none');
-                video.src = fullVideoUrl;
-                console.log('Chargement de la vidéo : ' + fullVideoUrl);
-            } else {
-                video.classList.add('d-none');
-                video.src = '';
-                console.log('Aucune vidéo à charger');
-            }
-
-            // Charger le contenu textuel
-            if (textContent && textContent.trim() !== '') {
-                contentDiv.innerHTML = textContent;
-            } else {
-                contentDiv.innerHTML = '<p class="text-muted">Aucun contenu disponible pour cette leçon.</p>';
+<script type="text/javascript">
+        function openFirstLecture() {
+            const firstLecture = document.querySelector('.lecture-title');
+            if (firstLecture) {
+                firstLecture.click();
             }
         }
 
-        // Charger une leçon au clic sur le titre
-        document.querySelectorAll('.lecture-title').forEach(lecture => {
-            lecture.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const videoUrl = lecture.getAttribute('data-video-url');
-                const textContent = lecture.getAttribute('data-content');
-                loadLecture(videoUrl, textContent);
-            });
-        });
-
-        // Charger la première leçon au démarrage
-        document.addEventListener('DOMContentLoaded', () => {
-            setTimeout(() => {
-                const firstLecture = document.querySelector('.lecture-title');
-                if (firstLecture) {
-                    firstLecture.click();
+        function convertToEmbedUrl(url) {
+            // Vérifie si l'URL est une URL YouTube et la convertit en format embed
+            if (url && url.includes('youtube.com/watch?v=')) {
+                const videoId = url.split('v=')[1]?.split('&')[0]; // Extrait l'ID de la vidéo
+                if (videoId) {
+                    return `https://www.youtube.com/embed/${videoId}`;
                 }
-            }, 500);
+            } else if (url && url.includes('youtu.be/')) {
+                const videoId = url.split('youtu.be/')[1]?.split('?')[0];
+                if (videoId) {
+                    return `https://www.youtube.com/embed/${videoId}`;
+                }
+            }
+            // Retourne l'URL originale si ce n'est pas une URL YouTube
+            return url;
+        }
+
+        function viewLesson(videoUrl, textContent) {
+            const video = document.getElementById("videoContainer");
+            const text = document.getElementById("textLesson");
+            const textContainer = document.createElement("div");
+
+            if (videoUrl && videoUrl.trim() !== "") {
+                // Convertir l'URL en format embed si c'est une URL YouTube
+                const embedUrl = convertToEmbedUrl(videoUrl);
+                video.classList.remove("d-none");
+                text.classList.add("d-none");
+                text.innerHTML = "";
+                video.setAttribute("src", embedUrl);
+            } else if (textContent && textContent.trim() !== "") {
+                video.classList.add("d-none");
+                text.classList.remove("d-none");
+                text.innerHTML = "";
+                textContainer.innerHTML = textContent;
+                textContainer.style.fontSize = "14px";
+                textContainer.style.textAlign = "left";
+                textContainer.style.paddingLeft = "40px";
+                textContainer.style.paddingRight = "40px";
+                text.appendChild(textContainer);
+            }
+        }
+
+        document.querySelectorAll('.lecture-title').forEach((lectureTitle) => {
+            lectureTitle.addEventListener('click', () => {
+                const videoUrl = lectureTitle.getAttribute('data-video-url');
+                const textContent = lectureTitle.getAttribute('data-content');
+                viewLesson(videoUrl, textContent);
+            });
         });
 
-        // Gérer les coches pour la progression
-        document.querySelectorAll('.lecture-checkbox').forEach(checkbox => {
-            checkbox.addEventListener('change', function(e) {
-                e.stopPropagation();
-                const lectureId = this.getAttribute('data-lecture-id');
-                const completed = this.checked ? 1 : 0;
-
-                $.ajax({
-                    url: '{{ route("user.lecture.completed") }}',
-                    method: 'POST',
-                    data: {
-                        lecture_id: lectureId,
-                        course_id: {{ $course->id }},
-                        completed: completed,
-                        _token: '{{ csrf_token() }}'
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            console.log('Progression mise à jour pour la leçon ' + lectureId);
-                            $('.header-menu-area .text-white').text('Progression : ' + response.progress.toFixed(2) + '%');
-                        }
-                    },
-                    error: function(xhr) {
-                        console.error('Erreur lors de la mise à jour de la progression');
-                        checkbox.checked = !completed;
-                    }
-                });
-            });
+        window.addEventListener('load', () => {
+            openFirstLecture();
         });
     </script>
-@endsection
+    @include('User.mycourses.body.footer')
+</body>
+</html>
