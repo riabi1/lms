@@ -79,8 +79,7 @@
         <div class="menu-title">Manage Orders</div>
       </a>
       <ul class="mm-collapse">
-        <li><a href="#"><i class='bx bx-radio-circle'></i>Pending Orders</a></li>
-        <li><a href="#"><i class='bx bx-radio-circle'></i>Confirm Orders</a></li>
+        <li><a href="#"><i class='bx bx-radio-circle'></i>All Orders</a></li>
       </ul>
     </li>
 

@@ -51,15 +51,19 @@
 </li>
 
 
-    <li>
-      <a class="has-arrow" href="javascript:;">
+   <li>
+    <a class="has-arrow" href="javascript:;">
         <div class="parent-icon"><i class='bx bx-bookmark-heart'></i></div>
         <div class="menu-title">All Orders</div>
-      </a>
-      <ul class="mm-collapse">
-        <li><a href="#"><i class='bx bx-radio-circle'></i>All Orders</a></li>
-      </ul>
-    </li>
+    </a>
+    <ul class="mm-collapse">
+        <li>
+            <a href="{{ route('instructor.orders.index') }}">
+                <i class='bx bx-radio-circle'></i>All Orders
+            </a>
+        </li>
+    </ul>
+</li>
     <li>
       <a class="has-arrow" href="javascript:;">
         <div class="parent-icon"><i class='bx bx-bookmark-heart'></i></div>

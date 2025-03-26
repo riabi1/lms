@@ -96,6 +96,17 @@
 /*==== font weight ====*/
 /*==== color ====*/
 /*---------------- css loader ----------------*/
+
+.certificate-btn {
+    background-color: #28a745; /* Vert */
+    border-color: #28a745;
+    color: #fff !important;
+}
+.certificate-btn:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+}
+
 @keyframes rotate {
     100% {
         transform: rotate(360deg);
