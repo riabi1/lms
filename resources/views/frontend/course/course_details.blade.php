@@ -364,10 +364,10 @@
                   <span class="text-color-3">4 days</span> left at this price!
                 </p>
                 <div class="buy-course-btn-box">
-                  @if ($hasPurchased)
-                    <a href="{{ route('course.start', [$course->id, $course->course_name_slug]) }}" class="btn theme-btn flex-grow-1 mr-3">
-                      <i class="la la-play-circle fs-18 mr-1"></i> Start Learning
-                    </a>
+                @if (isset($hasPurchased) && $hasPurchased)
+                      <a href="{{ route('course.start', [$course->id, \Str::slug($course->course_name)]) }}" class="btn theme-btn flex-grow-1 mr-3">
+                          <i class="la la-play-circle fs-18 mr-1"></i> Start Learning
+                      </a>
                   @else
                     <form action="{{ route('cart.add', $course->id) }}" method="POST">
                       @csrf
