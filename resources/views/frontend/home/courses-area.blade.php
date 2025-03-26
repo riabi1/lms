@@ -29,7 +29,7 @@ $categories = App\Models\Category::orderBy('category_name', 'ASC')->get();
         <!-- All Courses Tab -->
         <div class="tab-pane fade show active" id="all" role="tabpanel" aria-labelledby="all-tab">
           <div class="row">
-            @foreach($courses as $course)
+            @forelse($courses as $course)
             @php
             $finalPrice = $course->discount_price !== null
               ? max(0, $course->selling_price - $course->discount_price)
@@ -104,16 +104,15 @@ $categories = App\Models\Category::orderBy('category_name', 'ASC')->get();
                       <li>{{ $course->duration ?? 'N/A' }}</li>
                       <li>{{ $course->label ?? 'All Levels' }}</li>
                     </ul>
-                    <p class="card-text pt-1 fs-14 lh-22">{{ $course->description ?? 'No description available.' }}</p>
+                    <p class="card-text pt-1 fs-14 lh-22">{{ Str::limit(strip_tags($course->description), 100) ?? 'No description available.' }}</p>
                     <ul class="generic-list-item fs-14 py-3">
-                      @foreach ($course->goals->take(3) as $goal)
+                      @forelse ($course->goals->take(3) as $goal)
                         <li><i class="la la-check mr-1 text-black"></i> {{ $goal->goal_name }}</li>
-                      @endforeach
-                      @if ($course->goals->isEmpty())
+                      @empty
                         <li><i class="la la-check mr-1 text-black"></i> Learn key skills for this course</li>
                         <li><i class="la la-check mr-1 text-black"></i> Boost your knowledge</li>
                         <li><i class="la la-check mr-1 text-black"></i> Practical exercises included</li>
-                      @endif
+                      @endforelse
                     </ul>
                     <div class="d-flex justify-content-between align-items-center">
                       <form action="{{ route('cart.add', $course->id) }}" method="POST">
@@ -128,7 +127,11 @@ $categories = App\Models\Category::orderBy('category_name', 'ASC')->get();
                 </div>
               </div><!-- end tooltip_templates -->
             </div><!-- end col-lg-4 -->
-            @endforeach
+            @empty
+            <div class="col-12">
+              <h5 class="text-danger text-center">No Courses Found</h5>
+            </div>
+            @endforelse
           </div><!-- end row -->
         </div><!-- end tab-pane -->
 
@@ -218,16 +221,15 @@ $categories = App\Models\Category::orderBy('category_name', 'ASC')->get();
                       <li>{{ $course->duration ?? 'N/A' }}</li>
                       <li>{{ $course->label ?? 'All Levels' }}</li>
                     </ul>
-                    <p class="card-text pt-1 fs-14 lh-22">{{ $course->description ?? 'No description available.' }}</p>
+                    <p class="card-text pt-1 fs-14 lh-22">{{ Str::limit(strip_tags($course->description), 100) ?? 'No description available.' }}</p>
                     <ul class="generic-list-item fs-14 py-3">
-                      @foreach ($course->goals->take(3) as $goal)
+                      @forelse ($course->goals->take(3) as $goal)
                         <li><i class="la la-check mr-1 text-black"></i> {{ $goal->goal_name }}</li>
-                      @endforeach
-                      @if ($course->goals->isEmpty())
+                      @empty
                         <li><i class="la la-check mr-1 text-black"></i> Learn key skills for this course</li>
                         <li><i class="la la-check mr-1 text-black"></i> Boost your knowledge</li>
                         <li><i class="la la-check mr-1 text-black"></i> Practical exercises included</li>
-                      @endif
+                      @endforelse
                     </ul>
                     <div class="d-flex justify-content-between align-items-center">
                       <form action="{{ route('cart.add', $course->id) }}" method="POST">
@@ -244,7 +246,7 @@ $categories = App\Models\Category::orderBy('category_name', 'ASC')->get();
             </div><!-- end col-lg-4 -->
             @empty
             <div class="col-12">
-              <h5 class="text-danger text-center">No Course Found</h5>
+              <h5 class="text-danger text-center">No Courses Found</h5>
             </div>
             @endforelse
           </div><!-- end row -->
@@ -259,6 +261,8 @@ $categories = App\Models\Category::orderBy('category_name', 'ASC')->get();
 </section><!-- end courses-area -->
 
 <!-- Script pour initialiser Tooltipster avec position à droite -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="{{ asset('js/tooltipster.bundle.min.js') }}"></script>
 <script>
 $(document).ready(function() {
     $('.card-preview').tooltipster({
@@ -266,8 +270,8 @@ $(document).ready(function() {
         interactive: true,
         contentAsHTML: true,
         maxWidth: 400,
-        side: 'right', // Positionne le tooltip à droite du cours
-        distance: 10   // Distance entre la carte et le tooltip
+        side: 'right', 
+        distance: 10   
     });
 });
 </script>

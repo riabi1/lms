@@ -1,16 +1,11 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
 class UserCourseProgress extends Model
 {
-    protected $fillable = ['user_id', 'course_id', 'progress', 'completed_lectures'];
-
-    protected $casts = [
-        'completed_lectures' => 'array', // Convertir JSON en tableau PHP
-    ];
+    protected $fillable = ['user_id', 'course_id', 'lecture_id', 'completed', 'completed_at'];
 
     public function user()
     {
@@ -20,5 +15,10 @@ class UserCourseProgress extends Model
     public function course()
     {
         return $this->belongsTo(Course::class);
+    }
+
+    public function lecture()
+    {
+        return $this->belongsTo(CourseLecture::class, 'lecture_id'); // Changement ici
     }
 }

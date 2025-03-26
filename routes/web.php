@@ -25,11 +25,11 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::name('')->group(function () {
     require base_path('routes/auth/web.php');
 
- Route::get('/dashboard', function () {
-    return view('User.index');
-})->middleware(['auth:web', 'verified'])->name('dashboard');
+    Route::get('/dashboard', function () {
+        return view('User.index');
+    })->middleware(['auth:web', 'verified'])->name('dashboard');
 
-Route::middleware(['auth:web'])->group(function () {
+    Route::middleware(['auth:web'])->group(function () {
  // cart rouutes
    Route::post('/cart/add/{id}', [CartController::class, 'AddToCart'])->name('cart.add');
     Route::get('/cart', [CartController::class, 'MyCart'])->name('cart');
@@ -44,10 +44,11 @@ Route::middleware(['auth:web'])->group(function () {
     Route::resource('reviews', ReviewController::class)->names('user.reviews')->except(['create', 'store', 'show']);
     //user courses
    Route::get('/my-courses', [MyCourseController::class, 'myCourses'])->name('user.my.courses');
-    Route::get('/course/start/{id}/{slug}', [MyCourseController::class, 'startLearning'])
-     ->name('course.start');
-    Route::post('/course/rate/{course}', [MyCourseController::class, 'submitRating'])->name('course.rate')->middleware('auth');
-});
+   Route::get('/mycourses/learn/{courseId}/{slug}', [MyCourseController::class, 'startLearning'])->name('course.start');
+    Route::post('/mycourses/{courseId}/mark-lecture-completed', [MyCourseController::class, 'markLectureCompleted'])->name('course.markLectureCompleted');
+    Route::post('/course/rate/{course}', [MyCourseController::class, 'submitRating'])->name('course.rate');
+
+    });
 });
 
 // Admin Routes

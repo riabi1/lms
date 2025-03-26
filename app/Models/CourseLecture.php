@@ -31,8 +31,8 @@ class CourseLecture extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function section()
+   public function section()
     {
-        return $this->belongsTo(CourseSection::class, 'section_id', 'id');
+        return $this->belongsTo(CourseSection::class, 'section_id');
     }
 }
