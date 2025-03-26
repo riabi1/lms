@@ -4,9 +4,10 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\User\ReviewController;
 use App\Http\Controllers\Frontend\CartController;
+use App\Http\Controllers\User\MyCourseController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Frontend\IndexController;
-use App\Http\Controllers\User\MyCourseController;
+use App\Http\Controllers\Instructor\QuizController;
 use App\Http\Controllers\Admin\AdminCourseController;
 use App\Http\Controllers\Admin\AdminReviewController;
 use App\Http\Controllers\Admin\SubCategoryController;
@@ -44,9 +45,12 @@ Route::name('')->group(function () {
     Route::resource('reviews', ReviewController::class)->names('user.reviews')->except(['create', 'store', 'show']);
     //user courses
    Route::get('/my-courses', [MyCourseController::class, 'myCourses'])->name('user.my.courses');
-   Route::get('/mycourses/learn/{courseId}/{slug}', [MyCourseController::class, 'startLearning'])->name('course.start');
+  
     Route::post('/mycourses/{courseId}/mark-lecture-completed', [MyCourseController::class, 'markLectureCompleted'])->name('course.markLectureCompleted');
     Route::post('/course/rate/{course}', [MyCourseController::class, 'submitRating'])->name('course.rate');
+    // Quiz Routes
+   Route::get('/mycourses/learn/{courseId}/{slug}', [MyCourseController::class, 'startLearning'])->name('course.start');
+    Route::post('/mycourses/{courseId}/quiz/{quizId}/submit', [MyCourseController::class, 'submitQuiz'])->name('course.quiz.submit');
 
     });
 });
@@ -89,6 +93,10 @@ Route::prefix('instructor')->name('instructor.')->group(function () {
         Route::get('/all/review', [InstructorReviewController::class, 'index'])->name('all.review');
         // Coupon Resource Route
         Route::resource('coupon', CouponController::class)->names('coupon');
+        // Quiz Routes
+       Route::resource('quiz', QuizController::class)->names('quiz');
+
+  
     });
 });
 

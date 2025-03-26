@@ -9,6 +9,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Course;
 use App\Models\Review;
+use App\Models\QuizAttempt;
+use App\Models\Quiz;
 use Illuminate\Support\Facades\Storage;
 use App\Models\UserLectureProgress;
 
@@ -59,42 +61,7 @@ class MyCourseController extends Controller
           return response()->json(['success' => true, 'message' => 'Rating submitted successfully']);
       }
 
-      public function startLearning($id, $slug)
-    {
-        $userId = Auth::id();
-
-        // Vérifier si l'utilisateur a acheté le cours
-        $hasPurchased = Order::where('user_id', $userId)
-                            ->where('course_id', $id)
-                            ->where('payment_status', 'paid')
-                            ->exists();
-
-        if (!$hasPurchased) {
-            return redirect()->route('course.details', [$id, $slug])
-                            ->with('error', 'You need to purchase this course to start learning.');
-        }
-
-        // Charger le cours avec ses sections et leçons
-        $course = Course::with(['sections.lectures' => function ($query) {
-            $query->from('course_lectures'); // Spécifier la table correcte
-        }, 'instructor'])
-            ->where('id', $id)
-            ->where('course_name_slug', $slug)
-            ->firstOrFail();
-
-        $sections = $course->sections;
-        foreach ($sections as $section) {
-            $section->total_duration = $section->lectures->sum('duration') ?? 0;
-        }
-
-        // Charger la progression de l'utilisateur pour ce cours
-        $progress = UserCourseProgress::where('user_id', $userId)
-                                      ->where('course_id', $id)
-                                      ->pluck('completed', 'lecture_id')
-                                      ->toArray();
-
-        return view('User.mycourses.learn_course', compact('course', 'sections', 'progress'));
-    }
+ 
 
     public function markLectureCompleted(Request $request, $courseId)
     {
@@ -141,6 +108,93 @@ class MyCourseController extends Controller
             'message' => 'Lecture marked as completed.',
             'progress' => $progressPercentage,
         ]);
+    }
+
+   public function startLearning($courseId, $slug)
+    {
+        $course = Course::with(['sections.lectures', 'quizzes.questions'])->findOrFail($courseId);
+
+        if (\Str::slug($course->course_name) !== $slug) {
+            return redirect()->route('course.start', ['courseId' => $courseId, 'slug' => \Str::slug($course->course_name)]);
+        }
+
+        $user = Auth::user();
+
+        // Calculer la progression
+        $progress = $user->courseProgress()
+            ->where('course_id', $courseId)
+            ->pluck('completed', 'lecture_id')
+            ->toArray();
+        $totalLectures = $course->sections->flatMap->lectures->count();
+        $completedLectures = array_filter($progress, fn($completed) => $completed == 1);
+        $progressPercentage = $totalLectures > 0 ? round((count($completedLectures) / $totalLectures) * 100) : 0;
+
+        // Récupérer les tentatives de quiz
+        $quizAttempts = QuizAttempt::where('user_id', $user->id)
+            ->whereIn('quiz_id', $course->quizzes->pluck('id'))
+            ->get();
+
+        return view('User.mycourses.learn_course', compact('course', 'progress', 'progressPercentage', 'quizAttempts'));
+    }
+
+    public function submitQuiz(Request $request, $courseId, $quizId)
+    {
+        $user = Auth::user();
+        $quiz = Quiz::with('questions')->findOrFail($quizId);
+
+        if ($quiz->course_id != $courseId) {
+            abort(403, 'This quiz does not belong to the course.');
+        }
+
+        // Vérifier le nombre de tentatives
+        $attemptCount = QuizAttempt::where('user_id', $user->id)
+            ->where('quiz_id', $quizId)
+            ->count();
+
+        if ($attemptCount >= 3) {
+            $lastAttempt = QuizAttempt::where('user_id', $user->id)
+                ->where('quiz_id', $quizId)
+                ->orderBy('completed_at', 'desc')
+                ->first();
+
+            $waitUntil = $lastAttempt->completed_at->addMinute();
+            if (Carbon::now()->lessThan($waitUntil)) {
+                $secondsLeft = Carbon::now()->diffInSeconds($waitUntil);
+                return redirect()->route('course.start', ['courseId' => $courseId, 'slug' => \Str::slug($quiz->course->course_name)])
+                    ->with('error', "You have reached the maximum of 3 attempts. Please wait $secondsLeft seconds before trying again.");
+            }
+        }
+
+        // Calculer le score
+        $answers = $request->input('answers', []);
+        $correctAnswers = 0;
+        $totalQuestions = $quiz->questions->count();
+
+        foreach ($quiz->questions as $question) {
+            $userAnswer = $answers[$question->id] ?? null;
+            if ($userAnswer && $userAnswer === $question->correct_answer) {
+                $correctAnswers++;
+            }
+        }
+
+        $score = $totalQuestions > 0 ? round(($correctAnswers / $totalQuestions) * 100) : 0;
+        $passed = $score >= 70; // Seuil de réussite à 70 %
+
+        // Enregistrer la tentative
+        QuizAttempt::create([
+            'user_id' => $user->id,
+            'quiz_id' => $quiz->id,
+            'score' => $score,
+            'passed' => $passed,
+            'completed_at' => now(),
+        ]);
+
+        $message = $passed 
+            ? 'Quiz passed! Your score: ' . $score . '%. You can now download your certificate.'
+            : 'Quiz failed. Your score: ' . $score . '%. You have ' . (2 - $attemptCount) . ' attempts remaining.';
+
+        return redirect()->route('course.start', ['courseId' => $courseId, 'slug' => \Str::slug($quiz->course->course_name)])
+            ->with('success', $message);
     }
 
 }

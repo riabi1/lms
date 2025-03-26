@@ -66,6 +66,16 @@
                             </button>
                         </div>
                         <div class="nav-right-button d-flex align-items-center">
+                          @php
+                            $allQuizzesPassed = $course->quizzes->isNotEmpty() && $course->quizzes->every(function ($quiz) use ($quizAttempts) {
+                                return $quizAttempts->where('quiz_id', $quiz->id)->where('passed', true)->isNotEmpty();
+                            });
+                        @endphp
+                       @if ($allQuizzesPassed)
+                                  <a href="" class="btn theme-btn theme-btn-sm lh-26 text-white mr-2" style="background-color: #db5f49; border-color: #db5f49;">
+                                      <i class="la la-certificate mr-1"></i> Download Certificate
+                                  </a>
+                              @endif
                             <a href="#" class="btn theme-btn theme-btn-sm theme-btn-transparent lh-26 text-white mr-2" data-toggle="modal" data-target="#ratingModal"><i class="la la-star mr-1"></i> leave a rating</a>
                             <a href="#" class="btn theme-btn theme-btn-sm theme-btn-transparent lh-26 text-white mr-2" data-toggle="modal" data-target="#shareModal"><i class="la la-share mr-1"></i> share</a>
                             <div class="generic-action-wrap generic--action-wrap">
@@ -121,6 +131,13 @@
                             <!-- Conteneur pour le contenu textuel sous la vidéo -->
                             <div id="lectureContent" class="mt-4" style="font-size: 14px; text-align: left; padding: 0 40px;"></div>
                         </div>
+                        @if ($progressPercentage == 100 && $course->quizzes->isNotEmpty())
+                            <div class="mt-4">
+                                <button type="button" class="btn theme-btn" data-toggle="modal" data-target="#quizModal">
+                                    Take Quizzes
+                                </button>
+                            </div>
+                        @endif
                     </div><!-- end lecture-viewer-container -->
 
                     <div class="lecture-video-detail">
@@ -175,7 +192,7 @@
                                 <div class="tab-pane fade" id="course-content" role="tabpanel" aria-labelledby="course-content-tab">
                                     <div class="mobile-course-menu pt-4">
                                         <div class="accordion generic-accordion generic--accordion" id="mobileCourseAccordionCourseExample">
-                                            @foreach ($sections as $section)
+                                            @foreach ($course->sections as $section)
                                                 <div class="card">
                                                     <div class="card-header" id="mobileCourseHeading{{ $section->id }}">
                                                         <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#mobileCourseCollapse{{ $section->id }}" aria-expanded="true" aria-controls="mobileCourseCollapse{{ $section->id }}">
@@ -260,8 +277,17 @@
                                                     <h3 class="fs-16 font-weight-semi-bold pb-2">Certificates</h3>
                                                 </div><!-- end lecture-overview-stats-item -->
                                                 <div class="lecture-overview-stats-item lecture-overview-stats-wide-item">
-                                                    <p class="pb-3">Get Aduca certificate by completing entire course</p>
-                                                    <a href="#" class="btn theme-btn theme-btn-transparent">Aduca Certificate</a>
+                                                    <p class="pb-3">Get Your Certification By completing the entire course and quizzes </p>
+                                                      @php
+                                                          $allQuizzesPassed = $course->quizzes->isNotEmpty() && $course->quizzes->every(function ($quiz) use ($quizAttempts) {
+                                                              return $quizAttempts->where('quiz_id', $quiz->id)->where('passed', true)->isNotEmpty();
+                                                          });
+                                                      @endphp
+                                                    @if ($allQuizzesPassed)
+                                                          <a href="" class="btn theme-btn theme-btn-sm lh-26 text-white mr-2" style="background-color: #db5f49; border-color: #db5f49;">
+                                                              <i class="la la-certificate mr-1"></i> Download Certificate
+                                                          </a>
+                                                      @endif
                                                 </div><!-- end lecture-overview-stats-item -->
                                             </div><!-- end lecture-overview-stats-wrap -->
                                         </div><!-- end lecture-overview-item -->
@@ -336,7 +362,7 @@
                         </div><!-- end course-dashboard-side-heading -->
                         <div class="course-dashboard-side-content">
                             <div class="accordion generic-accordion generic--accordion" id="accordionCourseExample">
-                                @foreach ($sections as $section)
+                                @foreach ($course->sections as $section)
                                     <div class="card">
                                         <div class="card-header" id="headingOne{{ $section->id }}">
                                             <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseOne{{ $section->id }}" aria-expanded="true" aria-controls="collapseOne{{ $section->id }}">
@@ -385,6 +411,63 @@
             </div><!-- end course-dashboard-container -->
         </div><!-- end course-dashboard-wrap -->
     </section><!-- end course-dashboard -->
+    @if ($progressPercentage == 100 && $course->quizzes->isNotEmpty())
+        <div class="modal fade modal-container" id="quizModal" tabindex="-1" role="dialog" aria-labelledby="quizModalTitle" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header border-bottom-gray">
+                        <h5 class="modal-title fs-19 font-weight-semi-bold" id="quizModalTitle">Course Quizzes</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true" class="la la-times"></span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        @foreach ($course->quizzes as $quiz)
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h6 class="fs-16 font-weight-semi-bold">{{ $quiz->title }}</h6>
+                                    <p>{{ $quiz->description ?? 'No description' }}</p>
+                                    <p><strong>Time Limit:</strong> {{ $quiz->time_limit ? $quiz->time_limit . ' minutes' : 'No limit' }}</p>
+
+                                    @php
+                                        $attempts = $quizAttempts->where('quiz_id', $quiz->id);
+                                        $attemptCount = $attempts->count();
+                                        $lastAttempt = $attempts->sortByDesc('completed_at')->first();
+                                        $canAttempt = $attemptCount < 3 || ($lastAttempt && Carbon\Carbon::now()->greaterThanOrEqualTo($lastAttempt->completed_at->addMinute()));
+                                    @endphp
+
+                                    @if ($attempts->where('passed', true)->isNotEmpty())
+                                        <p class="text-success"><strong>Passed!</strong> You can now download your certificate.</p>
+                                        <a href="#" class="btn theme-btn theme-btn-sm">Download Certificate</a>
+                                    @elseif ($canAttempt)
+                                        <form action="{{ route('course.quiz.submit', ['courseId' => $course->id, 'quizId' => $quiz->id]) }}" method="POST">
+                                            @csrf
+                                            @foreach ($quiz->questions as $question)
+                                                <div class="mb-3">
+                                                    <label class="form-label">{{ $question->question_text }}</label>
+                                                    @foreach ($question->options as $option)
+                                                        <div class="form-check">
+                                                            <input type="radio" name="answers[{{ $question->id }}]" value="{{ $option }}" class="form-check-input" required>
+                                                            <label class="form-check-label">{{ $option }}</label>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            @endforeach
+                                            <p><strong>Attempts Remaining:</strong> {{ 3 - $attemptCount }}</p>
+                                            <button type="submit" class="btn theme-btn">Submit Quiz</button>
+                                        </form>
+                                    @else
+                                        <p class="text-danger"><strong>Attempts Exhausted!</strong> Please wait until 
+                                            {{ $lastAttempt->completed_at->addMinute()->toTimeString() }} to try again.</p>
+                                    @endif
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
     <!--======================================
         END COURSE-DASHBOARD
     ======================================-->
