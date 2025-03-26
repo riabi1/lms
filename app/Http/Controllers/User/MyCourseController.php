@@ -13,6 +13,8 @@ use App\Models\QuizAttempt;
 use App\Models\Quiz;
 use Illuminate\Support\Facades\Storage;
 use App\Models\UserLectureProgress;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 
 class MyCourseController extends Controller
 {
@@ -197,4 +199,34 @@ class MyCourseController extends Controller
             ->with('success', $message);
     }
 
+
+   public function downloadCertificate($courseId)
+{
+    $course = Course::with('quizzes')->findOrFail($courseId);
+    $user = Auth::user();
+
+    $quizAttempts = QuizAttempt::where('user_id', $user->id)
+        ->whereIn('quiz_id', $course->quizzes->pluck('id'))
+        ->get();
+
+    $allQuizzesPassed = $course->quizzes->isNotEmpty() && $course->quizzes->every(function ($quiz) use ($quizAttempts) {
+        return $quizAttempts->where('quiz_id', $quiz->id)->where('passed', true)->isNotEmpty();
+    });
+
+    if (!$allQuizzesPassed) {
+        return redirect()->route('course.start', ['courseId' => $courseId, 'slug' => \Str::slug($course->course_name)])
+            ->with('error', 'You must pass all quizzes to download the certificate.');
+    }
+
+    $data = [
+        'course_name' => $course->course_name,
+        'user_name' => $user->name,
+        'completion_date' => Carbon::now()->format('F d, Y'),
+        'certificate_number' => 'EDAA-' . str_pad($course->id, 4, '0', STR_PAD_LEFT) . '-' . str_pad($user->id, 4, '0', STR_PAD_LEFT),
+    ];
+
+    $pdf = Pdf::loadView('User.mycourses.certificate', $data)
+        ->setPaper('a4', 'landscape');
+    return $pdf->download('certificate_' . $course->id . '_' . $user->id . '.pdf');
+}
 }

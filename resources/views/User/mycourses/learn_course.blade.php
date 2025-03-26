@@ -66,16 +66,17 @@
                             </button>
                         </div>
                         <div class="nav-right-button d-flex align-items-center">
-                          @php
-                            $allQuizzesPassed = $course->quizzes->isNotEmpty() && $course->quizzes->every(function ($quiz) use ($quizAttempts) {
-                                return $quizAttempts->where('quiz_id', $quiz->id)->where('passed', true)->isNotEmpty();
-                            });
-                        @endphp
-                       @if ($allQuizzesPassed)
-                                  <a href="" class="btn theme-btn theme-btn-sm lh-26 text-white mr-2" style="background-color: #db5f49; border-color: #db5f49;">
-                                      <i class="la la-certificate mr-1"></i> Download Certificate
-                                  </a>
-                              @endif
+                         
+                      @php
+                          $allQuizzesPassed = $course->quizzes->isNotEmpty() && $course->quizzes->every(function ($quiz) use ($quizAttempts) {
+                              return $quizAttempts->where('quiz_id', $quiz->id)->where('passed', true)->isNotEmpty();
+                          });
+                      @endphp
+                      @if ($allQuizzesPassed)
+                          <a href="{{ route('course.certificate', $course->id) }}" class="btn theme-btn theme-btn-sm theme-btn-transparent lh-26 text-white mr-2 certificate-btn">
+                              <i class="la la-certificate mr-1"></i> Download Certificate
+                          </a>
+                      @endif
                             <a href="#" class="btn theme-btn theme-btn-sm theme-btn-transparent lh-26 text-white mr-2" data-toggle="modal" data-target="#ratingModal"><i class="la la-star mr-1"></i> leave a rating</a>
                             <a href="#" class="btn theme-btn theme-btn-sm theme-btn-transparent lh-26 text-white mr-2" data-toggle="modal" data-target="#shareModal"><i class="la la-share mr-1"></i> share</a>
                             <div class="generic-action-wrap generic--action-wrap">
@@ -278,16 +279,17 @@
                                                 </div><!-- end lecture-overview-stats-item -->
                                                 <div class="lecture-overview-stats-item lecture-overview-stats-wide-item">
                                                     <p class="pb-3">Get Your Certification By completing the entire course and quizzes </p>
-                                                      @php
-                                                          $allQuizzesPassed = $course->quizzes->isNotEmpty() && $course->quizzes->every(function ($quiz) use ($quizAttempts) {
-                                                              return $quizAttempts->where('quiz_id', $quiz->id)->where('passed', true)->isNotEmpty();
-                                                          });
-                                                      @endphp
+                                                     
+                                                   @php
+                                                        $allQuizzesPassed = $course->quizzes->isNotEmpty() && $course->quizzes->every(function ($quiz) use ($quizAttempts) {
+                                                            return $quizAttempts->where('quiz_id', $quiz->id)->where('passed', true)->isNotEmpty();
+                                                        });
+                                                    @endphp
                                                     @if ($allQuizzesPassed)
-                                                          <a href="" class="btn theme-btn theme-btn-sm lh-26 text-white mr-2" style="background-color: #db5f49; border-color: #db5f49;">
-                                                              <i class="la la-certificate mr-1"></i> Download Certificate
-                                                          </a>
-                                                      @endif
+                                                        <a href="{{ route('course.certificate', $course->id) }}" class="btn theme-btn theme-btn-sm theme-btn-transparent lh-26 text-white mr-2 certificate-btn">
+                                                            <i class="la la-certificate mr-1"></i> Download Certificate
+                                                        </a>
+                                                    @endif
                                                 </div><!-- end lecture-overview-stats-item -->
                                             </div><!-- end lecture-overview-stats-wrap -->
                                         </div><!-- end lecture-overview-item -->
@@ -438,7 +440,7 @@
 
                                     @if ($attempts->where('passed', true)->isNotEmpty())
                                         <p class="text-success"><strong>Passed!</strong> You can now download your certificate.</p>
-                                        <a href="#" class="btn theme-btn theme-btn-sm">Download Certificate</a>
+                                        <a href="{{ route('course.certificate', $course->id) }}" class="btn theme-btn theme-btn-sm">Download Certificate</a>
                                     @elseif ($canAttempt)
                                         <form action="{{ route('course.quiz.submit', ['courseId' => $course->id, 'quizId' => $quiz->id]) }}" method="POST">
                                             @csrf

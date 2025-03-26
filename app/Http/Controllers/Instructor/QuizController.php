@@ -89,7 +89,7 @@ public function store(Request $request)
         'time_limit' => 'nullable|integer|min:1',
         'questions' => 'required|array|min:1',
         'questions.*.question_text' => 'required|string',
-        'questions.*.options' => 'required|string', // Attendu comme chaîne
+        'questions.*.options' => 'required|string', 
         'questions.*.correct_answer' => 'required|string',
     ]);
 

@@ -8,6 +8,7 @@ use App\Http\Controllers\User\MyCourseController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Frontend\IndexController;
 use App\Http\Controllers\Instructor\QuizController;
+use App\Http\Controllers\Instructor\OrderController;
 use App\Http\Controllers\Admin\AdminCourseController;
 use App\Http\Controllers\Admin\AdminReviewController;
 use App\Http\Controllers\Admin\SubCategoryController;
@@ -51,6 +52,7 @@ Route::name('')->group(function () {
     // Quiz Routes
    Route::get('/mycourses/learn/{courseId}/{slug}', [MyCourseController::class, 'startLearning'])->name('course.start');
     Route::post('/mycourses/{courseId}/quiz/{quizId}/submit', [MyCourseController::class, 'submitQuiz'])->name('course.quiz.submit');
+    Route::get('/mycourses/certificate/{courseId}', [MyCourseController::class, 'downloadCertificate'])->name('course.certificate');
 
     });
 });
@@ -95,7 +97,9 @@ Route::prefix('instructor')->name('instructor.')->group(function () {
         Route::resource('coupon', CouponController::class)->names('coupon');
         // Quiz Routes
        Route::resource('quiz', QuizController::class)->names('quiz');
-
+        //orders
+       Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+       Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show');
   
     });
 });
