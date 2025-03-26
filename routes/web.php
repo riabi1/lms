@@ -44,7 +44,9 @@ Route::middleware(['auth:web'])->group(function () {
     Route::resource('reviews', ReviewController::class)->names('user.reviews')->except(['create', 'store', 'show']);
     //user courses
    Route::get('/my-courses', [MyCourseController::class, 'myCourses'])->name('user.my.courses');
-    Route::get('/mycourses/learn/{id}/{slug}', [MyCourseController::class, 'learnCourse'])->name('user.mycourse.learn');
+    Route::get('/course/start/{id}/{slug}', [MyCourseController::class, 'startLearning'])
+     ->name('course.start');
+    Route::post('/course/rate/{course}', [MyCourseController::class, 'submitRating'])->name('course.rate')->middleware('auth');
 });
 });
 

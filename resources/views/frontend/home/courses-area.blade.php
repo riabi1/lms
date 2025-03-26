@@ -67,11 +67,11 @@ $categories = App\Models\Category::orderBy('category_name', 'ASC')->get();
                   </h5>
                   <div class="d-flex justify-content-between align-items-center">
                     @if ($finalPrice < $course->selling_price)
-                    <p class="card-price text-black font-weight-bold">${{ number_format($finalPrice, 2) }}
-                      <span class="before-price font-weight-medium">${{ number_format($course->selling_price, 2) }}</span>
+                    <p class="card-price text-black font-weight-bold">{{ number_format($finalPrice, 2) }} TND
+                      <span class="before-price font-weight-medium">{{ number_format($course->selling_price, 2) }} TND</span>
                     </p>
                     @else
-                    <p class="card-price text-black font-weight-bold">${{ number_format($finalPrice, 2) }}</p>
+                    <p class="card-price text-black font-weight-bold">{{ number_format($finalPrice, 2) }} TND</p>
                     @endif
                   </div>
                 </div><!-- end card-body -->
@@ -181,11 +181,11 @@ $categories = App\Models\Category::orderBy('category_name', 'ASC')->get();
                   </h5>
                   <div class="d-flex justify-content-between align-items-center">
                     @if ($finalPrice < $course->selling_price)
-                    <p class="card-price text-black font-weight-bold">${{ number_format($finalPrice, 2) }}
-                      <span class="before-price font-weight-medium">${{ number_format($course->selling_price, 2) }}</span>
+                    <p class="card-price text-black font-weight-bold">{{ number_format($finalPrice, 2) }} TND
+                      <span class="before-price font-weight-medium">{{ number_format($course->selling_price, 2) }} TND</span>
                     </p>
                     @else
-                    <p class="card-price text-black font-weight-bold">${{ number_format($finalPrice, 2) }}</p>
+                    <p class="card-price text-black font-weight-bold">{{ number_format($finalPrice, 2) }} TND</p>
                     @endif
                   </div>
                 </div><!-- end card-body -->

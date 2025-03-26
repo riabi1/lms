@@ -1,10 +1,10 @@
 @extends('frontend.master')
-@section('home')
 
 @section('title')
 {{ $course->course_name }} | Easy Learning
 @endsection
 
+@section('home')
 <!-- ================================
     START BREADCRUMB AREA
 ================================= -->
@@ -342,14 +342,19 @@
               $discountPercentage = ($course->selling_price > 0 && $course->discount_price !== null)
                 ? round(($course->discount_price / $course->selling_price) * 100)
                 : 0;
+              // Vérifier si l'utilisateur a déjà acheté ce cours
+              $hasPurchased = Auth::check() && App\Models\Order::where('user_id', Auth::id())
+                ->where('course_id', $course->id)
+                ->where('payment_status', 'paid')
+                ->exists();
               @endphp
               <div class="preview-course-feature-content pt-40px">
                 <p class="d-flex align-items-center pb-2">
                   @if ($finalPrice < $course->selling_price)
-                    <span class="fs-35 font-weight-semi-bold text-black">${{ number_format($finalPrice, 2) }}</span>
-                    <span class="before-price mx-1">${{ number_format($course->selling_price, 2) }}</span>
+                    <span class="fs-35 font-weight-semi-bold text-black">{{ number_format($finalPrice, 2) }} TND</span>
+                    <span class="before-price mx-1">{{ number_format($course->selling_price, 2) }} TND</span>
                   @else
-                    <span class="fs-35 font-weight-semi-bold text-black">${{ number_format($finalPrice, 2) }}</span>
+                    <span class="fs-35 font-weight-semi-bold text-black">{{ number_format($finalPrice, 2) }} TND</span>
                   @endif
                   @if ($discountPercentage > 0)
                     <span class="price-discount">{{ $discountPercentage }}% off</span>
@@ -359,19 +364,25 @@
                   <span class="text-color-3">4 days</span> left at this price!
                 </p>
                 <div class="buy-course-btn-box">
-                  <form action="{{ route('cart.add', $course->id) }}" method="POST">
-                    @csrf
-                    <button type="submit" class="btn theme-btn flex-grow-1 mr-3">
-                      <i class="la la-shopping-cart fs-18 mr-1"></i> Add to Cart
-                    </button>
-                  </form>
+                  @if ($hasPurchased)
+                    <a href="{{ route('course.start', [$course->id, $course->course_name_slug]) }}" class="btn theme-btn flex-grow-1 mr-3">
+                      <i class="la la-play-circle fs-18 mr-1"></i> Start Learning
+                    </a>
+                  @else
+                    <form action="{{ route('cart.add', $course->id) }}" method="POST">
+                      @csrf
+                      <button type="submit" class="btn theme-btn flex-grow-1 mr-3">
+                        <i class="la la-shopping-cart fs-18 mr-1"></i> Add to Cart
+                      </button>
+                    </form>
+                  @endif
                 </div>
                 <div class="preview-course-incentives">
                   <h3 class="card-title fs-18 pb-2">This course includes</h3>
                   <ul class="generic-list-item pb-3">
                     <li><i class="la la-play-circle-o mr-2 text-color"></i>{{ $course->duration }} learning hours</li>
                     <li><i class="la la-file mr-2 text-color"></i>{{ $course->resources }} resources</li>
-                    <li><i class="la la-file mr-2 text-color"></i> certificate : {{ $course->certificate }} </li>
+                    <li><i class="la la-file mr-2 text-color"></i>Certificate: {{ $course->certificate }}</li>
                     <li><i class="la la-key mr-2 text-color"></i>Full lifetime access</li>
                   </ul>
                 </div><!-- end preview-course-incentives -->
@@ -449,9 +460,9 @@
             </div><!-- end rating-wrap -->
             <div class="d-flex justify-content-between align-items-center">
               @if ($insFinalPrice < $inscourse->selling_price)
-                <p class="card-price text-black font-weight-bold">${{ number_format($insFinalPrice, 2) }} <span class="before-price font-weight-medium">${{ number_format($inscourse->selling_price, 2) }}</span></p>
+                <p class="card-price text-black font-weight-bold">{{ number_format($insFinalPrice, 2) }} TND <span class="before-price font-weight-medium">{{ number_format($inscourse->selling_price, 2) }} TND</span></p>
               @else
-                <p class="card-price text-black font-weight-bold">${{ number_format($insFinalPrice, 2) }}</p>
+                <p class="card-price text-black font-weight-bold">{{ number_format($insFinalPrice, 2) }} TND</p>
               @endif
               <div class="icon-element icon-element-sm shadow-sm cursor-pointer" title="Add to Wishlist"><i class="la la-heart-o"></i></div>
             </div>
@@ -475,6 +486,10 @@
   $insRating = $inscourse->reviews->avg('rating') ?? 0;
   $insReviewsCount = $inscourse->reviews->count();
   $goals = App\Models\Course_goal::where('course_id', $inscourse->id)->orderBy('id', 'DESC')->get();
+  $insHasPurchased = Auth::check() && App\Models\Order::where('user_id', Auth::id())
+    ->where('course_id', $inscourse->id)
+    ->where('payment_status', 'paid')
+    ->exists();
   @endphp
   <div class="tooltip_templates" style="display: none;">
     <div id="tooltip_content_{{ $inscourse->id }}">
@@ -513,12 +528,18 @@
             @endif
           </ul>
           <div class="d-flex justify-content-between align-items-center">
-            <form action="{{ route('cart.add', $inscourse->id) }}" method="POST">
-              @csrf
-              <button type="submit" class="btn theme-btn flex-grow-1 mr-3">
-                <i class="la la-shopping-cart mr-1 fs-18"></i> Add to Cart
-              </button>
-            </form>
+            @if ($insHasPurchased)
+              <a href="{{ route('course.start', [$inscourse->id, $inscourse->course_name_slug]) }}" class="btn theme-btn flex-grow-1 mr-3">
+                <i class="la la-play-circle mr-1 fs-18"></i> Start Learning
+              </a>
+            @else
+              <form action="{{ route('cart.add', $inscourse->id) }}" method="POST">
+                @csrf
+                <button type="submit" class="btn theme-btn flex-grow-1 mr-3">
+                  <i class="la la-shopping-cart mr-1 fs-18"></i> Add to Cart
+                </button>
+              </form>
+            @endif
             <div class="icon-element icon-element-sm shadow-sm cursor-pointer" title="Add to Wishlist"><i class="la la-heart-o"></i></div>
           </div>
         </div>
@@ -657,5 +678,4 @@ $(document).ready(function() {
   });
 });
 </script>
-
 @endsection

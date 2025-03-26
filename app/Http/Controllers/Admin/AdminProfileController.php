@@ -30,7 +30,7 @@ class AdminProfileController extends Controller
 
       $admin = Auth::guard('admin')->user();
 
-      // Update basic fields
+      
       $admin->name = $request->name;
       $admin->email = $request->email;
       $admin->phone = $request->phone;
@@ -45,7 +45,7 @@ class AdminProfileController extends Controller
 
         $file = $request->file('photo');
         $filename = date('YmdHi') . $file->getClientOriginalName();
-        // Use Storage instead of move() for better Laravel integration
+        
         $file->storeAs('public/upload/admin_images', $filename);
         $admin->photo = $filename;
       }
