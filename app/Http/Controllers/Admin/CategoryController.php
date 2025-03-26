@@ -28,7 +28,7 @@ class CategoryController extends Controller
         ]);
 
         try {
-            // Stocker l'image dans storage/app/public/upload/category_images/
+            
             $image = $request->file('image');
             $filename = date('YmdHi') . '_' . $image->getClientOriginalName(); 
             $imagePath = $image->storeAs('upload/category_images', $filename, 'public');

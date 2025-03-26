@@ -9,9 +9,10 @@
   <div class="container-fluid">
     <div class="testimonial-carousel owl-action-styled">
       @php
+        // Récupérer les avis publiés avec la relation user
         $reviews = App\Models\Review::where('status', 1)->with('user')->get();
       @endphp
-      @foreach ($reviews as $review)
+      @forelse ($reviews as $review)
         <div class="card card-item">
           <div class="card-body">
             <div class="media media-card align-items-center pb-3">
@@ -37,7 +38,11 @@
             </p>
           </div><!-- end card-body -->
         </div><!-- end card -->
-      @endforeach
+      @empty
+        <div class="text-center">
+          <p>No reviews available yet.</p>
+        </div>
+      @endforelse
     </div><!-- end testimonial-carousel -->
   </div><!-- end container-fluid -->
 </section><!-- end testimonial-area -->

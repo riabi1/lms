@@ -49,10 +49,10 @@
                                 </td>
                                 <td class="text-right align-middle">
                                     @if (isset($item['selling_price']) && isset($item['discount_price']) && $item['discount_price'] > 0)
-                                        <del>${{ number_format($item['selling_price'], 2) }}</del><br>
-                                        ${{ number_format($item['price'], 2) }}
+                                        <del>{{ number_format($item['selling_price'], 2) }} TND</del><br>
+                                        {{ number_format($item['price'], 2) }} TND
                                     @else
-                                        ${{ number_format($item['selling_price'] ?? $item['price'], 2) }}
+                                        {{ number_format($item['selling_price'] ?? $item['price'], 2) }} TND
                                     @endif
                                 </td>
                                 <td class="text-center align-middle">
@@ -83,7 +83,7 @@
                                     <ul class="list-unstyled">
                                         @foreach ($coupons as $coupon)
                                             <li class="d-flex justify-content-between align-items-center mb-2">
-                                                <span>{{ $coupon['coupon_name'] }} (-${{ number_format($coupon['discount_amount'], 2) }})</span>
+                                                <span>{{ $coupon['coupon_name'] }} (-{{ number_format($coupon['discount_amount'], 2) }} TND)</span>
                                                 <form action="{{ route('coupon.remove', $coupon['coupon_name']) }}" method="POST" class="d-inline">
                                                     @csrf
                                                     <button type="submit" class="btn btn-warning btn-sm">Remove</button>
@@ -98,12 +98,12 @@
 
                     <div class="col-lg-4 ml-auto">
                         <div class="bg-gray p-4 mt-4" id="cart-summary">
-                            <p>Subtotal: $<span id="subtotal">{{ number_format($subtotal, 2) }}</span></p>
+                            <p>Subtotal: <span id="subtotal">{{ number_format($subtotal, 2) }} TND</span></p>
                             @if (!empty($coupons))
-                                <p>Total Coupon Discount: -${{ number_format($couponDiscount, 2) }}</p>
-                                <h4>Total: $<span id="total-price">{{ number_format($total, 2) }}</span></h4>
+                                <p>Total Coupon Discount: -{{ number_format($couponDiscount, 2) }} TND</p>
+                                <h4>Total: <span id="total-price">{{ number_format($total, 2) }} TND</span></h4>
                             @else
-                                <h4>Total: $<span id="total-price">{{ number_format($subtotal, 2) }}</span></h4>
+                                <h4>Total: <span id="total-price">{{ number_format($subtotal, 2) }} TND</span></h4>
                             @endif
                             <a href="{{ route('checkout.create') }}" class="btn theme-btn w-100 mt-3">Checkout <i class="la la-arrow-right"></i></a>
                         </div>
@@ -132,8 +132,8 @@
                         row.remove();
 
                         // Met à jour le sous-total et le total
-                        $('#subtotal').text(response.subtotal);
-                        $('#total-price').text(response.totalPrice);
+                        $('#subtotal').text(response.subtotal + ' TND');
+                        $('#total-price').text(response.totalPrice + ' TND');
 
                         // Vérifie si le panier est vide
                         if (response.cartCount === 0) {
@@ -141,7 +141,7 @@
                             $('#cart-summary').remove();
                         } else if (response.couponDiscount !== undefined) {
                             // Met à jour la remise si elle existe
-                            $('#coupon-list').find('p').text('Total Coupon Discount: -$' + response.couponDiscount);
+                            $('#coupon-list').siblings('p').text('Total Coupon Discount: -' + response.couponDiscount + ' TND');
                         }
 
                         // Affiche un message de succès (optionnel)

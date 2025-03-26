@@ -168,15 +168,6 @@ class IndexController extends Controller
         return view('instructor.instructor_details', compact('instructor', 'courses', 'totalStudents', 'totalReviews'));
     }
 
-  
-
-
-   
-
- 
-
-   
-
     /**
      * Display all available courses.
      */

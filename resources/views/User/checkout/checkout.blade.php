@@ -81,12 +81,17 @@
                         <div class="divider"><span></span></div>
                         <div class="input-box">
                             <label class="label-text">Credit or Debit Card (Stripe)</label>
-                            <p class="fs-14 text-muted mb-3">Enter your card details below. Required fields include: Card Number, Expiration Date (MM/YY), and CVC (3-4 digits on the back of your card).</p>
-                            <div class="form-group">
-                                <div id="card-element" class="form-control form--control" style="padding: 10px; border: 1px solid #e5e7eb; border-radius: 4px;"></div>
+                            <p class="fs-14 text-muted mb-3">Please enter your card details in the fields below to complete your payment securely via Stripe.</p>
+                            <div class="form-group bg-gray p-3 rounded" style="border: 1px solid #ced4da;">
+                                <div class="mb-2">
+                                    <strong>Card Information</strong>
+                                    <p class="fs-13 text-muted mb-0">Enter your card number, expiration date, and CVC code here:</p>
+                                </div>
+                                <div id="card-element" class="form-control form--control" style="padding: 10px; border: 1px solid #e5e7eb; border-radius: 4px; background: #fff;"></div>
                                 <div id="card-errors" class="text-danger mt-2" role="alert"></div>
                             </div>
-                            <p class="fs-12 text-muted mt-2">Example: Card Number: 4242 4242 4242 4242, Exp: 12/25, CVC: 123</p>
+                            <p class="fs-12 text-muted mt-2"><strong>Example:</strong> Card Number: 4242 4242 4242 4242, Exp: 12/25, CVC: 123</p>
+                            <p class="fs-12 text-muted">We accept Visa, MasterCard, and other major cards. Your payment is encrypted and secure.</p>
                         </div>
                     </div><!-- end card-body -->
                 </div><!-- end card -->
@@ -113,7 +118,7 @@
                                     </a>
                                     <div class="media-body">
                                         <h5 class="fs-15 pb-2"><a href="{{ url('course/details/'.$id.'/'.Str::slug($item['name'] ?? 'course')) }}">{{ $item['name'] }}</a></h5>
-                                        <p class="text-black font-weight-semi-bold lh-18">${{ number_format($adjustedPrices[$id] ?? $item['price'], 2) }}</p>
+                                        <p class="text-black font-weight-semi-bold lh-18">{{ number_format($adjustedPrices[$id] ?? $item['price'], 2) }} TND</p>
                                     </div>
                                 </div><!-- end media -->
                             @empty
@@ -131,23 +136,23 @@
                         <ul class="generic-list-item generic-list-item-flash fs-15">
                             <li class="d-flex align-items-center justify-content-between font-weight-semi-bold">
                                 <span class="text-black">Subtotal:</span>
-                                <span>${{ number_format($subtotal, 2) }}</span>
+                                <span>{{ number_format($subtotal, 2) }} TND</span>
                             </li>
                             @if (!empty($coupons))
                                 @foreach ($coupons as $coupon)
                                     <li class="d-flex align-items-center justify-content-between">
                                         <span class="text-black">Coupon ({{ $coupon['coupon_name'] }}):</span>
-                                        <span>-${{ number_format($coupon['discount_amount'], 2) }}</span>
+                                        <span>-{{ number_format($coupon['discount_amount'], 2) }} TND</span>
                                     </li>
                                 @endforeach
                                 <li class="d-flex align-items-center justify-content-between font-weight-semi-bold">
                                     <span class="text-black">Total Discount:</span>
-                                    <span>-${{ number_format($couponDiscount, 2) }}</span>
+                                    <span>-{{ number_format($couponDiscount, 2) }} TND</span>
                                 </li>
                             @endif
                             <li class="d-flex align-items-center justify-content-between font-weight-bold">
                                 <span class="text-black">Total:</span>
-                                <span>${{ number_format($total, 2) }}</span>
+                                <span>{{ number_format($total, 2) }} TND</span>
                             </li>
                         </ul>
                         <input type="hidden" name="total" value="{{ $total }}">
@@ -161,6 +166,7 @@
                 </div><!-- end card -->
             </div><!-- end col-lg-5 -->
         </div><!-- end row -->
+                    </form><!-- end form -->
     </div><!-- end container -->
 </section>
 <!-- ================================

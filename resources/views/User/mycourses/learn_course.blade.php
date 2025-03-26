@@ -42,7 +42,7 @@
                         </div>
                     </div><!-- end logo-box -->
                     <div class="course-dashboard-header-title pl-4">
-                        <a href="{{ url('course/details/' . $course->id . '/' . $course->course_slug) }}" class="text-white fs-15">{{ $course->course_name }}</a>
+                        <a href="{{ url('course/details/' . $course->id . '/' . $course->course_name_slug) }}" class="text-white fs-15">{{ $course->course_name }}</a>
                     </div><!-- end course-dashboard-header-title -->
                     <div class="menu-wrapper ml-auto">
                         <div class="theme-picker d-flex align-items-center mr-3">
@@ -75,8 +75,7 @@
                                     </a>
                                     <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuLink">
                                         <a class="dropdown-item" href="#">Favorite this course</a>
-                                        <a class="dropdown-item" href="#">Archive this course</a>
-                                        <a class="dropdown-item" href="#">Gift this course</a>
+                                        
                                     </div>
                                 </div>
                             </div>
@@ -93,16 +92,22 @@
     <!--======================================
         START COURSE-DASHBOARD
     ======================================-->
-              <section class="course-dashboard">
+    <section class="course-dashboard">
         <div class="course-dashboard-wrap">
             <div class="course-dashboard-container d-flex">
                 <div class="course-dashboard-column">
                     <div class="lecture-viewer-container">
                         <div class="lecture-video-item">
-                            <iframe width="100%" height="500" id="videoContainer" src="" title="Course Lecture Video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-                            <div id="textLesson" class="fs-24 font-weight-semi-bold pb-2 text-center mt-4 d-none">
-                                <h3></h3>
+                            <!-- Conteneur pour les vidéos -->
+                            <div id="mediaContainer">
+                                <iframe width="100%" height="500" id="videoIframe" class="d-none" src="" title="Course Lecture Video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                                <video width="100%" height="500" id="videoPlayer" class="d-none" controls>
+                                    <source src="" type="video/mp4">
+                                    Your browser does not support the video tag.
+                                </video>
                             </div>
+                            <!-- Conteneur pour le contenu textuel sous la vidéo -->
+                            <div id="lectureContent" class="mt-4" style="font-size: 14px; text-align: left; padding: 0 40px;"></div>
                         </div>
                     </div><!-- end lecture-viewer-container -->
 
@@ -156,53 +161,52 @@
                                 </div><!-- end tab-pane -->
 
                                 <div class="tab-pane fade" id="course-content" role="tabpanel" aria-labelledby="course-content-tab">
-                                  <div class="mobile-course-menu pt-4">
-                                    <div class="accordion generic-accordion generic--accordion" id="mobileCourseAccordionCourseExample">
-                                        @foreach ($sections as $section)
-                                            <div class="card">
-                                                <div class="card-header" id="mobileCourseHeading{{ $section->id }}">
-                                                    <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#mobileCourseCollapse{{ $section->id }}" aria-expanded="true" aria-controls="mobileCourseCollapse{{ $section->id }}">
-                                                        <i class="la la-angle-down"></i>
-                                                        <i class="la la-angle-up"></i>
-                                                        <span class="fs-15">{{ $section->section_title }}</span>
-                                                        <span class="course-duration">
-                                                            <span>{{ count($section->lectures) }}</span>
-                                                            <span>{{ $section->total_duration }}min</span>
-                                                        </span>
-                                                    </button>
-                                                </div><!-- end card-header -->
-                                             
-                                  <div id="mobileCourseCollapse{{ $section->id }}" class="collapse" aria-labelledby="mobileCourseHeading{{ $section->id }}" data-parent="#mobileCourseAccordionCourseExample">
-                    <div class="card-body p-0">
-                        <ul class="curriculum-sidebar-list">
-                            @foreach ($section->lectures as $lecture)
-                                <li class="course-item-link {{ $loop->first ? 'active' : '' }}">
-                                    <div class="course-item-content-wrap">
-                                        <div class="custom-control custom-checkbox">
-                                            <input type="checkbox" class="custom-control-input" id="mobileCourseCheckbox{{ $lecture->id }}" required>
-                                            <label class="custom-control-label custom--control-label" for="mobileCourseCheckbox{{ $lecture->id }}"></label>
-                                        </div><!-- end custom-control -->
-                                        <div class="course-item-content">
-                                            <h4 class="fs-15 lecture-title" 
-                                                data-video-local="{{ $lecture->video ? Storage::url($lecture->video) : '' }}" 
-                                                data-video-url="{{ $lecture->url }}" 
-                                                data-content="{!! $lecture->content !!}">
-                                                {{ $lecture->lecture_title }}
-                                            </h4>
-                                            <div class="courser-item-meta-wrap">
-                                                <p class="course-item-meta"><i class="la la-play-circle"></i>{{ $lecture->duration }}min</p>
-                                            </div>
-                                        </div><!-- end course-item-content -->
-                                    </div><!-- end course-item-content-wrap -->
-                                </li>
-                            @endforeach
-                        </ul>
-                    </div><!-- end card-body -->
-                </div><!-- end collapse -->
-            </div><!-- end card -->
-        @endforeach
-    </div><!-- end accordion-->
-</div><!-- end mobile-course-menu -->
+                                    <div class="mobile-course-menu pt-4">
+                                        <div class="accordion generic-accordion generic--accordion" id="mobileCourseAccordionCourseExample">
+                                            @foreach ($sections as $section)
+                                                <div class="card">
+                                                    <div class="card-header" id="mobileCourseHeading{{ $section->id }}">
+                                                        <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#mobileCourseCollapse{{ $section->id }}" aria-expanded="true" aria-controls="mobileCourseCollapse{{ $section->id }}">
+                                                            <i class="la la-angle-down"></i>
+                                                            <i class="la la-angle-up"></i>
+                                                            <span class="fs-15">{{ $section->section_title }}</span>
+                                                            <span class="course-duration">
+                                                                <span>{{ count($section->lectures) }}</span>
+                                                                <span>{{ $section->total_duration }}min</span>
+                                                            </span>
+                                                        </button>
+                                                    </div><!-- end card-header -->
+                                                    <div id="mobileCourseCollapse{{ $section->id }}" class="collapse" aria-labelledby="mobileCourseHeading{{ $section->id }}" data-parent="#mobileCourseAccordionCourseExample">
+                                                        <div class="card-body p-0">
+                                                            <ul class="curriculum-sidebar-list">
+                                                                @foreach ($section->lectures as $lecture)
+                                                                    <li class="course-item-link {{ $loop->first ? 'active' : '' }}">
+                                                                        <div class="course-item-content-wrap">
+                                                                            <div class="custom-control custom-checkbox">
+                                                                                <input type="checkbox" class="custom-control-input" id="mobileCourseCheckbox{{ $lecture->id }}" required>
+                                                                                <label class="custom-control-label custom--control-label" for="mobileCourseCheckbox{{ $lecture->id }}"></label>
+                                                                            </div><!-- end custom-control -->
+                                                                            <div class="course-item-content">
+                                                                                <h4 class="fs-15 lecture-title" 
+                                                                                    data-video-local="{{ $lecture->video ? Storage::url($lecture->video) : '' }}" 
+                                                                                    data-video-url="{{ $lecture->url }}" 
+                                                                                    data-content="{!! $lecture->content !!}">
+                                                                                    {{ $lecture->lecture_title }}
+                                                                                </h4>
+                                                                                <div class="courser-item-meta-wrap">
+                                                                                    <p class="course-item-meta"><i class="la la-play-circle"></i>{{ $lecture->duration }}min</p>
+                                                                                </div>
+                                                                            </div><!-- end course-item-content -->
+                                                                        </div><!-- end course-item-content-wrap -->
+                                                                    </li>
+                                                                @endforeach
+                                                            </ul>
+                                                        </div><!-- end card-body -->
+                                                    </div><!-- end collapse -->
+                                                </div><!-- end card -->
+                                            @endforeach
+                                        </div><!-- end accordion-->
+                                    </div><!-- end mobile-course-menu -->
                                 </div><!-- end tab-pane -->
 
                                 <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
@@ -246,15 +250,15 @@
                                                 </div><!-- end lecture-overview-stats-item -->
                                             </div><!-- end lecture-overview-stats-wrap -->
                                         </div><!-- end lecture-overview-item -->
-                                       
                                         <div class="section-block"></div>
+                                        <!-- description-->
                                         <div class="lecture-overview-item">
                                             <div class="lecture-overview-stats-wrap d-flex">
                                                 <div class="lecture-overview-stats-item">
                                                     <h3 class="fs-16 font-weight-semi-bold pb-2">Description</h3>
                                                 </div><!-- end lecture-overview-stats-item -->
                                                 <div class="lecture-overview-stats-item lecture-overview-stats-wide-item lecture-description">
-                                                    <h3 class="fs-16 font-weight-semi-bold pb-2">From the Author</h3>
+                                                    <h3 class="fs-16 font-weight-semi-bold pb-2">From {{ $course->instructor->name ?? 'the Author' }}</h3>
                                                     <p>{!! $course->description !!}</p>
                                                 </div><!-- end lecture-overview-stats-item -->
                                             </div><!-- end lecture-overview-stats-wrap -->
@@ -295,9 +299,7 @@
                                                 </div>
                                             </div><!-- end lecture-overview-item -->
                                             <div class="section-block"></div>
-
                                             <div class="lecture-overview-item mt-0">
-                                                
                                                 <div class="question-btn-box pt-35px text-center">
                                                     <button class="btn theme-btn theme-btn-transparent w-100" type="button">See More</button>
                                                 </div>
@@ -305,15 +307,9 @@
                                         </div>
                                     </div>
                                 </div><!-- end tab-pane -->
-
-                               
                             </div><!-- end tab-content -->
                         </div><!-- end lecture-video-detail-body -->
                     </div><!-- end lecture-video-detail -->
-
-                    
-
-                   
                 </div><!-- end course-dashboard-column -->
 
                 <div class="course-dashboard-sidebar-column">
@@ -348,7 +344,12 @@
                                                                     <label class="custom-control-label custom--control-label" for="courseCheckbox{{ $lecture->id }}"></label>
                                                                 </div><!-- end custom-control -->
                                                                 <div class="course-item-content">
-                                                                    <h4 class="fs-15 lecture-title" data-video-url="{{ $lecture->url }}" data-content="{!! $lecture->content !!}">{{ $lecture->lecture_title }}</h4>
+                                                                    <h4 class="fs-15 lecture-title" 
+                                                                        data-video-local="{{ $lecture->video ? Storage::url($lecture->video) : '' }}" 
+                                                                        data-video-url="{{ $lecture->url }}" 
+                                                                        data-content="{!! $lecture->content !!}">
+                                                                        {{ $lecture->lecture_title }}
+                                                                    </h4>
                                                                 </div><!-- end course-item-content -->
                                                             </div><!-- end course-item-content-wrap -->
                                                         </li>
@@ -375,36 +376,44 @@
     </div>
     <!-- end scroll top -->
 
-    <!-- Modals (Rating, Share, Report, etc.) remain unchanged -->
+    <!-- Modals -->
     <div class="modal fade modal-container" id="ratingModal" tabindex="-1" role="dialog" aria-labelledby="ratingModalTitle" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content">
-                <div class="modal-header border-bottom-gray">
-                    <div class="pr-2">
-                        <h5 class="modal-title fs-19 font-weight-semi-bold lh-24" id="ratingModalTitle">How would you rate this course?</h5>
-                    </div>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true" class="la la-times"></span>
-                    </button>
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header border-bottom-gray">
+                <div class="pr-2">
+                    <h5 class="modal-title fs-19 font-weight-semi-bold lh-24" id="ratingModalTitle">How would you rate this course?</h5>
                 </div>
-                <div class="modal-body text-center py-5">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true" class="la la-times"></span>
+                </button>
+            </div>
+            <div class="modal-body text-center py-5">
+                <form id="ratingForm" method="POST" action="{{ route('course.rate', $course->id) }}">
+                    @csrf
+                    <input type="hidden" name="rating" id="ratingValue" value="0">
                     <div class="leave-rating mt-5">
-                        <input type="radio" name='rate' id="star5" />
-                        <label for="star5" class="fs-45"></label>
-                        <input type="radio" name='rate' id="star4" />
-                        <label for="star4" class="fs-45"></label>
-                        <input type="radio" name='rate' id="star3" />
-                        <label for="star3" class="fs-45"></label>
-                        <input type="radio" name='rate' id="star2" />
-                        <label for="star2" class="fs-45"></label>
-                        <input type="radio" name='rate' id="star1" />
-                        <label for="star1" class="fs-45"></label>
-                        <div class="rating-result-text fs-20 pb-4"></div>
+                        <input type="radio" name="rate" id="star5" value="5" />
+                        <label for="star5" class="fs-45 star-label"></label>
+                        <input type="radio" name="rate" id="star4" value="4" />
+                        <label for="star4" class="fs-45 star-label"></label>
+                        <input type="radio" name="rate" id="star3" value="3" />
+                        <label for="star3" class="fs-45 star-label"></label>
+                        <input type="radio" name="rate" id="star2" value="2" />
+                        <label for="star2" class="fs-45 star-label"></label>
+                        <input type="radio" name="rate" id="star1" value="1" />
+                        <label for="star1" class="fs-45 star-label"></label>
+                        <div class="rating-result-text fs-20 pb-4" id="ratingText">Select a rating</div>
+                           </div>
+                    <div class="form-group">
+                        <textarea class="form-control" name="comment" id="comment" rows="3" placeholder="Add a comment (optional)"></textarea>
                     </div>
-                </div>
+                    <button type="submit" class="btn theme-btn mt-3" id="submitRating" disabled>Submit Rating</button>
+                </form>
             </div>
         </div>
     </div>
+</div>
 
     <div class="modal fade modal-container" id="shareModal" tabindex="-1" role="dialog" aria-labelledby="shareModalTitle" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
@@ -419,7 +428,7 @@
                     <div class="copy-to-clipboard">
                         <span class="success-message">Copied!</span>
                         <div class="input-group">
-                            <input type="text" class="form-control form--control copy-input pl-3" value="{{ url('course/details/' . $course->id . '/' . $course->course_slug) }}">
+                            <input type="text" class="form-control form--control copy-input pl-3" value="{{ url('course/details/' . $course->id . '/' . $course->course_name_slug) }}">
                             <div class="input-group-append">
                                 <button class="btn theme-btn theme-btn-sm copy-btn shadow-none"><i class="la la-copy mr-1"></i> Copy</button>
                             </div>
@@ -437,7 +446,6 @@
         </div>
     </div>
 
-    <!-- Other modals (reportModal, insertLinkModal, uploadPhotoModal) remain unchanged -->
     <div class="modal fade modal-container" id="reportModal" tabindex="-1" role="dialog" aria-labelledby="reportModalTitle" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
@@ -485,7 +493,8 @@
         </div><!-- end modal-dialog -->
     </div><!-- end modal -->
 
-<script type="text/javascript">
+    <!-- JavaScript -->
+    <script type="text/javascript">
         function openFirstLecture() {
             const firstLecture = document.querySelector('.lecture-title');
             if (firstLecture) {
@@ -494,9 +503,8 @@
         }
 
         function convertToEmbedUrl(url) {
-            // Vérifie si l'URL est une URL YouTube et la convertit en format embed
             if (url && url.includes('youtube.com/watch?v=')) {
-                const videoId = url.split('v=')[1]?.split('&')[0]; // Extrait l'ID de la vidéo
+                const videoId = url.split('v=')[1]?.split('&')[0];
                 if (videoId) {
                     return `https://www.youtube.com/embed/${videoId}`;
                 }
@@ -506,40 +514,49 @@
                     return `https://www.youtube.com/embed/${videoId}`;
                 }
             }
-            // Retourne l'URL originale si ce n'est pas une URL YouTube
             return url;
         }
 
-        function viewLesson(videoUrl, textContent) {
-            const video = document.getElementById("videoContainer");
-            const text = document.getElementById("textLesson");
-            const textContainer = document.createElement("div");
+        function viewLesson(videoLocal, videoUrl, textContent) {
+            const iframe = document.getElementById("videoIframe");
+            const videoPlayer = document.getElementById("videoPlayer");
+            const videoSource = videoPlayer.querySelector("source");
+            const contentDiv = document.getElementById("lectureContent");
 
-            if (videoUrl && videoUrl.trim() !== "") {
-                // Convertir l'URL en format embed si c'est une URL YouTube
+            // Réinitialiser l'affichage
+            iframe.classList.add("d-none");
+            videoPlayer.classList.add("d-none");
+            iframe.setAttribute("src", "");
+            videoSource.setAttribute("src", "");
+            contentDiv.innerHTML = "";
+
+            // Afficher la vidéo si disponible
+            if (videoLocal && videoLocal.trim() !== "") {
+                // Vidéo locale
+                videoPlayer.classList.remove("d-none");
+                videoSource.setAttribute("src", videoLocal);
+                videoPlayer.load(); // Recharge la vidéo
+            } else if (videoUrl && videoUrl.trim() !== "") {
+                // Vidéo externe (YouTube ou autre)
                 const embedUrl = convertToEmbedUrl(videoUrl);
-                video.classList.remove("d-none");
-                text.classList.add("d-none");
-                text.innerHTML = "";
-                video.setAttribute("src", embedUrl);
-            } else if (textContent && textContent.trim() !== "") {
-                video.classList.add("d-none");
-                text.classList.remove("d-none");
-                text.innerHTML = "";
-                textContainer.innerHTML = textContent;
-                textContainer.style.fontSize = "14px";
-                textContainer.style.textAlign = "left";
-                textContainer.style.paddingLeft = "40px";
-                textContainer.style.paddingRight = "40px";
-                text.appendChild(textContainer);
+                iframe.classList.remove("d-none");
+                iframe.setAttribute("src", embedUrl);
+            }
+
+            // Afficher le contenu textuel si disponible
+            if (textContent && textContent.trim() !== "") {
+                contentDiv.innerHTML = textContent;
+            } else {
+                contentDiv.innerHTML = "<p>No additional content available for this lecture.</p>";
             }
         }
 
         document.querySelectorAll('.lecture-title').forEach((lectureTitle) => {
             lectureTitle.addEventListener('click', () => {
+                const videoLocal = lectureTitle.getAttribute('data-video-local');
                 const videoUrl = lectureTitle.getAttribute('data-video-url');
                 const textContent = lectureTitle.getAttribute('data-content');
-                viewLesson(videoUrl, textContent);
+                viewLesson(videoLocal, videoUrl, textContent);
             });
         });
 
@@ -547,6 +564,51 @@
             openFirstLecture();
         });
     </script>
+    <script type="text/javascript">
+    $(document).ready(function () {
+        // Gestion des étoiles
+        $('.leave-rating input').on('change', function () {
+            const rating = $(this).val();
+            $('#ratingValue').val(rating);
+            $('#ratingText').text(`You rated ${rating} star${rating > 1 ? 's' : ''}`);
+            $('#submitRating').prop('disabled', false); // Activer le bouton
+        });
+
+        // Gestion du survol pour prévisualisation
+        $('.star-label').on('mouseenter', function () {
+            $(this).prevAll('label').addBack().css('color', '#f5c518');
+        }).on('mouseleave', function () {
+            if (!$('.leave-rating input:checked').length) {
+                $('.star-label').css('color', '#ddd');
+            }
+        });
+
+        // Soumission du formulaire via AJAX
+        $('#ratingForm').on('submit', function (e) {
+            e.preventDefault();
+
+            const formData = $(this).serialize();
+            const url = $(this).attr('action');
+
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: formData,
+                success: function (response) {
+                    if (response.success) {
+                        $('#ratingModal').modal('hide');
+                        alert('Thank you for your rating!');
+                    }
+                },
+                error: function (xhr) {
+                    const error = xhr.responseJSON?.message || 'An error occurred while submitting your rating.';
+                    $('#ratingText').text(error).css('color', 'red');
+                }
+            });
+        });
+    });
+</script>
+
     @include('User.mycourses.body.footer')
 </body>
 </html>

@@ -81,22 +81,26 @@ Course List | Easy Learning
             <div class="col-lg-12">
                 <div class="row">
                     @foreach ($courses as $course)
+                        @php
+                            $finalPrice = $course->discount_price !== null
+                                ? max(0, $course->selling_price - $course->discount_price)
+                                : $course->selling_price;
+                            $discountPercentage = ($course->selling_price > 0 && $course->discount_price !== null)
+                                ? round(($course->discount_price / $course->selling_price) * 100)
+                                : 0;
+                        @endphp
                         <div class="col-lg-4 col-md-6 responsive-column-half">
                             <div class="card card-item card-preview" data-tooltip-content="#tooltip_content_{{ $course->id }}">
                                 <div class="card-image">
                                     <a href="{{ route('course.details', [$course->id, $course->course_name_slug]) }}" class="d-block">
                                         <img class="card-img-top lazy" src="{{ asset('storage/upload/course_images/thumbnail/' . $course->course_image) }}" alt="{{ $course->course_title }}" onerror="this.src='{{ asset('images/default-course.jpg') }}'">
                                     </a>
-                                    @php
-                                        $amount = $course->selling_price - $course->discount_price;
-                                        $discount = $course->selling_price ? round(($amount / $course->selling_price) * 100) : 0;
-                                    @endphp
                                     <div class="course-badge-labels">
                                         @if ($course->bestseller == 1)
                                             <div class="course-badge">Bestseller</div>
                                         @endif
                                         @if ($course->discount_price !== null && $course->discount_price < $course->selling_price)
-                                            <div class="course-badge blue">-{{ $discount }}%</div>
+                                            <div class="course-badge blue">-{{ $discountPercentage }}%</div>
                                         @elseif ($course->discount_price === null)
                                             <div class="course-badge blue">New</div>
                                         @endif
@@ -118,10 +122,12 @@ Course List | Easy Learning
                                         </div>
                                         <span class="rating-total pl-1">({{ number_format($course->reviews_count) }})</span>
                                     </div><!-- end rating-wrap -->
-                                    @if ($course->discount_price === null)
-                                        <p class="card-price text-black font-weight-bold">${{ $course->selling_price }}</p>
+                                    @if ($finalPrice < $course->selling_price)
+                                        <p class="card-price text-black font-weight-bold">{{ number_format($finalPrice, 2) }} TND
+                                            <span class="before-price font-weight-medium">{{ number_format($course->selling_price, 2) }} TND</span>
+                                        </p>
                                     @else
-                                        <p class="card-price text-black font-weight-bold">${{ $course->discount_price }} <span class="before-price font-weight-medium">${{ $course->selling_price }}</span></p>
+                                        <p class="card-price text-black font-weight-bold">{{ number_format($finalPrice, 2) }} TND</p>
                                     @endif
                                 </div><!-- end card-body -->
                             </div><!-- end card -->
@@ -165,12 +171,12 @@ Course List | Easy Learning
                                             @endif
                                         </ul>
                                         <div class="d-flex justify-content-between align-items-center">
-                                             <form action="{{ route('cart.add', $course->id) }}" method="POST">
-                                                    @csrf
-                                                    <button type="submit" class="btn theme-btn w-100">
-                                                        <i class="la la-shopping-cart fs-18 mr-1"></i> Add to Cart
-                                                    </button>
-                                                </form> 
+                                            <form action="{{ route('cart.add', $course->id) }}" method="POST">
+                                                @csrf
+                                                <button type="submit" class="btn theme-btn w-100">
+                                                    <i class="la la-shopping-cart fs-18 mr-1"></i> Add to Cart
+                                                </button>
+                                            </form> 
                                             <div class="icon-element icon-element-sm shadow-sm cursor-pointer" title="Add to Wishlist"><i class="la la-heart-o"></i></div>
                                         </div>
                                     </div>
