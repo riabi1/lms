@@ -75,7 +75,6 @@
                                     </a>
                                     <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuLink">
                                         <a class="dropdown-item" href="#">Favorite this course</a>
-                                        
                                     </div>
                                 </div>
                             </div>
@@ -97,6 +96,19 @@
             <div class="course-dashboard-container d-flex">
                 <div class="course-dashboard-column">
                     <div class="lecture-viewer-container">
+                        <!-- Ajout de la barre de progression -->
+                        <div class="progress mb-4">
+                            @php
+                                $totalLectures = $course->sections->flatMap->lectures->count();
+                                $completedLectures = array_filter($progress, fn($completed) => $completed == 1);
+                                $progressPercentage = $totalLectures > 0 ? round((count($completedLectures) / $totalLectures) * 100) : 0;
+                            @endphp
+                            <div class="progress-bar bg-success" role="progressbar" style="width: {{ $progressPercentage }}%;" 
+                                 aria-valuenow="{{ $progressPercentage }}" aria-valuemin="0" aria-valuemax="100">
+                                {{ $progressPercentage }}% Complete
+                            </div>
+                        </div>
+
                         <div class="lecture-video-item">
                             <!-- Conteneur pour les vidéos -->
                             <div id="mediaContainer">
@@ -183,7 +195,11 @@
                                                                     <li class="course-item-link {{ $loop->first ? 'active' : '' }}">
                                                                         <div class="course-item-content-wrap">
                                                                             <div class="custom-control custom-checkbox">
-                                                                                <input type="checkbox" class="custom-control-input" id="mobileCourseCheckbox{{ $lecture->id }}" required>
+                                                                                <input type="checkbox" 
+                                                                                       class="custom-control-input mark-completed" 
+                                                                                       id="mobileCourseCheckbox{{ $lecture->id }}" 
+                                                                                       data-lecture-id="{{ $lecture->id }}" 
+                                                                                       {{ isset($progress[$lecture->id]) && $progress[$lecture->id] ? 'checked' : '' }}>
                                                                                 <label class="custom-control-label custom--control-label" for="mobileCourseCheckbox{{ $lecture->id }}"></label>
                                                                             </div><!-- end custom-control -->
                                                                             <div class="course-item-content">
@@ -226,7 +242,6 @@
                                                         <li><span>Skill level:</span>{{ $course->label }}</li>
                                                         <li><span>Students:</span>{{ $course->students_count }}</li>
                                                         <li><span>Languages:</span>{{ $course->language ?? 'English' }}</li>
-                                                        <li><span>Captions:</span>{{ $course->captions ? 'Yes' : 'No' }}</li>
                                                     </ul>
                                                 </div><!-- end lecture-overview-stats-item -->
                                                 <div class="lecture-overview-stats-item">
@@ -340,7 +355,11 @@
                                                         <li class="course-item-link {{ $loop->first ? 'active' : '' }}">
                                                             <div class="course-item-content-wrap">
                                                                 <div class="custom-control custom-checkbox">
-                                                                    <input type="checkbox" class="custom-control-input" id="courseCheckbox{{ $lecture->id }}" required>
+                                                                    <input type="checkbox" 
+                                                                           class="custom-control-input mark-completed" 
+                                                                           id="courseCheckbox{{ $lecture->id }}" 
+                                                                           data-lecture-id="{{ $lecture->id }}" 
+                                                                           {{ isset($progress[$lecture->id]) && $progress[$lecture->id] ? 'checked' : '' }}>
                                                                     <label class="custom-control-label custom--control-label" for="courseCheckbox{{ $lecture->id }}"></label>
                                                                 </div><!-- end custom-control -->
                                                                 <div class="course-item-content">
@@ -378,42 +397,42 @@
 
     <!-- Modals -->
     <div class="modal fade modal-container" id="ratingModal" tabindex="-1" role="dialog" aria-labelledby="ratingModalTitle" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <div class="modal-header border-bottom-gray">
-                <div class="pr-2">
-                    <h5 class="modal-title fs-19 font-weight-semi-bold lh-24" id="ratingModalTitle">How would you rate this course?</h5>
-                </div>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true" class="la la-times"></span>
-                </button>
-            </div>
-            <div class="modal-body text-center py-5">
-                <form id="ratingForm" method="POST" action="{{ route('course.rate', $course->id) }}">
-                    @csrf
-                    <input type="hidden" name="rating" id="ratingValue" value="0">
-                    <div class="leave-rating mt-5">
-                        <input type="radio" name="rate" id="star5" value="5" />
-                        <label for="star5" class="fs-45 star-label"></label>
-                        <input type="radio" name="rate" id="star4" value="4" />
-                        <label for="star4" class="fs-45 star-label"></label>
-                        <input type="radio" name="rate" id="star3" value="3" />
-                        <label for="star3" class="fs-45 star-label"></label>
-                        <input type="radio" name="rate" id="star2" value="2" />
-                        <label for="star2" class="fs-45 star-label"></label>
-                        <input type="radio" name="rate" id="star1" value="1" />
-                        <label for="star1" class="fs-45 star-label"></label>
-                        <div class="rating-result-text fs-20 pb-4" id="ratingText">Select a rating</div>
-                           </div>
-                    <div class="form-group">
-                        <textarea class="form-control" name="comment" id="comment" rows="3" placeholder="Add a comment (optional)"></textarea>
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header border-bottom-gray">
+                    <div class="pr-2">
+                        <h5 class="modal-title fs-19 font-weight-semi-bold lh-24" id="ratingModalTitle">How would you rate this course?</h5>
                     </div>
-                    <button type="submit" class="btn theme-btn mt-3" id="submitRating" disabled>Submit Rating</button>
-                </form>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true" class="la la-times"></span>
+                    </button>
+                </div>
+                <div class="modal-body text-center py-5">
+                    <form id="ratingForm" method="POST" action="{{ route('course.rate', $course->id) }}">
+                        @csrf
+                        <input type="hidden" name="rating" id="ratingValue" value="0">
+                        <div class="leave-rating mt-5">
+                            <input type="radio" name="rate" id="star5" value="5" />
+                            <label for="star5" class="fs-45 star-label"></label>
+                            <input type="radio" name="rate" id="star4" value="4" />
+                            <label for="star4" class="fs-45 star-label"></label>
+                            <input type="radio" name="rate" id="star3" value="3" />
+                            <label for="star3" class="fs-45 star-label"></label>
+                            <input type="radio" name="rate" id="star2" value="2" />
+                            <label for="star2" class="fs-45 star-label"></label>
+                            <input type="radio" name="rate" id="star1" value="1" />
+                            <label for="star1" class="fs-45 star-label"></label>
+                            <div class="rating-result-text fs-20 pb-4" id="ratingText">Select a rating</div>
+                        </div>
+                        <div class="form-group">
+                            <textarea class="form-control" name="comment" id="comment" rows="3" placeholder="Add a comment (optional)"></textarea>
+                        </div>
+                        <button type="submit" class="btn theme-btn mt-3" id="submitRating" disabled>Submit Rating</button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
     <div class="modal fade modal-container" id="shareModal" tabindex="-1" role="dialog" aria-labelledby="shareModalTitle" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
@@ -563,6 +582,40 @@
         window.addEventListener('load', () => {
             openFirstLecture();
         });
+
+        // Gestion de la progression via AJAX
+        $(document).ready(function() {
+            $('.mark-completed').on('change', function() {
+                const lectureId = $(this).data('lecture-id');
+                const completed = $(this).is(':checked') ? 1 : 0;
+                const courseId = {{ $course->id }};
+
+                $.ajax({
+                    url: '{{ route("course.markLectureCompleted", $course->id) }}',
+                    type: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        lecture_id: lectureId,
+                        completed: completed
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            // Mettre à jour la barre de progression
+                            $('.progress-bar').css('width', response.progress + '%')
+                                             .attr('aria-valuenow', response.progress)
+                                             .text(response.progress + '% Complete');
+                        } else {
+                            alert(response.message);
+                            $(this).prop('checked', !completed); // Revenir à l'état précédent en cas d'erreur
+                        }
+                    },
+                    error: function(xhr) {
+                        alert('An error occurred: ' + (xhr.responseJSON?.message || 'Unknown error'));
+                        $(this).prop('checked', !completed); // Revenir à l'état précédent
+                    }
+                });
+            });
+        });
     </script>
     <script type="text/javascript">
     $(document).ready(function () {
@@ -607,7 +660,7 @@
             });
         });
     });
-</script>
+    </script>
 
     @include('User.mycourses.body.footer')
 </body>

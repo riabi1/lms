@@ -77,4 +77,17 @@ class User extends Authenticatable implements MustVerifyEmail
 {
     return $this->hasMany(Review::class, 'user_id');
 }
+
+public function orders()
+    {
+        return $this->hasMany(Order::class); // Assurez-vous que la classe Order existe
+    }
+
+    /**
+     * Relation avec la progression des cours (facultatif, selon votre structure)
+     */
+    public function courseProgress()
+    {
+        return $this->hasMany(UserCourseProgress::class); // Si vous utilisez une table de progression
+    }
 }

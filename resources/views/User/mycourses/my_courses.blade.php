@@ -41,42 +41,49 @@ My Courses | Easy Learning
                         </tr>
                     </thead>
                     <tbody>
-                          @forelse ($orders as $key => $order)
-                              @if ($order->course) <!-- Vérifie que le cours existe -->
-                              <tr>
-                                  <td>{{ $key + 1 }}</td>
-                                  <td>
-                                      <img src="{{ $order->course->course_image ? Storage::url('upload/course_images/thumbnail/'.$order->course->course_image) : asset('images/no_image.jpg') }}" 
-                                          alt="{{ $order->course->course_name }}" 
-                                          style="width: 70px; height: 40px;" 
-                                          onerror="this.src='{{ asset('images/no_image.jpg') }}'">
-                                  </td>
-                                  <td>{{ $order->course->course_name }}</td>
-                                  <td>{{ $order->course->instructor->name ?? 'Unknown Instructor' }}</td>
-                                  <td>{{ $order->course->category->category_name ?? 'Uncategorized' }}</td>
-                                  <td>${{ number_format($order->price, 2) }}</td>
-                                  <td>
-                                      @php
-                                          $progress = $order->progress ?? 0; 
-                                      @endphp
-                                      @if ($progress > 0)
-                                          <a href="{{ url('mycourses/learn/'.$order->course->id.'/'.Str::slug($order->course->course_name)) }}" class="btn btn-primary btn-sm">
-                                              <i class="bx bx-play"></i> Continue Learning
-                                          </a>
-                                      @else
-                                          <a href="{{ url('mycourses/learn/'.$order->course->id.'/'.Str::slug($order->course->course_name)) }}" class="btn btn-success btn-sm">
-                                              <i class="bx bx-play"></i> Start Course
-                                          </a>
-                                      @endif
-                                  </td>
-                              </tr>
-                              @endif
-                          @empty
-                              <tr>
-                                  <td colspan="7" class="text-center">You haven't purchased any courses yet. <a href="{{ route('course.list') }}" class="text-primary">Explore Courses</a></td>
-                              </tr>
-                          @endforelse
-                      </tbody>
+                        @forelse ($orders as $key => $order)
+                            @if ($order->course) <!-- Vérifie que le cours existe -->
+                            <tr>
+                                <td>{{ $key + 1 }}</td>
+                                <td>
+                                    <img src="{{ $order->course->course_image ? Storage::url('upload/course_images/thumbnail/'.$order->course->course_image) : asset('images/no_image.jpg') }}" 
+                                         alt="{{ $order->course->course_name }}" 
+                                         style="width: 70px; height: 40px;" 
+                                         onerror="this.src='{{ asset('images/no_image.jpg') }}'">
+                                </td>
+                                <td>{{ $order->course->course_name }}</td>
+                                <td>{{ $order->course->instructor->name ?? 'Unknown Instructor' }}</td>
+                                <td>{{ $order->course->category->category_name ?? 'Uncategorized' }}</td>
+                                <td>${{ number_format($order->price, 2) }}</td>
+                                <td>
+                                    @php
+                                        $totalLectures = $order->course->sections->flatMap->lectures->count();
+                                        $completedLectures = array_filter($order->progress ?? [], fn($completed) => $completed == 1);
+                                        $progressPercentage = $totalLectures > 0 ? round((count($completedLectures) / $totalLectures) * 100) : 0;
+                                        $learnUrl = url('mycourses/learn/'.$order->course->id.'/'.Str::slug($order->course->course_name));
+                                    @endphp
+                                    @if ($progressPercentage == 0)
+                                        <a href="{{ $learnUrl }}" class="btn btn-success btn-sm">
+                                            <i class="bx bx-play"></i> Start Learning
+                                        </a>
+                                    @elseif ($progressPercentage < 100)
+                                        <a href="{{ $learnUrl }}" class="btn btn-primary btn-sm">
+                                            <i class="bx bx-play"></i> Continue Learning
+                                        </a>
+                                    @else
+                                        <a href="{{ $learnUrl }}" class="btn btn-info btn-sm">
+                                            <i class="bx bx-check"></i> Course Completed
+                                        </a>
+                                    @endif
+                                </td>
+                            </tr>
+                            @endif
+                        @empty
+                            <tr>
+                                <td colspan="7" class="text-center">You haven't purchased any courses yet. <a href="{{ route('course.list') }}" class="text-primary">Explore Courses</a></td>
+                            </tr>
+                        @endforelse
+                    </tbody>
                 </table>
             </div>
         </div>
