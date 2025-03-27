@@ -2,7 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\User\NotesController;
 use App\Http\Controllers\User\ReviewController;
+use App\Http\Controllers\User\QuizzesController;
 use App\Http\Controllers\Frontend\CartController;
 use App\Http\Controllers\User\MyCourseController;
 use App\Http\Controllers\Admin\CategoryController;
@@ -53,7 +55,13 @@ Route::name('')->group(function () {
     // Quiz Routes
    Route::get('/mycourses/learn/{courseId}/{slug}', [MyCourseController::class, 'startLearning'])->name('course.start');
     Route::post('/mycourses/{courseId}/quiz/{quizId}/submit', [MyCourseController::class, 'submitQuiz'])->name('course.quiz.submit');
+    //certificate routes
     Route::get('/mycourses/certificate/{courseId}', [MyCourseController::class, 'downloadCertificate'])->name('course.certificate');
+    //notes routes 
+   Route::resource('mycourses/notes', NotesController::class)->only(['index', 'store', 'update', 'destroy'])->names('mycourses.notes');
+
+    //User Quiz routes
+    Route::get('/quizzes', [QuizzesController::class, 'index'])->name('quizzes.index');
 
     });
 });
@@ -71,8 +79,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('subcategories', SubCategoryController::class)->except(['show']);
         Route::resource('courses', AdminCourseController::class)->names('courses');
         Route::resource('instructors', InstructorManagementController::class)->names('instructors');
-        // Custom Routes
+        // Courses  Routes
         Route::post('/courses/update-status', [AdminCourseController::class, 'UpdateCourseStatus'])->name('update.course.status');
+        // Instructor Routes
         Route::post('/instructors/status', [InstructorManagementController::class, 'updateStatus'])->name('update.instructor.status');
         // Review Routes
         Route::get('/pending/review', [AdminReviewController::class, 'pending'])->name('pending.review');
@@ -92,10 +101,12 @@ Route::prefix('instructor')->name('instructor.')->group(function () {
         return view('instructor.index');
     })->middleware(['auth:instructor'])->name('dashboard');
     Route::middleware(['auth:instructor', 'verified'])->group(function () {
+      //add course routes
         Route::resource('courses', CourseController::class)->names('courses');
         Route::get('/courses/subcategory/ajax/{category_id}', [CourseController::class, 'getSubCategory'])->name('subcategory.ajax');
         Route::resource('courses.sections', CourseSectionController::class)->names('course_sections');
         Route::resource('courses.lectures', CourseLectureController::class)->names('course_lectures');
+        //review routes
         Route::get('/all/review', [InstructorReviewController::class, 'index'])->name('all.review');
         // Coupon Resource Route
         Route::resource('coupon', CouponController::class)->names('coupon');

@@ -28,20 +28,17 @@
     <link href="{{ asset('backend/assets/css/app.css') }}" rel="stylesheet">
     <link href="{{ asset('backend/assets/css/icons.css') }}" rel="stylesheet">
 
-    <!-- Theme Styles (Thème sombre désactivé si non désiré) -->
-    <!-- <link rel="stylesheet" href="{{ asset('backend/assets/css/dark-theme.css') }}" /> -->
+    <!-- Theme Styles -->
     <link rel="stylesheet" href="{{ asset('backend/assets/css/semi-dark.css') }}" />
     <link rel="stylesheet" href="{{ asset('backend/assets/css/header-colors.css') }}" />
 
     <!-- Toastr -->
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.css">
 
-    <!-- Custom CSS -->
-    
+    <!-- jQuery dans head pour éviter les conflits -->
+    <script src="{{ asset('backend/assets/js/jquery.min.js') }}"></script>
 
-    <title>User Dashboard</title>
-
- 
+    <title>@yield('title', 'User Dashboard')</title>
 </head>
 
 <body>
@@ -57,15 +54,12 @@
 
         <!-- Start Page Wrapper -->
         <div class="page-wrapper">
-            
-                    @yield('userdashboard')
-                
-            </div>
-
-            <!-- Footer -->
-            @include('User.body.footer')
+            @yield('userdashboard')
         </div>
         <!-- End Page Wrapper -->
+
+        <!-- Footer -->
+        @include('User.body.footer')
 
         <!-- Start Overlay -->
         <div class="overlay toggle-icon"></div>
@@ -77,13 +71,10 @@
     </div>
     <!-- End Wrapper -->
 
-  
-
     <!-- Bootstrap JS -->
     <script src="{{ asset('backend/assets/js/bootstrap.bundle.min.js') }}"></script>
 
     <!-- Plugins -->
-    <script src="{{ asset('backend/assets/js/jquery.min.js') }}"></script>
     <script src="{{ asset('backend/assets/plugins/simplebar/js/simplebar.min.js') }}"></script>
     <script src="{{ asset('backend/assets/plugins/metismenu/js/metisMenu.min.js') }}"></script>
     <script src="{{ asset('backend/assets/plugins/perfect-scrollbar/js/perfect-scrollbar.js') }}"></script>

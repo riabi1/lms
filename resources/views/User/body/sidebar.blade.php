@@ -35,12 +35,12 @@
     </a>
 </li>
 
-      <li>
-            <a href="#">
-                <div class="parent-icon"><i class='bx bx-bolt-circle'></i></div>
-                <div class="menu-title">Quiz Attempts</div>
-            </a>
-        </li>
+     <li>
+    <a href="{{ route('quizzes.index') }}">
+        <div class="parent-icon"><i class='bx bx-bolt-circle'></i></div>
+        <div class="menu-title">Quiz Attempts</div>
+    </a>
+</li>
         <li>
             <a href="#">
                 <div class="parent-icon"><i class='bx bx-bookmark'></i></div>

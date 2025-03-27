@@ -49,40 +49,7 @@ $category = App\Models\Category::latest()->limit(6)->get();
   </div><!-- end container -->
 </section><!-- end category-area -->
 
-<!-- Tooltip Templates -->
-@foreach ($category as $cat)
-  @php
-  $course = App\Models\Course::where('category_id', $cat->id)->get();
-  $topCourses = $course->sortByDesc(function ($course) {
-    return $course->reviews->avg('rating');
-  })->take(3); // Top 3 cours par note moyenne
-  @endphp
-  <div class="tooltip_templates" style="display: none;">
-    <div id="tooltip_content_{{ $cat->id }}">
-      <div class="card card-item">
-        <div class="card-body">
-          <h5 class="card-title pb-1"><a href="{{ url('category/'.$cat->id.'/'.$cat->category_slug) }}">{{ $cat->category_name }}</a></h5>
-          <p class="card-text fs-14 lh-22 pb-2">{{ $cat->description ?? 'Explore a variety of courses in this category.' }}</p>
-          <ul class="generic-list-item generic-list-item-bullet generic-list-item--bullet d-flex align-items-center fs-14 pb-2">
-            <li>{{ count($course) }} courses</li>
-            <li>{{ $course->sum('duration') ? $course->sum('duration') . ' total hours' : 'N/A' }}</li>
-          </ul>
-          @if ($topCourses->isNotEmpty())
-            <h6 class="fs-14 font-weight-semi-bold pb-1">Top Courses:</h6>
-            <ul class="generic-list-item fs-14 py-2">
-              @foreach ($topCourses as $topCourse)
-                <li><i class="la la-check mr-1 text-black"></i> <a href="{{ url('course/details/'.$topCourse->id.'/'.$topCourse->course_name_slug) }}">{{ $topCourse->course_name }}</a> ({{ number_format($topCourse->reviews->avg('rating'), 1) }}/5)</li>
-              @endforeach
-            </ul>
-          @endif
-          <div class="d-flex justify-content-between align-items-center">
-            <a href="{{ url('category/'.$cat->id.'/'.$cat->category_slug) }}" class="btn theme-btn flex-grow-1 mr-3">Explore Now</a>
-          </div>
-        </div>
-      </div><!-- end card -->
-    </div>
-  </div><!-- end tooltip_templates -->
-@endforeach
+
 
 <!-- Script pour initialiser Tooltipster -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

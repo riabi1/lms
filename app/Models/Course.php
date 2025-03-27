@@ -100,4 +100,9 @@ class Course extends Model
     {
         return $this->hasMany(Quiz::class);
     }
+
+    public function notes()
+    {
+        return $this->hasMany(CourseNote::class)->where('user_id', auth()->id());
+    }
 }

@@ -3,6 +3,50 @@
 <head>
     @include('User.mycourses.body.header')
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+    <style>
+        .note-card {
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease-in-out;
+        }
+        .note-card:hover {
+            transform: translateY(-3px);
+        }
+        .note-card.favorite {
+            border: 2px solid #ffc107;
+        }
+        .bg-light-blue { background-color: #e3f2fd; }
+        .bg-light-green { background-color: #e8f5e9; }
+        .bg-light-yellow { background-color: #fffde7; }
+        .bg-light-pink { background-color: #fce4ec; }
+        .note-header {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .note-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .btn-add-note {
+            background-color: #28a745;
+            color: white;
+            border-radius: 25px;
+            padding: 8px 20px;
+            transition: all 0.3s;
+        }
+        .btn-add-note:hover {
+            background-color: #218838;
+            transform: scale(1.05);
+        }
+    </style>
 </head>
 <body>
     <!-- Preloader -->
@@ -134,9 +178,6 @@
                         <div class="lecture-tab-body bg-gray p-4">
                             <ul class="nav nav-tabs generic-tab" id="myTab" role="tablist">
                                 <li class="nav-item">
-                                    <a class="nav-link" id="search-tab" data-toggle="tab" href="#search" role="tab" aria-controls="search" aria-selected="false">
-                                        <i class="la la-search"></i>
-                                    </a>
                                 </li>
                                 <li class="nav-item mobile-menu-nav-item">
                                     <a class="nav-link" id="course-content-tab" data-toggle="tab" href="#course-content" role="tab" aria-controls="course-content" aria-selected="false">
@@ -154,8 +195,8 @@
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link" id="announcements-tab" data-toggle="tab" href="#announcements" role="tab" aria-controls="announcements" aria-selected="false">
-                                        Announcements
+                                    <a class="nav-link" id="notes-tab" data-toggle="tab" href="#notes" role="tab" aria-controls="notes" aria-selected="false">
+                                        Notes
                                     </a>
                                 </li>
                             </ul>
@@ -172,10 +213,7 @@
                                                 </div>
                                             </div>
                                         </form>
-                                        <div class="search-results-message text-center">
-                                            <h3 class="fs-24 font-weight-semi-bold pb-1">Start a new search</h3>
-                                            <p>To find captions, lectures or resources</p>
-                                        </div>
+                                        
                                     </div>
                                 </div>
                                 <div class="tab-pane fade" id="course-content" role="tabpanel" aria-labelledby="course-content-tab">
@@ -245,8 +283,6 @@
                                                 <div class="lecture-overview-stats-item">
                                                     <ul class="generic-list-item">
                                                         <li><span>Skill level:</span> {{ $course->label }}</li>
-                                                
-                                                       
                                                     </ul>
                                                 </div>
                                                 <div class="lecture-overview-stats-item">
@@ -340,6 +376,140 @@
                                             <h3 class="fs-24 font-weight-semi-bold pb-2">Announcements</h3>
                                             <p>No announcements available yet.</p>
                                         </div>
+                                    </div>
+                                </div>
+                                <!-- Nouvel onglet Notes -->
+                                <div class="tab-pane fade" id="notes" role="tabpanel" aria-labelledby="notes-tab">
+                                    <div class="lecture-overview-wrap pt-4">
+                                        <!-- Formulaire pour ajouter une note -->
+                                        <form action="{{ route('mycourses.notes.store', $course->id) }}" method="POST" class="mb-4">
+                                            @csrf
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Title</label>
+                                                    <input type="text" class="form-control" name="title" placeholder="e.g., Key Concept" required>
+                                                    @error('title')
+                                                        <span class="text-danger">{{ $message }}</span>
+                                                    @enderror
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Due Date (optional)</label>
+                                                    <input type="date" class="form-control" name="due_date">
+                                                    @error('due_date')
+                                                        <span class="text-danger">{{ $message }}</span>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Your Note</label>
+                                                <textarea class="form-control" name="content" rows="3" placeholder="Write something personal..." required></textarea>
+                                                @error('content')
+                                                    <span class="text-danger">{{ $message }}</span>
+                                                @enderror
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3 form-check">
+                                                    <input type="checkbox" class="form-check-input" name="favorite" id="favorite{{ $course->id }}" value="1">
+                                                    <label class="form-check-label" for="favorite{{ $course->id }}">Mark as Favorite</label>
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Note Color</label>
+                                                    <select class="form-control" name="color">
+                                                        <option value="bg-light-blue">Light Blue</option>
+                                                        <option value="bg-light-green">Light Green</option>
+                                                        <option value="bg-light-yellow">Light Yellow</option>
+                                                        <option value="bg-light-pink">Light Pink</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <button type="submit" class="btn btn-add-note"><i class="bx bx-plus"></i> Add Note</button>
+                                        </form>
+
+                                        <!-- Messages de motivation EdaaLearning -->
+                                        <div class="alert alert-info mb-4">
+                                            @php
+                                                $motivations = [
+                                                    "With EdaaLearning, every note is a step towards mastering your skills!",
+                                                    "EdaaLearning is here for you: turn your ideas into knowledge!",
+                                                    "Stay motivated with EdaaLearning, your learning partner!",
+                                                    "At EdaaLearning, your notes reflect your journey to success!"
+                                                ];
+                                                $randomMotivation = $motivations[array_rand($motivations)];
+                                            @endphp
+                                            {{ $randomMotivation }}
+                                        </div>
+
+                                        <!-- Liste des notes existantes -->
+                                        <h6 class="mb-3">Your Personal Notes</h6>
+                                        @if ($course->notes->isEmpty())
+                                            <p class="text-muted">No notes yet. Start your journey with EdaaLearning!</p>
+                                        @else
+                                            @foreach ($course->notes as $note)
+                                                <div class="note-card {{ $note->color ?? 'bg-light-blue' }} {{ $note->favorite ? 'favorite' : '' }} animate__animated animate__fadeIn" id="note-{{ $note->id }}">
+                                                    <!-- Affichage de la note -->
+                                                    <div class="note-display">
+                                                        <div class="note-header">
+                                                            {{ $note->title }}
+                                                            @if ($note->favorite)
+                                                                <i class="bx bx-star text-warning ms-2"></i>
+                                                            @endif
+                                                        </div>
+                                                        <p class="mb-2">{{ $note->content }}</p>
+                                                        @if ($note->due_date)
+                                                            <small class="text-muted">Due: {{ \Carbon\Carbon::parse($note->due_date)->format('F j, Y') }}</small><br>
+                                                        @endif
+                                                        <small class="text-muted">Added on {{ $note->created_at->format('F j, Y, H:i') }}</small>
+                                                        <div class="note-actions mt-2">
+                                                            <button class="btn btn-primary btn-sm edit-note-btn" data-note-id="{{ $note->id }}"><i class="bx bx-edit"></i> Edit</button>
+                                                            <form action="{{ route('mycourses.notes.delete', $note->id) }}" method="POST" class="d-inline">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this note?')">
+                                                                    <i class="bx bx-trash"></i>
+                                                                </button>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Formulaire d'édition (caché par défaut) -->
+                                                    <div class="note-edit-form" style="display: none;">
+                                                        <form action="{{ route('mycourses.notes.update', $note->id) }}" method="POST">
+                                                            @csrf
+                                                            @method('PUT')
+                                                            <div class="mb-3">
+                                                                <label class="form-label">Title</label>
+                                                                <input type="text" class="form-control" name="title" value="{{ $note->title }}" required>
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label class="form-label">Your Note</label>
+                                                                <textarea class="form-control" name="content" rows="3" required>{{ $note->content }}</textarea>
+                                                            </div>
+                                                            <div class="row">
+                                                                <div class="col-md-6 mb-3">
+                                                                    <label class="form-label">Due Date (optional)</label>
+                                                                    <input type="date" class="form-control" name="due_date" value="{{ $note->due_date ? $note->due_date->format('Y-m-d') : '' }}">
+                                                                </div>
+                                                                <div class="col-md-6 mb-3">
+                                                                    <label class="form-label">Note Color</label>
+                                                                    <select class="form-control" name="color">
+                                                                        <option value="bg-light-blue" {{ $note->color == 'bg-light-blue' ? 'selected' : '' }}>Light Blue</option>
+                                                                        <option value="bg-light-green" {{ $note->color == 'bg-light-green' ? 'selected' : '' }}>Light Green</option>
+                                                                        <option value="bg-light-yellow" {{ $note->color == 'bg-light-yellow' ? 'selected' : '' }}>Light Yellow</option>
+                                                                        <option value="bg-light-pink" {{ $note->color == 'bg-light-pink' ? 'selected' : '' }}>Light Pink</option>
+                                                                    </select>
+                                                                </div>
+                                                            </div>
+                                                            <div class="mb-3 form-check">
+                                                                <input type="checkbox" class="form-check-input" name="favorite" id="edit-favorite{{ $note->id }}" value="1" {{ $note->favorite ? 'checked' : '' }}>
+                                                                <label class="form-check-label" for="edit-favorite{{ $note->id }}">Mark as Favorite</label>
+                                                            </div>
+                                                            <button type="submit" class="btn btn-success btn-sm">Save Changes</button>
+                                                            <button type="button" class="btn btn-secondary btn-sm cancel-edit" data-note-id="{{ $note->id }}">Cancel</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        @endif
                                     </div>
                                 </div>
                             </div>
@@ -535,54 +705,6 @@
         </div>
     </div>
 
-    <div class="modal fade modal-container" id="reportModal" tabindex="-1" role="dialog" aria-labelledby="reportModalTitle" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content">
-                <div class="modal-header border-bottom-gray">
-                    <div class="pr-2">
-                        <h5 class="modal-title fs-19 font-weight-semi-bold lh-24" id="reportModalTitle">Report Abuse</h5>
-                        <p class="pt-1 fs-14 lh-24">Flagged content is reviewed by Aduca staff to determine whether it violates Terms of Service or Community Guidelines. If you have a question or technical issue, please contact our
-                            <a href="contact.html" class="text-color hover-underline">Support team here</a>.
-                        </p>
-                    </div>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true" class="la la-times"></span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <form method="post" action="">
-                        @csrf
-                        <div class="input-box">
-                            <label class="label-text">Select Report Type</label>
-                            <div class="form-group">
-                                <div class="select-container w-auto">
-                                    <select class="select-container-select" name="report_type" required>
-                                        <option value="">-- Select One --</option>
-                                        <option value="1">Inappropriate Course Content</option>
-                                        <option value="2">Inappropriate Behavior</option>
-                                        <option value="3">Aduca Policy Violation</option>
-                                        <option value="4">Spammy Content</option>
-                                        <option value="5">Other</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="input-box">
-                            <label class="label-text">Write Message</label>
-                            <div class="form-group">
-                                <textarea class="form-control form--control pl-3" name="message" placeholder="Provide additional details here..." rows="5" required></textarea>
-                            </div>
-                        </div>
-                        <div class="btn-box text-right pt-2">
-                            <button type="button" class="btn font-weight-medium mr-3" data-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn theme-btn theme-btn-sm lh-30">Submit <i class="la la-arrow-right icon ml-1"></i></button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- JavaScript -->
     <script type="text/javascript">
         function openFirstLecture() {
@@ -680,6 +802,24 @@
                     }
                 });
             });
+
+            // Gestion de l'édition des notes
+            $('.edit-note-btn').on('click', function() {
+                const noteId = $(this).data('note-id');
+                $('#note-' + noteId + ' .note-display').hide();
+                $('#note-' + noteId + ' .note-edit-form').show();
+            });
+
+            $('.cancel-edit').on('click', function() {
+                const noteId = $(this).data('note-id');
+                $('#note-' + noteId + ' .note-edit-form').hide();
+                $('#note-' + noteId + ' .note-display').show();
+            });
+
+            // Afficher les messages de succès avec Toastr
+            @if (session('success'))
+                toastr.success("{{ session('success') }}");
+            @endif
         });
     </script>
     <script type="text/javascript">
