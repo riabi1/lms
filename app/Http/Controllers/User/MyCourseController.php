@@ -200,33 +200,48 @@ class MyCourseController extends Controller
     }
 
 
-   public function downloadCertificate($courseId)
-{
-    $course = Course::with('quizzes')->findOrFail($courseId);
-    $user = Auth::user();
+    public function downloadCertificate($courseId)
+    {
+        $course = Course::with('quizzes')->findOrFail($courseId);
+        $user = Auth::user();
 
-    $quizAttempts = QuizAttempt::where('user_id', $user->id)
-        ->whereIn('quiz_id', $course->quizzes->pluck('id'))
-        ->get();
+        if ($course->certificate !== 'yes') {
+            return redirect()->route('course.start', ['courseId' => $courseId, 'slug' => \Str::slug($course->course_name)])
+                ->with('error', 'This course does not offer a certificate.');
+        }
 
-    $allQuizzesPassed = $course->quizzes->isNotEmpty() && $course->quizzes->every(function ($quiz) use ($quizAttempts) {
-        return $quizAttempts->where('quiz_id', $quiz->id)->where('passed', true)->isNotEmpty();
-    });
+        $totalLectures = $course->sections->flatMap->lectures->count();
+        $completedLectures = $user->courseProgress()->where('course_id', $courseId)->where('completed', 1)->count();
+        $progressPercentage = $totalLectures > 0 ? round(($completedLectures / $totalLectures) * 100) : 0;
 
-    if (!$allQuizzesPassed) {
-        return redirect()->route('course.start', ['courseId' => $courseId, 'slug' => \Str::slug($course->course_name)])
-            ->with('error', 'You must pass all quizzes to download the certificate.');
+        if ($progressPercentage < 100) {
+            return redirect()->route('course.start', ['courseId' => $courseId, 'slug' => \Str::slug($course->course_name)])
+                ->with('error', 'You must complete all lectures to download the certificate.');
+        }
+
+        if ($course->quizzes->isNotEmpty()) {
+            $quizAttempts = QuizAttempt::where('user_id', $user->id)
+                ->whereIn('quiz_id', $course->quizzes->pluck('id'))
+                ->get();
+
+            $allQuizzesPassed = $course->quizzes->every(function ($quiz) use ($quizAttempts) {
+                return $quizAttempts->where('quiz_id', $quiz->id)->where('passed', true)->isNotEmpty();
+            });
+
+            if (!$allQuizzesPassed) {
+                return redirect()->route('course.start', ['courseId' => $courseId, 'slug' => \Str::slug($course->course_name)])
+                    ->with('error', 'You must pass all quizzes to download the certificate.');
+            }
+        }
+
+        $data = [
+            'course_name' => $course->course_name,
+            'user_name' => $user->name,
+            'completion_date' => Carbon::now()->format('F d, Y'),
+            'certificate_number' => 'EDAA-' . str_pad($course->id, 4, '0', STR_PAD_LEFT) . '-' . str_pad($user->id, 4, '0', STR_PAD_LEFT),
+        ];
+
+        $pdf = PDF::loadView('User.mycourses.certificate', $data)->setPaper('a4', 'portrait');
+        return $pdf->download('certificate_' . $course->id . '_' . $user->id . '.pdf');
     }
-
-    $data = [
-        'course_name' => $course->course_name,
-        'user_name' => $user->name,
-        'completion_date' => Carbon::now()->format('F d, Y'),
-        'certificate_number' => 'EDAA-' . str_pad($course->id, 4, '0', STR_PAD_LEFT) . '-' . str_pad($user->id, 4, '0', STR_PAD_LEFT),
-    ];
-
-    $pdf = Pdf::loadView('User.mycourses.certificate', $data)
-        ->setPaper('a4', 'landscape');
-    return $pdf->download('certificate_' . $course->id . '_' . $user->id . '.pdf');
-}
 }

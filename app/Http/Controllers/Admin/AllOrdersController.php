@@ -10,17 +10,17 @@ class AllOrdersController extends Controller
 {
     public function index()
     {
-        $orders = Order::with(['user', 'course', 'payment', 'instructor'])
-            ->latest() // Trier par date de création
-            ->paginate(10); // Pagination
+        $orders = Order::with(['user', 'course', 'instructor'])
+            ->latest()
+            ->paginate(10);
 
         return view('admin.Order.index', compact('orders'));
     }
 
     public function show($id)
     {
-        $order = Order::with(['user', 'course', 'payment', 'instructor'])
-            ->findOrFail($id); // Récupérer la commande spécifique
+        $order = Order::with(['user', 'course',  'instructor'])
+            ->findOrFail($id);
 
         return view('admin.Order.show', compact('order'));
     }
