@@ -51,17 +51,3 @@ $category = App\Models\Category::latest()->limit(6)->get();
 
 
 
-<!-- Script pour initialiser Tooltipster -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
-$(document).ready(function() {
-  $('.card-preview').tooltipster({
-    theme: 'tooltipster-shadow',
-    interactive: true,
-    contentAsHTML: true,
-    maxWidth: 400,
-    side: 'right', // Positionne le tooltip à droite
-    distance: 10   // Distance entre la carte et le tooltip
-  });
-});
-</script>
