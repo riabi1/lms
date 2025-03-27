@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 class QuizAttempt extends Model
 {
     protected $fillable = ['user_id', 'quiz_id', 'score', 'passed', 'completed_at'];
+    protected $dates = ['completed_at'];
 
     public function user()
     {

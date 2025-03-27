@@ -72,7 +72,7 @@ class ReviewController extends Controller
             ]);
         }
 
-        return view('User.review.edit', compact('review'));
+        return view('User.reviews.edit', compact('review'));
     }
 
     public function update(Request $request, Review $review)
