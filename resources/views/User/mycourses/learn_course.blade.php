@@ -1,8 +1,11 @@
-@include('User.mycourses.body.header')
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    @include('User.mycourses.body.header')
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+</head>
 <body>
-    <!-- start cssload-loader -->
+    <!-- Preloader -->
     <div class="preloader">
         <div class="loader">
             <svg class="spinner" viewBox="0 0 50 50">
@@ -10,11 +13,8 @@
             </svg>
         </div>
     </div>
-    <!-- end cssload-loader -->
 
-    <!--======================================
-        START HEADER AREA
-    ======================================-->
+    <!-- Header Area -->
     <section class="header-menu-area">
         <div class="header-menu-content bg-dark">
             <div class="container-fluid">
@@ -40,10 +40,10 @@
                                 </svg>
                             </button>
                         </div>
-                    </div><!-- end logo-box -->
+                    </div>
                     <div class="course-dashboard-header-title pl-4">
                         <a href="{{ url('course/details/' . $course->id . '/' . $course->course_name_slug) }}" class="text-white fs-15">{{ $course->course_name }}</a>
-                    </div><!-- end course-dashboard-header-title -->
+                    </div>
                     <div class="menu-wrapper ml-auto">
                         <div class="theme-picker d-flex align-items-center mr-3">
                             <button class="theme-picker-btn dark-mode-btn" title="Dark mode">
@@ -66,19 +66,22 @@
                             </button>
                         </div>
                         <div class="nav-right-button d-flex align-items-center">
-                         
-                      @php
-                          $allQuizzesPassed = $course->quizzes->isNotEmpty() && $course->quizzes->every(function ($quiz) use ($quizAttempts) {
-                              return $quizAttempts->where('quiz_id', $quiz->id)->where('passed', true)->isNotEmpty();
-                          });
-                      @endphp
-                      @if ($allQuizzesPassed)
-                          <a href="{{ route('course.certificate', $course->id) }}" class="btn theme-btn theme-btn-sm theme-btn-transparent lh-26 text-white mr-2 certificate-btn">
-                              <i class="la la-certificate mr-1"></i> Download Certificate
-                          </a>
-                      @endif
-                            <a href="#" class="btn theme-btn theme-btn-sm theme-btn-transparent lh-26 text-white mr-2" data-toggle="modal" data-target="#ratingModal"><i class="la la-star mr-1"></i> leave a rating</a>
-                            <a href="#" class="btn theme-btn theme-btn-sm theme-btn-transparent lh-26 text-white mr-2" data-toggle="modal" data-target="#shareModal"><i class="la la-share mr-1"></i> share</a>
+                            @php
+                                $totalLectures = $course->sections->flatMap->lectures->count();
+                                $completedLectures = array_filter($progress, fn($completed) => $completed == 1);
+                                $progressPercentage = $totalLectures > 0 ? round((count($completedLectures) / $totalLectures) * 100) : 0;
+                                $allQuizzesPassed = $course->quizzes->isEmpty() || $course->quizzes->every(function ($quiz) use ($quizAttempts) {
+                                    return $quizAttempts->where('quiz_id', $quiz->id)->where('passed', true)->isNotEmpty();
+                                });
+                                $hasCertificate = $course->certificate === 'yes';
+                            @endphp
+                            @if ($hasCertificate && $progressPercentage == 100 && $allQuizzesPassed)
+                                <a href="{{ route('course.certificate.download', $course->id) }}" class="btn theme-btn theme-btn-sm theme-btn-transparent lh-26 text-white mr-2 certificate-btn">
+                                    <i class="la la-certificate mr-1"></i> Download Certificate
+                                </a>
+                            @endif
+                            <a href="#" class="btn theme-btn theme-btn-sm theme-btn-transparent lh-26 text-white mr-2" data-toggle="modal" data-target="#ratingModal"><i class="la la-star mr-1"></i> Leave a Rating</a>
+                            <a href="#" class="btn theme-btn theme-btn-sm theme-btn-transparent lh-26 text-white mr-2" data-toggle="modal" data-target="#shareModal"><i class="la la-share mr-1"></i> Share</a>
                             <div class="generic-action-wrap generic--action-wrap">
                                 <div class="dropdown">
                                     <a class="action-btn" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -89,39 +92,26 @@
                                     </div>
                                 </div>
                             </div>
-                        </div><!-- end nav-right-button -->
-                    </div><!-- end menu-wrapper -->
-                </div><!-- end main-menu-content -->
-            </div><!-- end container-fluid -->
-        </div><!-- end header-menu-content -->
-    </section><!-- end header-menu-area -->
-    <!--======================================
-        END HEADER AREA
-    ======================================-->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-    <!--======================================
-        START COURSE-DASHBOARD
-    ======================================-->
+    <!-- Course Dashboard -->
     <section class="course-dashboard">
         <div class="course-dashboard-wrap">
             <div class="course-dashboard-container d-flex">
                 <div class="course-dashboard-column">
                     <div class="lecture-viewer-container">
-                        <!-- Ajout de la barre de progression -->
                         <div class="progress mb-4">
-                            @php
-                                $totalLectures = $course->sections->flatMap->lectures->count();
-                                $completedLectures = array_filter($progress, fn($completed) => $completed == 1);
-                                $progressPercentage = $totalLectures > 0 ? round((count($completedLectures) / $totalLectures) * 100) : 0;
-                            @endphp
                             <div class="progress-bar bg-success" role="progressbar" style="width: {{ $progressPercentage }}%;" 
                                  aria-valuenow="{{ $progressPercentage }}" aria-valuemin="0" aria-valuemax="100">
                                 {{ $progressPercentage }}% Complete
                             </div>
                         </div>
-
                         <div class="lecture-video-item">
-                            <!-- Conteneur pour les vidéos -->
                             <div id="mediaContainer">
                                 <iframe width="100%" height="500" id="videoIframe" class="d-none" src="" title="Course Lecture Video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
                                 <video width="100%" height="500" id="videoPlayer" class="d-none" controls>
@@ -129,7 +119,6 @@
                                     Your browser does not support the video tag.
                                 </video>
                             </div>
-                            <!-- Conteneur pour le contenu textuel sous la vidéo -->
                             <div id="lectureContent" class="mt-4" style="font-size: 14px; text-align: left; padding: 0 40px;"></div>
                         </div>
                         @if ($progressPercentage == 100 && $course->quizzes->isNotEmpty())
@@ -139,7 +128,7 @@
                                 </button>
                             </div>
                         @endif
-                    </div><!-- end lecture-viewer-container -->
+                    </div>
 
                     <div class="lecture-video-detail">
                         <div class="lecture-tab-body bg-gray p-4">
@@ -187,9 +176,8 @@
                                             <h3 class="fs-24 font-weight-semi-bold pb-1">Start a new search</h3>
                                             <p>To find captions, lectures or resources</p>
                                         </div>
-                                    </div><!-- end search-course-wrap -->
-                                </div><!-- end tab-pane -->
-
+                                    </div>
+                                </div>
                                 <div class="tab-pane fade" id="course-content" role="tabpanel" aria-labelledby="course-content-tab">
                                     <div class="mobile-course-menu pt-4">
                                         <div class="accordion generic-accordion generic--accordion" id="mobileCourseAccordionCourseExample">
@@ -205,7 +193,7 @@
                                                                 <span>{{ $section->total_duration }}min</span>
                                                             </span>
                                                         </button>
-                                                    </div><!-- end card-header -->
+                                                    </div>
                                                     <div id="mobileCourseCollapse{{ $section->id }}" class="collapse" aria-labelledby="mobileCourseHeading{{ $section->id }}" data-parent="#mobileCourseAccordionCourseExample">
                                                         <div class="card-body p-0">
                                                             <ul class="curriculum-sidebar-list">
@@ -219,7 +207,7 @@
                                                                                        data-lecture-id="{{ $lecture->id }}" 
                                                                                        {{ isset($progress[$lecture->id]) && $progress[$lecture->id] ? 'checked' : '' }}>
                                                                                 <label class="custom-control-label custom--control-label" for="mobileCourseCheckbox{{ $lecture->id }}"></label>
-                                                                            </div><!-- end custom-control -->
+                                                                            </div>
                                                                             <div class="course-item-content">
                                                                                 <h4 class="fs-15 lecture-title" 
                                                                                     data-video-local="{{ $lecture->video ? Storage::url($lecture->video) : '' }}" 
@@ -230,85 +218,82 @@
                                                                                 <div class="courser-item-meta-wrap">
                                                                                     <p class="course-item-meta"><i class="la la-play-circle"></i>{{ $lecture->duration }}min</p>
                                                                                 </div>
-                                                                            </div><!-- end course-item-content -->
-                                                                        </div><!-- end course-item-content-wrap -->
+                                                                            </div>
+                                                                        </div>
                                                                     </li>
                                                                 @endforeach
                                                             </ul>
-                                                        </div><!-- end card-body -->
-                                                    </div><!-- end collapse -->
-                                                </div><!-- end card -->
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             @endforeach
-                                        </div><!-- end accordion-->
-                                    </div><!-- end mobile-course-menu -->
-                                </div><!-- end tab-pane -->
-
+                                        </div>
+                                    </div>
+                                </div>
                                 <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
                                     <div class="lecture-overview-wrap">
                                         <div class="lecture-overview-item">
                                             <h3 class="fs-24 font-weight-semi-bold pb-2">About this course</h3>
                                             <p>{{ $course->course_title }}</p>
-                                        </div><!-- end lecture-overview-item -->
+                                        </div>
                                         <div class="section-block"></div>
                                         <div class="lecture-overview-item">
                                             <div class="lecture-overview-stats-wrap d-flex">
                                                 <div class="lecture-overview-stats-item">
                                                     <h3 class="fs-16 font-weight-semi-bold pb-2">By the numbers</h3>
-                                                </div><!-- end lecture-overview-stats-item -->
+                                                </div>
                                                 <div class="lecture-overview-stats-item">
                                                     <ul class="generic-list-item">
-                                                        <li><span>Skill level:</span>{{ $course->label }}</li>
-                                                        <li><span>Students:</span>{{ $course->students_count }}</li>
-                                                        <li><span>Languages:</span>{{ $course->language ?? 'English' }}</li>
+                                                        <li><span>Skill level:</span> {{ $course->label }}</li>
+                                                
+                                                       
                                                     </ul>
-                                                </div><!-- end lecture-overview-stats-item -->
+                                                </div>
                                                 <div class="lecture-overview-stats-item">
                                                     <ul class="generic-list-item">
-                                                        <li><span>Resources:</span>{{ $course->resources }}</li>
-                                                        <li><span>Video length:</span>{{ $course->duration }} total hours</li>
-                                                        <li><span>Certificate:</span>{{ $course->certificate }}</li>
+                                                        <li><span>Resources:</span> {{ $course->resources ?? 'None' }}</li>
+                                                        <li><span>Video length:</span> {{ $course->duration }} total hours</li>
+                                                        <li><span>Certificate:</span> {{ $course->certificate === 'yes' ? 'Yes' : 'No' }}</li>
                                                     </ul>
-                                                </div><!-- end lecture-overview-stats-item -->
-                                            </div><!-- end lecture-overview-stats-wrap -->
-                                        </div><!-- end lecture-overview-item -->
+                                                </div>
+                                            </div>
+                                        </div>
                                         <div class="section-block"></div>
                                         <div class="lecture-overview-item">
                                             <div class="lecture-overview-stats-wrap d-flex">
                                                 <div class="lecture-overview-stats-item">
                                                     <h3 class="fs-16 font-weight-semi-bold pb-2">Certificates</h3>
-                                                </div><!-- end lecture-overview-stats-item -->
+                                                </div>
                                                 <div class="lecture-overview-stats-item lecture-overview-stats-wide-item">
-                                                    <p class="pb-3">Get Your Certification By completing the entire course and quizzes </p>
-                                                     
-                                                   @php
-                                                        $allQuizzesPassed = $course->quizzes->isNotEmpty() && $course->quizzes->every(function ($quiz) use ($quizAttempts) {
-                                                            return $quizAttempts->where('quiz_id', $quiz->id)->where('passed', true)->isNotEmpty();
-                                                        });
-                                                    @endphp
-                                                    @if ($allQuizzesPassed)
-                                                        <a href="{{ route('course.certificate', $course->id) }}" class="btn theme-btn theme-btn-sm theme-btn-transparent lh-26 text-white mr-2 certificate-btn">
+                                                    <p class="pb-3">Get Your Certification By completing the entire course and quizzes</p>
+                                                    @if ($hasCertificate && $progressPercentage == 100 && $allQuizzesPassed)
+                                                        <a href="{{ route('course.certificate.download', $course->id) }}" class="btn theme-btn theme-btn-sm theme-btn-transparent lh-26 text-white mr-2 certificate-btn">
                                                             <i class="la la-certificate mr-1"></i> Download Certificate
                                                         </a>
+                                                    @elseif ($hasCertificate && $progressPercentage < 100)
+                                                        <p class="text-muted">Complete all lectures to unlock the certificate.</p>
+                                                    @elseif ($hasCertificate && !$allQuizzesPassed)
+                                                        <p class="text-muted">Pass all quizzes to unlock the certificate.</p>
+                                                    @else
+                                                        <p class="text-muted">This course does not offer a certificate.</p>
                                                     @endif
-                                                </div><!-- end lecture-overview-stats-item -->
-                                            </div><!-- end lecture-overview-stats-wrap -->
-                                        </div><!-- end lecture-overview-item -->
+                                                </div>
+                                            </div>
+                                        </div>
                                         <div class="section-block"></div>
-                                        <!-- description-->
                                         <div class="lecture-overview-item">
                                             <div class="lecture-overview-stats-wrap d-flex">
                                                 <div class="lecture-overview-stats-item">
                                                     <h3 class="fs-16 font-weight-semi-bold pb-2">Description</h3>
-                                                </div><!-- end lecture-overview-stats-item -->
+                                                </div>
                                                 <div class="lecture-overview-stats-item lecture-overview-stats-wide-item lecture-description">
                                                     <h3 class="fs-16 font-weight-semi-bold pb-2">From {{ $course->instructor->name ?? 'the Author' }}</h3>
                                                     <p>{!! $course->description !!}</p>
-                                                </div><!-- end lecture-overview-stats-item -->
-                                            </div><!-- end lecture-overview-stats-wrap -->
-                                        </div><!-- end lecture-overview-item -->
-                                    </div><!-- end lecture-overview-wrap -->
-                                </div><!-- end tab-pane -->
-
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                                 <div class="tab-pane fade" id="question-and-ans" role="tabpanel" aria-labelledby="question-and-ans-tab">
                                     <div class="lecture-overview-wrap lecture-quest-wrap">
                                         <div class="new-question-wrap">
@@ -321,10 +306,10 @@
                                                     <input type="hidden" name="instructor_id" value="{{ $course->instructor_id }}">
                                                     <div class="custom-control-wrap">
                                                         <div class="custom-control custom-radio mb-3 pl-0">
-                                                            <input type="text" name="subject" class="form-control form--control pl-3" placeholder="Subject">
+                                                            <input type="text" name="subject" class="form-control form--control pl-3" placeholder="Subject" required>
                                                         </div>
                                                         <div class="custom-control custom-radio mb-3 pl-0">
-                                                            <textarea class="form-control form--control pl-3" name="question" rows="4" placeholder="Write your response..."></textarea>
+                                                            <textarea class="form-control form--control pl-3" name="question" rows="4" placeholder="Write your response..." required></textarea>
                                                         </div>
                                                     </div>
                                                     <div class="btn-box text-center">
@@ -332,36 +317,42 @@
                                                     </div>
                                                 </form>
                                             </div>
-                                        </div><!-- end new-question-wrap -->
-
+                                        </div>
                                         <div class="question-overview-result-wrap">
                                             <div class="lecture-overview-item">
                                                 <div class="question-overview-result-header d-flex align-items-center justify-content-between">
-                                                    <h3 class="fs-17 font-weight-semi-bold"> questions in this course</h3>
+                                                    <h3 class="fs-17 font-weight-semi-bold">Questions in this course</h3>
                                                     <button class="btn theme-btn theme-btn-sm theme-btn-transparent ask-new-question-btn">Ask a new question</button>
                                                 </div>
-                                            </div><!-- end lecture-overview-item -->
+                                            </div>
                                             <div class="section-block"></div>
                                             <div class="lecture-overview-item mt-0">
                                                 <div class="question-btn-box pt-35px text-center">
                                                     <button class="btn theme-btn theme-btn-transparent w-100" type="button">See More</button>
                                                 </div>
-                                            </div><!-- end lecture-overview-item -->
+                                            </div>
                                         </div>
                                     </div>
-                                </div><!-- end tab-pane -->
-                            </div><!-- end tab-content -->
-                        </div><!-- end lecture-video-detail-body -->
-                    </div><!-- end lecture-video-detail -->
-                </div><!-- end course-dashboard-column -->
-
+                                </div>
+                                <div class="tab-pane fade" id="announcements" role="tabpanel" aria-labelledby="announcements-tab">
+                                    <div class="lecture-overview-wrap">
+                                        <div class="lecture-overview-item">
+                                            <h3 class="fs-24 font-weight-semi-bold pb-2">Announcements</h3>
+                                            <p>No announcements available yet.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div class="course-dashboard-sidebar-column">
                     <button class="sidebar-open" type="button"><i class="la la-angle-left"></i> Course content</button>
                     <div class="course-dashboard-sidebar-wrap custom-scrollbar-styled">
                         <div class="course-dashboard-side-heading d-flex align-items-center justify-content-between">
                             <h3 class="fs-18 font-weight-semi-bold">Course content</h3>
                             <button class="sidebar-close" type="button"><i class="la la-times"></i></button>
-                        </div><!-- end course-dashboard-side-heading -->
+                        </div>
                         <div class="course-dashboard-side-content">
                             <div class="accordion generic-accordion generic--accordion" id="accordionCourseExample">
                                 @foreach ($course->sections as $section)
@@ -375,7 +366,7 @@
                                                     <span>({{ count($section->lectures) }})</span>
                                                 </span>
                                             </button>
-                                        </div><!-- end card-header -->
+                                        </div>
                                         <div id="collapseOne{{ $section->id }}" class="collapse" aria-labelledby="headingOne{{ $section->id }}" data-parent="#accordionCourseExample">
                                             <div class="card-body p-0">
                                                 <ul class="curriculum-sidebar-list">
@@ -389,7 +380,7 @@
                                                                            data-lecture-id="{{ $lecture->id }}" 
                                                                            {{ isset($progress[$lecture->id]) && $progress[$lecture->id] ? 'checked' : '' }}>
                                                                     <label class="custom-control-label custom--control-label" for="courseCheckbox{{ $lecture->id }}"></label>
-                                                                </div><!-- end custom-control -->
+                                                                </div>
                                                                 <div class="course-item-content">
                                                                     <h4 class="fs-15 lecture-title" 
                                                                         data-video-local="{{ $lecture->video ? Storage::url($lecture->video) : '' }}" 
@@ -397,22 +388,24 @@
                                                                         data-content="{!! $lecture->content !!}">
                                                                         {{ $lecture->lecture_title }}
                                                                     </h4>
-                                                                </div><!-- end course-item-content -->
-                                                            </div><!-- end course-item-content-wrap -->
+                                                                </div>
+                                                            </div>
                                                         </li>
                                                     @endforeach
                                                 </ul>
-                                            </div><!-- end card-body -->
-                                        </div><!-- end collapse -->
-                                    </div><!-- end card -->
+                                            </div>
+                                        </div>
+                                    </div>
                                 @endforeach
-                            </div><!-- end accordion-->
-                        </div><!-- end course-dashboard-side-content -->
-                    </div><!-- end course-dashboard-sidebar-wrap -->
-                </div><!-- end course-dashboard-sidebar-column -->
-            </div><!-- end course-dashboard-container -->
-        </div><!-- end course-dashboard-wrap -->
-    </section><!-- end course-dashboard -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quiz Modal -->
     @if ($progressPercentage == 100 && $course->quizzes->isNotEmpty())
         <div class="modal fade modal-container" id="quizModal" tabindex="-1" role="dialog" aria-labelledby="quizModalTitle" aria-hidden="true">
             <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
@@ -430,18 +423,12 @@
                                     <h6 class="fs-16 font-weight-semi-bold">{{ $quiz->title }}</h6>
                                     <p>{{ $quiz->description ?? 'No description' }}</p>
                                     <p><strong>Time Limit:</strong> {{ $quiz->time_limit ? $quiz->time_limit . ' minutes' : 'No limit' }}</p>
-
                                     @php
-                                        $attempts = $quizAttempts->where('quiz_id', $quiz->id);
-                                        $attemptCount = $attempts->count();
-                                        $lastAttempt = $attempts->sortByDesc('completed_at')->first();
-                                        $canAttempt = $attemptCount < 3 || ($lastAttempt && Carbon\Carbon::now()->greaterThanOrEqualTo($lastAttempt->completed_at->addMinute()));
+                                        $attemptCount = $quizAttempts->where('quiz_id', $quiz->id)->count();
+                                        $lastAttempt = $quizAttempts->where('quiz_id', $quiz->id)->sortByDesc('completed_at')->first();
+                                        $hasPassed = $quizAttempts->where('quiz_id', $quiz->id)->where('passed', true)->isNotEmpty();
                                     @endphp
-
-                                    @if ($attempts->where('passed', true)->isNotEmpty())
-                                        <p class="text-success"><strong>Passed!</strong> You can now download your certificate.</p>
-                                        <a href="{{ route('course.certificate', $course->id) }}" class="btn theme-btn theme-btn-sm">Download Certificate</a>
-                                    @elseif ($canAttempt)
+                                    @if (!$hasPassed && $attemptCount < 3)
                                         <form action="{{ route('course.quiz.submit', ['courseId' => $course->id, 'quizId' => $quiz->id]) }}" method="POST">
                                             @csrf
                                             @foreach ($quiz->questions as $question)
@@ -458,6 +445,8 @@
                                             <p><strong>Attempts Remaining:</strong> {{ 3 - $attemptCount }}</p>
                                             <button type="submit" class="btn theme-btn">Submit Quiz</button>
                                         </form>
+                                    @elseif ($hasPassed)
+                                        <p class="text-success"><strong>Quiz Passed!</strong> You have successfully completed this quiz.</p>
                                     @else
                                         <p class="text-danger"><strong>Attempts Exhausted!</strong> Please wait until 
                                             {{ $lastAttempt->completed_at->addMinute()->toTimeString() }} to try again.</p>
@@ -470,15 +459,11 @@
             </div>
         </div>
     @endif
-    <!--======================================
-        END COURSE-DASHBOARD
-    ======================================-->
 
-    <!-- start scroll top -->
+    <!-- Scroll Top -->
     <div id="scroll-top">
         <i class="la la-arrow-up" title="Go top"></i>
     </div>
-    <!-- end scroll top -->
 
     <!-- Modals -->
     <div class="modal fade modal-container" id="ratingModal" tabindex="-1" role="dialog" aria-labelledby="ratingModalTitle" aria-hidden="true">
@@ -563,15 +548,16 @@
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true" class="la la-times"></span>
                     </button>
-                </div><!-- end modal-header -->
+                </div>
                 <div class="modal-body">
-                    <form method="post">
+                    <form method="post" action="">
+                        @csrf
                         <div class="input-box">
                             <label class="label-text">Select Report Type</label>
                             <div class="form-group">
                                 <div class="select-container w-auto">
-                                    <select class="select-container-select">
-                                        <option value>-- Select One --</option>
+                                    <select class="select-container-select" name="report_type" required>
+                                        <option value="">-- Select One --</option>
                                         <option value="1">Inappropriate Course Content</option>
                                         <option value="2">Inappropriate Behavior</option>
                                         <option value="3">Aduca Policy Violation</option>
@@ -584,7 +570,7 @@
                         <div class="input-box">
                             <label class="label-text">Write Message</label>
                             <div class="form-group">
-                                <textarea class="form-control form--control pl-3" name="message" placeholder="Provide additional details here..." rows="5"></textarea>
+                                <textarea class="form-control form--control pl-3" name="message" placeholder="Provide additional details here..." rows="5" required></textarea>
                             </div>
                         </div>
                         <div class="btn-box text-right pt-2">
@@ -592,10 +578,10 @@
                             <button type="submit" class="btn theme-btn theme-btn-sm lh-30">Submit <i class="la la-arrow-right icon ml-1"></i></button>
                         </div>
                     </form>
-                </div><!-- end modal-body -->
-            </div><!-- end modal-content -->
-        </div><!-- end modal-dialog -->
-    </div><!-- end modal -->
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- JavaScript -->
     <script type="text/javascript">
@@ -627,27 +613,22 @@
             const videoSource = videoPlayer.querySelector("source");
             const contentDiv = document.getElementById("lectureContent");
 
-            // Réinitialiser l'affichage
             iframe.classList.add("d-none");
             videoPlayer.classList.add("d-none");
             iframe.setAttribute("src", "");
             videoSource.setAttribute("src", "");
             contentDiv.innerHTML = "";
 
-            // Afficher la vidéo si disponible
             if (videoLocal && videoLocal.trim() !== "") {
-                // Vidéo locale
                 videoPlayer.classList.remove("d-none");
                 videoSource.setAttribute("src", videoLocal);
-                videoPlayer.load(); // Recharge la vidéo
+                videoPlayer.load();
             } else if (videoUrl && videoUrl.trim() !== "") {
-                // Vidéo externe (YouTube ou autre)
                 const embedUrl = convertToEmbedUrl(videoUrl);
                 iframe.classList.remove("d-none");
                 iframe.setAttribute("src", embedUrl);
             }
 
-            // Afficher le contenu textuel si disponible
             if (textContent && textContent.trim() !== "") {
                 contentDiv.innerHTML = textContent;
             } else {
@@ -668,7 +649,6 @@
             openFirstLecture();
         });
 
-        // Gestion de la progression via AJAX
         $(document).ready(function() {
             $('.mark-completed').on('change', function() {
                 const lectureId = $(this).data('lecture-id');
@@ -685,66 +665,69 @@
                     },
                     success: function(response) {
                         if (response.success) {
-                            // Mettre à jour la barre de progression
                             $('.progress-bar').css('width', response.progress + '%')
                                              .attr('aria-valuenow', response.progress)
                                              .text(response.progress + '% Complete');
+                            location.reload(); // Recharger pour mettre à jour les conditions
                         } else {
                             alert(response.message);
-                            $(this).prop('checked', !completed); // Revenir à l'état précédent en cas d'erreur
+                            $(this).prop('checked', !completed);
                         }
                     },
                     error: function(xhr) {
                         alert('An error occurred: ' + (xhr.responseJSON?.message || 'Unknown error'));
-                        $(this).prop('checked', !completed); // Revenir à l'état précédent
+                        $(this).prop('checked', !completed);
                     }
                 });
             });
         });
     </script>
     <script type="text/javascript">
-    $(document).ready(function () {
-        // Gestion des étoiles
-        $('.leave-rating input').on('change', function () {
-            const rating = $(this).val();
-            $('#ratingValue').val(rating);
-            $('#ratingText').text(`You rated ${rating} star${rating > 1 ? 's' : ''}`);
-            $('#submitRating').prop('disabled', false); // Activer le bouton
-        });
+        $(document).ready(function () {
+            $('.leave-rating input').on('change', function () {
+                const rating = $(this).val();
+                $('#ratingValue').val(rating);
+                $('#ratingText').text(`You rated ${rating} star${rating > 1 ? 's' : ''}`);
+                $('#submitRating').prop('disabled', false);
+            });
 
-        // Gestion du survol pour prévisualisation
-        $('.star-label').on('mouseenter', function () {
-            $(this).prevAll('label').addBack().css('color', '#f5c518');
-        }).on('mouseleave', function () {
-            if (!$('.leave-rating input:checked').length) {
-                $('.star-label').css('color', '#ddd');
-            }
-        });
-
-        // Soumission du formulaire via AJAX
-        $('#ratingForm').on('submit', function (e) {
-            e.preventDefault();
-
-            const formData = $(this).serialize();
-            const url = $(this).attr('action');
-
-            $.ajax({
-                url: url,
-                type: 'POST',
-                data: formData,
-                success: function (response) {
-                    if (response.success) {
-                        $('#ratingModal').modal('hide');
-                        alert('Thank you for your rating!');
-                    }
-                },
-                error: function (xhr) {
-                    const error = xhr.responseJSON?.message || 'An error occurred while submitting your rating.';
-                    $('#ratingText').text(error).css('color', 'red');
+            $('.star-label').on('mouseenter', function () {
+                $(this).prevAll('label').addBack().css('color', '#f5c518');
+            }).on('mouseleave', function () {
+                if (!$('.leave-rating input:checked').length) {
+                    $('.star-label').css('color', '#ddd');
                 }
             });
+
+            $('#ratingForm').on('submit', function (e) {
+                e.preventDefault();
+                const formData = $(this).serialize();
+                const url = $(this).attr('action');
+
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    data: formData,
+                    success: function (response) {
+                        if (response.success) {
+                            $('#ratingModal').modal('hide');
+                            alert('Thank you for your rating!');
+                        }
+                    },
+                    error: function (xhr) {
+                        const error = xhr.responseJSON?.message || 'An error occurred while submitting your rating.';
+                        $('#ratingText').text(error).css('color', 'red');
+                    }
+                });
+            });
+
+            $('.copy-btn').on('click', function() {
+                const copyInput = $(this).closest('.copy-to-clipboard').find('.copy-input');
+                copyInput.select();
+                document.execCommand('copy');
+                $(this).closest('.copy-to-clipboard').find('.success-message').fadeIn().delay(1000).fadeOut();
+            });
         });
-    });
     </script>
 
     @include('User.mycourses.body.footer')

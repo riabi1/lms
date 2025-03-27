@@ -7,6 +7,7 @@ use App\Http\Controllers\Frontend\CartController;
 use App\Http\Controllers\User\MyCourseController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Frontend\IndexController;
+use App\Http\Controllers\Admin\AllOrdersController;
 use App\Http\Controllers\Instructor\QuizController;
 use App\Http\Controllers\Instructor\OrderController;
 use App\Http\Controllers\Admin\AdminCourseController;
@@ -77,6 +78,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/pending/review', [AdminReviewController::class, 'pending'])->name('pending.review');
         Route::get('/active/review', [AdminReviewController::class, 'active'])->name('active.review');
         Route::post('/update/review/status', [AdminReviewController::class, 'updateStatus'])->name('update.review.status');
+
+        Route::get('/orders', [AllOrdersController::class, 'index'])->name('orders.index');
+    Route::get('/orders/{id}', [AllOrdersController::class, 'show'])->name('orders.show');
     });
 });
 

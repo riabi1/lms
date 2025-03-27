@@ -20,9 +20,8 @@ class Order extends Model
         return $this->belongsTo(Course::class, 'course_id' ,'id');
     }
 
-    public function instructor(){
-        return $this->belongsTo(User::class, 'instructor_id' ,'id');
+public function instructor(){
+        return $this->belongsTo(Instructor::class, 'instructor_id', 'id');
     }
-
 
 }
