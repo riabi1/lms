@@ -35,4 +35,15 @@ class CourseLecture extends Model
     {
         return $this->belongsTo(CourseSection::class, 'section_id');
     }
+
+    public function getResourcesCountAttribute()
+    {
+        return collect([
+            $this->additional_video,
+            $this->file_path,
+            $this->external_link,
+        ])->filter(function ($value) {
+            return !is_null($value) && $value !== '';
+        })->count();
+    }
 }

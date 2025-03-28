@@ -138,13 +138,7 @@
                     @enderror
                 </div>
 
-                <div class="form-group col-md-3">
-                    <label for="resources" class="form-label">Resources</label>
-                    <input type="text" name="resources" class="form-control @error('resources') is-invalid @enderror" id="resources" value="{{ old('resources') }}">
-                    @error('resources')
-                        <span class="invalid-feedback">{{ $message }}</span>
-                    @enderror
-                </div>
+                
 
                 <div class="form-group col-md-12">
                     <label for="prerequisites" class="form-label">Course Prerequisites</label>

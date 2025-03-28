@@ -216,120 +216,133 @@
                                         
                                     </div>
                                 </div>
-                                <div class="tab-pane fade" id="course-content" role="tabpanel" aria-labelledby="course-content-tab">
-                                    <div class="mobile-course-menu pt-4">
-                                        <div class="accordion generic-accordion generic--accordion" id="mobileCourseAccordionCourseExample">
-                                            @foreach ($course->sections as $section)
-                                                <div class="card">
-                                                    <div class="card-header" id="mobileCourseHeading{{ $section->id }}">
-                                                        <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#mobileCourseCollapse{{ $section->id }}" aria-expanded="true" aria-controls="mobileCourseCollapse{{ $section->id }}">
-                                                            <i class="la la-angle-down"></i>
-                                                            <i class="la la-angle-up"></i>
-                                                            <span class="fs-15">{{ $section->section_title }}</span>
-                                                            <span class="course-duration">
-                                                                <span>{{ count($section->lectures) }}</span>
-                                                                <span>{{ $section->total_duration }}min</span>
-                                                            </span>
-                                                        </button>
-                                                    </div>
-                                                    <div id="mobileCourseCollapse{{ $section->id }}" class="collapse" aria-labelledby="mobileCourseHeading{{ $section->id }}" data-parent="#mobileCourseAccordionCourseExample">
-                                                        <div class="card-body p-0">
-                                                            <ul class="curriculum-sidebar-list">
-                                                                @foreach ($section->lectures as $lecture)
-                                                                    <li class="course-item-link {{ $loop->first ? 'active' : '' }}">
-                                                                        <div class="course-item-content-wrap">
-                                                                            <div class="custom-control custom-checkbox">
-                                                                                <input type="checkbox" 
-                                                                                       class="custom-control-input mark-completed" 
-                                                                                       id="mobileCourseCheckbox{{ $lecture->id }}" 
-                                                                                       data-lecture-id="{{ $lecture->id }}" 
-                                                                                       {{ isset($progress[$lecture->id]) && $progress[$lecture->id] ? 'checked' : '' }}>
-                                                                                <label class="custom-control-label custom--control-label" for="mobileCourseCheckbox{{ $lecture->id }}"></label>
-                                                                            </div>
-                                                                            <div class="course-item-content">
-                                                                                <h4 class="fs-15 lecture-title" 
-                                                                                    data-video-local="{{ $lecture->video ? Storage::url($lecture->video) : '' }}" 
-                                                                                    data-video-url="{{ $lecture->url }}" 
-                                                                                    data-content="{!! $lecture->content !!}">
-                                                                                    {{ $lecture->lecture_title }}
-                                                                                </h4>
-                                                                                <div class="courser-item-meta-wrap">
-                                                                                    <p class="course-item-meta"><i class="la la-play-circle"></i>{{ $lecture->duration }}min</p>
+                                        <div class="tab-pane fade" id="course-content" role="tabpanel" aria-labelledby="course-content-tab">
+                                            <div class="mobile-course-menu pt-4">
+                                                <div class="accordion generic-accordion generic--accordion" id="mobileCourseAccordionCourseExample">
+                                                    @foreach ($course->sections as $section)
+                                                        <div class="card">
+                                                            <div class="card-header" id="mobileCourseHeading{{ $section->id }}">
+                                                                <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#mobileCourseCollapse{{ $section->id }}" aria-expanded="true" aria-controls="mobileCourseCollapse{{ $section->id }}">
+                                                                    <i class="la la-angle-down"></i>
+                                                                    <i class="la la-angle-up"></i>
+                                                                    <span class="fs-15">{{ $section->section_title }}</span>
+                                                                    <span class="course-duration">
+                                                                        <span>{{ count($section->lectures) }}</span>
+                                                                      
+                                                                    </span>
+                                                                </button>
+                                                            </div>
+                                                            <div id="mobileCourseCollapse{{ $section->id }}" class="collapse" aria-labelledby="mobileCourseHeading{{ $section->id }}" data-parent="#mobileCourseAccordionCourseExample">
+                                                                <div class="card-body p-0">
+                                                                    <ul class="curriculum-sidebar-list">
+                                                                        @foreach ($section->lectures as $lecture)
+                                                                            <li class="course-item-link {{ $loop->first ? 'active' : '' }}">
+                                                                                <div class="course-item-content-wrap">
+                                                                                    <div class="custom-control custom-checkbox">
+                                                                                        <input type="checkbox" 
+                                                                                              class="custom-control-input mark-completed" 
+                                                                                              id="mobileCourseCheckbox{{ $lecture->id }}" 
+                                                                                              data-lecture-id="{{ $lecture->id }}" 
+                                                                                              {{ isset($progress[$lecture->id]) && $progress[$lecture->id] ? 'checked' : '' }}>
+                                                                                        <label class="custom-control-label custom--control-label" for="mobileCourseCheckbox{{ $lecture->id }}"></label>
+                                                                                    </div>
+                                                                                    <div class="course-item-content">
+                                                                                        <h4 class="fs-15 lecture-title" 
+                                                                                            data-video-local="{{ $lecture->video ? Storage::url($lecture->video) : '' }}" 
+                                                                                            data-video-url="{{ $lecture->url }}" 
+                                                                                            data-content="{!! $lecture->content !!}">
+                                                                                            {{ $lecture->lecture_title }}
+                                                                                        </h4>
+                                                                                        <div class="courser-item-meta-wrap">
+                                                                                            
+                                                                                            <!-- Afficher Resources uniquement si > 0 -->
+                                                                                            @if ($lecture->resources_count > 0)
+                                                                                                <p class="course-item-meta">
+                                                                                                    <a href="#" class="text-primary" data-toggle="modal" data-target="#resourcesModal{{ $lecture->id }}">
+                                                                                                        <i class="la la-download"></i> Resources: {{ $lecture->resources_count }}
+                                                                                                    </a>
+                                                                                                </p>
+                                                                                            @endif
+                                                                                        </div>
+                                                                                    </div>
                                                                                 </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    </li>
-                                                                @endforeach
-                                                            </ul>
+                                                                            </li>
+                                                                        @endforeach
+                                                                    </ul>
+                                                                </div>
+                                                            </div>
                                                         </div>
-                                                    </div>
+                                                    @endforeach
                                                 </div>
-                                            @endforeach
+                                            </div>
                                         </div>
-                                    </div>
-                                </div>
-                                <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
-                                    <div class="lecture-overview-wrap">
-                                        <div class="lecture-overview-item">
-                                            <h3 class="fs-24 font-weight-semi-bold pb-2">About this course</h3>
-                                            <p>{{ $course->course_title }}</p>
-                                        </div>
-                                        <div class="section-block"></div>
-                                        <div class="lecture-overview-item">
-                                            <div class="lecture-overview-stats-wrap d-flex">
-                                                <div class="lecture-overview-stats-item">
-                                                    <h3 class="fs-16 font-weight-semi-bold pb-2">By the numbers</h3>
-                                                </div>
-                                                <div class="lecture-overview-stats-item">
-                                                    <ul class="generic-list-item">
-                                                        <li><span>Skill level:</span> {{ $course->label }}</li>
-                                                    </ul>
-                                                </div>
-                                                <div class="lecture-overview-stats-item">
-                                                    <ul class="generic-list-item">
-                                                        <li><span>Resources:</span> {{ $course->resources ?? 'None' }}</li>
-                                                        <li><span>Video length:</span> {{ $course->duration }} total hours</li>
+                                    <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
+                                      <div class="lecture-overview-wrap">
+                                          <div class="lecture-overview-item">
+                                              <h3 class="fs-24 font-weight-semi-bold pb-2">About this course</h3>
+                                              <p>{{ $course->course_title }}</p>
+                                          </div>
+                                          <div class="section-block"></div>
+                                          <div class="lecture-overview-item">
+                                              <div class="lecture-overview-stats-wrap d-flex">
+                                                  <div class="lecture-overview-stats-item">
+                                                      <h3 class="fs-16 font-weight-semi-bold pb-2">By the numbers</h3>
+                                                  </div>
+                                                  <div class="lecture-overview-stats-item">
+                                                      <ul class="generic-list-item">
+                                                          <li><span>Skill level:</span> {{ $course->label }}</li>
+                                                      </ul>
+                                                  </div>
+                                                  <div class="lecture-overview-stats-item">
+                                                      <ul class="generic-list-item">
+                                                          <!-- Calcul dynamique du nombre total de ressources -->
+                                                          @php
+                                                              $totalResources = $course->sections->flatMap->lectures->sum('resources_count');
+                                                          @endphp
+                                                          <li><span>Resources:</span> {{ $totalResources > 0 ? $totalResources : 'None' }}</li>
+                                                          <li><span>Course length:</span> {{ $course->duration }} total hours</li>
                                                         <li><span>Certificate:</span> {{ $course->certificate === 'yes' ? 'Yes' : 'No' }}</li>
-                                                    </ul>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="section-block"></div>
-                                        <div class="lecture-overview-item">
-                                            <div class="lecture-overview-stats-wrap d-flex">
-                                                <div class="lecture-overview-stats-item">
-                                                    <h3 class="fs-16 font-weight-semi-bold pb-2">Certificates</h3>
-                                                </div>
-                                                <div class="lecture-overview-stats-item lecture-overview-stats-wide-item">
-                                                    <p class="pb-3">Get Your Certification By completing the entire course and quizzes</p>
-                                                    @if ($hasCertificate && $progressPercentage == 100 && $allQuizzesPassed)
-                                                        <a href="{{ route('course.certificate.download', $course->id) }}" class="btn theme-btn theme-btn-sm theme-btn-transparent lh-26 text-white mr-2 certificate-btn">
-                                                            <i class="la la-certificate mr-1"></i> Download Certificate
-                                                        </a>
-                                                    @elseif ($hasCertificate && $progressPercentage < 100)
-                                                        <p class="text-muted">Complete all lectures to unlock the certificate.</p>
-                                                    @elseif ($hasCertificate && !$allQuizzesPassed)
-                                                        <p class="text-muted">Pass all quizzes to unlock the certificate.</p>
-                                                    @else
-                                                        <p class="text-muted">This course does not offer a certificate.</p>
-                                                    @endif
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="section-block"></div>
-                                        <div class="lecture-overview-item">
-                                            <div class="lecture-overview-stats-wrap d-flex">
-                                                <div class="lecture-overview-stats-item">
-                                                    <h3 class="fs-16 font-weight-semi-bold pb-2">Description</h3>
-                                                </div>
-                                                <div class="lecture-overview-stats-item lecture-overview-stats-wide-item lecture-description">
-                                                    <h3 class="fs-16 font-weight-semi-bold pb-2">From {{ $course->instructor->name ?? 'the Author' }}</h3>
-                                                    <p>{!! $course->description !!}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                                      </ul>
+                                                  </div>
+                                              </div>
+                                          </div>
+                                          <!-- Le reste reste inchangé -->
+                                          <div class="section-block"></div>
+                                          <div class="lecture-overview-item">
+                                              <div class="lecture-overview-stats-wrap d-flex">
+                                                  <div class="lecture-overview-stats-item">
+                                                      <h3 class="fs-16 font-weight-semi-bold pb-2">Certificates</h3>
+                                                  </div>
+                                                  <div class="lecture-overview-stats-item lecture-overview-stats-wide-item">
+                                                      <p class="pb-3">Get Your Certification By completing the entire course and quizzes</p>
+                                                      @if ($hasCertificate && $progressPercentage == 100 && $allQuizzesPassed)
+                                                          <a href="{{ route('course.certificate.download', $course->id) }}" class="btn theme-btn theme-btn-sm theme-btn-transparent lh-26 text-white mr-2 certificate-btn">
+                                                              <i class="la la-certificate mr-1"></i> Download Certificate
+                                                          </a>
+                                                      @elseif ($hasCertificate && $progressPercentage < 100)
+                                                          <p class="text-muted">Complete all lectures to unlock the certificate.</p>
+                                                      @elseif ($hasCertificate && !$allQuizzesPassed)
+                                                          <p class="text-muted">Pass all quizzes to unlock the certificate.</p>
+                                                      @else
+                                                          <p class="text-muted">This course does not offer a certificate.</p>
+                                                      @endif
+                                                  </div>
+                                              </div>
+                                          </div>
+                                          <div class="section-block"></div>
+                                          <div class="lecture-overview-item">
+                                              <div class="lecture-overview-stats-wrap d-flex">
+                                                  <div class="lecture-overview-stats-item">
+                                                      <h3 class="fs-16 font-weight-semi-bold pb-2">Description</h3>
+                                                  </div>
+                                                  <div class="lecture-overview-stats-item lecture-overview-stats-wide-item lecture-description">
+                                                      <h3 class="fs-16 font-weight-semi-bold pb-2">From {{ $course->instructor->name ?? 'the Author' }}</h3>
+                                                      <p>{!! $course->description !!}</p>
+                                                  </div>
+                                              </div>
+                                          </div>
+                                      </div>
+                                  </div>
                                 <div class="tab-pane fade" id="question-and-ans" role="tabpanel" aria-labelledby="question-and-ans-tab">
                                     <div class="lecture-overview-wrap lecture-quest-wrap">
                                         <div class="new-question-wrap">
@@ -461,7 +474,7 @@
                                                         <small class="text-muted">Added on {{ $note->created_at->format('F j, Y, H:i') }}</small>
                                                         <div class="note-actions mt-2">
                                                             <button class="btn btn-primary btn-sm edit-note-btn" data-note-id="{{ $note->id }}"><i class="bx bx-edit"></i> Edit</button>
-                                                            <form action="{{ route('mycourses.notes.delete', $note->id) }}" method="POST" class="d-inline">
+                                                            <form action="{{ route('mycourses.notes.destroy', $note->id) }}" method="POST" class="d-inline">
                                                                 @csrf
                                                                 @method('DELETE')
                                                                 <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this note?')">
@@ -516,61 +529,72 @@
                         </div>
                     </div>
                 </div>
-                <div class="course-dashboard-sidebar-column">
-                    <button class="sidebar-open" type="button"><i class="la la-angle-left"></i> Course content</button>
-                    <div class="course-dashboard-sidebar-wrap custom-scrollbar-styled">
-                        <div class="course-dashboard-side-heading d-flex align-items-center justify-content-between">
-                            <h3 class="fs-18 font-weight-semi-bold">Course content</h3>
-                            <button class="sidebar-close" type="button"><i class="la la-times"></i></button>
+<div class="course-dashboard-sidebar-column">
+    <button class="sidebar-open" type="button"><i class="la la-angle-left"></i> Course content</button>
+    <div class="course-dashboard-sidebar-wrap custom-scrollbar-styled">
+        <div class="course-dashboard-side-heading d-flex align-items-center justify-content-between">
+            <h3 class="fs-18 font-weight-semi-bold">Course content</h3>
+            <button class="sidebar-close" type="button"><i class="la la-times"></i></button>
+        </div>
+        <div class="course-dashboard-side-content">
+            <div class="accordion generic-accordion generic--accordion" id="accordionCourseExample">
+                @foreach ($course->sections as $section)
+                    <div class="card">
+                        <div class="card-header" id="headingOne{{ $section->id }}">
+                            <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseOne{{ $section->id }}" aria-expanded="true" aria-controls="collapseOne{{ $section->id }}">
+                                <i class="la la-angle-down"></i>
+                                <i class="la la-angle-up"></i>
+                                <span class="fs-15">{{ $section->section_title }}</span>
+                                <span class="course-duration">
+                                    <span>({{ count($section->lectures) }})</span>
+                                </span>
+                            </button>
                         </div>
-                        <div class="course-dashboard-side-content">
-                            <div class="accordion generic-accordion generic--accordion" id="accordionCourseExample">
-                                @foreach ($course->sections as $section)
-                                    <div class="card">
-                                        <div class="card-header" id="headingOne{{ $section->id }}">
-                                            <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseOne{{ $section->id }}" aria-expanded="true" aria-controls="collapseOne{{ $section->id }}">
-                                                <i class="la la-angle-down"></i>
-                                                <i class="la la-angle-up"></i>
-                                                <span class="fs-15">{{ $section->section_title }}</span>
-                                                <span class="course-duration">
-                                                    <span>({{ count($section->lectures) }})</span>
-                                                </span>
-                                            </button>
-                                        </div>
-                                        <div id="collapseOne{{ $section->id }}" class="collapse" aria-labelledby="headingOne{{ $section->id }}" data-parent="#accordionCourseExample">
-                                            <div class="card-body p-0">
-                                                <ul class="curriculum-sidebar-list">
-                                                    @foreach ($section->lectures as $lecture)
-                                                        <li class="course-item-link {{ $loop->first ? 'active' : '' }}">
-                                                            <div class="course-item-content-wrap">
-                                                                <div class="custom-control custom-checkbox">
-                                                                    <input type="checkbox" 
-                                                                           class="custom-control-input mark-completed" 
-                                                                           id="courseCheckbox{{ $lecture->id }}" 
-                                                                           data-lecture-id="{{ $lecture->id }}" 
-                                                                           {{ isset($progress[$lecture->id]) && $progress[$lecture->id] ? 'checked' : '' }}>
-                                                                    <label class="custom-control-label custom--control-label" for="courseCheckbox{{ $lecture->id }}"></label>
-                                                                </div>
-                                                                <div class="course-item-content">
-                                                                    <h4 class="fs-15 lecture-title" 
-                                                                        data-video-local="{{ $lecture->video ? Storage::url($lecture->video) : '' }}" 
-                                                                        data-video-url="{{ $lecture->url }}" 
-                                                                        data-content="{!! $lecture->content !!}">
-                                                                        {{ $lecture->lecture_title }}
-                                                                    </h4>
-                                                                </div>
-                                                            </div>
-                                                        </li>
-                                                    @endforeach
-                                                </ul>
+                        <div id="collapseOne{{ $section->id }}" class="collapse" aria-labelledby="headingOne{{ $section->id }}" data-parent="#accordionCourseExample">
+                            <div class="card-body p-0">
+                                <ul class="curriculum-sidebar-list">
+                                    @foreach ($section->lectures as $lecture)
+                                        <li class="course-item-link {{ $loop->first ? 'active' : '' }}">
+                                            <div class="course-item-content-wrap">
+                                                <div class="custom-control custom-checkbox">
+                                                    <input type="checkbox" 
+                                                           class="custom-control-input mark-completed" 
+                                                           id="courseCheckbox{{ $lecture->id }}" 
+                                                           data-lecture-id="{{ $lecture->id }}" 
+                                                           {{ isset($progress[$lecture->id]) && $progress[$lecture->id] ? 'checked' : '' }}>
+                                                    <label class="custom-control-label custom--control-label" for="courseCheckbox{{ $lecture->id }}"></label>
+                                                </div>
+                                                <div class="course-item-content">
+                                                    <h4 class="fs-15 lecture-title" 
+                                                        data-video-local="{{ $lecture->video ? Storage::url($lecture->video) : '' }}" 
+                                                        data-video-url="{{ $lecture->url }}" 
+                                                        data-content="{!! $lecture->content !!}">
+                                                        {{ $lecture->lecture_title }}
+                                                    </h4>
+                                                    <div class="courser-item-meta-wrap">
+                                                       
+                                                        <!-- Afficher Resources uniquement si > 0 -->
+                                                        @if ($lecture->resources_count > 0)
+                                                            <p class="course-item-meta">
+                                                                <a href="#" class="text-primary" data-toggle="modal" data-target="#resourcesModal{{ $lecture->id }}">
+                                                                    <i class="la la-download"></i> Resources: {{ $lecture->resources_count }}
+                                                                </a>
+                                                            </p>
+                                                        @endif
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </div>
-                                @endforeach
+                                        </li>
+                                    @endforeach
+                                </ul>
                             </div>
                         </div>
                     </div>
-                </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+</div>
             </div>
         </div>
     </section>
@@ -704,7 +728,56 @@
             </div>
         </div>
     </div>
-
+<!-- Resources Modal -->
+@foreach ($course->sections as $section)
+    @foreach ($section->lectures as $lecture)
+        @if ($lecture->resources_count > 0)
+            <div class="modal fade modal-container" id="resourcesModal{{ $lecture->id }}" tabindex="-1" role="dialog" aria-labelledby="resourcesModalTitle{{ $lecture->id }}" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header border-bottom-gray">
+                            <h5 class="modal-title fs-19 font-weight-semi-bold" id="resourcesModalTitle{{ $lecture->id }}">{{ $lecture->lecture_title }} - Resources</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true" class="la la-times"></span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            @if ($lecture->resources_description)
+                                <p class="text-muted mb-3">{{ $lecture->resources_description }}</p>
+                            @endif
+                            <ul class="list-unstyled">
+                                @if ($lecture->additional_video)
+                                    <li class="mb-2">
+                                        <i class="la la-video-camera"></i> 
+                                        <a href="{{ Storage::url($lecture->additional_video) }}" target="_blank" class="text-primary">Additional Video</a>
+                                        <small>(Click to view/download)</small>
+                                    </li>
+                                @endif
+                                @if ($lecture->file_path)
+                                    <li class="mb-2">
+                                        <i class="la la-file"></i> 
+                                        <a href="{{ Storage::url($lecture->file_path) }}" download class="text-primary">Resource File</a>
+                                        <small>(Click to download)</small>
+                                    </li>
+                                @endif
+                                @if ($lecture->external_link)
+                                    <li class="mb-2">
+                                        <i class="la la-link"></i> 
+                                        <a href="{{ $lecture->external_link }}" target="_blank" class="text-primary">External Resource</a>
+                                        <small>(Click to visit)</small>
+                                    </li>
+                                @endif
+                            </ul>
+                        </div>
+                        <div class="modal-footer justify-content-center border-top-gray">
+                            <button type="button" class="btn theme-btn" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+    @endforeach
+@endforeach
     <!-- JavaScript -->
     <script type="text/javascript">
         function openFirstLecture() {

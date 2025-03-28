@@ -26,7 +26,6 @@ class Course extends Model
         'video',
         'label',
         'duration',
-        'resources',
         'certificate',
         'selling_price',
         'discount_price',

@@ -41,8 +41,8 @@
                             </td>
                             <td>{{ $item->course_name }}</td>
                             <td>{{ optional($item->category)->category_name ?? 'No Category' }}</td>
-                            <td>${{ $item->selling_price ?? 'N/A' }}</td>
-                            <td>${{ $item->discount_price ?? 'N/A' }}</td>
+                            <td>{{ $item->selling_price ?? 'N/A' }}TND</td>
+                            <td>{{ $item->discount_price ?? 'N/A' }}TND</td>
                             <td>
                                 <a href="{{ route('instructor.courses.show', $item->id) }}" class="btn btn-primary btn-sm" title="View"><i class="lni lni-eye"></i></a>
                                 <a href="{{ route('instructor.courses.edit', $item->id) }}" class="btn btn-info btn-sm" title="Edit"><i class="lni lni-eraser"></i></a>

@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Instructor;
 
-use App\Http\Controllers\Controller; // Héritage de la classe de base
+use App\Http\Controllers\Controller;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -26,6 +26,16 @@ class OrderController extends Controller
         $order = Order::where('instructor_id', $instructorId)
             ->with(['user', 'course'])
             ->findOrFail($id); // Récupérer la commande spécifique
+
+        // Marquer les notifications liées à cette commande comme lues
+        $instructor = Auth::guard('instructor')->user();
+        $notifications = $instructor->unreadNotifications()
+            ->where('data->order_id', $order->id)
+            ->get();
+
+        foreach ($notifications as $notification) {
+            $notification->markAsRead();
+        }
 
         return view('instructor.orders.show', compact('order'));
     }

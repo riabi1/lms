@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\SubCategoryController;
 use App\Http\Controllers\Instructor\CourseController;
 use App\Http\Controllers\Instructor\CouponController; 
 use App\Http\Controllers\Frontend\StripePaymentController;
+use App\Http\Controllers\Instructor\NotificationController;
 use App\Http\Controllers\Instructor\CourseLectureController;
 use App\Http\Controllers\Instructor\CourseSectionController;
 use App\Http\Controllers\Admin\InstructorManagementController;
@@ -115,6 +116,8 @@ Route::prefix('instructor')->name('instructor.')->group(function () {
         //orders
        Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
        Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show');
+       //notif routes 
+     Route::post('/instructor/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAllAsRead');
   
     });
 });

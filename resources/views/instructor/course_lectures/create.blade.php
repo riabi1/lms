@@ -1,17 +1,13 @@
 @extends('Instructor.layout.Instructor_layout')
-@section('instructor')
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 
+@section('instructor')
 <div class="page-content">
     <div class="row">
         <div class="col-12"> 
             <div class="card radius-10">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
-                        
-
-                         <img src="{{ $course->course_image ? asset('storage/upload/course_images/thumbnail/' . $course->course_image) : asset('upload/no_image.jpg') }}"  class="rounded-circle p-1 border"width= "90" height= "90" alt="{{ $course->course_name }}" >
+                        <img src="{{ $course->course_image ? asset('storage/upload/course_images/thumbnail/' . $course->course_image) : asset('upload/no_image.jpg') }}" class="rounded-circle p-1 border" width="90" height="90" alt="{{ $course->course_name }}">
                         <div class="flex-grow-1 ms-3">
                             <h5 class="mt-0">{{ $course->course_name }}</h5>
                             <p class="mb-0">{{ $course->course_title }}</p>
@@ -100,6 +96,9 @@
     </div>
 </div>
 
+<!-- Scripts -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 <script>
     function addLectureDiv(courseId, sectionId, containerId) {
         const lectureContainer = document.getElementById(containerId);
@@ -111,13 +110,30 @@
 
         newLectureDiv.innerHTML = `
             <div class="container">
-                <h6>Lecture Title</h6>
-                <input type="text" class="form-control lecture-title" placeholder="Enter Lecture Title">
-                <textarea class="form-control mt-2 lecture-content" placeholder="Enter Lecture Content"></textarea>
-                <h6 class="mt-3">Add Video URL</h6>
-                <input type="text" name="url" class="form-control lecture-url" placeholder="Add URL">
-                <h6 class="mt-3">Upload Video (Optional)</h6>
-                <input type="file" name="video" class="form-control lecture-video" accept="video/*">
+                <h5 class="mt-3">Lecture Content (Visible on Platform)</h5>
+                <div class="border p-3 mb-3 bg-light">
+                    <h6>Lecture Title</h6>
+                    <input type="text" class="form-control lecture-title" placeholder="Enter Lecture Title" required>
+                    <h6 class="mt-3">Lecture Content</h6>
+                    <textarea class="form-control lecture-content" placeholder="Enter Lecture Content"></textarea>
+                    <h6 class="mt-3">Video URL</h6>
+                    <input type="text" name="url" class="form-control lecture-url" placeholder="Add Video URL">
+                    <h6 class="mt-3">Upload Main Video (MP4/WebM)</h6>
+                    <input type="file" name="video" class="form-control lecture-video" accept="video/mp4,video/webm">
+                </div>
+
+                <h5 class="mt-3">Additional Resources (Downloadable by Students)</h5>
+                <div class="border p-3 bg-light">
+                    <h6>Upload Additional Video (MP4/WebM)</h6>
+                    <input type="file" name="additional_video" class="form-control lecture-additional-video" accept="video/mp4,video/webm">
+                    <h6 class="mt-3">Upload Resource File (PDF/DOC/JPG/PNG)</h6>
+                    <input type="file" name="file_path" class="form-control lecture-file" accept=".pdf,.doc,.docx,image/jpeg,image/png">
+                    <h6 class="mt-3">External Resource Link</h6>
+                    <input type="text" name="external_link" class="form-control lecture-external-link" placeholder="Add External Link">
+                    <h6 class="mt-3">Resources Description</h6>
+                    <textarea class="form-control lecture-resources-description" placeholder="Describe the resources (e.g., 'Download this PDF for more details')"></textarea>
+                </div>
+
                 <button class="btn btn-primary mt-3" onclick="saveLecture('${courseId}', ${sectionId}, '${containerId}')">Save Lecture</button>
                 <button class="btn btn-secondary mt-3" onclick="hideLectureContainer('${containerId}')">Cancel</button>
             </div>
@@ -139,6 +155,10 @@
         const lectureContent = lectureContainer.querySelector('.lecture-content').value;
         const lectureUrl = lectureContainer.querySelector('.lecture-url').value;
         const lectureVideo = lectureContainer.querySelector('.lecture-video').files[0];
+        const additionalVideo = lectureContainer.querySelector('.lecture-additional-video').files[0];
+        const lectureFile = lectureContainer.querySelector('.lecture-file').files[0];
+        const externalLink = lectureContainer.querySelector('.lecture-external-link').value;
+        const resourcesDescription = lectureContainer.querySelector('.lecture-resources-description').value;
 
         let formData = new FormData();
         formData.append('course_id', courseId);
@@ -147,6 +167,10 @@
         formData.append('url', lectureUrl);
         formData.append('content', lectureContent);
         if (lectureVideo) formData.append('video', lectureVideo);
+        if (additionalVideo) formData.append('additional_video', additionalVideo);
+        if (lectureFile) formData.append('file_path', lectureFile);
+        formData.append('external_link', externalLink);
+        formData.append('resources_description', resourcesDescription);
 
         fetch("{{ route('instructor.course_lectures.store', $course->id) }}", {
             method: 'POST',
@@ -188,5 +212,4 @@
         });
     }
 </script>
-
 @endsection
