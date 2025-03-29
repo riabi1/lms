@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Auth\Notifications\VerifyEmail;
-use Illuminate\Auth\Notifications\ResetPassword as ResetPasswordNotification;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Auth\Notifications\ResetPassword as ResetPasswordNotification;
 
 class Instructor extends Authenticatable implements MustVerifyEmail
 {
@@ -131,7 +131,26 @@ class Instructor extends Authenticatable implements MustVerifyEmail
     }
 
     public function reviews()
-{
+    {
     return $this->hasMany(Review::class, 'instructor_id');
+    }
+
+ public function reports()
+{
+    return $this->morphMany(Report::class, 'reporter');
 }
+public function blogs()
+{
+    return $this->hasMany(Blog::class);
+}
+public function conversations()
+{
+    return $this->hasMany(Conversation::class);
+}
+
+public function sentMessages()
+{
+    return $this->morphMany(Message::class, 'sender');
+}
+
 }

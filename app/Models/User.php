@@ -90,4 +90,29 @@ public function orders()
     {
         return $this->hasMany(UserCourseProgress::class); // Si vous utilisez une table de progression
     }
+
+    public function notifications()
+    {
+        return $this->morphMany(Notification::class, 'notifiable');
+    }
+
+    public function wishlists()
+{
+    return $this->hasMany(Wishlist::class);
+}
+
+public function reports()
+{
+    return $this->morphMany(Report::class, 'reporter');
+}
+
+public function conversations()
+{
+    return $this->hasMany(Conversation::class);
+}
+
+public function sentMessages()
+{
+    return $this->morphMany(Message::class, 'sender');
+}
 }

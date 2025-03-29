@@ -59,7 +59,10 @@ Route::name('')->group(function () {
     //certificate routes
     Route::get('/mycourses/certificate/{courseId}', [MyCourseController::class, 'downloadCertificate'])->name('course.certificate');
     //notes routes 
-   Route::resource('mycourses/notes', NotesController::class)->only(['index', 'store', 'update', 'destroy'])->names('mycourses.notes');
+ Route::get('/mycourses', [NotesController::class, 'index'])->name('mycourses.index');
+    Route::post('/mycourses/{courseId}/notes', [NotesController::class, 'store'])->name('mycourses.notes.store');
+    Route::put('/mycourses/notes/{id}', [NotesController::class, 'update'])->name('mycourses.notes.update');
+    Route::delete('/mycourses/notes/{id}', [NotesController::class, 'destroy'])->name('mycourses.notes.destroy');
 
     //User Quiz routes
     Route::get('/quizzes', [QuizzesController::class, 'index'])->name('quizzes.index');
@@ -116,8 +119,12 @@ Route::prefix('instructor')->name('instructor.')->group(function () {
         //orders
        Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
        Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show');
-       //notif routes 
+       //order notif
      Route::post('/instructor/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAllAsRead');
+     //review notif
+     Route::get('/instructor/reviews/{review}', [ReviewController::class, 'show'])->name('reviews.show');
+    
+   
   
     });
 });

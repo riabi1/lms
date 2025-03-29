@@ -30,9 +30,9 @@
                                 @if ($unreadCount > 0)
                                     @foreach ($unreadNotifications as $notification)
                                         <a class="dropdown-item py-2 px-3 border-bottom" 
-                                           href="{{ route('instructor.orders.show', $notification->data['order_id']) }}">
+                                           href="{{ $notification->data['type'] === 'review' ? route('instructor.all.review') : route('instructor.orders.show', $notification->data['order_id']) }}">
                                             <div class="d-flex align-items-center gap-2">
-                                                <i class="bx bx-book text-primary fs-5"></i>
+                                                <i class="bx bx-{{ $notification->data['type'] === 'review' ? 'star' : 'book' }} text-primary fs-5"></i>
                                                 <div class="flex-grow-1" style="overflow: hidden;">
                                                     <p class="mb-0 text-dark" style="word-break: break-word; white-space: normal; overflow-wrap: break-word;">
                                                         {{ $notification->data['message'] }}

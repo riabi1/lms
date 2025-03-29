@@ -29,6 +29,7 @@ class OrderPlacedNotification extends Notification
             'order_id' => $this->order->id,
             'course_title' => $this->order->course_title,
             'user_name' => $this->order->user->name,
+            'type' => 'order',
             'message' => "L'utilisateur {$this->order->user->name} a passé une commande pour votre cours '{$this->order->course_title}'.",
         ];
     }

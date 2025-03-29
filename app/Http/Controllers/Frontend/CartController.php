@@ -267,7 +267,7 @@ class CartController extends Controller
 
         try {
             $charge = Charge::create([
-                'amount' => $total * 100, // Montant en centimes
+                'amount' => $total * 100,
                 'currency' => 'eur',
                 'source' => $request->stripeToken,
                 'description' => 'Payment for multiple courses by ' . Auth::user()->name,
@@ -307,10 +307,8 @@ class CartController extends Controller
                 foreach ($orders as $order) {
                     $instructor->notify(new OrderPlacedNotification($order));
                 }
-                \Log::info("Notification envoyée à l'instructeur ID: {$instructorId} pour " . count($orders) . " commande(s)");
-            } else {
-                \Log::error("Instructeur non trouvé pour ID: {$instructorId}");
-            }
+               
+            } 
         }
 
         Session::forget('cart');

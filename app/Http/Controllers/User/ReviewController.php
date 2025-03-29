@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Review;
 use Illuminate\Support\Facades\Auth;
+use App\Notifications\ReviewSubmittedNotification;
 use Carbon\Carbon;
 
 class ReviewController extends Controller
@@ -26,7 +27,7 @@ class ReviewController extends Controller
         return redirect()->route('user.reviews.index');
     }
 
-    public function store(Request $request)
+  public function store(Request $request)
     {
         $request->validate([
             'course_id' => 'required|exists:courses,id',
@@ -35,7 +36,7 @@ class ReviewController extends Controller
             'rate' => 'required|integer|between:1,5',
         ]);
 
-        Review::create([
+        $review = Review::create([
             'course_id' => $request->course_id,
             'user_id' => Auth::guard('web')->id(),
             'instructor_id' => $request->instructor_id,
@@ -45,11 +46,19 @@ class ReviewController extends Controller
             'created_at' => Carbon::now(),
         ]);
 
+        // Envoyer la notification à l'instructeur
+        $instructor = $review->instructor;
+        if ($instructor) {
+            $instructor->notify(new ReviewSubmittedNotification($review));
+            \Log::info("Notification envoyée à l'instructeur ID: {$instructor->id} pour l'avis ID: {$review->id}");
+        } else {
+            \Log::error("Instructeur non trouvé pour l'avis ID: {$review->id}");
+        }
+
         return redirect()->back()->with([
             'message' => 'Review Submitted Successfully and Will Be Approved by Admin',
             'alert-type' => 'success'
-        ]);
-    }
+        ]);}
 
     public function show(Review $review)
     {
