@@ -26,7 +26,6 @@ class Course extends Model
         'video',
         'label',
         'duration',
-        'resources',
         'certificate',
         'selling_price',
         'discount_price',
@@ -105,4 +104,9 @@ class Course extends Model
     {
         return $this->hasMany(CourseNote::class)->where('user_id', auth()->id());
     }
+
+    public function wishlists()
+{
+    return $this->hasMany(Wishlist::class);
+}
 }

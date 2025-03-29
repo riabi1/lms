@@ -18,63 +18,58 @@ use Carbon\Carbon;
 
 class MyCourseController extends Controller
 {
-   public function myCourses()
-{
-    $orders = auth()->user()->orders()->with('course.sections.lectures')->get();
-    foreach ($orders as $order) {
-        $order->progress = auth()->user()->courseProgress()
-            ->where('course_id', $order->course_id)
-            ->pluck('completed', 'lecture_id')
-            ->toArray();
+    public function myCourses()
+    {
+        $orders = auth()->user()->orders()->with('course.sections.lectures')->get();
+        foreach ($orders as $order) {
+            $order->progress = auth()->user()->courseProgress()
+                ->where('course_id', $order->course_id)
+                ->pluck('completed', 'lecture_id')
+                ->toArray();
+        }
+        return view('User.mycourses.my_courses', compact('orders'));
     }
-    return view('User.mycourses.my_courses', compact('orders'));
-}
+
     public function submitRating(Request $request, $courseId)
-      {
-
-          $request->validate([
-              'rating' => 'required|integer|min:1|max:5',
-          ]);
-
-          $userId = Auth::id();
-          $course = Course::findOrFail($courseId);
-
-          // Vérifier si l'utilisateur a acheté le cours
-          $hasPurchased = Order::where('user_id', $userId)
-                              ->where('course_id', $courseId)
-                              ->where('payment_status', 'paid')
-                              ->exists();
-
-          if (!$hasPurchased) {
-              return response()->json(['message' => 'You must purchase this course to rate it.'], 403);
-          }
-
-          // Enregistrer ou mettre à jour la note dans la table reviews
-          Review::updateOrCreate(
-              ['user_id' => $userId, 'course_id' => $courseId],
-              [
-                  'instructor_id' => $course->instructor_id, // Associer l'instructeur du cours
-                  'comment' => $request->comment ?? '',      // Commentaire vide par défaut
-                  'rating' => $request->rating,
-                  'status' => 0                              // Statut par défaut à 0 (non publié)
-              ]
-          );
-
-          return response()->json(['success' => true, 'message' => 'Rating submitted successfully']);
-      }
-
- 
-
-    public function markLectureCompleted(Request $request, $courseId)
     {
         $request->validate([
-            'lecture_id' => 'required|exists:course_lectures,id', // Vérifier dans la bonne table
+            'rating' => 'required|integer|min:1|max:5',
         ]);
 
         $userId = Auth::id();
         $course = Course::findOrFail($courseId);
 
-        // Vérifier si l'utilisateur a acheté le cours
+        $hasPurchased = Order::where('user_id', $userId)
+                            ->where('course_id', $courseId)
+                            ->where('payment_status', 'paid')
+                            ->exists();
+
+        if (!$hasPurchased) {
+            return response()->json(['message' => 'You must purchase this course to rate it.'], 403);
+        }
+
+        Review::updateOrCreate(
+            ['user_id' => $userId, 'course_id' => $courseId],
+            [
+                'instructor_id' => $course->instructor_id,
+                'comment' => $request->comment ?? '',
+                'rating' => $request->rating,
+                'status' => 0
+            ]
+        );
+
+        return response()->json(['success' => true, 'message' => 'Rating submitted successfully']);
+    }
+
+    public function markLectureCompleted(Request $request, $courseId)
+    {
+        $request->validate([
+            'lecture_id' => 'required|exists:course_lectures,id',
+        ]);
+
+        $userId = Auth::id();
+        $course = Course::findOrFail($courseId);
+
         $hasPurchased = Order::where('user_id', $userId)
                             ->where('course_id', $courseId)
                             ->where('payment_status', 'paid')
@@ -84,7 +79,6 @@ class MyCourseController extends Controller
             return response()->json(['success' => false, 'message' => 'You must purchase this course to mark progress.'], 403);
         }
 
-        // Marquer la leçon comme terminée
         UserCourseProgress::updateOrCreate(
             [
                 'user_id' => $userId,
@@ -97,7 +91,6 @@ class MyCourseController extends Controller
             ]
         );
 
-        // Calculer la progression totale
         $totalLectures = $course->sections->flatMap->lectures->count();
         $completedLectures = UserCourseProgress::where('user_id', $userId)
                                               ->where('course_id', $courseId)
@@ -112,7 +105,7 @@ class MyCourseController extends Controller
         ]);
     }
 
-   public function startLearning($courseId, $slug)
+    public function startLearning($courseId, $slug)
     {
         $course = Course::with(['sections.lectures', 'quizzes.questions'])->findOrFail($courseId);
 
@@ -121,6 +114,16 @@ class MyCourseController extends Controller
         }
 
         $user = Auth::user();
+
+        // Vérifier si l'utilisateur a acheté le cours
+        $hasPurchased = Order::where('user_id', $user->id)
+                            ->where('course_id', $courseId)
+                            ->where('payment_status', 'paid')
+                            ->exists();
+
+        if (!$hasPurchased) {
+            abort(403, 'You do not have access to this course.');
+        }
 
         // Calculer la progression
         $progress = $user->courseProgress()
@@ -148,7 +151,6 @@ class MyCourseController extends Controller
             abort(403, 'This quiz does not belong to the course.');
         }
 
-        // Vérifier le nombre de tentatives
         $attemptCount = QuizAttempt::where('user_id', $user->id)
             ->where('quiz_id', $quizId)
             ->count();
@@ -167,7 +169,6 @@ class MyCourseController extends Controller
             }
         }
 
-        // Calculer le score
         $answers = $request->input('answers', []);
         $correctAnswers = 0;
         $totalQuestions = $quiz->questions->count();
@@ -180,9 +181,8 @@ class MyCourseController extends Controller
         }
 
         $score = $totalQuestions > 0 ? round(($correctAnswers / $totalQuestions) * 100) : 0;
-        $passed = $score >= 70; // Seuil de réussite à 70 %
+        $passed = $score >= 70;
 
-        // Enregistrer la tentative
         QuizAttempt::create([
             'user_id' => $user->id,
             'quiz_id' => $quiz->id,
@@ -198,7 +198,6 @@ class MyCourseController extends Controller
         return redirect()->route('course.start', ['courseId' => $courseId, 'slug' => \Str::slug($quiz->course->course_name)])
             ->with('success', $message);
     }
-
 
     public function downloadCertificate($courseId)
     {

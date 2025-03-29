@@ -9,6 +9,7 @@ use App\Models\Coupon;
 use App\Models\Order;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
+use App\Notifications\OrderPlacedNotification;
 use Carbon\Carbon;
 use Stripe\Charge;
 use Stripe\Stripe;
@@ -216,7 +217,7 @@ class CartController extends Controller
         return view('User.checkout.checkout', compact('cart', 'subtotal', 'couponDiscount', 'total', 'coupons', 'adjustedPrices'));
     }
 
-    public function CheckoutProcess(Request $request)
+   public function CheckoutProcess(Request $request)
     {
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'Please log in.');
@@ -266,8 +267,8 @@ class CartController extends Controller
 
         try {
             $charge = Charge::create([
-                'amount' => $total * 100, // Montant en centimes
-                'currency' => 'tnd', // Changé en TND pour correspondre à la devise locale
+                'amount' => $total * 100,
+                'currency' => 'eur',
                 'source' => $request->stripeToken,
                 'description' => 'Payment for multiple courses by ' . Auth::user()->name,
             ]);
@@ -276,6 +277,9 @@ class CartController extends Controller
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Payment failed: ' . $e->getMessage());
         }
+
+        // Tableau pour stocker les commandes par instructeur
+        $ordersByInstructor = [];
 
         foreach ($request->course_id as $index => $courseId) {
             $order = new Order();
@@ -287,6 +291,24 @@ class CartController extends Controller
             $order->payment_status = 'paid';
             $order->payment_id = $paymentId;
             $order->save();
+
+            // Regrouper les commandes par instructeur
+            $instructorId = $request->instructor_id[$index];
+            if (!isset($ordersByInstructor[$instructorId])) {
+                $ordersByInstructor[$instructorId] = [];
+            }
+            $ordersByInstructor[$instructorId][] = $order;
+        }
+
+        // Envoyer une notification à chaque instructeur
+        foreach ($ordersByInstructor as $instructorId => $orders) {
+            $instructor = \App\Models\Instructor::find($instructorId);
+            if ($instructor) {
+                foreach ($orders as $order) {
+                    $instructor->notify(new OrderPlacedNotification($order));
+                }
+               
+            } 
         }
 
         Session::forget('cart');

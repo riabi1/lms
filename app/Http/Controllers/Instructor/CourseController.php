@@ -50,7 +50,7 @@ class CourseController extends Controller
                 'description' => 'nullable|string',
                 'label' => 'nullable|string|in:Beginner,Intermediate,Advanced',
                 'duration' => 'nullable|string',
-                'resources' => 'nullable|string',
+                
                 'certificate' => 'nullable|in:Yes,No',
                 'selling_price' => 'nullable|numeric',
                 'discount_price' => 'nullable|numeric',
@@ -76,7 +76,7 @@ class CourseController extends Controller
                 'video' => $courseVideo,
                 'label' => $request->label,
                 'duration' => $request->duration,
-                'resources' => $request->resources,
+                
                 'certificate' => $request->certificate,
                 'selling_price' => $request->selling_price,
                 'discount_price' => $request->discount_price,

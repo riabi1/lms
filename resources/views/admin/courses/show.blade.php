@@ -71,21 +71,18 @@
             <div class="card-body">
               <table class="table mb-0">
                 <tbody>
-                  <tr>
-                    <td><strong>Resources:</strong></td>
-                    <td>{{ $course->resources }}</td>
-                  </tr>
+              
                   <tr>
                     <td><strong>Certificate:</strong></td>
                     <td>{{ $course->certificate }}</td>
                   </tr>
                   <tr>
                     <td><strong>Selling Price:</strong></td>
-                    <td>${{ $course->selling_price }}</td>
+                    <td>{{ $course->selling_price }}TND</td>
                   </tr>
                   <tr>
                     <td><strong>Discount Price:</strong></td>
-                    <td>${{ $course->discount_price }}</td>
+                    <td>{{ $course->discount_price }}TND</td>
                   </tr>
                   <tr>
                     <td><strong>Status:</strong></td>

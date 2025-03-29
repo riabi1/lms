@@ -28,10 +28,10 @@
                     <p><strong>Course Title:</strong> {{ $course->course_title }}</p>
                     <p><strong>Category:</strong> {{ optional($course->category)->category_name ?? 'No Category' }}</p>
                     <p><strong>Subcategory:</strong> {{ optional($course->subCategory)->subcategory_name ?? 'No Subcategory' }}</p>
-                    <p><strong>Price:</strong> ${{ $course->selling_price ?? 'N/A' }}</p>
-                    <p><strong>Discount Price:</strong> ${{ $course->discount_price ?? 'N/A' }}</p>
+                    <p><strong>Price:</strong> {{ $course->selling_price ?? 'N/A' }}TND</p>
+                    <p><strong>Discount Price:</strong> {{ $course->discount_price ?? 'N/A' }}TND</p>
                     <p><strong>Duration:</strong> {{ $course->duration ?? 'N/A' }}</p>
-                    <p><strong>Resources:</strong> {{ $course->resources ?? 'N/A' }}</p>
+                   
                     <p><strong>Certificate:</strong> {{ $course->certificate ?? 'N/A' }}</p>
                     <p><strong>Label:</strong> {{ $course->label ?? 'N/A' }}</p>
                     <p><strong>Prerequisites:</strong> {{ $course->prerequisites ?? 'N/A' }}</p>
