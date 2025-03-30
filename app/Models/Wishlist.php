@@ -8,6 +8,11 @@ class Wishlist extends Model
 {
     protected $fillable = ['user_id', 'course_id'];
 
+    public function trackable()
+    {
+        return $this->morphTo();
+    }
+    
     public function user()
     {
         return $this->belongsTo(User::class);

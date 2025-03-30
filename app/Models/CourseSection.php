@@ -9,30 +9,15 @@ class CourseSection extends Model
 {
     use HasFactory;
 
-    /**
-     * The attributes that are not mass assignable.
-     *
-     * @var array
-     */
     protected $guarded = [];
 
-    /**
-     * Define the relationship with the Course model.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function course()
+   public function course()
     {
-        return $this->belongsTo(Course::class, 'course_id', 'id');
+        return $this->belongsTo(Course::class);
     }
 
-    /**
-     * Define the relationship with the CourseLecture model.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function lectures()
+  public function lectures()
     {
-        return $this->hasMany(CourseLecture::class, 'section_id', 'id');
+        return $this->hasMany(CourseLecture::class, 'section_id');
     }
 }

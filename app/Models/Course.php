@@ -4,6 +4,17 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Category;
+use App\Models\SubCategory;
+use App\Models\Instructor;
+use App\Models\Review;
+use App\Models\CourseGoal;
+use App\Models\CourseSection;
+use App\Models\CourseLecture;
+use App\Models\CourseNote;
+use App\Models\Wishlist;
+use App\Models\Quiz;
+use App\Models\QuizAttempt;
 
 class Course extends Model
 {
@@ -35,55 +46,33 @@ class Course extends Model
         'highestrated',
         'status',
     ];
-    /**
-     * Define the relationship with the Category model.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
+
     public function category()
     {
         return $this->belongsTo(Category::class, 'category_id', 'id');
     }
 
-    /**
-     * Define the relationship with the SubCategory model.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function subcategory()
+ public function subCategory()
     {
-        return $this->belongsTo(SubCategory::class, 'subcategory_id', 'id');
+        return $this->belongsTo(SubCategory::class, 'subcategory_id');
     }
 
-    /**
-     * Define the relationship with the Instructor model.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
   public function instructor()
 {
     return $this->belongsTo(Instructor::class, 'instructor_id');
 }
 
-    /**
-     * Define the relationship with the Review model.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
     public function reviews()
     {
-        return $this->hasMany(Review::class, 'course_id');
+        return $this->morphMany(Review::class, 'reviewable');
     }
 
-    /**
-     * Define the relationship with the Course_goal model.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
+  
     public function goals()
     {
-        return $this->hasMany(Course_goal::class, 'course_id', 'id');
+        return $this->morphMany(CourseGoal::class, 'goalable');
     }
+   
 
     public function sections()
     {
@@ -95,10 +84,7 @@ class Course extends Model
         return $this->hasMany(CourseLecture::class);
     }
 
-    public function quizzes()
-    {
-        return $this->hasMany(Quiz::class);
-    }
+ 
 
     public function notes()
     {
@@ -109,4 +95,26 @@ class Course extends Model
 {
     return $this->hasMany(Wishlist::class);
 }
+
+public function quizzes()
+    {
+        return $this->hasMany(Quiz::class);
+    }
+
+    public function quizAttempts()
+    {
+        return $this->hasManyThrough(
+            QuizAttempt::class,    // Modèle cible (final)
+            Quiz::class,           // Modèle intermédiaire
+            'course_id',           // Clé étrangère sur la table intermédiaire (quizzes)
+            'quiz_id',             // Clé étrangère sur la table cible (quiz_attempts)
+            'id',                  // Clé primaire sur la table courante (courses)
+            'id'                   // Clé primaire sur la table intermédiaire (quizzes)
+        );
+    }
+
+    public function courseable()
+    {
+        return $this->morphTo();
+    }
 }

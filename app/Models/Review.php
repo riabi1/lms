@@ -27,6 +27,11 @@ class Review extends Model
     return $this->belongsTo(Course::class, 'course_id');
   }
 
+  public function reviewable()
+    {
+        return $this->morphTo();
+    }
+    
   public function user()
   {
     return $this->belongsTo(User::class, 'user_id');

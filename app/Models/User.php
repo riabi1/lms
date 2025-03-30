@@ -83,23 +83,13 @@ public function orders()
         return $this->hasMany(Order::class); // Assurez-vous que la classe Order existe
     }
 
-    /**
-     * Relation avec la progression des cours (facultatif, selon votre structure)
-     */
-    public function courseProgress()
-    {
-        return $this->hasMany(UserCourseProgress::class); // Si vous utilisez une table de progression
-    }
-
+   
     public function notifications()
     {
         return $this->morphMany(Notification::class, 'notifiable');
     }
 
-    public function wishlists()
-{
-    return $this->hasMany(Wishlist::class);
-}
+
 
 public function reports()
 {
@@ -107,12 +97,33 @@ public function reports()
 }
 
 public function conversations()
-{
-    return $this->hasMany(Conversation::class);
-}
+    {
+        return $this->hasMany(Conversation::class, 'user_id');
+    }
 
 public function sentMessages()
-{
-    return $this->morphMany(Message::class, 'sender');
-}
+    {
+        return $this->morphMany(Message::class, 'sender');
+    }
+
+/**
+     * Relation polymorphique avec user_course_progress
+     */
+    public function courseProgress()
+    {
+        return $this->morphMany(UserCourseProgress::class, 'trackable');
+    }
+
+    /**
+     * Relation polymorphique avec wishlists
+     */
+    public function wishlists()
+    {
+        return $this->morphMany(Wishlist::class, 'trackable');
+    }
+
+    public function courses()
+    {
+        return $this->morphMany(Course::class, 'courseable');
+    }
 }

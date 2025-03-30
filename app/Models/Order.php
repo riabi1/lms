@@ -16,8 +16,9 @@ class Order extends Model
 
    
 
-    public function course(){
-        return $this->belongsTo(Course::class, 'course_id' ,'id');
+  public function courses()
+    {
+        return $this->morphMany(Course::class, 'courseable');
     }
 
 public function instructor(){

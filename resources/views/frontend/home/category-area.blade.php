@@ -1,5 +1,5 @@
 @php
-$category = App\Models\Category::latest()->limit(6)->get();
+$categories = App\Models\Category::latest()->limit(6)->get();
 @endphp
 
 <section class="category-area pb-90px">
@@ -22,9 +22,12 @@ $category = App\Models\Category::latest()->limit(6)->get();
     </div><!-- end row -->
     <div class="category-wrapper mt-30px">
       <div class="row">
-        @foreach ($category as $cat)
+        @foreach ($categories as $cat)
         @php
-        $course = App\Models\Course::where('category_id', $cat->id)->get();
+        // Compter les cours via la relation avec sub_categories
+        $courseCount = App\Models\Course::whereHas('subcategory', function ($query) use ($cat) {
+            $query->where('category_id', $cat->id);
+        })->count();
         @endphp
         <div class="col-lg-4 responsive-column-half">
           <div class="category-item card-preview" data-tooltip-content="#tooltip_content_{{ $cat->id }}">
@@ -37,7 +40,7 @@ $category = App\Models\Category::latest()->limit(6)->get();
             <div class="category-content">
               <div class="category-inner">
                 <h3 class="cat__title"><a href="{{ url('category/'.$cat->id.'/'.$cat->category_slug) }}">{{ $cat->category_name }}</a></h3>
-                <p class="cat__meta">{{ count($course) }} courses</p>
+                <p class="cat__meta">{{ $courseCount }} courses</p>
                 <a href="{{ url('category/'.$cat->id.'/'.$cat->category_slug) }}" class="btn theme-btn theme-btn-sm theme-btn-white">Explore<i class="la la-arrow-right icon ml-1"></i></a>
               </div>
             </div><!-- end category-content -->
@@ -48,6 +51,3 @@ $category = App\Models\Category::latest()->limit(6)->get();
     </div><!-- end category-wrapper -->
   </div><!-- end container -->
 </section><!-- end category-area -->
-
-
-
