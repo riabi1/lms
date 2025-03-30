@@ -81,7 +81,13 @@ $categories = App\Models\Category::orderBy('category_name', 'ASC')->get();
               <div class="tooltip_templates" style="display: none;">
                 <div id="tooltip_content_{{ $course->id }}">
                   <div class="card-body">
-                    <p class="card-text pb-2">By <a href="{{ route('instructor.details', $course->instructor_id) }}">{{ $course->instructor->name ?? 'Unknown Instructor' }}</a></p>
+                    <p class="card-text pb-2">By 
+                      @if ($course->instructor_id && $course->instructor)
+                        <a href="{{ route('instructor.details', $course->instructor_id) }}">{{ $course->instructor->name }}</a>
+                      @else
+                        Unknown Instructor
+                      @endif
+                    </p>
                     <h5 class="card-title pb-1">
                       <a href="{{ route('course.details', [$course->id, $course->course_name_slug]) }}">{{ $course->course_title }}</a>
                     </h5>
@@ -141,10 +147,12 @@ $categories = App\Models\Category::orderBy('category_name', 'ASC')->get();
           <div class="row">
             @php
             $catwiseCourse = App\Models\Course::with(['instructor', 'reviews', 'goals'])
-              ->where('category_id', $category->id)
-              ->where('status', 1)
-              ->orderBy('id', 'DESC')
-              ->get();
+                ->whereHas('subcategory', function ($query) use ($category) {
+                    $query->where('category_id', $category->id);
+                })
+                ->where('status', 1)
+                ->orderBy('id', 'DESC')
+                ->get();
             @endphp
             @forelse ($catwiseCourse as $course)
             @php
@@ -198,7 +206,13 @@ $categories = App\Models\Category::orderBy('category_name', 'ASC')->get();
               <div class="tooltip_templates" style="display: none;">
                 <div id="tooltip_content_{{ $course->id }}">
                   <div class="card-body">
-                    <p class="card-text pb-2">By <a href="{{ route('instructor.details', $course->instructor_id) }}">{{ $course->instructor->name ?? 'Unknown Instructor' }}</a></p>
+                    <p class="card-text pb-2">By 
+                      @if ($course->instructor_id && $course->instructor)
+                        <a href="{{ route('instructor.details', $course->instructor_id) }}">{{ $course->instructor->name }}</a>
+                      @else
+                        Unknown Instructor
+                      @endif
+                    </p>
                     <h5 class="card-title pb-1">
                       <a href="{{ route('course.details', [$course->id, $course->course_name_slug]) }}">{{ $course->course_title }}</a>
                     </h5>
@@ -270,8 +284,8 @@ $(document).ready(function() {
         interactive: true,
         contentAsHTML: true,
         maxWidth: 400,
-        side: 'right', 
-        distance: 10   
+        side: 'right',
+        distance: 10
     });
 });
 </script>

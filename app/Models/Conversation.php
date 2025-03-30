@@ -8,7 +8,7 @@ class Conversation extends Model
 {
     protected $fillable = ['user_id', 'instructor_id', 'last_message_at'];
 
-    public function user()
+  public function user()
     {
         return $this->belongsTo(User::class);
     }
@@ -18,7 +18,7 @@ class Conversation extends Model
         return $this->belongsTo(Instructor::class);
     }
 
-    public function messages()
+   public function messages()
     {
         return $this->hasMany(Message::class);
     }

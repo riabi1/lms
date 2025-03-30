@@ -71,11 +71,10 @@ class Instructor extends Authenticatable implements MustVerifyEmail
     /**
      * Define the relationship with the Course model.
      */
-    public function courses()
+   public function courses()
     {
-        return $this->hasMany(Course::class, 'instructor_id');
+        return $this->morphMany(Course::class, 'courseable');
     }
-
     /**
      * Send the email verification notification.
      *
@@ -139,18 +138,18 @@ class Instructor extends Authenticatable implements MustVerifyEmail
 {
     return $this->morphMany(Report::class, 'reporter');
 }
-public function blogs()
-{
-    return $this->hasMany(Blog::class);
-}
+public function blogPosts()
+    {
+        return $this->hasMany(BlogPost::class);
+    }
 public function conversations()
-{
-    return $this->hasMany(Conversation::class);
-}
+    {
+        return $this->hasMany(Conversation::class, 'instructor_id');
+    }
 
 public function sentMessages()
-{
-    return $this->morphMany(Message::class, 'sender');
-}
+    {
+        return $this->morphMany(Message::class, 'sender');
+    }
 
 }

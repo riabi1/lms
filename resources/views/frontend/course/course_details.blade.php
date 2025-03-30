@@ -32,9 +32,9 @@
           <h6 class="ribbon ribbon-lg mr-2 bg-3 text-white">Highest Rated</h6>
           @endif
 
-          @php
-          $reviewcount = App\Models\Review::where('course_id', $course->id)->where('status', 1)->latest()->get();
-          $average = App\Models\Review::where('course_id', $course->id)->where('status', 1)->avg('rating');
+         @php
+          $reviewcount = $course->reviews()->where('status', 1)->latest()->get();
+          $average = $course->reviews()->where('status', 1)->avg('rating');
           @endphp
 
           <div class="rating-wrap d-flex flex-wrap align-items-center">
@@ -47,7 +47,13 @@
             <span class="rating-total pl-1">({{ count($reviewcount) }} ratings)</span>
           </div>
         </div><!-- end d-flex -->
-        <p class="pt-2 pb-1">Created by <a href="{{ route('instructor.details', $course->instructor_id) }}" class="text-color hover-underline">{{ $course->instructor->name ?? 'Unknown Instructor' }}</a></p>
+        <p class="pt-2 pb-1">Created by 
+            @if ($course->instructor_id && $course->instructor)
+                <a href="{{ route('instructor.details', $course->instructor_id) }}" class="text-color hover-underline">{{ $course->instructor->name }}</a>
+            @else
+                Unknown Instructor
+            @endif
+        </p>
         <div class="d-flex flex-wrap align-items-center">
           <p class="pr-3 d-flex align-items-center">
             <svg class="svg-icon-color-gray mr-1" width="16px" viewBox="0 0 24 24">
@@ -168,16 +174,16 @@
             <div class="instructor-wrap">
               <div class="media media-card">
                 <div class="instructor-img">
-                  <a href="{{ route('instructor.details', $course->instructor_id) }}" class="media-img d-block">
-                    <img class="lazy" src="{{ $course->instructor->photo ? asset('storage/upload/instructor_images/' . $course->instructor->photo) : asset('images/no_image.jpg') }}" alt="Instructor image" loading="lazy" onerror="this.src='{{ asset('images/no_image.jpg') }}'">
+                  <a href="{{ $course->instructor_id ? route('instructor.details', $course->instructor_id) : '#' }}" class="media-img d-block">
+                   <img class="lazy" src="{{ $course->instructor && $course->instructor->photo ? asset('storage/upload/instructor_images/' . $course->instructor->photo) : asset('images/no_image.jpg') }}" alt="Instructor image" loading="lazy" onerror="this.src='{{ asset('images/no_image.jpg') }}'">
                   </a>
                   <ul class="generic-list-item pt-3">
                     <li><i class="la la-play-circle-o mr-2 text-color-3"></i> {{ $instructorCourses->count() }} Courses</li>
-                    <li><a href="{{ route('instructor.details', $course->instructor_id) }}">View all Courses</a></li>
+                   <li><a href="{{ $course->instructor_id ? route('instructor.details', $course->instructor_id) : '#' }}">View all Courses</a></li>
                   </ul>
                 </div><!-- end instructor-img -->
                 <div class="media-body">
-                  <h5><a href="{{ route('instructor.details', $course->instructor_id) }}">{{ $course->instructor->name ?? 'Unknown Instructor' }}</a></h5>
+                 <h5><a href="{{ $course->instructor_id ? route('instructor.details', $course->instructor_id) : '#' }}">{{ $course->instructor->name ?? 'Unknown Instructor' }}</a></h5>
                   <span class="d-block lh-18 pt-2 pb-3">Joined {{ $course->instructor && $course->instructor->created_at ? \Carbon\Carbon::parse($course->instructor->created_at)->diffForHumans() : 'N/A' }}</span>
                   <p class="text-black lh-18 pb-3">{{ $course->instructor->email ?? 'No email available' }}</p>
                 </div>
@@ -202,26 +208,27 @@
                   </div><!-- end rating-wrap -->
                 </div><!-- end review-rating-summary -->
                 <div class="media-body">
-                  @php
-                  $reviewcount = App\Models\Review::where('course_id', $course->id)
-                    ->where('status', 1)
-                    ->select('rating', DB::raw('count(*) as count'))
-                    ->groupBy('rating')
-                    ->orderBy('rating', 'desc')
-                    ->get();
-                  $totalReviews = $reviewcount->sum('count');
-                  $percentages = [];
-                  for ($i = 5; $i >= 1; $i--) {
-                    $ratingCount = $reviewcount->where('rating', $i)->first();
-                    $count = $ratingCount ? $ratingCount->count : 0;
-                    $percent = $totalReviews > 0 ? ($count / $totalReviews) * 100 : 0;
-                    $percentages[] = [
-                      'rating' => $i,
-                      'percent' => $percent,
-                      'count' => $count,
-                    ];
-                  }
-                  @endphp
+                       @php
+                      $reviewcount = $course->reviews()
+                          ->where('status', 1)
+                          ->select('rating', DB::raw('count(*) as count'))
+                          ->groupBy('rating')
+                          ->orderBy('rating', 'desc')
+                          ->get();
+
+                      $totalReviews = $reviewcount->sum('count');
+                      $percentages = [];
+                      for ($i = 5; $i >= 1; $i--) {
+                          $ratingCount = $reviewcount->where('rating', $i)->first();
+                          $count = $ratingCount ? $ratingCount->count : 0;
+                          $percent = $totalReviews > 0 ? ($count / $totalReviews) * 100 : 0;
+                          $percentages[] = [
+                              'rating' => $i,
+                              'percent' => $percent,
+                              'count' => $count,
+                          ];
+                      }
+                      @endphp
 
                   @if (count($percentages) > 0)
                   @foreach ($percentages as $ratingInfo)
@@ -248,8 +255,12 @@
           <div class="course-overview-card pt-4">
             <h3 class="fs-24 font-weight-semi-bold pb-4">Reviews</h3>
             <div class="review-wrap">
-              @php
-              $reviews = App\Models\Review::where('course_id', $course->id)->where('status', 1)->latest()->limit(5)->get();
+             @php
+              $reviews = $course->reviews()
+                  ->where('status', 1)
+                  ->latest()
+                  ->limit(5)
+                  ->get();
               @endphp
               @foreach ($reviews as $item)
               <div class="media media-card border-bottom border-bottom-gray pb-4 mb-4">
@@ -416,7 +427,13 @@
 <section class="related-course-area bg-gray pt-60px pb-60px">
   <div class="container">
     <div class="related-course-wrap">
-      <h3 class="fs-28 font-weight-semi-bold pb-35px">More Courses by <a href="{{ route('instructor.details', $course->instructor_id) }}" class="text-color hover-underline">{{ $course->instructor->name ?? 'Unknown Instructor' }}</a></h3>
+      <h3 class="fs-28 font-weight-semi-bold pb-35px">More Courses by 
+    @if ($course->instructor_id && $course->instructor)
+        <a href="{{ route('instructor.details', $course->instructor_id) }}" class="text-color hover-underline">{{ $course->instructor->name }}</a>
+    @else
+        Unknown Instructor
+    @endif
+      </h3>
       <div class="view-more-carousel-2 owl-action-styled">
         @foreach ($instructorCourses as $inscourse)
         @php

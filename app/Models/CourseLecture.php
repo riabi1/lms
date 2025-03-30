@@ -16,24 +16,21 @@ class CourseLecture extends Model
      */
     protected $guarded = [];
 
-    /**
-     * Define the relationship with the Course model.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function course()
+   
+   public function course()
     {
-        return $this->belongsTo(Course::class, 'course_id', 'id');
+        return $this->belongsTo(Course::class);
     }
 
-    /**
-     * Define the relationship with the CourseSection model.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-   public function section()
+  
+  public function section()
     {
         return $this->belongsTo(CourseSection::class, 'section_id');
+    }
+
+    public function progress()
+    {
+        return $this->hasMany(UserCourseProgress::class, 'lecture_id');
     }
 
     public function getResourcesCountAttribute()

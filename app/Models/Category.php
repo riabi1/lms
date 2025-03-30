@@ -15,4 +15,16 @@ class Category extends Model
   {
     return $this->hasMany(SubCategory::class);
   }
+
+  public function courses()
+    {
+        return $this->hasManyThrough(
+            Course::class,           // Modèle cible (final)
+            SubCategory::class,      // Modèle intermédiaire
+            'category_id',           // Clé étrangère sur la table intermédiaire (sub_categories)
+            'subcategory_id',        // Clé étrangère sur la table cible (courses)
+            'id',                    // Clé primaire sur la table courante (categories)
+            'id'                     // Clé primaire sur la table intermédiaire (sub_categories)
+        );
+    }
 }

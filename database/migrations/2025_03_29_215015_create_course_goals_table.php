@@ -6,23 +6,16 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('course_goals', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('course_id');
-            $table->text('goal_name')->nullable();
-            $table->timestamps();
-             $table->foreign('course_id')->references('id')->on('courses')->onDelete('cascade');
+            $table->id(); // bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT
+            $table->morphs('goalable'); // goalable_id et goalable_type pour la relation polymorphique
+            $table->text('goal_name')->nullable(); // text DEFAULT NULL
+            $table->timestamps(); // created_at et updated_at
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('course_goals');
