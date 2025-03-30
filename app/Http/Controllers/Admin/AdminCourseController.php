@@ -12,52 +12,59 @@ class AdminCourseController extends Controller
      */
     public function index()
     {
-        $courses = Course::with(['instructor', 'category'])
-            ->whereNotNull('instructor_id')
-            ->whereExists(function ($query) {
-                $query->select('*')
-                      ->from('instructors')
-                      ->whereColumn('instructors.id', 'courses.instructor_id');
+        $courses = Course::with(['courseable', 'subcategory', 'category'])
+            ->whereHas('courseable', function ($query) {
+                $query->where('courseable_type', 'App\\Models\\Instructor'); // Filtrer les cours des instructeurs
             })
-            ->whereNotNull('category_id')
-            ->whereExists(function ($query) {
-                $query->select('*')
-                      ->from('categories')
-                      ->whereColumn('categories.id', 'courses.category_id');
-            })
+            ->whereHas('subcategory') // Vérifie l'existence de la sous-catégorie
+            ->whereHas('category')    // Vérifie l'existence de la catégorie
             ->latest()
             ->get();
 
         return view('admin.courses.index', compact('courses'));
     }
 
-
-
     /**
      * Display the specified course.
      */
     public function show($id)
     {
-        $course = Course::findOrFail($id);
+        $course = Course::with(['courseable', 'subcategory', 'category'])
+            ->findOrFail($id);
+
+        // Vérifie si le cours appartient à un instructeur
+        if ($course->courseable_type !== 'App\\Models\\Instructor') {
+            abort(403, 'Ce cours n\'est pas associé à un instructeur.');
+        }
+
         return view('admin.courses.show', compact('course'));
     }
 
-
-
     /**
-     * Update the status of a course 
+     * Update the status of a course.
      */
-    public function UpdateCourseStatus(Request $request)
+    public function updateCourseStatus(Request $request)
     {
         $request->validate([
             'course_id' => 'required|exists:courses,id',
-            'is_checked' => 'boolean'
+            'is_checked' => 'required|boolean',
         ]);
 
-        $course = Course::findOrFail($request->input('course_id'));
-        $course->status = $request->input('is_checked', 0);
+        $course = Course::findOrFail($request->course_id);
+
+        // Vérifie si le cours appartient à un instructeur
+        if ($course->courseable_type !== 'App\\Models\\Instructor') {
+            return response()->json([
+                'message' => 'Impossible de modifier le statut : ce cours n\'est pas associé à un instructeur.',
+            ], 403);
+        }
+
+        $course->status = $request->is_checked;
         $course->save();
 
-        return response()->json(['message' => 'Course Status Updated Successfully']);
+        return response()->json([
+            'message' => 'Course status updated successfully',
+            'status' => $course->status,
+        ]);
     }
 }

@@ -10,8 +10,9 @@ class Order extends Model
     use HasFactory;
     protected $guarded = [];
 
-    public function user(){
-        return $this->belongsTo(User::class, 'user_id' ,'id');
+   public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 
    
@@ -19,6 +20,11 @@ class Order extends Model
   public function courses()
     {
         return $this->morphMany(Course::class, 'courseable');
+    }
+
+    public function course()
+    {
+        return $this->belongsTo(Course::class, 'course_id');
     }
 
 public function instructor(){

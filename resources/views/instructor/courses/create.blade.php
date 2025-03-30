@@ -1,10 +1,12 @@
 @extends('Instructor.layout.Instructor_layout')
 @section('instructor')
+
+<!-- Scripts nécessaires -->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
 
 <div class="page-content">
-    <!--breadcrumb-->
+    <!-- Breadcrumb -->
     <div class="page-breadcrumb d-none d-sm-flex align-items-center mb-3">
         <div class="ps-3">
             <nav aria-label="breadcrumb">
@@ -15,7 +17,7 @@
             </nav>
         </div>
     </div>
-    <!--end breadcrumb-->
+    <!-- End Breadcrumb -->
 
     <div class="card">
         <div class="card-body p-4">
@@ -25,7 +27,7 @@
                 @csrf
 
                 <div class="form-group col-md-6">
-                    <label for="course_name" class="form-label">Course Name</label>
+                    <label for="course_name" class="form-label">Course Name <span class="text-danger">*</span></label>
                     <input type="text" name="course_name" class="form-control @error('course_name') is-invalid @enderror" id="course_name" value="{{ old('course_name') }}">
                     @error('course_name')
                         <span class="invalid-feedback">{{ $message }}</span>
@@ -33,7 +35,7 @@
                 </div>
 
                 <div class="form-group col-md-6">
-                    <label for="course_title" class="form-label">Course Title</label>
+                    <label for="course_title" class="form-label">Course Title <span class="text-danger">*</span></label>
                     <input type="text" name="course_title" class="form-control @error('course_title') is-invalid @enderror" id="course_title" value="{{ old('course_title') }}">
                     @error('course_title')
                         <span class="invalid-feedback">{{ $message }}</span>
@@ -49,7 +51,7 @@
                 </div>
 
                 <div class="form-group col-md-6">
-                    <label class="form-label">&nbsp;</label> <!-- Placeholder pour alignement -->
+                    <label class="form-label">Image Preview</label>
                     <img id="showImage" src="{{ asset('upload/no_image.jpg') }}" alt="Preview" class="rounded-circle p-1 bg-primary" style="width: 100px; height: 100px; object-fit: cover;">
                 </div>
 
@@ -66,7 +68,7 @@
                 </div>
 
                 <div class="form-group col-md-6">
-                    <label for="category_id" class="form-label">Course Category</label>
+                    <label for="category_id" class="form-label">Course Category <span class="text-danger">*</span></label>
                     <select name="category_id" id="category_id" class="form-select @error('category_id') is-invalid @enderror">
                         <option value="" selected disabled>Select a category</option>
                         @foreach ($categories as $cat)
@@ -79,7 +81,7 @@
                 </div>
 
                 <div class="form-group col-md-6">
-                    <label for="subcategory_id" class="form-label">Course Subcategory</label>
+                    <label for="subcategory_id" class="form-label">Course Subcategory <span class="text-danger">*</span></label>
                     <select name="subcategory_id" id="subcategory_id" class="form-select @error('subcategory_id') is-invalid @enderror">
                         <option value="" selected>Select a subcategory</option>
                         <!-- Populated via AJAX -->
@@ -116,7 +118,7 @@
 
                 <div class="form-group col-md-3">
                     <label for="selling_price" class="form-label">Course Price</label>
-                    <input type="text" name="selling_price" class="form-control @error('selling_price') is-invalid @enderror" id="selling_price" value="{{ old('selling_price') }}">
+                    <input type="number" step="0.01" name="selling_price" class="form-control @error('selling_price') is-invalid @enderror" id="selling_price" value="{{ old('selling_price') }}">
                     @error('selling_price')
                         <span class="invalid-feedback">{{ $message }}</span>
                     @enderror
@@ -124,7 +126,7 @@
 
                 <div class="form-group col-md-3">
                     <label for="discount_price" class="form-label">Discount Price</label>
-                    <input type="text" name="discount_price" class="form-control @error('discount_price') is-invalid @enderror" id="discount_price" value="{{ old('discount_price') }}">
+                    <input type="number" step="0.01" name="discount_price" class="form-control @error('discount_price') is-invalid @enderror" id="discount_price" value="{{ old('discount_price') }}">
                     @error('discount_price')
                         <span class="invalid-feedback">{{ $message }}</span>
                     @enderror
@@ -132,17 +134,15 @@
 
                 <div class="form-group col-md-3">
                     <label for="duration" class="form-label">Duration</label>
-                    <input type="text" name="duration" class="form-control @error('duration') is-invalid @enderror" id="duration" value="{{ old('duration') }}">
+                    <input type="text" name="duration" class="form-control @error('duration') is-invalid @enderror" id="duration" value="{{ old('duration') }}" placeholder="e.g., 10 hours">
                     @error('duration')
                         <span class="invalid-feedback">{{ $message }}</span>
                     @enderror
                 </div>
 
-                
-
                 <div class="form-group col-md-12">
                     <label for="prerequisites" class="form-label">Course Prerequisites</label>
-                    <textarea name="prerequisites" class="form-control @error('prerequisites') is-invalid @enderror" id="prerequisites" placeholder="Prerequisites ..." rows="3">{{ old('prerequisites') }}</textarea>
+                    <textarea name="prerequisites" class="form-control @error('prerequisites') is-invalid @enderror" id="prerequisites" placeholder="Enter prerequisites..." rows="3">{{ old('prerequisites') }}</textarea>
                     @error('prerequisites')
                         <span class="invalid-feedback">{{ $message }}</span>
                     @enderror
@@ -162,7 +162,7 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="goals" class="form-label">Goals</label>
-                                <input type="text" name="course_goals[]" id="goals" class="form-control" placeholder="Goals" value="{{ old('course_goals.0') }}">
+                                <input type="text" name="course_goals[]" id="goals" class="form-control" placeholder="Enter a goal" value="{{ old('course_goals.0') }}">
                             </div>
                         </div>
                         <div class="form-group col-md-6" style="padding-top: 30px;">
@@ -211,7 +211,7 @@
                 <div class="row">
                     <div class="form-group col-md-6">
                         <label for="goals">Goals</label>
-                        <input type="text" name="course_goals[]" id="goals" class="form-control" placeholder="Goals">
+                        <input type="text" name="course_goals[]" id="goals" class="form-control" placeholder="Enter a goal">
                     </div>
                     <div class="form-group col-md-6" style="padding-top: 20px">
                         <span class="btn btn-success btn-sm addeventmore"><i class="fa fa-plus-circle"></i> Add</span>
@@ -277,19 +277,27 @@
             }
         });
 
-        // Validation du formulaire
+        // Validation du formulaire avec jQuery Validate
         $('#myForm').validate({
             rules: {
                 course_name: { required: true },
                 course_title: { required: true },
                 category_id: { required: true },
-                subcategory_id: { required: true }
+                subcategory_id: { required: true },
+                image: { accept: "image/jpeg,image/png,image/jpg" },
+                video: { accept: "video/mp4,video/avi,video/mov" },
+                selling_price: { number: true, min: 0 },
+                discount_price: { number: true, min: 0 }
             },
             messages: {
-                course_name: { required: 'Please Enter Course Name' },
-                course_title: { required: 'Please Enter Course Title' },
-                category_id: { required: 'Please Select a Category' },
-                subcategory_id: { required: 'Please Select a Subcategory' }
+                course_name: { required: 'Please enter the course name' },
+                course_title: { required: 'Please enter the course title' },
+                category_id: { required: 'Please select a category' },
+                subcategory_id: { required: 'Please select a subcategory' },
+                image: { accept: 'Please upload a valid image file (JPEG, PNG, JPG)' },
+                video: { accept: 'Please upload a valid video file (MP4, AVI, MOV)' },
+                selling_price: { number: 'Please enter a valid number', min: 'Price cannot be negative' },
+                discount_price: { number: 'Please enter a valid number', min: 'Discount price cannot be negative' }
             },
             errorElement: 'span',
             errorPlacement: function(error, element) {

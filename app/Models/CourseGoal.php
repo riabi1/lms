@@ -14,4 +14,6 @@ class CourseGoal extends Model
     {
         return $this->morphTo();
     }
+
+ 
 }

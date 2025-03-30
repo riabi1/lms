@@ -23,15 +23,31 @@ class IndexController extends Controller
 {
     public function CourseDetails($id, $slug)
     {
-        $course = Course::with(['instructor', 'subcategory', 'sections', 'lectures', 'goals'])->findOrFail($id);
+        $course = Course::with([
+            'subcategory.category',
+            'sections.lectures',
+            'goals',
+            'reviews'
+        ])->findOrFail($id);
+
+        if ($slug !== $course->course_name_slug) {
+            return redirect()->route('course.details', [$course->id, $course->course_name_slug]);
+        }
+
+        $instructor = $course->courseable_type === 'App\Models\Instructor' && $course->courseable_id
+            ? Instructor::find($course->courseable_id)
+            : null;
+
         $goals = $course->goals->pluck('goal_name')->toArray();
         $categories = Category::orderBy('category_name', 'ASC')->get();
-        $instructorId = $course->instructor_id;
 
-        // Vérifier si instructor_id existe avant la requête
-        $instructorCourses = $instructorId
-            ? Course::where('instructor_id', $instructorId)->latest()->get()
-            : collect(); // Retourne une collection vide si pas d'instructeur
+        $instructorCourses = $instructor
+            ? Course::where('courseable_type', 'App\Models\Instructor')
+                    ->where('courseable_id', $instructor->id)
+                    ->where('id', '!=', $course->id)
+                    ->latest()
+                    ->get()
+            : collect();
 
         $relatedCourses = Course::where('subcategory_id', $course->subcategory_id)
             ->where('id', '!=', $id)
@@ -39,13 +55,26 @@ class IndexController extends Controller
             ->limit(5)
             ->get();
 
-        return view('frontend.course.course_details', compact('course', 'goals', 'categories', 'instructorCourses', 'relatedCourses'));
+        $hasPurchased = Auth::check() && Order::where('user_id', Auth::id())
+            ->where('course_id', $course->id)
+            ->where('payment_status', 'paid')
+            ->exists();
+
+        return view('frontend.course.course_details', compact(
+            'course',
+            'goals',
+            'categories',
+            'instructorCourses',
+            'relatedCourses',
+            'instructor',
+            'hasPurchased'
+        ));
     }
 
     public function CategoryCourse(Request $request, $id, $slug)
     {
         $category = Category::where('id', $id)->where('category_slug', $slug)->firstOrFail();
-        $query = Course::with(['goals', 'instructor', 'reviews'])
+        $query = Course::with(['goals', 'courseable', 'reviews'])
             ->where('status', 1)
             ->whereHas('subcategory', function ($q) use ($category) {
                 $q->where('category_id', $category->id);
@@ -92,7 +121,7 @@ class IndexController extends Controller
     public function SubCategoryCourse(Request $request, $id, $slug)
     {
         $subcategory = SubCategory::where('id', $id)->where('subcategory_slug', $slug)->firstOrFail();
-        $query = Course::with(['goals', 'instructor', 'reviews'])
+        $query = Course::with(['goals', 'courseable', 'reviews'])
             ->where('status', 1)
             ->where('subcategory_id', $subcategory->id);
 
@@ -155,7 +184,7 @@ class IndexController extends Controller
 
     public function courses(Request $request)
     {
-        $query = Course::with(['goals', 'instructor', 'reviews'])->where('status', 1);
+        $query = Course::with(['goals', 'courseable', 'reviews'])->where('status', 1);
 
         if ($request->filled('category_id')) {
             $query->whereHas('subcategory', function ($q) use ($request) {
@@ -200,6 +229,4 @@ class IndexController extends Controller
 
         return view('frontend.course.course_list', compact('courses', 'categories'));
     }
-
-
 }

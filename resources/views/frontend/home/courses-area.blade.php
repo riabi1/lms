@@ -1,5 +1,5 @@
 @php
-$courses = App\Models\Course::with(['instructor', 'reviews', 'goals'])->where('status', 1)->orderBy('id', 'ASC')->limit(6)->get();
+$courses = App\Models\Course::with(['courseable', 'reviews', 'goals'])->where('status', 1)->orderBy('id', 'ASC')->limit(6)->get();
 $categories = App\Models\Category::orderBy('category_name', 'ASC')->get();
 @endphp
 
@@ -39,6 +39,7 @@ $categories = App\Models\Category::orderBy('category_name', 'ASC')->get();
               : 0;
             $rating = $course->reviews->avg('rating') ?? 0;
             $reviews_count = $course->reviews->count();
+            $instructor = $course->courseable instanceof \App\Models\Instructor ? $course->courseable : null;
             @endphp
             <div class="col-lg-4 responsive-column-half">
               <div class="card card-item card-preview" data-tooltip-content="#tooltip_content_{{ $course->id }}">
@@ -82,8 +83,8 @@ $categories = App\Models\Category::orderBy('category_name', 'ASC')->get();
                 <div id="tooltip_content_{{ $course->id }}">
                   <div class="card-body">
                     <p class="card-text pb-2">By 
-                      @if ($course->instructor_id && $course->instructor)
-                        <a href="{{ route('instructor.details', $course->instructor_id) }}">{{ $course->instructor->name }}</a>
+                      @if ($instructor)
+                        <a href="{{ route('instructor.details', $instructor->id) }}">{{ $instructor->name }}</a>
                       @else
                         Unknown Instructor
                       @endif
@@ -146,7 +147,7 @@ $categories = App\Models\Category::orderBy('category_name', 'ASC')->get();
         <div class="tab-pane fade" id="category{{ $category->id }}" role="tabpanel" aria-labelledby="category-{{ $category->id }}-tab">
           <div class="row">
             @php
-            $catwiseCourse = App\Models\Course::with(['instructor', 'reviews', 'goals'])
+            $catwiseCourse = App\Models\Course::with(['courseable', 'reviews', 'goals'])
                 ->whereHas('subcategory', function ($query) use ($category) {
                     $query->where('category_id', $category->id);
                 })
@@ -164,6 +165,7 @@ $categories = App\Models\Category::orderBy('category_name', 'ASC')->get();
               : 0;
             $rating = $course->reviews->avg('rating') ?? 0;
             $reviews_count = $course->reviews->count();
+            $instructor = $course->courseable instanceof \App\Models\Instructor ? $course->courseable : null;
             @endphp
             <div class="col-lg-4 responsive-column-half">
               <div class="card card-item card-preview" data-tooltip-content="#tooltip_content_{{ $course->id }}">
@@ -207,8 +209,8 @@ $categories = App\Models\Category::orderBy('category_name', 'ASC')->get();
                 <div id="tooltip_content_{{ $course->id }}">
                   <div class="card-body">
                     <p class="card-text pb-2">By 
-                      @if ($course->instructor_id && $course->instructor)
-                        <a href="{{ route('instructor.details', $course->instructor_id) }}">{{ $course->instructor->name }}</a>
+                      @if ($instructor)
+                        <a href="{{ route('instructor.details', $instructor->id) }}">{{ $instructor->name }}</a>
                       @else
                         Unknown Instructor
                       @endif

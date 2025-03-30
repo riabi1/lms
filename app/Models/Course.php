@@ -47,37 +47,39 @@ class Course extends Model
         'status',
     ];
 
-    public function category()
+    public function instructor()
     {
-        return $this->belongsTo(Category::class, 'category_id', 'id');
+        return $this->belongsTo(Instructor::class, 'instructor_id'); // Spécifie la clé étrangère
     }
 
- public function subCategory()
+public function subcategory()
     {
-        return $this->belongsTo(SubCategory::class, 'subcategory_id');
+        return $this->belongsTo(Subcategory::class, 'subcategory_id');
     }
 
-  public function instructor()
-{
-    return $this->belongsTo(Instructor::class, 'instructor_id');
-}
+public function category()
+    {
+        return $this->hasOneThrough(Category::class, Subcategory::class, 'id', 'id', 'subcategory_id', 'category_id');
+    }
 
-    public function reviews()
+
+
+  public function reviews()
     {
         return $this->morphMany(Review::class, 'reviewable');
     }
 
   
-    public function goals()
-    {
-        return $this->morphMany(CourseGoal::class, 'goalable');
-    }
+public function goals()
+{
+    return $this->morphMany(CourseGoal::class, 'goalable');
+}
    
 
-    public function sections()
-    {
-        return $this->hasMany(CourseSection::class);
-    }
+   public function sections()
+{
+    return $this->hasMany(CourseSection::class);
+}
 
     public function lectures()
     {

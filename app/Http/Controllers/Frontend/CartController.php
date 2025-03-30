@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Course;
 use App\Models\Coupon;
 use App\Models\Order;
+use App\Models\Instructor;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use App\Notifications\OrderPlacedNotification;
@@ -18,7 +19,7 @@ class CartController extends Controller
 {
     public function AddToCart(Request $request, $id)
     {
-        $course = Course::with('instructor')->find($id);
+        $course = Course::with('courseable')->find($id);
         if (!$course) {
             return redirect()->back()->with('error', 'Course not found');
         }
@@ -41,18 +42,22 @@ class CartController extends Controller
         }
 
         $effectivePrice = $course->discount_price !== null && $course->discount_price > 0 
-            ? ($course->selling_price - $course->discount_price) 
+            ? max(0, $course->selling_price - $course->discount_price) 
             : $course->selling_price;
+
+        $instructor = $course->courseable_type === 'App\Models\Instructor' && $course->courseable_id
+            ? Instructor::find($course->courseable_id)
+            : null;
 
         $cart[$id] = [
             'id' => $course->id,
             'name' => $course->course_name,
-            'instructor_name' => $course->instructor ? ($course->instructor->name ?? 'Unknown Instructor') : 'Unknown Instructor',
+            'instructor_name' => $instructor ? $instructor->name : 'Unknown Instructor',
             'selling_price' => $course->selling_price ?? 0,
             'discount_price' => $course->discount_price ?? 0,
             'price' => $effectivePrice,
             'image' => $course->course_image,
-            'instructor_id' => $course->instructor_id,
+            'instructor_id' => $instructor ? $instructor->id : null,
         ];
 
         Session::put('cart', $cart);
@@ -71,7 +76,7 @@ class CartController extends Controller
 
         $coupons = Session::get('coupons', []);
         $couponDiscount = array_sum(array_column($coupons, 'discount_amount'));
-        $total = $subtotal - $couponDiscount;
+        $total = max(0, $subtotal - $couponDiscount);
 
         return view('User.mycart.view_mycart', compact('cart', 'subtotal', 'couponDiscount', 'total', 'coupons'));
     }
@@ -95,22 +100,24 @@ class CartController extends Controller
             $coupons = Session::get('coupons', []);
             $totalPrice = $subtotal;
             $couponDiscount = 0;
-            if (!empty($coupons)) {
-                $newSubtotal = $subtotal;
+
+            if (!empty($coupons) && !empty($cart)) {
                 $updatedCoupons = [];
                 foreach ($coupons as $couponData) {
                     $coupon = Coupon::where('coupon_name', $couponData['coupon_name'])->first();
-                    if ($coupon) {
-                        $discount = round($newSubtotal * $coupon->coupon_discount / 100);
+                    if ($coupon && $this->isCouponApplicable($coupon, $cart)) {
+                        $discount = round($subtotal * $coupon->coupon_discount / 100);
                         $updatedCoupons[$coupon->coupon_name] = [
                             'coupon_name' => $coupon->coupon_name,
                             'discount_amount' => $discount,
                         ];
                         $couponDiscount += $discount;
-                        $totalPrice = max(0, $newSubtotal - $couponDiscount);
                     }
                 }
                 Session::put('coupons', $updatedCoupons);
+                $totalPrice = max(0, $subtotal - $couponDiscount);
+            } else {
+                Session::forget('coupons');
             }
 
             return response()->json([
@@ -129,8 +136,22 @@ class CartController extends Controller
         ], 404);
     }
 
+    private function isCouponApplicable($coupon, $cart)
+    {
+        foreach ($cart as $item) {
+            if ($coupon->course_id == $item['id'] && $coupon->instructor_id == $item['instructor_id']) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public function CouponApply(Request $request)
     {
+        $request->validate([
+            'coupon_name' => 'required|string|max:255',
+        ]);
+
         $coupon = Coupon::where('coupon_name', $request->coupon_name)
             ->where('coupon_validity', '>=', Carbon::now()->format('Y-m-d'))
             ->where('status', 1)
@@ -145,14 +166,7 @@ class CartController extends Controller
             return redirect()->route('cart')->with('error', 'Cart is empty');
         }
 
-        $applicable = false;
-        foreach ($cart as $item) {
-            if ($coupon->course_id == $item['id'] && $coupon->instructor_id == $item['instructor_id']) {
-                $applicable = true;
-                break;
-            }
-        }
-        if (!$applicable) {
+        if (!$this->isCouponApplicable($coupon, $cart)) {
             return redirect()->route('cart')->with('error', 'Coupon not applicable to any course in cart');
         }
 
@@ -199,7 +213,7 @@ class CartController extends Controller
         $subtotal = array_sum(array_column($cart, 'price'));
         $coupons = Session::get('coupons', []);
         $couponDiscount = array_sum(array_column($coupons, 'discount_amount'));
-        $total = $subtotal - $couponDiscount;
+        $total = max(0, $subtotal - $couponDiscount);
 
         $adjustedPrices = [];
         if ($couponDiscount > 0 && $subtotal > 0) {
@@ -217,7 +231,7 @@ class CartController extends Controller
         return view('User.checkout.checkout', compact('cart', 'subtotal', 'couponDiscount', 'total', 'coupons', 'adjustedPrices'));
     }
 
-   public function CheckoutProcess(Request $request)
+    public function CheckoutProcess(Request $request)
     {
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'Please log in.');
@@ -238,11 +252,21 @@ class CartController extends Controller
             'price' => 'required|array',
             'instructor_id' => 'required|array',
             'adjusted_price' => 'required|array',
-            'total' => 'required|numeric',
+            'total' => 'required|numeric|min:0',
             'stripeToken' => 'required',
         ]);
 
-        // Vérifier si un cours dans le panier a déjà été acheté
+        // Vérifier la cohérence des données du panier
+        foreach ($request->course_id as $index => $courseId) {
+            if (!isset($cart[$courseId]) || 
+                $cart[$courseId]['name'] !== $request->course_title[$index] || 
+                $cart[$courseId]['instructor_id'] != $request->instructor_id[$index] ||
+                abs($cart[$courseId]['price'] - $request->price[$index]) > 0.01) {
+                return redirect()->back()->with('error', 'Cart data has been tampered with.');
+            }
+        }
+
+        // Vérifier les cours déjà achetés
         $purchasedCourses = Order::where('user_id', Auth::id())
             ->where('payment_status', 'paid')
             ->pluck('course_id')
@@ -257,7 +281,7 @@ class CartController extends Controller
         $subtotal = array_sum(array_column($cart, 'price'));
         $coupons = Session::get('coupons', []);
         $couponDiscount = array_sum(array_column($coupons, 'discount_amount'));
-        $total = $subtotal - $couponDiscount;
+        $total = max(0, $subtotal - $couponDiscount);
 
         if (abs($request->total - $total) > 0.01) {
             return redirect()->back()->with('error', 'Total amount mismatch.');
@@ -267,8 +291,8 @@ class CartController extends Controller
 
         try {
             $charge = Charge::create([
-                'amount' => $total * 100,
-                'currency' => 'eur',
+                'amount' => round($total * 100),
+                'currency' => 'eur', 
                 'source' => $request->stripeToken,
                 'description' => 'Payment for multiple courses by ' . Auth::user()->name,
             ]);
@@ -278,9 +302,7 @@ class CartController extends Controller
             return redirect()->back()->with('error', 'Payment failed: ' . $e->getMessage());
         }
 
-        // Tableau pour stocker les commandes par instructeur
         $ordersByInstructor = [];
-
         foreach ($request->course_id as $index => $courseId) {
             $order = new Order();
             $order->user_id = Auth::id();
@@ -292,7 +314,6 @@ class CartController extends Controller
             $order->payment_id = $paymentId;
             $order->save();
 
-            // Regrouper les commandes par instructeur
             $instructorId = $request->instructor_id[$index];
             if (!isset($ordersByInstructor[$instructorId])) {
                 $ordersByInstructor[$instructorId] = [];
@@ -300,15 +321,13 @@ class CartController extends Controller
             $ordersByInstructor[$instructorId][] = $order;
         }
 
-        // Envoyer une notification à chaque instructeur
         foreach ($ordersByInstructor as $instructorId => $orders) {
-            $instructor = \App\Models\Instructor::find($instructorId);
+            $instructor = Instructor::find($instructorId);
             if ($instructor) {
                 foreach ($orders as $order) {
                     $instructor->notify(new OrderPlacedNotification($order));
                 }
-               
-            } 
+            }
         }
 
         Session::forget('cart');

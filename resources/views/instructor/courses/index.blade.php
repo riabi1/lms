@@ -2,7 +2,7 @@
 @section('instructor')
 
 <div class="page-content">
-    <!--breadcrumb-->
+    <!-- Breadcrumb -->
     <div class="page-breadcrumb d-none d-sm-flex align-items-center mb-3">
         <div class="ps-3">
             <nav aria-label="breadcrumb">
@@ -37,12 +37,15 @@
                         <tr>
                             <td>{{ $key + 1 }}</td>
                             <td>
-                                <img src="{{ $item->course_image ? asset('storage/upload/course_images/thumbnail/' . $item->course_image) : asset('upload/no_image.jpg') }}" alt="{{ $item->course_name }}" style="width: 70px; height: 40px; object-fit: cover;" class="img-fluid">
+                                <img src="{{ $item->course_image ? asset('storage/upload/course_images/thumbnail/' . $item->course_image) : asset('upload/no_image.jpg') }}" 
+                                     alt="{{ $item->course_name }}" 
+                                     style="width: 70px; height: 40px; object-fit: cover;" 
+                                     class="img-fluid">
                             </td>
                             <td>{{ $item->course_name }}</td>
-                            <td>{{ optional($item->category)->category_name ?? 'No Category' }}</td>
-                            <td>{{ $item->selling_price ?? 'N/A' }}TND</td>
-                            <td>{{ $item->discount_price ?? 'N/A' }}TND</td>
+                            <td>{{ $item->category ? $item->category->category_name : 'No Category' }}</td>
+                            <td>{{ $item->selling_price ? number_format($item->selling_price, 2) . ' TND' : 'N/A' }}</td>
+                            <td>{{ $item->discount_price ? number_format($item->discount_price, 2) . ' TND' : 'N/A' }}</td>
                             <td>
                                 <a href="{{ route('instructor.courses.show', $item->id) }}" class="btn btn-primary btn-sm" title="View"><i class="lni lni-eye"></i></a>
                                 <a href="{{ route('instructor.courses.edit', $item->id) }}" class="btn btn-info btn-sm" title="Edit"><i class="lni lni-eraser"></i></a>
@@ -66,12 +69,16 @@
     </div>
 </div>
 
-<!-- DataTables Scripts (si utilisé) -->
+<!-- DataTables Scripts -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 <script>
     $(document).ready(function() {
-        $('#example').DataTable();
+        $('#example').DataTable({
+            "order": [[0, "asc"]], // Trier par la colonne "Sl" par défaut
+            "pageLength": 10       // Nombre d'entrées par page
+        });
     });
 </script>
 

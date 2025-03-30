@@ -88,6 +88,7 @@ Course List | Easy Learning
                             $discountPercentage = ($course->selling_price > 0 && $course->discount_price !== null)
                                 ? round(($course->discount_price / $course->selling_price) * 100)
                                 : 0;
+                            $instructor = $course->courseable instanceof \App\Models\Instructor ? $course->courseable : null;
                         @endphp
                         <div class="col-lg-4 col-md-6 responsive-column-half">
                             <div class="card card-item card-preview" data-tooltip-content="#tooltip_content_{{ $course->id }}">
@@ -111,7 +112,11 @@ Course List | Easy Learning
                                         <a href="{{ route('course.details', [$course->id, $course->course_name_slug]) }}">{{ $course->course_title }}</a>
                                     </h5>
                                     <p class="card-text">
-                                        <a href="{{ route('instructor.details', $course->instructor_id) }}">{{ $course->instructor->name ?? 'Unknown Instructor' }}</a>
+                                        @if ($instructor)
+                                            <a href="{{ route('instructor.details', $instructor->id) }}">{{ $instructor->name }}</a>
+                                        @else
+                                            Unknown Instructor
+                                        @endif
                                     </p>
                                     <div class="rating-wrap d-flex align-items-center py-2">
                                         <div class="review-stars">
@@ -136,7 +141,14 @@ Course List | Easy Learning
                             <div class="tooltip_templates" style="display: none;">
                                 <div id="tooltip_content_{{ $course->id }}">
                                     <div class="card-body">
-                                        <p class="card-text pb-2">By <a href="{{ route('instructor.details', $course->instructor_id) }}">{{ $course->instructor->name ?? 'Unknown Instructor' }}</a></p>
+                                        <p class="card-text pb-2">
+                                            By 
+                                            @if ($instructor)
+                                                <a href="{{ route('instructor.details', $instructor->id) }}">{{ $instructor->name }}</a>
+                                            @else
+                                                Unknown Instructor
+                                            @endif
+                                        </p>
                                         <h5 class="card-title pb-1">
                                             <a href="{{ route('course.details', [$course->id, $course->course_name_slug]) }}">{{ $course->course_title }}</a>
                                         </h5>

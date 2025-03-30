@@ -1,8 +1,11 @@
 @extends('Instructor.layout.Instructor_layout')
 @section('instructor')
 
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+
 <div class="page-content">
-    <!--breadcrumb-->
+    <!-- Breadcrumb -->
     <div class="page-breadcrumb d-none d-sm-flex align-items-center mb-3">
         <div class="ps-3">
             <nav aria-label="breadcrumb">
@@ -16,41 +19,59 @@
             <a href="{{ route('instructor.quiz.create') }}" class="btn btn-primary px-5">Add Quiz</a>
         </div>
     </div>
+    <!-- End Breadcrumb -->
 
     <div class="card">
         <div class="card-body">
+            <!-- Messages Flash -->
+            @if (session('message'))
+                <div class="alert alert-{{ session('alert-type', 'info') }} alert-dismissible fade show" role="alert">
+                    {{ session('message') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+
             <div class="table-responsive">
-                <table id="example" class="table table-striped table-bordered" style="width:100%">
+                <table id="quizTable" class="table table-striped table-bordered" style="width:100%">
                     <thead>
                         <tr>
-                            <th>Sl</th>
+                            <th>#</th>
                             <th>Course</th>
                             <th>Title</th>
                             <th>Time Limit</th>
-                            <th>Action</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse ($quizzes as $key => $quiz)
-                        <tr>
-                            <td>{{ $key + 1 }}</td>
-                            <td>{{ $quiz->course->course_name }}</td>
-                            <td>{{ $quiz->title }}</td>
-                            <td>{{ $quiz->time_limit ? $quiz->time_limit . ' min' : 'N/A' }}</td>
-                            <td>
-                                <a href="{{ route('instructor.quiz.show', $quiz->id) }}" class="btn btn-primary btn-sm" title="View"><i class="lni lni-eye"></i></a>
-                                <a href="{{ route('instructor.quiz.edit', $quiz->id) }}" class="btn btn-info btn-sm" title="Edit"><i class="lni lni-eraser"></i></a>
-                                <form action="{{ route('instructor.quiz.destroy', $quiz->id) }}" method="POST" style="display:inline;">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-danger btn-sm" title="Delete" onclick="return confirm('Are you sure you want to delete this quiz?');"><i class="lni lni-trash"></i></button>
-                                </form>
-                            </td>
-                        </tr>
+                            <tr>
+                                <td>{{ $key + 1 }}</td>
+                                <td>{{ $quiz->course->course_name ?? 'N/A' }}</td>
+                                <td>{{ $quiz->title }}</td>
+                                <td>{{ $quiz->time_limit ? $quiz->time_limit . ' min' : 'No Limit' }}</td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="{{ route('instructor.quiz.show', $quiz->id) }}" class="btn btn-sm btn-primary" title="View">
+                                            <i class="lni lni-eye"></i>
+                                        </a>
+                                        <a href="{{ route('instructor.quiz.edit', $quiz->id) }}" class="btn btn-sm btn-info" title="Edit">
+                                            <i class="lni lni-eraser"></i>
+                                        </a>
+                                        <form action="{{ route('instructor.quiz.destroy', $quiz->id) }}" method="POST" style="display:inline;">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-danger" title="Delete" 
+                                                    onclick="return confirm('Are you sure you want to delete this quiz?');">
+                                                <i class="lni lni-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
                         @empty
-                        <tr>
-                            <td colspan="5" class="text-center">No quizzes found.</td>
-                        </tr>
+                            <tr>
+                                <td colspan="5" class="text-center">No quizzes found.</td>
+                            </tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -60,11 +81,23 @@
 </div>
 
 <!-- DataTables Scripts -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 <script>
     $(document).ready(function() {
-        $('#example').DataTable();
+        $('#quizTable').DataTable({
+            "paging": true,
+            "lengthChange": true,
+            "searching": true,
+            "ordering": true,
+            "info": true,
+            "autoWidth": false,
+            "responsive": true,
+            "language": {
+                "emptyTable": "No quizzes available in table"
+            }
+        });
     });
 </script>
 

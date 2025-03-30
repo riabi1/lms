@@ -36,15 +36,15 @@
                         @forelse ($cart as $id => $item)
                             <tr id="cart-row-{{ $id }}">
                                 <td class="text-center align-middle">
-                                    <img src="{{ !empty($item['image']) ? Storage::url('upload/course_images/thumbnail/' . $item['image']) : url('upload/no_image.jpg') }}" 
+                                    <img src="{{ $item['image'] ? asset('storage/upload/course_images/thumbnail/' . $item['image']) : asset('upload/no_image.jpg') }}" 
                                          alt="{{ $item['name'] }}" 
                                          class="rounded lazy" 
                                          style="width: 75px; height: auto;">
                                 </td>
                                 <td class="align-middle">
                                     <strong>{{ $item['name'] }}</strong><br>
-                                    By <a href="{{ route('instructor.details', $item['instructor_id'] ?? 'unknown') }}">
-                                        {{ $item['instructor_name'] ?? 'Unknown Instructor' }}
+                                    By <a href="{{ $item['instructor_id'] ? route('instructor.details', $item['instructor_id']) : '#' }}">
+                                        {{ $item['instructor_name'] }}
                                     </a>
                                 </td>
                                 <td class="text-right align-middle">
@@ -52,7 +52,7 @@
                                         <del>{{ number_format($item['selling_price'], 2) }} TND</del><br>
                                         {{ number_format($item['price'], 2) }} TND
                                     @else
-                                        {{ number_format($item['selling_price'] ?? $item['price'], 2) }} TND
+                                        {{ number_format($item['price'], 2) }} TND
                                     @endif
                                 </td>
                                 <td class="text-center align-middle">
@@ -67,13 +67,13 @@
                     </tbody>
                 </table>
 
-                @if ($cart)
+                @if (!empty($cart))
                     <div class="d-flex justify-content-between pt-4">
                         <div>
                             <form action="{{ route('coupon.apply') }}" method="POST" id="coupon-form">
                                 @csrf
                                 <div class="input-group">
-                                    <input class="form-control" type="text" name="coupon_name" placeholder="Enter coupon code">
+                                    <input class="form-control" type="text" name="coupon_name" placeholder="Enter coupon code" required>
                                     <button type="submit" class="btn theme-btn">Apply Coupon</button>
                                 </div>
                             </form>
@@ -100,7 +100,7 @@
                         <div class="bg-gray p-4 mt-4" id="cart-summary">
                             <p>Subtotal: <span id="subtotal">{{ number_format($subtotal, 2) }} TND</span></p>
                             @if (!empty($coupons))
-                                <p>Total Coupon Discount: -{{ number_format($couponDiscount, 2) }} TND</p>
+                                <p>Total Coupon Discount: <span id="coupon-discount">-{{ number_format($couponDiscount, 2) }} TND</span></p>
                                 <h4>Total: <span id="total-price">{{ number_format($total, 2) }} TND</span></h4>
                             @else
                                 <h4>Total: <span id="total-price">{{ number_format($subtotal, 2) }} TND</span></h4>
@@ -113,9 +113,8 @@
         </div>
     </section>
 
-    <!-- Script AJAX pour la suppression -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
+   <script>
     $(document).ready(function() {
         $('.remove-from-cart').on('click', function(e) {
             e.preventDefault();
@@ -123,28 +122,30 @@
             var row = $('#cart-row-' + courseId);
 
             $.ajax({
-                url: '{{ route("cart.remove", "") }}/' + courseId,
+                url: '{{ route("cart.remove", "__ID__") }}'.replace('__ID__', courseId),
                 type: 'GET',
                 dataType: 'json',
                 success: function(response) {
                     if (response.success) {
-                        // Supprime la ligne du tableau
                         row.remove();
 
-                        // Met à jour le sous-total et le total
                         $('#subtotal').text(response.subtotal + ' TND');
                         $('#total-price').text(response.totalPrice + ' TND');
 
-                        // Vérifie si le panier est vide
                         if (response.cartCount === 0) {
                             $('#cart-items').html('<tr><td colspan="4" class="text-center">Cart is empty.</td></tr>');
                             $('#cart-summary').remove();
-                        } else if (response.couponDiscount !== undefined) {
-                            // Met à jour la remise si elle existe
-                            $('#coupon-list').siblings('p').text('Total Coupon Discount: -' + response.couponDiscount + ' TND');
+                            $('#coupon-list').remove();
+                        } else if (response.couponDiscount > 0) {
+                            $('#coupon-discount').text('-' + response.couponDiscount + ' TND');
+                            if (!document.getElementById('coupon-discount')) {
+                                $('#subtotal').after('<p>Total Coupon Discount: <span id="coupon-discount">-' + response.couponDiscount + ' TND</span></p>');
+                            }
+                        } else {
+                            $('#coupon-list').remove();
+                            $('#coupon-discount').parent().remove();
                         }
 
-                        // Affiche un message de succès (optionnel)
                         alert(response.message);
                     } else {
                         alert(response.message);

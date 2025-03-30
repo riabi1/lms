@@ -8,25 +8,27 @@ use Illuminate\Http\Request;
 
 class InstructorManagementController extends Controller
 {
-   
     /**
      * Display a listing of the instructors or handle section display.
      */
     public function index(Request $request)
     {
-        $allinstructor = Instructor::all();
-        $section = $request->query('section', 'list'); 
+        $allinstructor = Instructor::withCount('courses')->latest()->get(); // Charger le nombre de cours
+        $section = $request->query('section', 'list'); // Par défaut : liste
         $instructor = null;
 
-        if ($section === 'show') {
-            $instructor = Instructor::find($request->query('id'));
+        if ($section === 'show' && $request->query('id')) {
+            $instructor = Instructor::with('courses')->find($request->query('id')); // Charger les cours pour les détails
+            if (!$instructor) {
+                return redirect()->route('admin.instructors.index')->with('message', 'Instructor not found')->with('alert-type', 'error');
+            }
         }
 
         return view('admin.instructor.index', compact('allinstructor', 'section', 'instructor'));
     }
 
     /**
-     * Display the specified instructor .
+     * Display the specified instructor.
      */
     public function show($id)
     {
@@ -47,8 +49,8 @@ class InstructorManagementController extends Controller
         $instructor->update(['status' => $request->status]);
 
         return response()->json([
-            'message' => 'Instructor status updated successfully!'
+            'message' => 'Instructor status updated successfully!',
+            'status' => $instructor->status,
         ]);
     }
-
 }
