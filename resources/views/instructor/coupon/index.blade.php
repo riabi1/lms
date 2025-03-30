@@ -30,36 +30,61 @@
                         <tr>
                             <th>Sl</th>
                             <th>Coupon Name</th>
-                            <th>Coupon Discount</th>
-                            <th>Coupon Status</th>
+                            <th>Discount</th>
+                            <th>Validity</th>
+                            <th>Status</th>
                             <th>Course</th>
                             <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($coupons as $key => $item)
+                        @forelse ($coupons as $key => $item)
                             <tr>
                                 <td>{{ $key + 1 }}</td>
                                 <td>{{ $item->coupon_name }}</td>
                                 <td>{{ $item->coupon_discount }}%</td>
                                 <td>
-                                    @if ($item->coupon_validity >= Carbon\Carbon::now()->format('Y-m-d'))
-                                        <span class="badge bg-success">Valid</span>
+                                    {{ \Carbon\Carbon::parse($item->coupon_validity)->format('d M Y') }}
+                                    @if ($item->coupon_validity >= \Carbon\Carbon::now()->format('Y-m-d'))
+                                        <span class="badge bg-success ms-2">Valid</span>
                                     @else
-                                        <span class="badge bg-danger">Invalid</span>
+                                        <span class="badge bg-danger ms-2">Expired</span>
                                     @endif
                                 </td>
-                                <td>{{ $item->course ? $item->course->course_name : 'N/A' }}</td>
                                 <td>
-                                    <a href="{{ route('instructor.coupon.edit', $item->id) }}" class="btn btn-info px-5">Edit</a>
+                                    @if ($item->status == 1)
+                                        <span class="badge bg-primary">Active</span>
+                                    @else
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @php
+                                        $course = \App\Models\Course::find($item->course_id);
+                                    @endphp
+                                    {{ $course ? $course->course_name : 'N/A' }}
+                                </td>
+                                <td>
+                                    <a href="{{ route('instructor.coupon.edit', $item->id) }}" class="btn btn-info px-3">Edit</a>
                                     <form action="{{ route('instructor.coupon.destroy', $item->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this coupon?');">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-danger px-5">Delete</button>
+                                        <button type="submit" class="btn btn-danger px-3">Delete</button>
+                                    </form>
+                                    <form action="{{ route('instructor.coupon.toggleStatus', $item->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to change the status of this coupon?');">
+                                        @csrf
+                                        @method('PUT')
+                                        <button type="submit" class="btn {{ $item->status == 1 ? 'btn-warning' : 'btn-success' }} px-3">
+                                            {{ $item->status == 1 ? 'Deactivate' : 'Activate' }}
+                                        </button>
                                     </form>
                                 </td>
                             </tr>
-                        @endforeach
+                        @empty
+                            <tr>
+                                <td colspan="7" class="text-center">No coupons found.</td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
@@ -67,12 +92,16 @@
     </div>
 </div>
 
-<!-- Inclure DataTables JS si utilisé -->
+<!-- Inclure jQuery et DataTables -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
 <script>
     $(document).ready(function() {
-        $('#example').DataTable();
+        $('#example').DataTable({
+            "order": [[0, "asc"]],
+            "pageLength": 10
+        });
     });
 </script>
 

@@ -14,8 +14,8 @@
       <div class="breadcrumb-content">
         <ul class="generic-list-item generic-list-item-arrow d-flex flex-wrap align-items-center">
           <li><a href="{{ url('/') }}">Home</a></li>
-          <li><a href="{{ $course->category ? url('category/'.$course->category->id.'/'.$course->category->category_slug) : '#' }}">{{ $course->category->category_name ?? 'Uncategorized' }}</a></li>
-          <li><a href="{{ $course->subcategory ? url('subcategory/'.$course->subcategory->id.'/'.$course->subcategory->subcategory_slug) : '#' }}">{{ $course->subcategory->subcategory_name ?? 'No Subcategory' }}</a></li>
+          <li><a href="{{ $course->subcategory && $course->subcategory->category ? url('category/'.$course->subcategory->category->id.'/'.$course->subcategory->category->category_slug) : '#' }}">{{ $course->subcategory && $course->subcategory->category ? $course->subcategory->category->category_name : 'Uncategorized' }}</a></li>
+          <li><a href="{{ $course->subcategory ? url('subcategory/'.$course->subcategory->id.'/'.$course->subcategory->subcategory_slug) : '#' }}">{{ $course->subcategory ? $course->subcategory->subcategory_name : 'No Subcategory' }}</a></li>
         </ul>
         <div class="section-heading">
           <h2 class="section__title">{{ $course->course_name }}</h2>
@@ -32,7 +32,7 @@
           <h6 class="ribbon ribbon-lg mr-2 bg-3 text-white">Highest Rated</h6>
           @endif
 
-         @php
+          @php
           $reviewcount = $course->reviews()->where('status', 1)->latest()->get();
           $average = $course->reviews()->where('status', 1)->avg('rating');
           @endphp
@@ -48,8 +48,8 @@
           </div>
         </div><!-- end d-flex -->
         <p class="pt-2 pb-1">Created by 
-            @if ($course->instructor_id && $course->instructor)
-                <a href="{{ route('instructor.details', $course->instructor_id) }}" class="text-color hover-underline">{{ $course->instructor->name }}</a>
+            @if ($instructor)
+                <a href="{{ route('instructor.details', $instructor->id) }}" class="text-color hover-underline">{{ $instructor->name }}</a>
             @else
                 Unknown Instructor
             @endif
@@ -96,7 +96,7 @@
               @forelse ($goals as $goal)
               <li><i class="la la-check mr-1 text-black"></i> {{ trim($goal) }}</li>
               @empty
-              <li>No goals specified for this course.</li>
+              <li><i class="la la-check mr-1 text-black"></i> No goals specified for this course.</li>
               @endforelse
             </ul>
           </div><!-- end course-overview-card -->
@@ -104,16 +104,16 @@
           <div class="course-overview-card">
             <h3 class="fs-24 font-weight-semi-bold pb-3">Requirements</h3>
             <ul class="generic-list-item generic-list-item-bullet fs-15">
-              <li>{{ $course->prerequisites }}</li>
+              <li>{{ $course->prerequisites ?? 'No specific requirements.' }}</li>
             </ul>
           </div><!-- end course-overview-card -->
           
           <div class="course-overview-card">
             <h3 class="fs-24 font-weight-semi-bold pb-3">Description</h3>
-            <p class="fs-15 pb-2">{!! $course->description !!}</p>
+            <p class="fs-15 pb-2">{!! $course->description ?? 'No description available.' !!}</p>
             <div class="collapse" id="collapseMore">
               <h4 class="fs-20 font-weight-semi-bold py-2">Who this course is for:</h4>
-              <p class="fs-15 pb-2">{{ $course->prerequisites }}</p>
+              <p class="fs-15 pb-2">{{ $course->prerequisites ?? 'Anyone interested in learning.' }}</p>
             </div>
             <a class="collapse-btn collapse--btn fs-15" data-toggle="collapse" href="#collapseMore" role="button" aria-expanded="false" aria-controls="collapseMore">
               <span class="collapse-btn-hide">Show more<i class="la la-angle-down ml-1 fs-14"></i></span>
@@ -156,7 +156,7 @@
                               <i class="la la-play-circle mr-2"></i>
                               {{ $lect->lecture_title }}
                             </span>
-                            <span class="text-muted">{{ $lect->duration ?? '03:09' }}</span>
+                            <span class="text-muted">N/A</span> <!-- Pas de duration dans la DB -->
                           </div>
                         </li>
                         @endforeach
@@ -174,18 +174,18 @@
             <div class="instructor-wrap">
               <div class="media media-card">
                 <div class="instructor-img">
-                  <a href="{{ $course->instructor_id ? route('instructor.details', $course->instructor_id) : '#' }}" class="media-img d-block">
-                   <img class="lazy" src="{{ $course->instructor && $course->instructor->photo ? asset('storage/upload/instructor_images/' . $course->instructor->photo) : asset('images/no_image.jpg') }}" alt="Instructor image" loading="lazy" onerror="this.src='{{ asset('images/no_image.jpg') }}'">
+                  <a href="{{ $instructor ? route('instructor.details', $instructor->id) : '#' }}" class="media-img d-block">
+                   <img class="lazy" src="{{ $instructor && $instructor->photo ? asset('storage/upload/instructor_images/' . $instructor->photo) : asset('images/no_image.jpg') }}" alt="Instructor image" loading="lazy" onerror="this.src='{{ asset('images/no_image.jpg') }}'">
                   </a>
                   <ul class="generic-list-item pt-3">
                     <li><i class="la la-play-circle-o mr-2 text-color-3"></i> {{ $instructorCourses->count() }} Courses</li>
-                   <li><a href="{{ $course->instructor_id ? route('instructor.details', $course->instructor_id) : '#' }}">View all Courses</a></li>
+                   <li><a href="{{ $instructor ? route('instructor.details', $instructor->id) : '#' }}">View all Courses</a></li>
                   </ul>
                 </div><!-- end instructor-img -->
                 <div class="media-body">
-                 <h5><a href="{{ $course->instructor_id ? route('instructor.details', $course->instructor_id) : '#' }}">{{ $course->instructor->name ?? 'Unknown Instructor' }}</a></h5>
-                  <span class="d-block lh-18 pt-2 pb-3">Joined {{ $course->instructor && $course->instructor->created_at ? \Carbon\Carbon::parse($course->instructor->created_at)->diffForHumans() : 'N/A' }}</span>
-                  <p class="text-black lh-18 pb-3">{{ $course->instructor->email ?? 'No email available' }}</p>
+                 <h5><a href="{{ $instructor ? route('instructor.details', $instructor->id) : '#' }}">{{ $instructor->name ?? 'Unknown Instructor' }}</a></h5>
+                  <span class="d-block lh-18 pt-2 pb-3">Joined {{ $instructor && $instructor->created_at ? \Carbon\Carbon::parse($instructor->created_at)->diffForHumans() : 'N/A' }}</span>
+                  <p class="text-black lh-18 pb-3">{{ $instructor->email ?? 'No email available' }}</p>
                 </div>
               </div>
             </div><!-- end instructor-wrap -->
@@ -208,27 +208,27 @@
                   </div><!-- end rating-wrap -->
                 </div><!-- end review-rating-summary -->
                 <div class="media-body">
-                       @php
-                      $reviewcount = $course->reviews()
-                          ->where('status', 1)
-                          ->select('rating', DB::raw('count(*) as count'))
-                          ->groupBy('rating')
-                          ->orderBy('rating', 'desc')
-                          ->get();
+                  @php
+                  $reviewcount = $course->reviews()
+                      ->where('status', 1)
+                      ->select('rating', DB::raw('count(*) as count'))
+                      ->groupBy('rating')
+                      ->orderBy('rating', 'desc')
+                      ->get();
 
-                      $totalReviews = $reviewcount->sum('count');
-                      $percentages = [];
-                      for ($i = 5; $i >= 1; $i--) {
-                          $ratingCount = $reviewcount->where('rating', $i)->first();
-                          $count = $ratingCount ? $ratingCount->count : 0;
-                          $percent = $totalReviews > 0 ? ($count / $totalReviews) * 100 : 0;
-                          $percentages[] = [
-                              'rating' => $i,
-                              'percent' => $percent,
-                              'count' => $count,
-                          ];
-                      }
-                      @endphp
+                  $totalReviews = $reviewcount->sum('count');
+                  $percentages = [];
+                  for ($i = 5; $i >= 1; $i--) {
+                      $ratingCount = $reviewcount->where('rating', $i)->first();
+                      $count = $ratingCount ? $ratingCount->count : 0;
+                      $percent = $totalReviews > 0 ? ($count / $totalReviews) * 100 : 0;
+                      $percentages[] = [
+                          'rating' => $i,
+                          'percent' => $percent,
+                          'count' => $count,
+                      ];
+                  }
+                  @endphp
 
                   @if (count($percentages) > 0)
                   @foreach ($percentages as $ratingInfo)
@@ -255,7 +255,7 @@
           <div class="course-overview-card pt-4">
             <h3 class="fs-24 font-weight-semi-bold pb-4">Reviews</h3>
             <div class="review-wrap">
-             @php
+              @php
               $reviews = $course->reviews()
                   ->where('status', 1)
                   ->latest()
@@ -293,7 +293,7 @@
               @csrf
               <div class="leave-rating-wrap pb-4">
                 <div class="leave-rating leave--rating">
-                  <input type="radio" name="rate" id="star5" value="5" />
+                  <input type="radio" name="rate" id="star5" value="5" required />
                   <label for="star5"></label>
                   <input type="radio" name="rate" id="star4" value="4" />
                   <label for="star4"></label>
@@ -306,11 +306,11 @@
                 </div><!-- end leave-rating -->
               </div>
               <input type="hidden" name="course_id" value="{{ $course->id }}">
-              <input type="hidden" name="instructor_id" value="{{ $course->instructor_id }}">
+              <input type="hidden" name="instructor_id" value="{{ $instructor ? $instructor->id : null }}">
               <div class="input-box col-lg-12">
                 <label class="label-text">Message</label>
                 <div class="form-group">
-                  <textarea class="form-control form--control pl-3" name="comment" placeholder="Write Message" rows="5"></textarea>
+                  <textarea class="form-control form--control pl-3" name="comment" placeholder="Write Message" rows="5" required></textarea>
                 </div>
               </div><!-- end input-box -->
               <div class="btn-box col-lg-12">
@@ -346,19 +346,15 @@
                   </div>
                 </a>
               </div><!-- end preview-course-video -->
+             
               @php
-              $finalPrice = $course->discount_price !== null
-                ? max(0, $course->selling_price - $course->discount_price)
-                : $course->selling_price;
-              $discountPercentage = ($course->selling_price > 0 && $course->discount_price !== null)
-                ? round(($course->discount_price / $course->selling_price) * 100)
-                : 0;
-              // Vérifier si l'utilisateur a déjà acheté ce cours
-              $hasPurchased = Auth::check() && App\Models\Order::where('user_id', Auth::id())
-                ->where('course_id', $course->id)
-                ->where('payment_status', 'paid')
-                ->exists();
-              @endphp
+$finalPrice = $course->discount_price !== null
+    ? max(0, $course->selling_price - $course->discount_price)
+    : $course->selling_price;
+$discountPercentage = ($course->selling_price > 0 && $course->discount_price !== null)
+    ? round(($course->discount_price / $course->selling_price) * 100)
+    : 0;
+@endphp
               <div class="preview-course-feature-content pt-40px">
                 <p class="d-flex align-items-center pb-2">
                   @if ($finalPrice < $course->selling_price)
@@ -374,25 +370,25 @@
                 <p class="preview-price-discount-text pb-35px">
                   <span class="text-color-3">4 days</span> left at this price!
                 </p>
-                <div class="buy-course-btn-box">
-                @if (isset($hasPurchased) && $hasPurchased)
-                      <a href="{{ route('course.start', [$course->id, \Str::slug($course->course_name)]) }}" class="btn theme-btn flex-grow-1 mr-3">
-                          <i class="la la-play-circle fs-18 mr-1"></i> Start Learning
-                      </a>
-                  @else
-                    <form action="{{ route('cart.add', $course->id) }}" method="POST">
-                      @csrf
-                      <button type="submit" class="btn theme-btn flex-grow-1 mr-3">
-                        <i class="la la-shopping-cart fs-18 mr-1"></i> Add to Cart
-                      </button>
-                    </form>
-                  @endif
-                </div>
+               <div class="buy-course-btn-box">
+    @if ($hasPurchased)
+        <a href="{{ route('course.start', [$course->id, \Str::slug($course->course_name)]) }}" class="btn theme-btn flex-grow-1 mr-3">
+            <i class="la la-play-circle fs-18 mr-1"></i> Start Learning
+        </a>
+    @else
+        <form action="{{ route('cart.add', $course->id) }}" method="POST">
+            @csrf
+            <button type="submit" class="btn theme-btn flex-grow-1 mr-3">
+                <i class="la la-shopping-cart fs-18 mr-1"></i> Add to Cart
+            </button>
+        </form>
+    @endif
+</div>
                 <div class="preview-course-incentives">
                   <h3 class="card-title fs-18 pb-2">This course includes</h3>
                   <ul class="generic-list-item pb-3">
                     <li><i class="la la-play-circle-o mr-2 text-color"></i>{{ $course->duration }} learning hours</li>
-                    <li><i class="la la-file mr-2 text-color"></i>{{ $course->resources }} resources</li>
+                    <li><i class="la la-file mr-2 text-color"></i>{{ $course->resources ?? 'N/A' }} resources</li>
                     <li><i class="la la-file mr-2 text-color"></i>Certificate: {{ $course->certificate }}</li>
                     <li><i class="la la-key mr-2 text-color"></i>Full lifetime access</li>
                   </ul>
@@ -428,11 +424,11 @@
   <div class="container">
     <div class="related-course-wrap">
       <h3 class="fs-28 font-weight-semi-bold pb-35px">More Courses by 
-    @if ($course->instructor_id && $course->instructor)
-        <a href="{{ route('instructor.details', $course->instructor_id) }}" class="text-color hover-underline">{{ $course->instructor->name }}</a>
-    @else
-        Unknown Instructor
-    @endif
+        @if ($instructor)
+            <a href="{{ route('instructor.details', $instructor->id) }}" class="text-color hover-underline">{{ $instructor->name }}</a>
+        @else
+            Unknown Instructor
+        @endif
       </h3>
       <div class="view-more-carousel-2 owl-action-styled">
         @foreach ($instructorCourses as $inscourse)
@@ -465,7 +461,7 @@
           <div class="card-body">
             <h6 class="ribbon ribbon-blue-bg fs-14 mb-3">{{ $inscourse->label }}</h6>
             <h5 class="card-title"><a href="{{ url('course/details/'.$inscourse->id.'/'.$inscourse->course_name_slug) }}">{{ $inscourse->course_name }}</a></h5>
-            <p class="card-text"><a href="{{ route('instructor.details', $inscourse->instructor_id) }}">{{ $inscourse->instructor->name ?? 'Unknown Instructor' }}</a></p>
+            <p class="card-text"><a href="{{ $instructor ? route('instructor.details', $instructor->id) : '#' }}">{{ $instructor->name ?? 'Unknown Instructor' }}</a></p>
             <div class="rating-wrap d-flex align-items-center py-2">
               <div class="review-stars">
                 <span class="rating-number">{{ number_format($insRating, 1) }}</span>
@@ -502,7 +498,7 @@
     : $inscourse->selling_price;
   $insRating = $inscourse->reviews->avg('rating') ?? 0;
   $insReviewsCount = $inscourse->reviews->count();
-  $goals = App\Models\Course_goal::where('course_id', $inscourse->id)->orderBy('id', 'DESC')->get();
+  $goals = App\Models\CourseGoal::where('goalable_type', 'App\Models\Course')->where('goalable_id', $inscourse->id)->orderBy('id', 'DESC')->get();
   $insHasPurchased = Auth::check() && App\Models\Order::where('user_id', Auth::id())
     ->where('course_id', $inscourse->id)
     ->where('payment_status', 'paid')
@@ -512,7 +508,7 @@
     <div id="tooltip_content_{{ $inscourse->id }}">
       <div class="card card-item">
         <div class="card-body">
-          <p class="card-text pb-2">By <a href="{{ route('instructor.details', $inscourse->instructor_id) }}">{{ $inscourse->instructor->name ?? 'Unknown Instructor' }}</a></p>
+          <p class="card-text pb-2">By <a href="{{ $instructor ? route('instructor.details', $instructor->id) : '#' }}">{{ $instructor->name ?? 'Unknown Instructor' }}</a></p>
           <h5 class="card-title pb-1"><a href="{{ url('course/details/'.$inscourse->id.'/'.$inscourse->course_name_slug) }}">{{ $inscourse->course_name }}</a></h5>
           <div class="d-flex align-items-center pb-1">
             @if ($inscourse->bestseller == 1)
@@ -533,7 +529,7 @@
             <li>{{ $inscourse->duration ?? 'N/A' }}</li>
             <li>{{ $inscourse->label ?? 'All Levels' }}</li>
           </ul>
-          <p class="card-text pt-1 fs-14 lh-22">{{ $inscourse->description ?? 'No description available.' }}</p>
+          <p class="card-text pt-1 fs-14 lh-22">{!! $inscourse->description ?? 'No description available.' !!}</p>
           <ul class="generic-list-item fs-14 py-3">
             @foreach ($goals->take(3) as $goal)
               <li><i class="la la-check mr-1 text-black"></i> {{ $goal->goal_name }}</li>
@@ -634,13 +630,15 @@
         </button>
       </div><!-- end modal-header -->
       <div class="modal-body">
-        <form method="post">
+        <form method="post" action="">
+          @csrf
+          <input type="hidden" name="course_id" value="{{ $course->id }}">
           <div class="input-box">
             <label class="label-text">Select Report Type</label>
             <div class="form-group">
               <div class="select-container w-auto">
-                <select class="select-container-select">
-                  <option value>-- Select One --</option>
+                <select class="select-container-select" name="report_type" required>
+                  <option value="">-- Select One --</option>
                   <option value="1">Inappropriate Course Content</option>
                   <option value="2">Inappropriate Behavior</option>
                   <option value="3">Aduca Policy Violation</option>
@@ -653,7 +651,7 @@
           <div class="input-box">
             <label class="label-text">Write Message</label>
             <div class="form-group">
-              <textarea class="form-control form--control pl-3" name="message" placeholder="Provide additional details here..." rows="5"></textarea>
+              <textarea class="form-control form--control pl-3" name="description" placeholder="Provide additional details here..." rows="5" required></textarea>
             </div>
           </div>
           <div class="btn-box text-right pt-2">

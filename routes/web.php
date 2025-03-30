@@ -84,9 +84,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('courses', AdminCourseController::class)->names('courses');
         Route::resource('instructors', InstructorManagementController::class)->names('instructors');
         // Courses  Routes
-        Route::post('/courses/update-status', [AdminCourseController::class, 'UpdateCourseStatus'])->name('update.course.status');
+       Route::post('/courses/update-status', [AdminCourseController::class, 'updateCourseStatus'])->name('courses.updateStatus');
         // Instructor Routes
-        Route::post('/instructors/status', [InstructorManagementController::class, 'updateStatus'])->name('update.instructor.status');
+       Route::post('/instructors/update-status', [InstructorManagementController::class, 'updateStatus'])->name('instructors.updateStatus');
         // Review Routes
         Route::get('/pending/review', [AdminReviewController::class, 'pending'])->name('pending.review');
         Route::get('/active/review', [AdminReviewController::class, 'active'])->name('active.review');
@@ -114,6 +114,7 @@ Route::prefix('instructor')->name('instructor.')->group(function () {
         Route::get('/all/review', [InstructorReviewController::class, 'index'])->name('all.review');
         // Coupon Resource Route
         Route::resource('coupon', CouponController::class)->names('coupon');
+        Route::put('/coupons/{coupon}/toggle-status', [CouponController::class, 'toggleStatus'])->name('coupon.toggleStatus');
         // Quiz Routes
        Route::resource('quiz', QuizController::class)->names('quiz');
         //orders

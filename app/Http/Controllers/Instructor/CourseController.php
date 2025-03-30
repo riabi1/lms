@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Category;
 use App\Models\SubCategory;
 use App\Models\Course;
-use App\Models\Course_goal;
+use App\Models\CourseGoal;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
 use Illuminate\Support\Facades\Auth;
@@ -17,7 +17,9 @@ class CourseController extends Controller
 {
     public function index()
     {
-        $courses = Course::where('instructor_id', Auth::guard('instructor')->id())
+        $instructorId = Auth::guard('instructor')->id();
+        $courses = Course::where('courseable_type', 'App\Models\Instructor')
+            ->where('courseable_id', $instructorId)
             ->with('category')
             ->latest('id')
             ->get();
@@ -50,7 +52,6 @@ class CourseController extends Controller
                 'description' => 'nullable|string',
                 'label' => 'nullable|string|in:Beginner,Intermediate,Advanced',
                 'duration' => 'nullable|string',
-                
                 'certificate' => 'nullable|in:Yes,No',
                 'selling_price' => 'nullable|numeric',
                 'discount_price' => 'nullable|numeric',
@@ -58,7 +59,7 @@ class CourseController extends Controller
                 'bestseller' => 'nullable|boolean',
                 'featured' => 'nullable|boolean',
                 'highestrated' => 'nullable|boolean',
-                'course_goals.*' => 'nullable|string',
+                'CourseGoals.*' => 'nullable|string',
             ]);
             \Log::info('Validated Data:', $validated);
 
@@ -68,7 +69,8 @@ class CourseController extends Controller
             $course = Course::create([
                 'category_id' => $request->category_id,
                 'subcategory_id' => $request->subcategory_id,
-                'instructor_id' => Auth::guard('instructor')->id(),
+                'courseable_type' => 'App\Models\Instructor',
+                'courseable_id' => Auth::guard('instructor')->id(),
                 'course_title' => $request->course_title,
                 'course_name' => $request->course_name,
                 'course_name_slug' => strtolower(str_replace(' ', '-', $request->course_name)),
@@ -76,7 +78,6 @@ class CourseController extends Controller
                 'video' => $courseVideo,
                 'label' => $request->label,
                 'duration' => $request->duration,
-                
                 'certificate' => $request->certificate,
                 'selling_price' => $request->selling_price,
                 'discount_price' => $request->discount_price,
@@ -90,7 +91,7 @@ class CourseController extends Controller
             ]);
 
             \Log::info('Course Created:', ['id' => $course->id, 'data' => $course->toArray()]);
-            $this->saveGoals($course->id, $request->course_goals);
+            $this->saveGoals($course->id, $request->CourseGoals);
 
             return redirect()->route('instructor.courses.index')->with([
                 'message' => 'Course Inserted Successfully',
@@ -111,21 +112,20 @@ class CourseController extends Controller
         $course->load('goals');
         return view('instructor.courses.show', compact('course'));
     }
-
-    public function edit(Course $course)
-    {
-        $this->authorizeCourse($course);
-        $goals = Course_goal::where('course_id', $course->id)->get();
-        $categories = Category::latest()->get();
-        $subcategories = SubCategory::latest()->get();
-        return view('instructor.courses.edit', compact('course', 'categories', 'subcategories', 'goals'));
-    }
+public function edit(Course $course)
+{
+    $this->authorizeCourse($course);
+    $goals = $course->goals; // Utilise la relation polymorphique
+    $categories = Category::latest()->get();
+    $subcategories = SubCategory::latest()->get();
+    return view('instructor.courses.edit', compact('course', 'categories', 'subcategories', 'goals'));
+}
 
     public function update(Request $request, Course $course)
     {
         $this->authorizeCourse($course);
 
-        $course->update($request->except('course_goals', 'image', 'video', 'course_id') + [
+        $course->update($request->except('CourseGoals', 'image', 'video', 'course_id') + [
             'course_name_slug' => strtolower(str_replace(' ', '-', $request->course_name)),
         ]);
 
@@ -139,7 +139,7 @@ class CourseController extends Controller
             $course->update(['video' => $this->uploadFile($request->file('video'), 'upload/course_images/video')]);
         }
 
-        $this->saveGoals($course->id, $request->course_goals);
+        $this->saveGoals($course->id, $request->CourseGoals);
 
         return redirect()->route('instructor.courses.index')->with([
             'message' => 'Course Updated Successfully',
@@ -152,7 +152,7 @@ class CourseController extends Controller
         $this->authorizeCourse($course);
         $this->deleteFile($course->course_image, 'upload/course_images/thumbnail');
         $this->deleteFile($course->video, 'upload/course_images/video');
-        Course_goal::where('course_id', $course->id)->delete();
+        CourseGoal::where('course_id', $course->id)->delete();
         $course->delete();
 
         return redirect()->route('instructor.courses.index')->with([
@@ -173,7 +173,7 @@ class CourseController extends Controller
     // Helper Methods
     private function authorizeCourse(Course $course)
     {
-        if ($course->instructor_id !== Auth::guard('instructor')->id()) {
+        if ($course->courseable_type !== 'App\Models\Instructor' || $course->courseable_id !== Auth::guard('instructor')->id()) {
             abort(403, 'Unauthorized action.');
         }
     }
@@ -194,11 +194,9 @@ class CourseController extends Controller
             $img = $manager->read($file)->resize(370, 246)->toJpeg(80);
             Storage::disk('public')->put("$path/$filename", (string) $img);
         } else {
-            
             $file->storeAs($path, $filename, 'public');
         }
 
-       
         if (!Storage::disk('public')->exists("$path/$filename")) {
             \Log::error('File upload failed:', ['path' => "$path/$filename"]);
             return null;
@@ -217,15 +215,24 @@ class CourseController extends Controller
         }
     }
 
-    private function saveGoals($courseId, $goals)
-    {
-        if ($goals) {
-            Course_goal::where('course_id', $courseId)->delete();
-            foreach ($goals as $goal) {
-                if ($goal) {
-                    Course_goal::create(['course_id' => $courseId, 'goal_name' => $goal]);
-                }
+private function saveGoals($courseId, $goals)
+{
+    if ($goals) {
+        // Supprime les anciens objectifs pour ce cours
+        CourseGoal::where('goalable_id', $courseId)
+                  ->where('goalable_type', Course::class)
+                  ->delete();
+
+        // Ajoute les nouveaux objectifs
+        foreach ($goals as $goal) {
+            if ($goal) {
+                CourseGoal::create([
+                    'goalable_id' => $courseId,
+                    'goalable_type' => Course::class,
+                    'goal_name' => $goal
+                ]);
             }
         }
     }
+}
 }

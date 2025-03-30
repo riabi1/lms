@@ -16,8 +16,8 @@ class CourseSection extends Model
         return $this->belongsTo(Course::class);
     }
 
-  public function lectures()
-    {
-        return $this->hasMany(CourseLecture::class, 'section_id');
-    }
+public function lectures()
+{
+    return $this->hasMany(CourseLecture::class, 'section_id');
+}
 }

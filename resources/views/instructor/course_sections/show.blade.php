@@ -2,31 +2,39 @@
 @section('instructor')
 
 <div class="page-content">
-    <!--breadcrumb-->
-    <div class="page-breadcrumb d-none d-sm-flex align-items-center mb-3"> 
+    <!-- Breadcrumb -->
+    <div class="page-breadcrumb d-none d-sm-flex align-items-center mb-3">
         <div class="ps-3">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0 p-0">
                     <li class="breadcrumb-item"><a href="{{ route('instructor.dashboard') }}"><i class="bx bx-home-alt"></i></a></li>
                     <li class="breadcrumb-item"><a href="{{ route('instructor.courses.index') }}">Courses</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('instructor.course_sections.index', $section->course_id) }}">{{ $section->course->course_name }}</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('instructor.course_sections.index', $course->id) }}">{{ $course->course_name }}</a></li>
                     <li class="breadcrumb-item active" aria-current="page">{{ $section->section_title }}</li>
                 </ol>
             </nav>
         </div>
         <div class="ms-auto">
-            <a href="{{ route('instructor.course_sections.edit', [$section->course_id, $section->id]) }}" class="btn btn-primary">Edit Section</a>
+            <a href="{{ route('instructor.course_sections.edit', [$course->id, $section->id]) }}" class="btn btn-primary">Edit Section</a>
         </div>
     </div>
-    <!--end breadcrumb-->
+    <!-- End Breadcrumb -->
 
     <div class="card">
         <div class="card-body p-4">
             <h5 class="mb-4">{{ $section->section_title }}</h5>
 
+            <!-- Messages Flash -->
+            @if (session('message'))
+                <div class="alert alert-{{ session('alert-type', 'info') }} alert-dismissible fade show" role="alert">
+                    {{ session('message') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+
             <div class="row">
                 <div class="col-md-6">
-                    <p><strong>Course:</strong> {{ $section->course->course_name }}</p>
+                    <p><strong>Course:</strong> {{ $course->course_name }}</p>
                 </div>
             </div>
 
@@ -36,20 +44,27 @@
                     <div class="card mb-2">
                         <div class="card-body d-flex justify-content-between align-items-center">
                             <span>{{ $lecture->lecture_title }}</span>
-                            <div>
-                                <a href="{{ route('instructor.course_lectures.show', [$section->course_id, $lecture->id]) }}" class="btn btn-primary btn-sm">View</a>
-                                <a href="{{ route('instructor.course_lectures.edit', [$section->course_id, $lecture->id]) }}" class="btn btn-info btn-sm">Edit</a>
+                            <div class="btn-group">
+                                <a href="{{ route('instructor.course_lectures.show', [$course->id, $lecture->id]) }}" class="btn btn-sm btn-primary">View</a>
+                                <a href="{{ route('instructor.course_lectures.edit', [$course->id, $lecture->id]) }}" class="btn btn-sm btn-info">Edit</a>
+                                <form action="{{ route('instructor.course_lectures.destroy', [$course->id, $lecture->id]) }}" method="POST" style="display:inline;">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this lecture?');">Delete</button>
+                                </form>
                             </div>
                         </div>
                     </div>
                 @empty
-                    <p>No lectures available for this section.</p>
+                    <div class="alert alert-info" role="alert">
+                        No lectures available for this section. <a href="{{ route('instructor.course_lectures.create', [$course->id, $section->id]) }}" class="alert-link">Add a lecture</a> to get started.
+                    </div>
                 @endforelse
             </div>
 
             <div class="mt-4">
-                <a href="{{ route('instructor.course_sections.index', $section->course_id) }}" class="btn btn-secondary">Back to Sections</a>
-                <a href="{{ route('instructor.course_lectures.create', $section->course_id) }}" class="btn btn-primary">Add Lecture</a>
+                <a href="{{ route('instructor.course_sections.index', $course->id) }}" class="btn btn-secondary">Back to Sections</a>
+                <a href="{{ route('instructor.course_lectures.create', [$course->id, $section->id]) }}" class="btn btn-primary">Add Lecture</a>
             </div>
         </div>
     </div>

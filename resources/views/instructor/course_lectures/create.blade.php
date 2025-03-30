@@ -1,94 +1,166 @@
 @extends('Instructor.layout.Instructor_layout')
-
 @section('instructor')
+
 <div class="page-content">
+    <!-- Breadcrumb -->
+    <div class="page-breadcrumb d-none d-sm-flex align-items-center mb-3">
+        <div class="ps-3">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0 p-0">
+                    <li class="breadcrumb-item"><a href="{{ route('instructor.dashboard') }}"><i class="bx bx-home-alt"></i></a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('instructor.courses.index') }}">Courses</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ $course->course_name }} - Sections & Lectures</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="ms-auto">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSectionModal">Add Section</button>
+        </div>
+    </div>
+    <!-- End Breadcrumb -->
+
     <div class="row">
-        <div class="col-12"> 
+        <div class="col-12">
             <div class="card radius-10">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
-                        <img src="{{ $course->course_image ? asset('storage/upload/course_images/thumbnail/' . $course->course_image) : asset('upload/no_image.jpg') }}" class="rounded-circle p-1 border" width="90" height="90" alt="{{ $course->course_name }}">
+                        <img src="{{ $course->course_image ? asset('storage/upload/course_images/thumbnail/' . $course->course_image) : asset('upload/no_image.jpg') }}"
+                             class="rounded-circle p-1 border" width="90" height="90" alt="{{ $course->course_name }}">
                         <div class="flex-grow-1 ms-3">
                             <h5 class="mt-0">{{ $course->course_name }}</h5>
                             <p class="mb-0">{{ $course->course_title }}</p>
                         </div>
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">Add Section</button>
                     </div>
                 </div>
             </div>
 
-            @forelse ($sections as $key => $item)  
-            <div class="container">
-                <div class="main-body">
-                    <div class="row">
-                        <div class="col-lg-12">
-                            <div class="card">
-                                <div class="card-body p-4 d-flex justify-content-between">
-                                    <h6>{{ $item->section_title }}</h6>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <form action="{{ route('instructor.course_sections.destroy', [$course->id, $item->id]) }}" method="POST" style="display:inline;">
+            <!-- Messages Flash -->
+            @if (session('message'))
+                <div class="alert alert-{{ session('alert-type', 'info') }} alert-dismissible fade show" role="alert">
+                    {{ session('message') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+
+            @forelse ($sections as $key => $item)
+                <div class="card mt-3">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">{{ $item->section_title }}</h6>
+                            <div class="btn-group">
+                                <a href="{{ route('instructor.course_sections.edit', [$course->id, $item->id]) }}" class="btn btn-sm btn-info">Edit</a>
+                                <form action="{{ route('instructor.course_sections.destroy', [$course->id, $item->id]) }}" method="POST" style="display:inline;">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this section and its lectures?');">Delete</button>
+                                </form>
+                                <button class="btn btn-sm btn-primary" onclick="toggleLectureForm('lectureContainer{{ $key }}')">Add Lecture</button>
+                            </div>
+                        </div>
+
+                        <!-- Lectures existantes -->
+                        <div class="mt-3">
+                            @forelse ($item->lectures as $lecture)
+                                <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
+                                    <span><strong>{{ $loop->iteration }}.</strong> {{ $lecture->lecture_title }}</span>
+                                    <div class="btn-group">
+                                        <a href="{{ route('instructor.course_lectures.show', [$course->id, $lecture->id]) }}" class="btn btn-sm btn-primary">View</a>
+                                        <a href="{{ route('instructor.course_lectures.edit', [$course->id, $lecture->id]) }}" class="btn btn-sm btn-info">Edit</a>
+                                        <form action="{{ route('instructor.course_lectures.destroy', [$course->id, $lecture->id]) }}" method="POST" style="display:inline;">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn btn-danger px-2 ms-auto" onclick="return confirm('Are you sure you want to delete this section?');">Delete Section</button> 
+                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this lecture?');">Delete</button>
                                         </form>
-                                        <a class="btn btn-primary ms-2" onclick="addLectureDiv({{ $course->id }}, {{ $item->id }}, 'lectureContainer{{ $key }}')" id="addLectureBtn{{ $key }}">Add Lecture</a>
-                                    </div>                      
+                                    </div>
+                                </div>
+                            @empty
+                                <p class="text-muted">No lectures available for this section.</p>
+                            @endforelse
+                        </div>
+
+                        <!-- Formulaire dynamique pour ajouter une leçon -->
+                        <div id="lectureContainer{{ $key }}" class="mt-3" style="display: none;">
+                            <form id="lectureForm{{ $key }}" enctype="multipart/form-data">
+                                @csrf
+                                <input type="hidden" name="course_id" value="{{ $course->id }}">
+                                <input type="hidden" name="section_id" value="{{ $item->id }}">
+
+                                <h6>Lecture Content</h6>
+                                <div class="border p-3 mb-3 bg-light">
+                                    <div class="mb-3">
+                                        <label class="form-label">Lecture Title <span class="text-danger">*</span></label>
+                                        <input type="text" name="lecture_title" class="form-control" placeholder="Enter Lecture Title" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Content</label>
+                                        <textarea name="content" class="form-control" placeholder="Enter Lecture Content"></textarea>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Video URL</label>
+                                        <input type="url" name="url" class="form-control" placeholder="Add Video URL">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Main Video (MP4/WebM, max 100MB)</label>
+                                        <input type="file" name="video" class="form-control" accept="video/mp4,video/webm">
+                                    </div>
                                 </div>
 
-                                <div class="courseHide" id="lectureContainer{{ $key }}">
-                                    <div class="container">
-                                        @forelse ($item->lectures as $lecture) 
-                                        <div class="lectureDiv mb-3 d-flex align-items-center justify-content-between">
-                                            <div>
-                                                <strong>{{ $loop->iteration }}. {{ $lecture->lecture_title }}</strong>
-                                            </div>
-                                            <div class="btn-group">
-                                                <a href="{{ route('instructor.course_lectures.edit', [$course->id, $lecture->id]) }}" class="btn btn-sm btn-primary">Edit</a> 
-                                                <form action="{{ route('instructor.course_lectures.destroy', [$course->id, $lecture->id]) }}" method="POST" style="display:inline;">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <a href="#" class="btn btn-sm btn-danger" onclick="event.preventDefault(); if(confirm('Are you sure you want to delete this lecture?')) this.closest('form').submit();">Delete</a>
-                                                </form>
-                                            </div> 
-                                        </div> 
-                                        @empty
-                                            <p>No lectures available for this section.</p>
-                                        @endforelse 
-                                    </div> 
+                                <h6>Additional Resources</h6>
+                                <div class="border p-3 mb-3 bg-light">
+                                    <div class="mb-3">
+                                        <label class="form-label">Additional Video (MP4/WebM, max 100MB)</label>
+                                        <input type="file" name="additional_video" class="form-control" accept="video/mp4,video/webm">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Resource File (PDF/DOC/JPG/PNG, max 20MB)</label>
+                                        <input type="file" name="file_path" class="form-control" accept=".pdf,.doc,.docx,image/jpeg,image/png">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">External Link</label>
+                                        <input type="url" name="external_link" class="form-control" placeholder="Add External Link">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Resources Description</label>
+                                        <textarea name="resources_description" class="form-control" placeholder="Describe the resources"></textarea>
+                                    </div>
                                 </div>
-                            </div>
+
+                                <button type="button" class="btn btn-primary" onclick="saveLecture('{{ $course->id }}', '{{ $item->id }}', 'lectureForm{{ $key }}')">Save Lecture</button>
+                                <button type="button" class="btn btn-secondary" onclick="toggleLectureForm('lectureContainer{{ $key }}')">Cancel</button>
+                            </form>
                         </div>
                     </div>
                 </div>
-            </div>
             @empty
-                <p>No sections available for this course.</p>
-            @endforelse   
+                <div class="alert alert-info mt-3" role="alert">
+                    No sections available for this course. Add a section to get started.
+                </div>
+            @endforelse
         </div>
-    </div> 
-</div>   
+    </div>
+</div>
 
-<!-- Modal -->
-<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+<!-- Modal for Adding Section -->
+<div class="modal fade" id="addSectionModal" tabindex="-1" aria-labelledby="addSectionModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">Add Section</h5>
+                <h5 class="modal-title" id="addSectionModalLabel">Add Section</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body"> 
-                <form action="{{ route('instructor.course_sections.store', $course->id) }}" method="POST">
+            <div class="modal-body">
+                <form id="sectionForm" action="{{ route('instructor.course_sections.store', $course->id) }}" method="POST">
                     @csrf
-                    <input type="hidden" name="course_id" value="{{ $course->id }}">
-                    <div class="form-group mb-3">
-                        <label for="section_title" class="form-label">Course Section</label>
-                        <input type="text" name="section_title" class="form-control @error('section_title') is-invalid @enderror" id="section_title" value="{{ old('section_title') }}">
+                    <div class="mb-3">
+                        <label for="section_title" class="form-label">Section Title <span class="text-danger">*</span></label>
+                        <input type="text" name="section_title" class="form-control @error('section_title') is-invalid @enderror" id="section_title" value="{{ old('section_title') }}" required>
                         @error('section_title')
                             <span class="invalid-feedback">{{ $message }}</span>
                         @enderror
                     </div>
-                    <div class="modal-footer">   
-                        <button type="submit" class="btn btn-primary">Save changes</button> 
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save Section</button>
                     </div>
                 </form>
             </div>
@@ -98,79 +170,16 @@
 
 <!-- Scripts -->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    function addLectureDiv(courseId, sectionId, containerId) {
-        const lectureContainer = document.getElementById(containerId);
-        lectureContainer.style.display = 'block';
-
-        const newLectureDiv = document.createElement('div');
-        newLectureDiv.classList.add('lectureDiv', 'mb-3');
-        newLectureDiv.id = 'newLectureDiv';
-
-        newLectureDiv.innerHTML = `
-            <div class="container">
-                <h5 class="mt-3">Lecture Content (Visible on Platform)</h5>
-                <div class="border p-3 mb-3 bg-light">
-                    <h6>Lecture Title</h6>
-                    <input type="text" class="form-control lecture-title" placeholder="Enter Lecture Title" required>
-                    <h6 class="mt-3">Lecture Content</h6>
-                    <textarea class="form-control lecture-content" placeholder="Enter Lecture Content"></textarea>
-                    <h6 class="mt-3">Video URL</h6>
-                    <input type="text" name="url" class="form-control lecture-url" placeholder="Add Video URL">
-                    <h6 class="mt-3">Upload Main Video (MP4/WebM)</h6>
-                    <input type="file" name="video" class="form-control lecture-video" accept="video/mp4,video/webm">
-                </div>
-
-                <h5 class="mt-3">Additional Resources (Downloadable by Students)</h5>
-                <div class="border p-3 bg-light">
-                    <h6>Upload Additional Video (MP4/WebM)</h6>
-                    <input type="file" name="additional_video" class="form-control lecture-additional-video" accept="video/mp4,video/webm">
-                    <h6 class="mt-3">Upload Resource File (PDF/DOC/JPG/PNG)</h6>
-                    <input type="file" name="file_path" class="form-control lecture-file" accept=".pdf,.doc,.docx,image/jpeg,image/png">
-                    <h6 class="mt-3">External Resource Link</h6>
-                    <input type="text" name="external_link" class="form-control lecture-external-link" placeholder="Add External Link">
-                    <h6 class="mt-3">Resources Description</h6>
-                    <textarea class="form-control lecture-resources-description" placeholder="Describe the resources (e.g., 'Download this PDF for more details')"></textarea>
-                </div>
-
-                <button class="btn btn-primary mt-3" onclick="saveLecture('${courseId}', ${sectionId}, '${containerId}')">Save Lecture</button>
-                <button class="btn btn-secondary mt-3" onclick="hideLectureContainer('${containerId}')">Cancel</button>
-            </div>
-        `;
-
-        lectureContainer.appendChild(newLectureDiv);
+    function toggleLectureForm(containerId) {
+        const container = document.getElementById(containerId);
+        container.style.display = container.style.display === 'none' || container.style.display === '' ? 'block' : 'none';
     }
 
-    function hideLectureContainer(containerId) {
-        const lectureContainer = document.getElementById(containerId);
-        const newLectureDiv = document.getElementById('newLectureDiv');
-        if (newLectureDiv) newLectureDiv.remove();
-        location.reload();
-    }
-
-    function saveLecture(courseId, sectionId, containerId) {
-        const lectureContainer = document.getElementById(containerId);
-        const lectureTitle = lectureContainer.querySelector('.lecture-title').value;
-        const lectureContent = lectureContainer.querySelector('.lecture-content').value;
-        const lectureUrl = lectureContainer.querySelector('.lecture-url').value;
-        const lectureVideo = lectureContainer.querySelector('.lecture-video').files[0];
-        const additionalVideo = lectureContainer.querySelector('.lecture-additional-video').files[0];
-        const lectureFile = lectureContainer.querySelector('.lecture-file').files[0];
-        const externalLink = lectureContainer.querySelector('.lecture-external-link').value;
-        const resourcesDescription = lectureContainer.querySelector('.lecture-resources-description').value;
-
-        let formData = new FormData();
-        formData.append('course_id', courseId);
-        formData.append('section_id', sectionId);
-        formData.append('lecture_title', lectureTitle);
-        formData.append('url', lectureUrl);
-        formData.append('content', lectureContent);
-        if (lectureVideo) formData.append('video', lectureVideo);
-        if (additionalVideo) formData.append('additional_video', additionalVideo);
-        if (lectureFile) formData.append('file_path', lectureFile);
-        formData.append('external_link', externalLink);
-        formData.append('resources_description', resourcesDescription);
+    function saveLecture(courseId, sectionId, formId) {
+        const form = document.getElementById(formId);
+        const formData = new FormData(form);
 
         fetch("{{ route('instructor.course_lectures.store', $course->id) }}", {
             method: 'POST',
@@ -185,7 +194,8 @@
                 toast: true,
                 position: 'top-end',
                 showConfirmButton: false,
-                timer: 6000
+                timer: 3000,
+                timerProgressBar: true,
             });
 
             if (data.success) {
@@ -193,7 +203,7 @@
                     icon: 'success',
                     title: data.success
                 }).then(() => {
-                    hideLectureContainer(containerId);
+                    window.location.reload(); // Recharge la page pour afficher la nouvelle leçon
                 });
             } else {
                 Toast.fire({

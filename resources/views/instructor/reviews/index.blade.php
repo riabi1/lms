@@ -37,7 +37,7 @@
             @forelse ($reviews as $key => $item)
             <tr>
               <td>{{ $key + 1 }}</td>
-              <td>{{ $item->course->course_name }}</td>
+              <td>{{ $item->reviewable && $item->reviewable_type === 'App\Models\Course' ? $item->reviewable->course_name : 'N/A' }}</td>
               <td>{{ $item->user->name ?? 'N/A' }}</td>
               <td>{{ $item->comment }}</td>
               <td>
