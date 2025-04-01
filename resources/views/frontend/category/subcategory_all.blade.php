@@ -86,22 +86,28 @@
             </div><!-- end col-lg-4 -->
             <div class="col-lg-8">
                 <div class="row">
-                    @foreach ($courses as $course)
+                    @forelse ($courses as $course)
+                        @php
+                            $finalPrice = $course->discount_price !== null
+                                ? max(0, $course->selling_price - $course->discount_price)
+                                : $course->selling_price;
+                            $discount = $course->selling_price && $course->discount_price !== null
+                                ? round(($course->selling_price - $finalPrice) / $course->selling_price * 100)
+                                : 0;
+                            $rating = $course->reviews->avg('rating') ?? 0;
+                            $reviewsCount = $course->reviews->count();
+                        @endphp
                         <div class="col-lg-6 responsive-column-half">
                             <div class="card card-item card-preview">
                                 <div class="card-image">
                                     <a href="{{ route('course.details', [$course->id, $course->course_name_slug]) }}" class="d-block">
-                                        <img class="card-img-top lazy" src="{{ asset('storage/upload/course_images/thumbnail/' . $course->course_image) }}" alt="{{ $course->course_title }}" onerror="this.src='{{ asset('images/default-course.jpg') }}'">
+                                        <img class="card-img-top lazy" src="{{ asset('storage/upload/course_images/thumbnail/' . ($course->course_image ?? 'default-course.jpg')) }}" alt="{{ $course->course_title }}" onerror="this.src='{{ asset('images/default-course.jpg') }}'">
                                     </a>
-                                    @php
-                                        $amount = $course->selling_price - $course->discount_price;
-                                        $discount = $course->selling_price ? round(($amount / $course->selling_price) * 100) : 0;
-                                    @endphp
                                     <div class="course-badge-labels">
                                         @if ($course->bestseller == 1)
                                             <div class="course-badge">Bestseller</div>
                                         @endif
-                                        @if ($course->discount_price !== null && $course->discount_price < $course->selling_price)
+                                        @if ($discount > 0)
                                             <div class="course-badge blue">-{{ $discount }}%</div>
                                         @elseif ($course->discount_price === null)
                                             <div class="course-badge blue">New</div>
@@ -114,33 +120,38 @@
                                         <a href="{{ route('course.details', [$course->id, $course->course_name_slug]) }}">{{ $course->course_title }}</a>
                                     </h5>
                                     <p class="card-text">
-                                        <a href="{{ route('instructor.details', $course->instructor_id) }}">{{ $course->instructor->name ?? 'Unknown Instructor' }}</a>
+                                        <a href="{{ route('instructor.details', $course->courseable->id) }}">{{ $course->courseable->name ?? 'Unknown Instructor' }}</a>
                                     </p>
                                     <div class="rating-wrap d-flex align-items-center py-2">
                                         <div class="review-stars">
-                                            <span class="rating-number">{{ number_format($course->rating, 1) }}</span>
+                                            <span class="rating-number">{{ number_format($rating, 1) }}</span>
                                             @for ($i = 1; $i <= 5; $i++)
-                                                <span class="la la-star{{ $i <= floor($course->rating) ? '' : '-o' }}"></span>
+                                                <span class="la la-star{{ $i <= floor($rating) ? '' : '-o' }}"></span>
                                             @endfor
                                         </div>
-                                        <span class="rating-total pl-1">({{ number_format($course->reviews_count) }})</span>
+                                        <span class="rating-total pl-1">({{ number_format($reviewsCount) }})</span>
                                     </div><!-- end rating-wrap -->
                                     <div class="d-flex justify-content-between align-items-center">
-                                        @if ($course->discount_price === null)
-                                            <p class="card-price text-black font-weight-bold">${{ $course->selling_price }}</p>
-                                        @else
-                                            <p class="card-price text-black font-weight-bold">${{ $course->discount_price }} <span class="before-price font-weight-medium">${{ $course->selling_price }}</span></p>
-                                        @endif
+                                        <p class="card-price text-black font-weight-bold">
+                                            ${{ number_format($finalPrice, 2) }}
+                                            @if ($discount > 0)
+                                                <span class="before-price font-weight-medium">${{ number_format($course->selling_price, 2) }}</span>
+                                            @endif
+                                        </p>
                                         <div class="icon-element icon-element-sm shadow-sm cursor-pointer" title="Add to Wishlist"><i class="la la-heart-o"></i></div>
                                     </div>
                                 </div><!-- end card-body -->
                             </div><!-- end card -->
                         </div><!-- end col-lg-6 -->
-                    @endforeach
+                    @empty
+                        <div class="col-lg-12">
+                            <p class="text-center">No courses found in this subcategory.</p>
+                        </div>
+                    @endforelse
                 </div><!-- end row -->
                 <div class="text-center pt-3">
                     {{ $courses->links() }}
-                    <p class="fs-14 pt-2">Showing {{ $courses->firstItem() }}–{{ $courses->lastItem() }} of {{ $courses->total() }} results</p>
+                    <p class="fs-14 pt-2">Showing {{ $courses->firstItem() ?? 0 }}–{{ $courses->lastItem() ?? 0 }} of {{ $courses->total() }} results</p>
                 </div>
             </div><!-- end col-lg-8 -->
         </div><!-- end row -->
