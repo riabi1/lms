@@ -17,12 +17,13 @@ use App\Http\Controllers\Admin\AdminReviewController;
 use App\Http\Controllers\Admin\SubCategoryController;
 use App\Http\Controllers\Instructor\CourseController;
 use App\Http\Controllers\Instructor\CouponController; 
-use App\Http\Controllers\Frontend\StripePaymentController;
 use App\Http\Controllers\Instructor\NotificationController;
 use App\Http\Controllers\Instructor\CourseLectureController;
 use App\Http\Controllers\Instructor\CourseSectionController;
 use App\Http\Controllers\Admin\InstructorManagementController;
 use App\Http\Controllers\Instructor\ReviewController as InstructorReviewController;
+use App\Http\Controllers\Frontend\StripePaymentController;
+use App\Http\Controllers\Frontend\PaypalPaymentController;
 
 // Home Page Route
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -37,15 +38,25 @@ Route::name('')->group(function () {
 
     Route::middleware(['auth:web'])->group(function () {
  // cart rouutes
-   Route::post('/cart/add/{id}', [CartController::class, 'AddToCart'])->name('cart.add');
-    Route::get('/cart', [CartController::class, 'MyCart'])->name('cart');
-   Route::get('/cart/remove/{id}', [CartController::class, 'CartRemove'])->name('cart.remove');
-   //coupon routes
-    Route::post('/coupon/apply', [CartController::class, 'CouponApply'])->name('coupon.apply');
-    Route::post('/coupon/remove/{couponName}', [CartController::class, 'CouponRemove'])->name('coupon.remove');
-    // payment routes
-    Route::get('/checkout', [CartController::class, 'CheckoutCreate'])->name('checkout.create');
-    Route::post('/checkout/process', [CartController::class, 'CheckoutProcess'])->name('checkout.process');
+ Route::get('/cart', [CartController::class, 'MyCart'])->name('cart');
+Route::post('/cart/add/{id}', [CartController::class, 'AddToCart'])->name('cart.add');
+Route::delete('/cart/remove/{id}', [CartController::class, 'CartRemove'])->name('cart.remove');
+Route::post('/coupon/apply', [CartController::class, 'CouponApply'])->name('coupon.apply');
+Route::get('/coupon/remove/{couponName}', [CartController::class, 'CouponRemove'])->name('coupon.remove');
+Route::get('/checkout', [CartController::class, 'CheckoutCreate'])->name('checkout.create');
+
+// Stripe Payment Routes
+Route::post('/pay/stripe', [StripePaymentController::class, 'payWithStripe'])->name('pay.stripe');
+
+// PayPal Payment Routes
+Route::get('/pay/paypal', [PaypalPaymentController::class, 'payWithPaypal'])->name('pay.paypal');
+Route::get('/paypal/success', [PaypalPaymentController::class, 'paypalSuccess'])->name('paypal.success');
+Route::get('/paypal/cancel', [PaypalPaymentController::class, 'paypalCancel'])->name('paypal.cancel');
+
+// Success Route
+Route::get('/order/success', function () {
+    return view('User.checkout.success');
+})->name('order.success');
   //revious routes
     Route::resource('reviews', ReviewController::class)->names('user.reviews')->except(['create', 'store', 'show']);
     //user courses

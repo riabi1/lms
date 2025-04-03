@@ -1,213 +1,191 @@
 @extends('frontend.master')
 
+@section('title')
+    Checkout | Easy Learning
+@endsection
+
 @section('home')
-<!-- ================================
-    START BREADCRUMB AREA
-================================= -->
-<section class="breadcrumb-area section-padding img-bg-2">
-    <div class="overlay"></div>
-    <div class="container">
-        <div class="breadcrumb-content d-flex flex-wrap align-items-center justify-content-between">
-            <div class="section-heading">
+    <section class="breadcrumb-area section-padding img-bg-2">
+        <div class="overlay"></div>
+        <div class="container">
+            <div class="breadcrumb-content d-flex align-items-center justify-content-between">
                 <h2 class="section__title text-white">Checkout</h2>
+                <ul class="generic-list-item generic-list-item-white generic-list-item-arrow d-flex align-items-center">
+                    <li><a href="{{ route('home') }}">Home</a></li>
+                    <li>Checkout</li>
+                </ul>
             </div>
-            <ul class="generic-list-item generic-list-item-white generic-list-item-arrow d-flex flex-wrap align-items-center">
-                <li><a href="{{ route('home') }}">Home</a></li>
-                <li>Pages</li>
-                <li>Checkout</li>
-            </ul>
-        </div><!-- end breadcrumb-content -->
-    </div><!-- end container -->
-</section><!-- end breadcrumb-area -->
-<!-- ================================
-    END BREADCRUMB AREA
-================================= -->
+        </div>
+    </section>
 
-<!-- ================================
-    START CART AREA
-================================= -->
-<section class="cart-area section--padding">
-    <div class="container">
-        @if (session('success') || session('info') || session('error'))
-            <div class="alert {{ session('success') ? 'alert-success' : (session('info') ? 'alert-info' : 'alert-danger') }}">
-                {{ session('success') ?: session('info') ?: session('error') }}
-            </div>
-        @endif
+    <section class="cart-area section-padding">
+        <div class="container">
+            @if (session('success') || session('error'))
+                <div class="alert {{ session('success') ? 'alert-success' : 'alert-danger' }}">
+                    {{ session('success') ?: session('error') }}
+                </div>
+            @endif
 
-        <div class="row">
-            <div class="col-lg-7">
-                <div class="card card-item">
-                    <div class="card-body">
-                        <h3 class="card-title fs-22 pb-3">Billing Details</h3>
-                        <div class="divider"><span></span></div>
-                        <form method="POST" id="checkoutForm" action="{{ route('checkout.process') }}">
-                            @csrf
-                            <input type="hidden" name="payment_method" value="stripe">
-
-                            <div class="input-box col-lg-6">
-                                <label class="label-text">First Name</label>
-                                <div class="form-group">
-                                    <input class="form-control form--control" type="text" name="name" value="{{ Auth::user()->name }}" required>
-                                    <span class="la la-user input-icon"></span>
-                                </div>
-                            </div><!-- end input-box -->
-                            <div class="input-box col-lg-6">
-                                <label class="label-text">Email</label>
-                                <div class="form-group">
-                                    <input class="form-control form--control" type="email" name="email" value="{{ Auth::user()->email }}" required>
-                                    <span class="la la-envelope input-icon"></span>
-                                </div>
-                            </div><!-- end input-box -->
-                            <div class="input-box col-lg-12">
-                                <label class="label-text">Address</label>
-                                <div class="form-group">
-                                    <input class="form-control form--control" type="text" name="address" value="{{ Auth::user()->address ?? '' }}">
-                                    <span class="la la-map-marker input-icon"></span>
-                                </div>
-                            </div><!-- end input-box -->
-                            <div class="input-box col-lg-12">
-                                <label class="label-text">Phone Number</label>
-                                <div class="form-group">
-                                    <input id="phone" class="form-control form--control" type="tel" name="phone" value="{{ Auth::user()->phone ?? '' }}">
-                                    <span class="la la-phone input-icon"></span>
-                                </div>
-                            </div><!-- end input-box -->
-                    </div><!-- end card-body -->
-                </div><!-- end card -->
-
-                <div class="card card-item">
-                    <div class="card-body">
-                        <h3 class="card-title fs-22 pb-3">Payment Method</h3>
-                        <div class="divider"><span></span></div>
-                        <div class="input-box">
-                            <label class="label-text">Credit or Debit Card (Stripe)</label>
-                            <p class="fs-14 text-muted mb-3">Please enter your card details in the fields below to complete your payment securely via Stripe.</p>
-                            <div class="form-group bg-gray p-3 rounded" style="border: 1px solid #ced4da;">
-                                <div class="mb-2">
-                                    <strong>Card Information</strong>
-                                    <p class="fs-13 text-muted mb-0">Enter your card number, expiration date, and CVC code here:</p>
-                                </div>
-                                <div id="card-element" class="form-control form--control" style="padding: 10px; border: 1px solid #e5e7eb; border-radius: 4px; background: #fff;"></div>
-                                <div id="card-errors" class="text-danger mt-2" role="alert"></div>
-                            </div>
-                            <p class="fs-12 text-muted mt-2"><strong>Example:</strong> Card Number: 4242 4242 4242 4242, Exp: 12/25, CVC: 123</p>
-                            <p class="fs-12 text-muted">We accept Visa, MasterCard, and other major cards. Your payment is encrypted and secure.</p>
-                        </div>
-                    </div><!-- end card-body -->
-                </div><!-- end card -->
-            </div><!-- end col-lg-7 -->
-
-            <div class="col-lg-5">
-                <div class="card card-item">
-                    <div class="card-body">
-                        <h3 class="card-title fs-22 pb-3">Order Details</h3>
-                        <div class="divider"><span></span></div>
-                        <div class="order-details-lists">
-                            @forelse ($cart as $id => $item)
-                                <input type="hidden" name="course_id[]" value="{{ $id }}">
-                                <input type="hidden" name="course_title[]" value="{{ $item['name'] }}">
-                                <input type="hidden" name="price[]" value="{{ $item['price'] }}">
-                                <input type="hidden" name="instructor_id[]" value="{{ $item['instructor_id'] ?? '' }}">
-                                <input type="hidden" name="adjusted_price[]" value="{{ $adjustedPrices[$id] ?? $item['price'] }}">
-
-                                <div class="media media-card border-bottom border-bottom-gray pb-3 mb-3">
-                                    <a href="{{ url('course/details/'.$id.'/'.Str::slug($item['name'] ?? 'course')) }}" class="media-img">
-                                        <img src="{{ !empty($item['image']) ? Storage::url('upload/course_images/thumbnail/' . $item['image']) : url('upload/no_image.jpg') }}" 
-                                             alt="{{ $item['name'] }}" 
-                                             style="width: 60px; height: auto;">
-                                    </a>
-                                    <div class="media-body">
-                                        <h5 class="fs-15 pb-2"><a href="{{ url('course/details/'.$id.'/'.Str::slug($item['name'] ?? 'course')) }}">{{ $item['name'] }}</a></h5>
-                                        <p class="text-black font-weight-semi-bold lh-18">{{ number_format($adjustedPrices[$id] ?? $item['price'], 2) }} TND</p>
-                                    </div>
-                                </div><!-- end media -->
-                            @empty
-                                <p class="text-muted">No items in cart.</p>
-                            @endforelse
-                        </div><!-- end order-details-lists -->
-                        <a href="{{ route('cart') }}" class="btn-text"><i class="la la-edit mr-1"></i>Edit Cart</a>
-                    </div><!-- end card-body -->
-                </div><!-- end card -->
-
-                <div class="card card-item">
-                    <div class="card-body">
-                        <h3 class="card-title fs-22 pb-3">Order Summary</h3>
-                        <div class="divider"><span></span></div>
-                        <ul class="generic-list-item generic-list-item-flash fs-15">
-                            <li class="d-flex align-items-center justify-content-between font-weight-semi-bold">
-                                <span class="text-black">Subtotal:</span>
-                                <span>{{ number_format($subtotal, 2) }} TND</span>
-                            </li>
-                            @if (!empty($coupons))
-                                @foreach ($coupons as $coupon)
-                                    <li class="d-flex align-items-center justify-content-between">
-                                        <span class="text-black">Coupon ({{ $coupon['coupon_name'] }}):</span>
-                                        <span>-{{ number_format($coupon['discount_amount'], 2) }} TND</span>
-                                    </li>
+            <div class="row">
+                <div class="col-lg-7">
+                    <h3 class="fs-24 pb-4">Order Summary</h3>
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Course</th>
+                                    <th>Instructor</th>
+                                    <th class="text-right">Price</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($cartItems as $item)
+                                    <tr>
+                                        <td>{{ e($item->name) }}</td>
+                                        <td>{{ e($item->attributes['instructor_name'] ?? 'Unknown') }}</td>
+                                        <td class="text-right">{{ number_format($adjustedPrices[$item->id], 2) }} USD</td>
+                                    </tr>
                                 @endforeach
-                                <li class="d-flex align-items-center justify-content-between font-weight-semi-bold">
-                                    <span class="text-black">Total Discount:</span>
-                                    <span>-{{ number_format($couponDiscount, 2) }} TND</span>
-                                </li>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="col-lg-5">
+                    <div class="bg-gray p-4 rounded">
+                        <h4 class="fs-20 pb-3">Payment Details</h4>
+                        <div class="mb-3">
+                            <p class="d-flex justify-content-between">
+                                <span>Subtotal:</span>
+                                <span>{{ number_format($subtotal, 2) }} USD</span>
+                            </p>
+                            @if ($couponDiscount > 0)
+                                <p class="d-flex justify-content-between">
+                                    <span>Coupon Discount:</span>
+                                    <span>-{{ number_format($couponDiscount, 2) }} USD</span>
+                                </p>
                             @endif
-                            <li class="d-flex align-items-center justify-content-between font-weight-bold">
-                                <span class="text-black">Total:</span>
-                                <span>{{ number_format($total, 2) }} TND</span>
+                            <h5 class="d-flex justify-content-between mt-2 border-top pt-2">
+                                <strong>Total:</strong>
+                                <strong>{{ number_format($total, 2) }} USD</strong>
+                            </h5>
+                        </div>
+
+                        <ul class="nav nav-tabs mb-3" id="paymentTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="stripe-tab" data-bs-toggle="tab" data-bs-target="#stripe" type="button" role="tab" aria-controls="stripe" aria-selected="true">Stripe</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="paypal-tab" data-bs-toggle="tab" data-bs-target="#paypal" type="button" role="tab" aria-controls="paypal" aria-selected="false">PayPal</button>
                             </li>
                         </ul>
-                        <input type="hidden" name="total" value="{{ $total }}">
 
-                        <div class="btn-box border-top border-top-gray pt-3">
-                            <p class="fs-14 lh-22 mb-2">Aduca is required by law to collect applicable transaction taxes for purchases made in certain tax jurisdictions.</p>
-                            <p class="fs-14 lh-22 mb-3">By completing your purchase you agree to these <a href="#" class="text-color hover-underline">Terms of Service.</a></p>
-                            <button type="submit" class="btn theme-btn w-100">Pay with Stripe <i class="la la-arrow-right icon ml-1"></i></button>
+                        <div class="tab-content" id="paymentTabContent">
+                            <div class="tab-pane fade show active" id="stripe" role="tabpanel" aria-labelledby="stripe-tab">
+                                <form action="{{ route('pay.stripe') }}" method="POST" id="stripe-payment-form">
+                                    @csrf
+                                    <div class="mb-3">
+                                        <label for="card-element" class="form-label">Credit or Debit Card</label>
+                                        <p class="text-muted small mb-2">Enter your card details below to pay securely via Stripe.</p>
+                                        <div id="card-element" class="form-control p-2" style="border: 1px solid #ced4da; border-radius: 4px;"></div>
+                                        <div id="card-errors" role="alert" class="text-danger mt-2"></div>
+                                    </div>
+                                    <button type="submit" class="btn theme-btn w-100" id="stripe-submit">
+                                        <i class="la la-credit-card"></i> Pay {{ number_format($total, 2) }} USD with Stripe
+                                    </button>
+                                    <p class="text-muted small mt-2">Test with card: 4242 4242 4242 4242, any future date, any CVC.</p>
+                                </form>
+                            </div>
+
+                            <div class="tab-pane fade" id="paypal" role="tabpanel" aria-labelledby="paypal-tab">
+                                <form action="{{ route('pay.paypal') }}" method="POST">
+                                    @csrf
+                                    <button type="submit" class="btn theme-btn w-100">
+                                        <i class="la la-paypal"></i> Pay {{ number_format($total, 2) }} USD with PayPal
+                                    </button>
+                                    <p class="text-muted small mt-2">You will be redirected to PayPal to complete your payment.</p>
+                                </form>
+                            </div>
                         </div>
-                    </div><!-- end card-body -->
-                </div><!-- end card -->
-            </div><!-- end col-lg-5 -->
-        </div><!-- end row -->
-                    </form><!-- end form -->
-    </div><!-- end container -->
-</section>
-<!-- ================================
-    END CART AREA
-================================= -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+@endsection
 
-<!-- Script pour Stripe -->
-<script src="https://js.stripe.com/v3/"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const stripe = Stripe('{{ env('STRIPE_KEY') }}');
-        const elements = stripe.elements();
-        const card = elements.create('card', {
-            style: {
-                base: {
-                    color: '#32325d',
-                    fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
-                    fontSmoothing: 'antialiased',
-                    fontSize: '16px',
-                    '::placeholder': { color: '#aab7c4' }
+@section('scripts')
+    @parent
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://js.stripe.com/v3/"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded');
+            var stripe = Stripe('{{ env('STRIPE_KEY') }}');
+            if (!stripe) {
+                console.error('Stripe not initialized');
+                return;
+            }
+
+            var elements = stripe.elements();
+            var card = elements.create('card', {
+                style: {
+                    base: {
+                        fontSize: '16px',
+                        color: '#32325d',
+                        '::placeholder': {
+                            color: '#aab7c4'
+                        }
+                    },
+                    invalid: {
+                        color: '#dc3545',
+                        iconColor: '#dc3545'
+                    }
                 },
-                invalid: { color: '#fa755a', iconColor: '#fa755a' }
-            }
-        });
-        card.mount('#card-element');
+                hidePostalCode: true
+            });
 
-        const form = document.getElementById('checkoutForm');
-        form.addEventListener('submit', async function (event) {
-            event.preventDefault();
-            const { token, error } = await stripe.createToken(card);
-            if (error) {
-                document.getElementById('card-errors').textContent = error.message;
+            var cardElement = document.getElementById('card-element');
+            if (cardElement) {
+                card.mount('#card-element');
+                console.log('Card element mounted');
             } else {
-                const hiddenInput = document.createElement('input');
-                hiddenInput.setAttribute('type', 'hidden');
-                hiddenInput.setAttribute('name', 'stripeToken');
-                hiddenInput.setAttribute('value', token.id);
-                form.appendChild(hiddenInput);
-                form.submit();
+                console.error('Card element not found');
+            }
+
+            card.on('change', function(event) {
+                var displayError = document.getElementById('card-errors');
+                if (event.error) {
+                    displayError.textContent = event.error.message;
+                } else {
+                    displayError.textContent = '';
+                }
+            });
+
+            var form = document.getElementById('stripe-payment-form');
+            var submitButton = document.getElementById('stripe-submit');
+            if (form) {
+                form.addEventListener('submit', function(event) {
+                    event.preventDefault();
+                    submitButton.disabled = true;
+                    submitButton.textContent = 'Processing...';
+
+                    stripe.createToken(card).then(function(result) {
+                        if (result.error) {
+                            document.getElementById('card-errors').textContent = result.error.message;
+                            submitButton.disabled = false;
+                            submitButton.textContent = 'Pay {{ number_format($total, 2) }} USD with Stripe';
+                        } else {
+                            var tokenInput = document.createElement('input');
+                            tokenInput.setAttribute('type', 'hidden');
+                            tokenInput.setAttribute('name', 'stripeToken');
+                            tokenInput.setAttribute('value', result.token.id);
+                            form.appendChild(tokenInput);
+                            form.submit();
+                        }
+                    });
+                });
             }
         });
-    });
-</script>
+    </script>
 @endsection

@@ -246,7 +246,11 @@ a {
 	transform: rotate(-45deg) translateY(-50%);
 	transform-origin: top;
 	top: 50%;
-	transition: all .3s ease-out
+	transition: all .3s ease-out;
+	-webkit-transform: rotate(-45deg) translateY(-50%);
+	-moz-transform: rotate(-45deg) translateY(-50%);
+	-ms-transform: rotate(-45deg) translateY(-50%);
+	-o-transform: rotate(-45deg) translateY(-50%);
 }
 
 @media screen and (min-width:1025px) {

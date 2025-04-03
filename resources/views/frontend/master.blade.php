@@ -33,6 +33,8 @@
   <!-- end inject -->
 <script src="{{ asset('js/jquery-3.4.1.min.js') }}"></script>
 <script src="{{ asset('js/tooltipster.bundle.min.js') }}"></script>
+<script src="{{ asset('js/app.js') }}"></script>
+@yield('scripts')
 <link rel="stylesheet" href="{{ asset('css/tooltipster.bundle.css') }}">
 
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.css">

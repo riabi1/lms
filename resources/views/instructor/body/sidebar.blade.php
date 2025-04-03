@@ -26,7 +26,7 @@
       </a>
     </li>
     @if ($status == 1)
-    <li class="menu-label">Course Manage</li>
+    <li class="menu-label">My Elements</li>
     <li>
       <a href="javascript:;" class="has-arrow">
         <div class="parent-icon"><i class='bx bx-cart'></i></div>

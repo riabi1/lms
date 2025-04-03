@@ -1,4 +1,9 @@
 @extends('frontend.master')
+
+@section('title')
+    Shopping Cart | Easy Learning
+@endsection
+
 @section('home')
     <section class="breadcrumb-area section-padding img-bg-2">
         <div class="overlay"></div>
@@ -33,30 +38,32 @@
                         </tr>
                     </thead>
                     <tbody id="cart-items">
-                        @forelse ($cart as $id => $item)
-                            <tr id="cart-row-{{ $id }}">
+                        @forelse ($cartItems as $item)
+                            <tr id="cart-row-{{ $item->id }}">
                                 <td class="text-center align-middle">
-                                    <img src="{{ $item['image'] ? asset('storage/upload/course_images/thumbnail/' . $item['image']) : asset('upload/no_image.jpg') }}" 
-                                         alt="{{ $item['name'] }}" 
+                                    <img src="{{ $item->attributes->image ? asset('storage/upload/course_images/thumbnail/' . $item->attributes->image) : asset('images/no_image.jpg') }}" 
+                                         alt="{{ e($item->name) }}" 
                                          class="rounded lazy" 
-                                         style="width: 75px; height: auto;">
+                                         style="width: 75px; height: auto;"
+                                         loading="lazy"
+                                         onerror="this.src='{{ asset('images/no_image.jpg') }}'">
                                 </td>
                                 <td class="align-middle">
-                                    <strong>{{ $item['name'] }}</strong><br>
-                                    By <a href="{{ $item['instructor_id'] ? route('instructor.details', $item['instructor_id']) : '#' }}">
-                                        {{ $item['instructor_name'] }}
+                                    <strong>{{ e($item->name) }}</strong><br>
+                                    By <a href="{{ $item->attributes->instructor_id ? route('instructor.details', $item->attributes->instructor_id) : '#' }}">
+                                        {{ e($item->attributes->instructor_name ?? 'Unknown Instructor') }}
                                     </a>
                                 </td>
                                 <td class="text-right align-middle">
-                                    @if (isset($item['selling_price']) && isset($item['discount_price']) && $item['discount_price'] > 0)
-                                        <del>{{ number_format($item['selling_price'], 2) }} TND</del><br>
-                                        {{ number_format($item['price'], 2) }} TND
+                                    @if (isset($item->attributes->selling_price) && isset($item->attributes->discount_price) && $item->attributes->discount_price > 0)
+                                        <del>{{ number_format($item->attributes->selling_price, 2) }} TND</del><br>
+                                        {{ number_format($item->price, 2) }} TND
                                     @else
-                                        {{ number_format($item['price'], 2) }} TND
+                                        {{ number_format($item->price, 2) }} TND
                                     @endif
                                 </td>
                                 <td class="text-center align-middle">
-                                    <button class="btn btn-danger btn-sm remove-from-cart" data-id="{{ $id }}">Remove</button>
+                                    <button class="btn btn-danger btn-sm remove-from-cart" data-id="{{ $item->id }}">Remove</button>
                                 </td>
                             </tr>
                         @empty
@@ -67,15 +74,18 @@
                     </tbody>
                 </table>
 
-                @if (!empty($cart))
-                    <div class="d-flex justify-content-between pt-4">
-                        <div>
+                @if ($cartItems->count() > 0)
+                    <div class="row pt-4">
+                        <div class="col-lg-8">
                             <form action="{{ route('coupon.apply') }}" method="POST" id="coupon-form">
                                 @csrf
                                 <div class="input-group">
                                     <input class="form-control" type="text" name="coupon_name" placeholder="Enter coupon code" required>
                                     <button type="submit" class="btn theme-btn">Apply Coupon</button>
                                 </div>
+                                @error('coupon_name')
+                                    <span class="text-danger">{{ $message }}</span>
+                                @enderror
                             </form>
                             @if (!empty($coupons))
                                 <div class="mt-3" id="coupon-list">
@@ -83,7 +93,7 @@
                                     <ul class="list-unstyled">
                                         @foreach ($coupons as $coupon)
                                             <li class="d-flex justify-content-between align-items-center mb-2">
-                                                <span>{{ $coupon['coupon_name'] }} (-{{ number_format($coupon['discount_amount'], 2) }} TND)</span>
+                                                <span>{{ e($coupon['coupon_name']) }} (-{{ number_format($coupon['discount_amount'], 2) }} TND)</span>
                                                 <form action="{{ route('coupon.remove', $coupon['coupon_name']) }}" method="POST" class="d-inline">
                                                     @csrf
                                                     <button type="submit" class="btn btn-warning btn-sm">Remove</button>
@@ -94,27 +104,28 @@
                                 </div>
                             @endif
                         </div>
-                    </div>
 
-                    <div class="col-lg-4 ml-auto">
-                        <div class="bg-gray p-4 mt-4" id="cart-summary">
-                            <p>Subtotal: <span id="subtotal">{{ number_format($subtotal, 2) }} TND</span></p>
-                            @if (!empty($coupons))
-                                <p>Total Coupon Discount: <span id="coupon-discount">-{{ number_format($couponDiscount, 2) }} TND</span></p>
+                        <div class="col-lg-4">
+                            <div class="bg-gray p-4 mt-4" id="cart-summary">
+                                <p>Subtotal: <span id="subtotal">{{ number_format($subtotal, 2) }} TND</span></p>
+                                @if ($couponDiscount > 0)
+                                    <p>Total Coupon Discount: <span id="coupon-discount">-{{ number_format($couponDiscount, 2) }} TND</span></p>
+                                @endif
                                 <h4>Total: <span id="total-price">{{ number_format($total, 2) }} TND</span></h4>
-                            @else
-                                <h4>Total: <span id="total-price">{{ number_format($subtotal, 2) }} TND</span></h4>
-                            @endif
-                            <a href="{{ route('checkout.create') }}" class="btn theme-btn w-100 mt-3">Checkout <i class="la la-arrow-right"></i></a>
+                                <a href="{{ route('checkout.create') }}" class="btn theme-btn w-100 mt-3">Checkout <i class="la la-arrow-right"></i></a>
+                            </div>
                         </div>
                     </div>
                 @endif
             </div>
         </div>
     </section>
+@endsection
 
+@section('scripts')
+    @parent
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-   <script>
+    <script>
     $(document).ready(function() {
         $('.remove-from-cart').on('click', function(e) {
             e.preventDefault();
@@ -122,9 +133,12 @@
             var row = $('#cart-row-' + courseId);
 
             $.ajax({
-                url: '{{ route("cart.remove", "__ID__") }}'.replace('__ID__', courseId),
+                url: '{{ route("cart.remove", "") }}/' + courseId,
                 type: 'GET',
                 dataType: 'json',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
                 success: function(response) {
                     if (response.success) {
                         row.remove();
@@ -137,13 +151,19 @@
                             $('#cart-summary').remove();
                             $('#coupon-list').remove();
                         } else if (response.couponDiscount > 0) {
-                            $('#coupon-discount').text('-' + response.couponDiscount + ' TND');
                             if (!document.getElementById('coupon-discount')) {
                                 $('#subtotal').after('<p>Total Coupon Discount: <span id="coupon-discount">-' + response.couponDiscount + ' TND</span></p>');
+                            } else {
+                                $('#coupon-discount').text('-' + response.couponDiscount + ' TND');
                             }
                         } else {
                             $('#coupon-list').remove();
                             $('#coupon-discount').parent().remove();
+                        }
+
+                        // Update header cart count if it exists
+                        if ($('#cartQty').length) {
+                            $('#cartQty').text(response.cartCount);
                         }
 
                         alert(response.message);
@@ -153,9 +173,12 @@
                 },
                 error: function(xhr) {
                     alert('An error occurred while removing the item.');
+                    console.error(xhr);
                 }
             });
         });
     });
     </script>
 @endsection
+
+
