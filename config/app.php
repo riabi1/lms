@@ -183,7 +183,7 @@ return [
     Illuminate\View\ViewServiceProvider::class,
     Laravel\Socialite\SocialiteServiceProvider::class,
     Barryvdh\DomPDF\ServiceProvider::class,
-
+    
 
     /*
          * Package Service Providers...
@@ -214,6 +214,7 @@ return [
   'aliases' => Facade::defaultAliases()->merge([
     'Socialite' => Laravel\Socialite\Facades\Socialite::class,
     'PDF' => Barryvdh\DomPDF\Facade::class,
+    'Cart' => Bin\LaravelCart\Facades\Cart::class,
   ])->toArray(),
 
 ];

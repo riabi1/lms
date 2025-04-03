@@ -122,7 +122,7 @@ $categories = App\Models\Category::orderBy('category_name', 'ASC')->get();
                       @endforelse
                     </ul>
                     <div class="d-flex justify-content-between align-items-center">
-                      <form action="{{ route('cart.add', $course->id) }}" method="POST">
+                       <form action="{{ route('cart.add', $course->id) }}" method="POST">
                         @csrf
                         <button type="submit" class="btn theme-btn flex-grow-1 mr-3">
                           <i class="la la-shopping-cart fs-18 mr-1"></i> Add to Cart
