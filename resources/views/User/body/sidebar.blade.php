@@ -42,12 +42,14 @@
     </a>
 </li>
         <li>
-            <a href="#">
-                <div class="parent-icon"><i class='bx bx-bookmark'></i></div>
-                <div class="menu-title">Wishlist</div>
-                <span class="badge badge-info p-1 ml-2" id="wishQty">2</span>
-            </a>
-        </li>
+    <a href="{{ route('wishlist.index') }}">
+        <div class="parent-icon"><i class='bx bx-bookmark'></i></div>
+        <div class="menu-title">Wishlist</div>
+        <span class="badge badge-info p-1 ml-2" id="wishQty">
+            {{ auth()->check() ? \App\Models\Wishlist::where('trackable_type', 'App\Models\User')->where('trackable_id', auth()->id())->count() : 0 }}
+        </span>
+    </a>
+</li>
 
      <li>
             <a href="#">

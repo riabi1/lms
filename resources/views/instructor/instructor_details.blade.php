@@ -109,7 +109,7 @@
                 </div>
                 @auth
                     <div class="mt-4 text-center animate__animated animate__fadeInUp" style="animation-delay: 0.8s;">
-                      
+                        <!-- Placeholder for potential future functionality like messaging -->
                     </div>
                 @else
                     <div class="mt-4 text-center animate__animated animate__fadeInUp" style="animation-delay: 0.8s;">
@@ -127,6 +127,15 @@
 <!--======================================
     START COURSE AREA
 ======================================-->
+<style>
+.wishlist-btn i {
+    transition: color 0.3s ease;
+}
+.wishlist-btn.wishlisted i {
+    color: #F16767;
+}
+</style>
+
 <section class="course-area section-padding bg-white">
     <div class="container">
         <div class="d-flex align-items-center justify-content-between pb-4">
@@ -138,15 +147,19 @@
             @forelse($courses as $course)
                 @php
                     $finalPrice = $course->discount_price !== null ? max(0, $course->selling_price - $course->discount_price) : $course->selling_price;
-                    $discountPercentage = ($course->selling_price > 0 && $course->discount_price !== null) ? round(($course->discount_price / $course->selling_price) * 100) : 0;
+                    $discountPercentage = ($course->selling_price > 0 && $course->discount_price !== null) ? round(($course->selling_price - $finalPrice) / $course->selling_price * 100) : 0;
                     $rating = $course->reviews->avg('rating') ?? 0;
                     $reviews_count = $course->reviews->count();
+                    $isWishlisted = auth()->check() && \App\Models\Wishlist::where('trackable_type', 'App\Models\User')
+                        ->where('trackable_id', auth()->id())
+                        ->where('course_id', $course->id)
+                        ->exists();
                 @endphp
                 <div class="col-lg-4 col-md-6">
                     <div class="card card-item card-preview shadow-sm hover-scale animate__animated animate__fadeInUp" data-tooltip-content="#tooltip_content_{{ $course->id }}">
                         <div class="card-image position-relative">
                             <a href="{{ url('course/details/'.$course->id.'/'.$course->course_name_slug) }}" class="d-block">
-                                <img class="card-img-top lazy rounded-top" src="{{ asset('storage/upload/course_images/thumbnail/' . ($course->course_image ?? 'default-course.jpg')) }}" alt="{{ $course->course_name }}" style="height: 200px; object-fit: cover;">
+                                <img class="card-img-top lazy rounded-top" src="{{ asset('storage/upload/course_images/thumbnail/' . ($course->course_image ?? 'default-course.jpg')) }}" alt="{{ $course->course_name }}" style="height: 200px; object-fit: cover;" onerror="this.src='{{ asset('images/default-course.jpg') }}';">
                             </a>
                             <div class="course-badge-labels position-absolute top-10 start-10">
                                 @if($course->bestseller == 1)
@@ -178,7 +191,17 @@
                                 @else
                                     <p class="card-price text-dark fw-bold fs-16">${{ number_format($finalPrice, 2) }}</p>
                                 @endif
-                                <div class="icon-element icon-element-sm shadow-sm cursor-pointer text-primary" title="Add to Wishlist"><i class="la la-heart-o fs-18"></i></div>
+                                @auth
+                                    <button class="wishlist-btn icon-element icon-element-sm shadow-sm cursor-pointer border-0 bg-transparent {{ $isWishlisted ? 'wishlisted' : '' }}"
+                                            data-course-id="{{ $course->id }}"
+                                            title="{{ $isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist' }}">
+                                        <i class="la {{ $isWishlisted ? 'la-heart' : 'la-heart-o' }} fs-18"></i>
+                                    </button>
+                                @else
+                                    <a href="{{ route('login') }}" class="icon-element icon-element-sm shadow-sm cursor-pointer text-primary" title="Login to add to Wishlist">
+                                        <i class="la la-heart-o fs-18"></i>
+                                    </a>
+                                @endauth
                             </div>
                         </div><!-- end card-body -->
                     </div><!-- end card -->
@@ -202,6 +225,10 @@
         $finalPrice = $course->discount_price !== null ? max(0, $course->selling_price - $course->discount_price) : $course->selling_price;
         $rating = $course->reviews->avg('rating') ?? 0;
         $reviews_count = $course->reviews->count();
+        $isWishlisted = auth()->check() && \App\Models\Wishlist::where('trackable_type', 'App\Models\User')
+            ->where('trackable_id', auth()->id())
+            ->where('course_id', $course->id)
+            ->exists();
     @endphp
     <div class="tooltip_templates" style="display: none;">
         <div id="tooltip_content_{{ $course->id }}">
@@ -248,7 +275,17 @@
                             @csrf
                             <button type="submit" class="btn theme-btn btn-sm px-3"><i class="la la-shopping-cart mr-1"></i> Add to Cart</button>
                         </form>
-                        <div class="icon-element icon-element-sm shadow-sm cursor-pointer text-primary" title="Add to Wishlist"><i class="la la-heart-o fs-18"></i></div>
+                        @auth
+                            <button class="wishlist-btn icon-element icon-element-sm shadow-sm cursor-pointer border-0 bg-transparent {{ $isWishlisted ? 'wishlisted' : '' }}"
+                                    data-course-id="{{ $course->id }}"
+                                    title="{{ $isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist' }}">
+                                <i class="la {{ $isWishlisted ? 'la-heart' : 'la-heart-o' }} fs-18"></i>
+                            </button>
+                        @else
+                            <a href="{{ route('login') }}" class="icon-element icon-element-sm shadow-sm cursor-pointer text-primary" title="Login to add to Wishlist">
+                                <i class="la la-heart-o fs-18"></i>
+                            </a>
+                        @endauth
                     </div>
                 </div>
             </div><!-- end card -->
@@ -296,6 +333,48 @@
                 function() { $(this).css('transform', 'scale(1.05)'); },
                 function() { $(this).css('transform', 'scale(1)'); }
             );
+
+            // Handle wishlist button clicks
+            $('.wishlist-btn').on('click', function(e) {
+                e.preventDefault();
+                var $button = $(this);
+                var courseId = $button.data('course-id');
+                var isWishlisted = $button.hasClass('wishlisted');
+                var url = isWishlisted ? '/wishlist/remove/' + courseId : '/wishlist/add/' + courseId;
+
+                $.ajax({
+                    url: url,
+                    method: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            if (isWishlisted) {
+                                $button.removeClass('wishlisted');
+                                $button.find('i').removeClass('la-heart').addClass('la-heart-o');
+                                $button.attr('title', 'Add to Wishlist');
+                            } else {
+                                $button.addClass('wishlisted');
+                                $button.find('i').removeClass('la-heart-o').addClass('la-heart');
+                                $button.attr('title', 'Remove from Wishlist');
+                            }
+                            // Sync all wishlist buttons for this course (card and tooltip)
+                            $('.wishlist-btn[data-course-id="' + courseId + '"]').each(function() {
+                                $(this).toggleClass('wishlisted', !isWishlisted);
+                                $(this).find('i').toggleClass('la-heart-o', isWishlisted).toggleClass('la-heart', !isWishlisted);
+                                $(this).attr('title', isWishlisted ? 'Add to Wishlist' : 'Remove from Wishlist');
+                            });
+                            // Trigger wishlist count update (if applicable)
+                            $(document).trigger('wishlist-updated');
+                        }
+                    },
+                    error: function(xhr) {
+                        var response = xhr.responseJSON;
+                        alert(response.message || 'An error occurred.');
+                    }
+                });
+            });
         });
     </script>
 @endpush

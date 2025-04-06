@@ -5,73 +5,94 @@
 @endsection
 
 @section('home')
-    <!-- BREADCRUMB AREA -->
-    <section class="breadcrumb-area pt-50px pb-50px bg-white pattern-bg">
-        <div class="container">
-            <div class="col-lg-8 mr-auto">
-                <div class="breadcrumb-content">
-                    <ul class="generic-list-item generic-list-item-arrow d-flex flex-wrap align-items-center">
-                        <li><a href="{{ url('/') }}">Home</a></li>
-                        <li><a href="{{ $course->subcategory && $course->subcategory->category ? url('category/'.$course->subcategory->category->id.'/'.$course->subcategory->category->category_slug) : '#' }}">{{ $course->subcategory && $course->subcategory->category ? $course->subcategory->category->category_name : 'Uncategorized' }}</a></li>
-                        <li><a href="{{ $course->subcategory ? url('subcategory/'.$course->subcategory->id.'/'.$course->subcategory->subcategory_slug) : '#' }}">{{ $course->subcategory ? $course->subcategory->subcategory_name : 'No Subcategory' }}</a></li>
-                    </ul>
-                    <div class="section-heading">
-                        <h2 class="section__title">{{ $course->course_name ?? 'Untitled Course' }}</h2>
-                        <p class="section__desc pt-2 lh-30">{{ $course->course_title ?? 'No title available' }}</p>
-                    </div>
-                    <div class="d-flex flex-wrap align-items-center pt-3">
-                        @if ($course->bestseller == 1)
-                            <h6 class="ribbon ribbon-lg mr-2 bg-3 text-white">Bestseller</h6>
-                        @endif
-                        @if ($course->featured == 1)
-                            <h6 class="ribbon ribbon-lg mr-2 bg-3 text-white">Featured</h6>
-                        @endif
-                        @if ($course->highestrated == 1)
-                            <h6 class="ribbon ribbon-lg mr-2 bg-3 text-white">Highest Rated</h6>
-                        @endif
+<style>
+.wishlist-btn i {
+    transition: color 0.3s ease;
+}
+.wishlist-btn.wishlisted i {
+    color: #F16767;
+}
+</style>
 
-                        @php
-                            $reviewcount = $course->reviews()->where('status', 1)->latest()->get();
-                            $average = $course->reviews()->where('status', 1)->avg('rating') ?? 0;
-                        @endphp
+<!-- BREADCRUMB AREA -->
+<section class="breadcrumb-area pt-50px pb-50px bg-white pattern-bg">
+    <div class="container">
+        <div class="col-lg-8 mr-auto">
+            <div class="breadcrumb-content">
+                <ul class="generic-list-item generic-list-item-arrow d-flex flex-wrap align-items-center">
+                    <li><a href="{{ url('/') }}">Home</a></li>
+                    <li><a href="{{ $course->subcategory && $course->subcategory->category ? url('category/'.$course->subcategory->category->id.'/'.$course->subcategory->category->category_slug) : '#' }}">{{ $course->subcategory && $course->subcategory->category ? $course->subcategory->category->category_name : 'Uncategorized' }}</a></li>
+                    <li><a href="{{ $course->subcategory ? url('subcategory/'.$course->subcategory->id.'/'.$course->subcategory->subcategory_slug) : '#' }}">{{ $course->subcategory ? $course->subcategory->subcategory_name : 'No Subcategory' }}</a></li>
+                </ul>
+                <div class="section-heading">
+                    <h2 class="section__title">{{ $course->course_name ?? 'Untitled Course' }}</h2>
+                    <p class="section__desc pt-2 lh-30">{{ $course->course_title ?? 'No title available' }}</p>
+                </div>
+                <div class="d-flex flex-wrap align-items-center pt-3">
+                    @if ($course->bestseller == 1)
+                        <h6 class="ribbon ribbon-lg mr-2 bg-3 text-white">Bestseller</h6>
+                    @endif
+                    @if ($course->featured == 1)
+                        <h6 class="ribbon ribbon-lg mr-2 bg-3 text-white">Featured</h6>
+                    @endif
+                    @if ($course->highestrated == 1)
+                        <h6 class="ribbon ribbon-lg mr-2 bg-3 text-white">Highest Rated</h6>
+                    @endif
 
-                        <div class="rating-wrap d-flex flex-wrap align-items-center">
-                            <div class="review-stars">
-                                <span class="rating-number">{{ round($average, 1) }}</span>
-                                @for ($i = 1; $i <= 5; $i++)
-                                    <span class="la la-star{{ $i <= floor($average) ? '' : '-o' }}"></span>
-                                @endfor
-                            </div>
-                            <span class="rating-total pl-1">({{ count($reviewcount) }} ratings)</span>
+                    @php
+                        $reviewcount = $course->reviews()->where('status', 1)->latest()->get();
+                        $average = $course->reviews()->where('status', 1)->avg('rating') ?? 0;
+                        $isWishlisted = auth()->check() && \App\Models\Wishlist::where('trackable_type', 'App\Models\User')
+                            ->where('trackable_id', auth()->id())
+                            ->where('course_id', $course->id)
+                            ->exists();
+                    @endphp
+
+                    <div class="rating-wrap d-flex flex-wrap align-items-center">
+                        <div class="review-stars">
+                            <span class="rating-number">{{ round($average, 1) }}</span>
+                            @for ($i = 1; $i <= 5; $i++)
+                                <span class="la la-star{{ $i <= floor($average) ? '' : '-o' }}"></span>
+                            @endfor
                         </div>
+                        <span class="rating-total pl-1">({{ count($reviewcount) }} ratings)</span>
                     </div>
-                    <p class="pt-2 pb-1">Created by 
-                        @if ($instructor)
-                            <a href="{{ route('instructor.details', $instructor->id) }}" class="text-color hover-underline">{{ $instructor->name }}</a>
-                        @else
-                            Unknown Instructor
-                        @endif
+                </div>
+                <p class="pt-2 pb-1">Created by 
+                    @if ($instructor)
+                        <a href="{{ route('instructor.details', $instructor->id) }}" class="text-color hover-underline">{{ $instructor->name }}</a>
+                    @else
+                        Unknown Instructor
+                    @endif
+                </p>
+                <div class="d-flex flex-wrap align-items-center">
+                    <p class="pr-3 d-flex align-items-center">
+                        <svg class="svg-icon-color-gray mr-1" width="16px" viewBox="0 0 24 24">
+                            <path d="M23 12l-2.44-2.78.34-3.68-3.61-.82-1.89-3.18L12 3 8.6 1.54 6.71 4.72l-3.61.81.34 3.68L1 12l2.44 2.78-.34 3.69 3.61.82 1.89 3.18L12 21l3.4 1.46 1.89-3.18 3.61-.82-.34-3.68L23 12zm-10 5h-2v-2h2v2zm0-4h-2V7h2v6z"></path>
+                        </svg>
+                        Last updated {{ $course->updated_at ? \Carbon\Carbon::parse($course->updated_at)->format('M d Y') : 'N/A' }}
                     </p>
-                    <div class="d-flex flex-wrap align-items-center">
-                        <p class="pr-3 d-flex align-items-center">
-                            <svg class="svg-icon-color-gray mr-1" width="16px" viewBox="0 0 24 24">
-                                <path d="M23 12l-2.44-2.78.34-3.68-3.61-.82-1.89-3.18L12 3 8.6 1.54 6.71 4.72l-3.61.81.34 3.68L1 12l2.44 2.78-.34 3.69 3.61.82 1.89 3.18L12 21l3.4 1.46 1.89-3.18 3.61-.82-.34-3.68L23 12zm-10 5h-2v-2h2v2zm0-4h-2V7h2v6z"></path>
-                            </svg>
-                            Last updated {{ $course->updated_at ? \Carbon\Carbon::parse($course->updated_at)->format('M d Y') : 'N/A' }}
-                        </p>
-                    </div>
-                    <div class="bread-btn-box pt-3">
-                        <button class="btn theme-btn theme-btn-sm theme-btn-transparent lh-28 mr-2 mb-2">
+                </div>
+                <div class="bread-btn-box pt-3">
+                    @auth
+                        <button class="wishlist-btn btn theme-btn theme-btn-sm theme-btn-transparent lh-28 mr-2 mb-2 {{ $isWishlisted ? 'wishlisted' : '' }}"
+                                data-course-id="{{ $course->id }}"
+                                title="{{ $isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist' }}">
+                            <i class="la {{ $isWishlisted ? 'la-heart' : 'la-heart-o' }} mr-1"></i>
+                            <span class="swapping-btn" data-text-swap="Wishlisted" data-text-original="Wishlist">{{ $isWishlisted ? 'Wishlisted' : 'Wishlist' }}</span>
+                        </button>
+                    @else
+                        <a href="{{ route('login') }}" class="btn theme-btn theme-btn-sm theme-btn-transparent lh-28 mr-2 mb-2" title="Login to add to Wishlist">
                             <i class="la la-heart-o mr-1"></i>
                             <span class="swapping-btn" data-text-swap="Wishlisted" data-text-original="Wishlist">Wishlist</span>
-                        </button>
-                        <button class="btn theme-btn theme-btn-sm theme-btn-transparent lh-28 mr-2 mb-2" data-toggle="modal" data-target="#shareModal">
-                            <i class="la la-share mr-1"></i>Share
-                        </button>
-                        <button class="btn theme-btn theme-btn-sm theme-btn-transparent lh-28 mb-2" data-toggle="modal" data-target="#reportModal">
-                            <i class="la la-flag mr-1"></i>Report abuse
-                        </button>
-                    </div>
+                        </a>
+                    @endauth
+                    <button class="btn theme-btn theme-btn-sm theme-btn-transparent lh-28 mr-2 mb-2" data-toggle="modal" data-target="#shareModal">
+                        <i class="la la-share mr-1"></i>Share
+                    </button>
+                    <button class="btn theme-btn theme-btn-sm theme-btn-transparent lh-28 mb-2" data-toggle="modal" data-target="#reportModal">
+                        <i class="la la-flag mr-1"></i>Report abuse
+                    </button>
                 </div>
             </div>
         </div>
@@ -432,6 +453,10 @@
                                 : 0;
                             $insRating = $inscourse->reviews->avg('rating') ?? 0;
                             $insReviewsCount = $inscourse->reviews->count();
+                            $insIsWishlisted = auth()->check() && \App\Models\Wishlist::where('trackable_type', 'App\Models\User')
+                                ->where('trackable_id', auth()->id())
+                                ->where('course_id', $inscourse->id)
+                                ->exists();
                         @endphp
                         <div class="card card-item card-preview" data-tooltip-content="#tooltip_content_{{ $inscourse->id }}">
                             <div class="card-image">
@@ -468,7 +493,17 @@
                                     @else
                                         <p class="card-price text-black font-weight-bold">{{ number_format($insFinalPrice, 2) }} TND</p>
                                     @endif
-                                    <div class="icon-element icon-element-sm shadow-sm cursor-pointer" title="Add to Wishlist"><i class="la la-heart-o"></i></div>
+                                    @auth
+                                        <button class="wishlist-btn icon-element icon-element-sm shadow-sm cursor-pointer border-0 bg-transparent {{ $insIsWishlisted ? 'wishlisted' : '' }}"
+                                                data-course-id="{{ $inscourse->id }}"
+                                                title="{{ $insIsWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist' }}">
+                                            <i class="la {{ $insIsWishlisted ? 'la-heart' : 'la-heart-o' }}"></i>
+                                        </button>
+                                    @else
+                                        <a href="{{ route('login') }}" class="icon-element icon-element-sm shadow-sm cursor-pointer" title="Login to add to Wishlist">
+                                            <i class="la la-heart-o"></i>
+                                        </a>
+                                    @endauth
                                 </div>
                             </div>
                         </div>
@@ -490,6 +525,10 @@
             $insHasPurchased = Auth::check() && App\Models\Order::where('user_id', Auth::id())
                 ->where('course_id', $inscourse->id)
                 ->where('payment_status', 'paid')
+                ->exists();
+            $insIsWishlisted = auth()->check() && \App\Models\Wishlist::where('trackable_type', 'App\Models\User')
+                ->where('trackable_id', auth()->id())
+                ->where('course_id', $inscourse->id)
                 ->exists();
         @endphp
         <div class="tooltip_templates" style="display: none;">
@@ -541,7 +580,17 @@
                                     </button>
                                 </form>
                             @endif
-                            <div class="icon-element icon-element-sm shadow-sm cursor-pointer" title="Add to Wishlist"><i class="la la-heart-o"></i></div>
+                            @auth
+                                <button class="wishlist-btn icon-element icon-element-sm shadow-sm cursor-pointer border-0 bg-transparent {{ $insIsWishlisted ? 'wishlisted' : '' }}"
+                                        data-course-id="{{ $inscourse->id }}"
+                                        title="{{ $insIsWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist' }}">
+                                    <i class="la {{ $insIsWishlisted ? 'la-heart' : 'la-heart-o' }}"></i>
+                                </button>
+                            @else
+                                <a href="{{ route('login') }}" class="icon-element icon-element-sm shadow-sm cursor-pointer" title="Login to add to Wishlist">
+                                    <i class="la la-heart-o"></i>
+                                </a>
+                            @endauth
                         </div>
                     </div>
                 </div>
@@ -654,8 +703,10 @@
 
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{{ asset('js/tooltipster.bundle.min.js') }}"></script>
     <script>
     $(document).ready(function() {
+        // Section toggle for accordion
         $('.section-toggle').on('click', function() {
             const content = $(this).closest('.card').find('.section-content');
             const plusIcon = $(this).find('.la-plus');
@@ -671,6 +722,7 @@
             }
         });
 
+        // Initialize Tooltipster
         $('.card-preview').tooltipster({
             theme: 'tooltipster-shadow',
             interactive: true,
@@ -678,6 +730,42 @@
             maxWidth: 400,
             side: 'right',
             distance: 10
+        });
+
+        // Handle wishlist button clicks
+        $('.wishlist-btn').on('click', function(e) {
+            e.preventDefault();
+            var $button = $(this);
+            var courseId = $button.data('course-id');
+            var isWishlisted = $button.hasClass('wishlisted');
+            var url = isWishlisted ? '/wishlist/remove/' + courseId : '/wishlist/add/' + courseId;
+
+            $.ajax({
+                url: url,
+                method: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        if (isWishlisted) {
+                            $button.removeClass('wishlisted');
+                            $button.find('i').removeClass('la-heart').addClass('la-heart-o');
+                            $button.attr('title', 'Add to Wishlist');
+                            $button.find('.swapping-btn').text($button.find('.swapping-btn').data('text-original'));
+                        } else {
+                            $button.addClass('wishlisted');
+                            $button.find('i').removeClass('la-heart-o').addClass('la-heart');
+                            $button.attr('title', 'Remove from Wishlist');
+                            $button.find('.swapping-btn').text($button.find('.swapping-btn').data('text-swap'));
+                        }
+                    }
+                },
+                error: function(xhr) {
+                    var response = xhr.responseJSON;
+                    alert(response.message || 'An error occurred.');
+                }
+            });
         });
     });
     </script>

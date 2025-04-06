@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\User\NotesController;
 use App\Http\Controllers\User\ReviewController;
@@ -79,9 +80,11 @@ Route::get('/order/success', function () {
     Route::put('/mycourses/notes/{id}', [NotesController::class, 'update'])->name('mycourses.notes.update');
     Route::delete('/mycourses/notes/{id}', [NotesController::class, 'destroy'])->name('mycourses.notes.destroy');
   
-    //User Quiz routes
+    //User wishlist routes
     Route::get('/quizzes', [QuizzesController::class, 'index'])->name('quizzes.index');
-
+    Route::post('/wishlist/add/{course_id}', [WishlistController::class, 'add'])->name('wishlist.add');
+    Route::post('/wishlist/remove/{course_id}', [WishlistController::class, 'remove'])->name('wishlist.remove');
+    Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
     });
 });
 
