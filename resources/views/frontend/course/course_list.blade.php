@@ -29,6 +29,15 @@ Course List | Easy Learning
 <!--======================================
         START COURSE AREA
 ======================================-->
+<style>
+.wishlist-btn i {
+    transition: color 0.3s ease;
+}
+.wishlist-btn.wishlisted i {
+    color: #F16767;
+}
+</style>
+
 <section class="course-area section--padding">
     <div class="container">
         <!-- Formulaire de filtration -->
@@ -89,6 +98,10 @@ Course List | Easy Learning
                                 ? round(($course->discount_price / $course->selling_price) * 100)
                                 : 0;
                             $instructor = $course->courseable instanceof \App\Models\Instructor ? $course->courseable : null;
+                            $isWishlisted = auth()->check() && \App\Models\Wishlist::where('trackable_type', 'App\Models\User')
+                                ->where('trackable_id', auth()->id())
+                                ->where('course_id', $course->id)
+                                ->exists();
                         @endphp
                         <div class="col-lg-4 col-md-6 responsive-column-half">
                             <div class="card card-item card-preview" data-tooltip-content="#tooltip_content_{{ $course->id }}">
@@ -137,7 +150,7 @@ Course List | Easy Learning
                                 </div><!-- end card-body -->
                             </div><!-- end card -->
 
-                            <!-- Contenu du tooltip affiché au survol -->
+                            <!-- Tooltip Content -->
                             <div class="tooltip_templates" style="display: none;">
                                 <div id="tooltip_content_{{ $course->id }}">
                                     <div class="card-body">
@@ -188,8 +201,18 @@ Course List | Easy Learning
                                                 <button type="submit" class="btn theme-btn w-100">
                                                     <i class="la la-shopping-cart fs-18 mr-1"></i> Add to Cart
                                                 </button>
-                                            </form> 
-                                            <div class="icon-element icon-element-sm shadow-sm cursor-pointer" title="Add to Wishlist"><i class="la la-heart-o"></i></div>
+                                            </form>
+                                            @auth
+                                                <button class="wishlist-btn icon-element icon-element-sm shadow-sm cursor-pointer border-0 bg-transparent {{ $isWishlisted ? 'wishlisted' : '' }}"
+                                                        data-course-id="{{ $course->id }}"
+                                                        title="{{ $isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist' }}">
+                                                    <i class="la {{ $isWishlisted ? 'la-heart' : 'la-heart-o' }}"></i>
+                                                </button>
+                                            @else
+                                                <a href="{{ route('login') }}" class="icon-element icon-element-sm shadow-sm cursor-pointer" title="Login to add to Wishlist">
+                                                    <i class="la la-heart-o"></i>
+                                                </a>
+                                            @endauth
                                         </div>
                                     </div>
                                 </div>
@@ -209,15 +232,52 @@ Course List | Easy Learning
         END COURSE AREA
 ======================================-->
 
-<!-- Script pour initialiser Tooltipster -->
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="{{ asset('js/tooltipster.bundle.min.js') }}"></script>
 <script>
-    $(document).ready(function() {
-        $('.card-preview').tooltipster({
-            theme: 'tooltipster-shadow',
-            interactive: true,
-            contentAsHTML: true,
-            maxWidth: 400
+$(document).ready(function() {
+    // Initialize Tooltipster
+    $('.card-preview').tooltipster({
+        theme: 'tooltipster-shadow',
+        interactive: true,
+        contentAsHTML: true,
+        maxWidth: 400
+    });
+
+    // Handle wishlist button clicks
+    $('.wishlist-btn').on('click', function(e) {
+        e.preventDefault();
+        var $button = $(this);
+        var courseId = $button.data('course-id');
+        var isWishlisted = $button.hasClass('wishlisted');
+        var url = isWishlisted ? '/wishlist/remove/' + courseId : '/wishlist/add/' + courseId;
+
+        $.ajax({
+            url: url,
+            method: 'POST',
+            data: {
+                _token: '{{ csrf_token() }}'
+            },
+            success: function(response) {
+                if (response.status === 'success') {
+                    if (isWishlisted) {
+                        $button.removeClass('wishlisted');
+                        $button.find('i').removeClass('la-heart').addClass('la-heart-o');
+                        $button.attr('title', 'Add to Wishlist');
+                    } else {
+                        $button.addClass('wishlisted');
+                        $button.find('i').removeClass('la-heart-o').addClass('la-heart');
+                        $button.attr('title', 'Remove from Wishlist');
+                    }
+                }
+            },
+            error: function(xhr) {
+                var response = xhr.responseJSON;
+                alert(response.message || 'An error occurred.');
+            }
         });
     });
+});
 </script>
 @endsection

@@ -395,16 +395,7 @@
                             <a href="#" class="btn theme-btn theme-btn-sm theme-btn-transparent lh-26 text-white mr-2" data-toggle="modal" data-target="#shareModal">
                                 <i class="bx bx-share-alt mr-1"></i> Share
                             </a>
-                            <div class="generic-action-wrap">
-                                <div class="dropdown">
-                                    <a class="action-btn" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown">
-                                        <i class="bx bx-dots-vertical-rounded"></i>
-                                    </a>
-                                    <div class="dropdown-menu dropdown-menu-right">
-                                        <a class="dropdown-item" href="#">Favorite this course</a>
-                                    </div>
-                                </div>
-                            </div>
+                           
                         </div>
                     </div>
                 </div>
@@ -874,12 +865,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer justify-content-center border-top-gray">
-                    <ul class="social-icons social-icons-styled">
-                        <li><a href="#" class="facebook-bg"><i class="bx bxl-facebook"></i></a></li>
-                        <li><a href="#" class="twitter-bg"><i class="bx bxl-twitter"></i></a></li>
-                        <li><a href="#" class="instagram-bg"><i class="bx bxl-instagram"></i></a></li>
-                    </ul>
+              
                 </div>
             </div>
         </div>

@@ -29,6 +29,15 @@
 <!--======================================
         START COURSE AREA
 ======================================-->
+<style>
+.wishlist-btn i {
+    transition: color 0.3s ease;
+}
+.wishlist-btn.wishlisted i {
+    color:#F16767;
+}
+</style>
+
 <section class="course-area section--padding">
     <div class="container">
         <!-- Formulaire de filtration -->
@@ -86,16 +95,20 @@
             <div class="col-lg-8">
                 <div class="row">
                     @foreach ($courses as $course)
+                        @php
+                            $amount = $course->selling_price - $course->discount_price;
+                            $discount = $course->selling_price ? round(($amount / $course->selling_price) * 100) : 0;
+                            $isWishlisted = auth()->check() && \App\Models\Wishlist::where('trackable_type', 'App\Models\User')
+                                ->where('trackable_id', auth()->id())
+                                ->where('course_id', $course->id)
+                                ->exists();
+                        @endphp
                         <div class="col-lg-6 responsive-column-half">
                             <div class="card card-item card-preview">
                                 <div class="card-image">
                                     <a href="{{ route('course.details', [$course->id, $course->course_name_slug]) }}" class="d-block">
                                         <img class="card-img-top lazy" src="{{ asset('storage/upload/course_images/thumbnail/' . $course->course_image) }}" alt="{{ $course->course_title }}" onerror="this.src='{{ asset('images/default-course.jpg') }}'">
                                     </a>
-                                    @php
-                                        $amount = $course->selling_price - $course->discount_price;
-                                        $discount = $course->selling_price ? round(($amount / $course->selling_price) * 100) : 0;
-                                    @endphp
                                     <div class="course-badge-labels">
                                         @if ($course->bestseller == 1)
                                             <div class="course-badge">Bestseller</div>
@@ -127,7 +140,17 @@
                                         @else
                                             <p class="card-price text-black font-weight-bold">${{ $course->discount_price }} <span class="before-price font-weight-medium">${{ $course->selling_price }}</span></p>
                                         @endif
-                                        <div class="icon-element icon-element-sm shadow-sm cursor-pointer" title="Add to Wishlist"><i class="la la-heart-o"></i></div>
+                                        @auth
+                                            <button class="wishlist-btn icon-element icon-element-sm shadow-sm cursor-pointer border-0 bg-transparent {{ $isWishlisted ? 'wishlisted' : '' }}"
+                                                    data-course-id="{{ $course->id }}"
+                                                    title="{{ $isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist' }}">
+                                                <i class="la {{ $isWishlisted ? 'la-heart' : 'la-heart-o' }}"></i>
+                                            </button>
+                                        @else
+                                            <a href="{{ route('login') }}" class="icon-element icon-element-sm shadow-sm cursor-pointer" title="Login to add to Wishlist">
+                                                <i class="la la-heart-o"></i>
+                                            </a>
+                                        @endauth
                                     </div>
                                 </div><!-- end card-body -->
                             </div><!-- end card -->
@@ -145,4 +168,44 @@
 <!--======================================
         END COURSE AREA
 ======================================-->
+
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    // Handle wishlist button clicks
+    $('.wishlist-btn').on('click', function(e) {
+        e.preventDefault();
+        var $button = $(this);
+        var courseId = $button.data('course-id');
+        var isWishlisted = $button.hasClass('wishlisted');
+        var url = isWishlisted ? '/wishlist/remove/' + courseId : '/wishlist/add/' + courseId;
+
+        $.ajax({
+            url: url,
+            method: 'POST',
+            data: {
+                _token: '{{ csrf_token() }}'
+            },
+            success: function(response) {
+                if (response.status === 'success') {
+                    if (isWishlisted) {
+                        $button.removeClass('wishlisted');
+                        $button.find('i').removeClass('la-heart').addClass('la-heart-o');
+                        $button.attr('title', 'Add to Wishlist');
+                    } else {
+                        $button.addClass('wishlisted');
+                        $button.find('i').removeClass('la-heart-o').addClass('la-heart');
+                        $button.attr('title', 'Remove from Wishlist');
+                    }
+                }
+            },
+            error: function(xhr) {
+                var response = xhr.responseJSON;
+                alert(response.message || 'An error occurred.');
+            }
+        });
+    });
+});
+</script>
 @endsection

@@ -6,20 +6,21 @@ use Illuminate\Database\Eloquent\Model;
 
 class Wishlist extends Model
 {
-    protected $fillable = ['user_id', 'course_id'];
+    protected $fillable = ['trackable_type', 'trackable_id', 'course_id'];
 
+    /**
+     * Get the parent trackable model (e.g., User).
+     */
     public function trackable()
     {
         return $this->morphTo();
     }
-    
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
 
-    public function course()
+    /**
+     * Get the course associated with the wishlist.
+     */
+   public function course()
     {
-        return $this->belongsTo(Course::class);
+        return $this->belongsTo(Course::class, 'course_id');
     }
 }
