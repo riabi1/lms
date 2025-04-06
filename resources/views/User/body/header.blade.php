@@ -37,16 +37,7 @@
                     </div>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end" id="userDropdown">
-                    <li>
-                        <div class="theme-picker d-flex flex-column px-3 py-2">
-                            <button class="theme-picker-btn dark-mode-btn w-100 text-left d-flex align-items-center" title="Dark mode">
-                                <i class="bx bx-moon mr-2"></i> Dark Mode
-                            </button>
-                            <button class="theme-picker-btn light-mode-btn w-100 text-left d-flex align-items-center" title="Light mode">
-                                <i class="bx bx-sun mr-2"></i> Light Mode
-                            </button>
-                        </div>
-                    </li>
+                  
                     <li><div class="dropdown-divider"></div></li>
                     <li>
                         <a class="dropdown-item d-flex align-items-center" href="dashboard-purchase-history.html">

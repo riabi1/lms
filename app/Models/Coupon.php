@@ -24,7 +24,7 @@ class Coupon extends Model
      * Relation avec le modèle Course.
      * Un coupon appartient à un cours.
      */
-  public function course()
+public function course()
     {
         return $this->belongsTo(Course::class, 'course_id');
     }
@@ -33,8 +33,8 @@ class Coupon extends Model
      * Relation avec le modèle User (instructeur).
      * Un coupon appartient à un instructeur.
      */
-    public function instructor()
+ public function instructor()
     {
-        return $this->belongsTo(User::class, 'instructor_id', 'id');
+        return $this->belongsTo(Instructor::class, 'instructor_id');
     }
 }

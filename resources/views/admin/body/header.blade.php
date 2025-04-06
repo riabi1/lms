@@ -2,18 +2,7 @@
     <div class="topbar d-flex align-items-center">
         <nav class="navbar navbar-expand gap-3">
             <div class="top-menu ms-auto">
-                <ul class="navbar-nav align-items-center gap-1">
-                    <!-- Notifications -->
-                    <li class="nav-item dropdown dropdown-large">
-                        <a class="nav-link dropdown-toggle dropdown-toggle-nocaret position-relative" href="#" 
-                           data-bs-toggle="dropdown" data-bs-target="#notificationDropdown" aria-expanded="false">
-                            <i class="bx bx-bell"></i>
-                        </a>
-                        <ul class="dropdown-menu" id="notificationDropdown">
-                            <li><a class="dropdown-item" href="#">No notifications yet</a></li>
-                        </ul>
-                    </li>
-                </ul>
+             
             </div>
             @php
                 $admin = Auth::guard('admin')->user();

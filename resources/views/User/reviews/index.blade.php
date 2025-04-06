@@ -48,7 +48,7 @@
             border: 1px solid #ddd;
         }
         .table th, .table td {
-            vertical-align: middle; /* Alignement vertical pour un meilleur rendu */
+            vertical-align: middle;
         }
     </style>
 
@@ -88,8 +88,8 @@
                                 @foreach ($reviews as $key => $review)
                                     <tr>
                                         <td>{{ $key + 1 }}</td>
-                                        <td>{{ $review->course->course_name }}</td>
-                                        <td>{{ $review->instructor->name ?? 'N/A' }}</td>
+                                        <td>{{ $review->course ? $review->course->course_name : 'N/A' }}</td>
+                                        <td>{{ $review->instructor ? $review->instructor->name : 'N/A' }}</td>
                                         <td>{{ $review->comment }}</td>
                                         <td class="rating-stars">
                                             @for ($i = 1; $i <= 5; $i++)

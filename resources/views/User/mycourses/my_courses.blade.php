@@ -126,7 +126,7 @@
                                                  onerror="this.src='{{ asset('images/no_image.jpg') }}'">
                                         </td>
                                         <td>{{ $order->course->course_name }}</td>
-                                        <td>{{ $order->course->instructor->name ?? 'Unknown Instructor' }}</td>
+                                        <td>{{ $order->instructor->name ?? 'N/A' }}</td>
                                         <td>{{ $order->course->category->category_name ?? 'Uncategorized' }}</td>
                                         <td>${{ number_format($order->price, 2) }}</td>
                                         <td>

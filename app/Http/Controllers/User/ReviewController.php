@@ -13,18 +13,18 @@ use Carbon\Carbon;
 
 class ReviewController extends Controller
 {
-    public function index()
-    {
-        $userId = Auth::guard('web')->id();
-        $reviews = Review::where('user_id', $userId)
-            ->with(['reviewable' => function ($query) {
-                $query->with('courseable'); // Charger l'instructeur via la relation polymorphique du cours
-            }])
-            ->orderBy('id', 'DESC')
-            ->get();
+public function index()
+{
+    $userId = Auth::guard('web')->id();
+    $reviews = Review::where('user_id', $userId)
+        ->with(['reviewable' => function ($query) {
+            $query->with('courseable');
+        }, 'user'])
+        ->orderBy('id', 'DESC')
+        ->get();
 
-        return view('User.reviews.index', compact('reviews'));
-    }
+    return view('User.reviews.index', compact('reviews'));
+}
 
     public function create()
     {
@@ -88,24 +88,31 @@ class ReviewController extends Controller
         return redirect()->route('user.reviews.index');
     }
 
-    public function edit(Review $review)
-    {
-        if ($review->user_id !== Auth::guard('web')->id()) {
-            return redirect()->route('user.reviews.index')->with([
-                'message' => 'Unauthorized access to edit this review.',
-                'alert-type' => 'error'
-            ]);
-        }
-
-        if ($review->status == 1) {
-            return redirect()->route('user.reviews.index')->with([
-                'message' => 'Approved reviews cannot be edited.',
-                'alert-type' => 'error'
-            ]);
-        }
-
-        return view('User.reviews.edit', compact('review'));
+  public function edit(Review $review)
+{
+    if ($review->user_id !== Auth::guard('web')->id()) {
+        return redirect()->route('user.reviews.index')->with([
+            'message' => 'Unauthorized access to edit this review.',
+            'alert-type' => 'error'
+        ]);
     }
+
+    if ($review->status == 1) {
+        return redirect()->route('user.reviews.index')->with([
+            'message' => 'Approved reviews cannot be edited.',
+            'alert-type' => 'error'
+        ]);
+    }
+
+    if (!$review->is_course) {
+        return redirect()->route('user.reviews.index')->with([
+            'message' => 'This review is not associated with a course.',
+            'alert-type' => 'error'
+        ]);
+    }
+
+    return view('User.reviews.edit', compact('review'));
+}
 
     public function update(Request $request, Review $review)
     {

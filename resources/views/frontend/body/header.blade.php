@@ -7,11 +7,11 @@
                         <ul class="generic-list-item d-flex flex-wrap align-items-center fs-14">
                             <li class="d-flex align-items-center pr-3 mr-3 border-right border-right-gray">
                                 <i class="la la-phone mr-1"></i>
-                                <a href="tel:+21628587753">+216 28-587-753</a>
+                                <a href="tel:{{ preg_replace('/[^0-9+]/', '', $siteSettings->phone) }}">{{ $siteSettings->phone }}</a>
                             </li>
                             <li class="d-flex align-items-center">
                                 <i class="la la-envelope-o mr-1"></i>
-                                <a href="mailto:lmspfee@gmail.com">lmspfee@gmail.com</a>
+                                <a href="mailto:{{ $siteSettings->email }}">{{ $siteSettings->email }}</a>
                             </li>
                         </ul>
                     </div>
@@ -76,7 +76,9 @@
                     <div class="col-lg-2">
                         <div class="logo-box">
                             <a href="{{ url('/') }}" class="logo">
-                                <img src="{{ asset('frontend/images/logo.png') }}" alt="logo" class="lazy" loading="lazy" onerror="this.src='{{ asset('images/no_image.jpg') }}'">
+                                <img src="{{ $siteSettings->logo ? asset($siteSettings->logo) : asset('frontend/images/logo.png') }}" 
+                                     alt="logo" class="lazy" loading="lazy" 
+                                     onerror="this.src='{{ asset('images/no_image.jpg') }}'">
                             </a>
                             <div class="user-btn-action">
                                 <div class="search-menu-toggle icon-element icon-element-sm shadow-sm mr-2" data-toggle="tooltip" data-placement="top" title="Search">

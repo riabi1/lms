@@ -30,6 +30,7 @@
     <link rel="stylesheet" href="{{ asset('backend/assets/css/semi-dark.css') }}"/>
     <link rel="stylesheet" href="{{ asset('backend/assets/css/header-colors.css') }}"/>
 
+    
     <!-- Datatable -->
     <link href="{{ asset('backend/assets/plugins/datatable/css/dataTables.bootstrap5.min.css') }}" rel="stylesheet" />
     <!-- End Datatable -->

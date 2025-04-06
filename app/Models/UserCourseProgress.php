@@ -5,7 +5,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class UserCourseProgress extends Model
 {
-    protected $fillable = ['user_id', 'course_id', 'lecture_id', 'completed', 'completed_at'];
+  protected $fillable = [
+        'trackable_type', 'trackable_id', 'course_id', 'lecture_id', 'completed', 'completed_at'
+    ];
 
 
     /**

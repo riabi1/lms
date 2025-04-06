@@ -1,7 +1,7 @@
 @extends('User.layout.User_layout')
 
 @section('title')
-    Edit Review for {{ $review->course->course_name }} | Easy Learning
+    Edit Review for {{ $review->course ? $review->course->course_name : 'Unknown Course' }} | Easy Learning
 @endsection
 
 @section('userdashboard')
@@ -60,7 +60,9 @@
 
         <div class="card">
             <div class="card-body">
-                <h4 class="card-title mb-3">Edit Review for {{ $review->course->course_name }}</h4>
+                <h4 class="card-title mb-3">
+                    Edit Review for {{ $review->course ? $review->course->course_name : 'Unknown Course' }}
+                </h4>
                 <form action="{{ route('user.reviews.update', $review->id) }}" method="POST">
                     @csrf
                     @method('PUT')
@@ -77,7 +79,7 @@
                         <label for="rate">Rating</label>
                         <select class="form-control @error('rate') is-invalid @enderror" id="rate" name="rate" required>
                             @for ($i = 1; $i <= 5; $i++)
-                                <option value="{{ $i }}" {{ old('rate', $review->rating) == $i ? 'selected' : '' }}>{{ $i }} Star{{ $i > 1 ? 's' : '' }}</option>
+                                <option value="{{ $i }}" {{ old('rate', $review->rating) == $i ? 'selected' : '' }}>{{ $i }} Star{{ $i > 1 ? 's' : '' }}</Aoption>
                             @endfor
                         </select>
                         @error('rate')

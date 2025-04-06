@@ -1,6 +1,6 @@
 @extends('Instructor.layout.Instructor_layout')
-@section('instructor')
 
+@section('instructor')
 <div class="page-content">
     <!-- Breadcrumb -->
     <div class="page-breadcrumb d-none d-sm-flex align-items-center mb-3">
@@ -40,7 +40,8 @@
                                 <img src="{{ $item->course_image ? asset('storage/upload/course_images/thumbnail/' . $item->course_image) : asset('upload/no_image.jpg') }}" 
                                      alt="{{ $item->course_name }}" 
                                      style="width: 70px; height: 40px; object-fit: cover;" 
-                                     class="img-fluid">
+                                     class="img-fluid"
+                                     onerror="this.src='{{ asset('upload/no_image.jpg') }}'">
                             </td>
                             <td>{{ $item->course_name }}</td>
                             <td>{{ $item->category ? $item->category->category_name : 'No Category' }}</td>
@@ -49,11 +50,6 @@
                             <td>
                                 <a href="{{ route('instructor.courses.show', $item->id) }}" class="btn btn-primary btn-sm" title="View"><i class="lni lni-eye"></i></a>
                                 <a href="{{ route('instructor.courses.edit', $item->id) }}" class="btn btn-info btn-sm" title="Edit"><i class="lni lni-eraser"></i></a>
-                                <form action="{{ route('instructor.courses.destroy', $item->id) }}" method="POST" style="display:inline;">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-danger btn-sm" title="Delete" onclick="return confirm('Are you sure you want to delete this course?');"><i class="lni lni-trash"></i></button>
-                                </form>
                                 <a href="{{ route('instructor.course_sections.index', $item->id) }}" class="btn btn-warning btn-sm" title="Sections"><i class="lni lni-list"></i></a>
                             </td>
                         </tr>
@@ -76,10 +72,9 @@
 <script>
     $(document).ready(function() {
         $('#example').DataTable({
-            "order": [[0, "asc"]], // Trier par la colonne "Sl" par défaut
-            "pageLength": 10       // Nombre d'entrées par page
+            "order": [[0, "asc"]], // Sort by "Sl" column by default
+            "pageLength": 10       // Entries per page
         });
     });
 </script>
-
 @endsection

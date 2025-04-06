@@ -4,65 +4,62 @@
             <div class="top-menu ms-auto">
                 <ul class="navbar-nav align-items-center gap-1">
                     <!-- Notifications -->
-                    <li class="nav-item dropdown dropdown-large">
-                        <a class="nav-link dropdown-toggle dropdown-toggle-nocaret position-relative" href="#" 
-                           role="button" data-bs-toggle="dropdown" data-bs-target="#notificationDropdown" aria-expanded="false">
-                            <i class="bx bx-bell fs-5"></i>
-                            @php
-                                $instructor = Auth::guard('instructor')->user();
-                                $unreadNotifications = $instructor ? $instructor->unreadNotifications()->latest()->get() : collect();
-                                $unreadCount = $unreadNotifications->count();
-                            @endphp
-                            @if ($unreadCount > 0)
-                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger p-1" style="font-size: 0.65rem; min-width: 18px; height: 18px; line-height: 1;">
-                                    {{ $unreadCount > 9 ? '9+' : $unreadCount }}
-                                    <span class="visually-hidden">notifications non lues</span>
-                                </span>
-                            @endif
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-end shadow-sm" id="notificationDropdown" style="min-width: 350px; max-width: 400px;">
-                            <!-- En-tête du Dropdown -->
-                            <div class="dropdown-header bg-light p-2 border-bottom">
-                                <h6 class="mb-0 fw-bold">Notifications ({{ $unreadCount }})</h6>
+                  <li class="nav-item dropdown dropdown-large">
+    <a class="nav-link dropdown-toggle dropdown-toggle-nocaret position-relative" href="#" 
+       role="button" data-bs-toggle="dropdown" data-bs-target="#notificationDropdown" aria-expanded="false">
+        <i class="bx bx-bell fs-5"></i>
+        @php
+            $instructor = Auth::guard('instructor')->user();
+            $unreadNotifications = $instructor ? $instructor->unreadNotifications()->latest()->get() : collect();
+            $unreadCount = $unreadNotifications->count();
+        @endphp
+        @if ($unreadCount > 0)
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger p-1" style="font-size: 0.65rem; min-width: 18px; height: 18px; line-height: 1;">
+                {{ $unreadCount > 9 ? '9+' : $unreadCount }}
+                <span class="visually-hidden">notifications non lues</span>
+            </span>
+        @endif
+    </a>
+    <div class="dropdown-menu dropdown-menu-end shadow-sm" id="notificationDropdown" style="min-width: 350px; max-width: 400px;">
+        <div class="dropdown-header bg-light p-2 border-bottom">
+            <h6 class="mb-0 fw-bold">Notifications ({{ $unreadCount }})</h6>
+        </div>
+        <div class="dropdown-body" style="max-height: 300px; overflow-y: auto; overflow-x: hidden;">
+            @if ($unreadCount > 0)
+                @foreach ($unreadNotifications as $notification)
+                    <a class="dropdown-item py-2 px-3 border-bottom" 
+                       href="{{ $notification->data['type'] === 'question' ? route('instructor.course.questions', $notification->data['course_id']) : ($notification->data['type'] === 'order' ? route('instructor.orders.show', $notification->data['order_id']) : '#') }}">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bx bx-{{ $notification->data['type'] === 'question' ? 'question-mark' : ($notification->data['type'] === 'order' ? 'book' : 'star') }} text-primary fs-5"></i>
+                            <div class="flex-grow-1" style="overflow: hidden;">
+                                <p class="mb-0 text-dark" style="word-break: break-word; white-space: normal; overflow-wrap: break-word;">
+                                    {{ $notification->data['message'] }}
+                                </p>
+                                <small class="text-muted" style="display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                    {{ $notification->created_at->diffForHumans() }}
+                                </small>
                             </div>
-                            <!-- Contenu des Notifications -->
-                            <div class="dropdown-body" style="max-height: 300px; overflow-y: auto; overflow-x: hidden;">
-                                @if ($unreadCount > 0)
-                                    @foreach ($unreadNotifications as $notification)
-                                        <a class="dropdown-item py-2 px-3 border-bottom" 
-                                           href="{{ $notification->data['type'] === 'review' ? route('instructor.all.review') : route('instructor.orders.show', $notification->data['order_id']) }}">
-                                            <div class="d-flex align-items-center gap-2">
-                                                <i class="bx bx-{{ $notification->data['type'] === 'review' ? 'star' : 'book' }} text-primary fs-5"></i>
-                                                <div class="flex-grow-1" style="overflow: hidden;">
-                                                    <p class="mb-0 text-dark" style="word-break: break-word; white-space: normal; overflow-wrap: break-word;">
-                                                        {{ $notification->data['message'] }}
-                                                    </p>
-                                                    <small class="text-muted" style="display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                                        {{ $notification->created_at->diffForHumans() }}
-                                                    </small>
-                                                </div>
-                                            </div>
-                                        </a>
-                                    @endforeach
-                                @else
-                                    <div class="dropdown-item text-center py-3 text-muted">
-                                        <i class="bx bx-info-circle me-1"></i> Aucune notification pour le moment
-                                    </div>
-                                @endif
-                            </div>
-                            <!-- Pied du Dropdown -->
-                            @if ($unreadCount > 0)
-                                <div class="dropdown-footer p-2 border-top">
-                                    <form action="{{ route('instructor.notifications.markAllAsRead') }}" method="POST" class="d-inline w-100">
-                                        @csrf
-                                        <button type="submit" class="btn btn-link text-primary w-100 text-decoration-none">
-                                            <i class="bx bx-check-circle me-1"></i> Marquer tout comme lu
-                                        </button>
-                                    </form>
-                                </div>
-                            @endif
                         </div>
-                    </li>
+                    </a>
+                @endforeach
+            @else
+                <div class="dropdown-item text-center py-3 text-muted">
+                    <i class="bx bx-info-circle me-1"></i> Aucune notification pour le moment
+                </div>
+            @endif
+        </div>
+        @if ($unreadCount > 0)
+            <div class="dropdown-footer p-2 border-top">
+                <form action="{{ route('instructor.notifications.markAllAsRead') }}" method="POST" class="d-inline w-100">
+                    @csrf
+                    <button type="submit" class="btn btn-link text-primary w-100 text-decoration-none">
+                        <i class="bx bx-check-circle me-1"></i> Marquer tout comme lu
+                    </button>
+                </form>
+            </div>
+        @endif
+    </div>
+</li>
                 </ul>
             </div>
 

@@ -21,14 +21,12 @@ class Course extends Model
     use HasFactory;
 
     /**
-     * The attributes that are not mass assignable.
+     * The attributes that are mass assignable.
      *
      * @var array
      */
-  protected $fillable = [
-        'category_id',
+    protected $fillable = [
         'subcategory_id',
-        'instructor_id',
         'course_image',
         'course_title',
         'course_name',
@@ -37,6 +35,7 @@ class Course extends Model
         'video',
         'label',
         'duration',
+        'resources', // Added from schema
         'certificate',
         'selling_price',
         'discount_price',
@@ -45,48 +44,52 @@ class Course extends Model
         'featured',
         'highestrated',
         'status',
+        'courseable_type', // Added for polymorphic relationship
+        'courseable_id',   // Added for polymorphic relationship
+        'created_at',      // Added to allow setting timestamp manually
     ];
 
-    public function instructor()
+    public function goals()
     {
-        return $this->belongsTo(Instructor::class, 'instructor_id'); // Spécifie la clé étrangère
+        return $this->morphMany(CourseGoal::class, 'goalable');
+    }
+
+    public function courseable()
+    {
+        return $this->morphTo();
+    }
+
+    public function category()
+    {
+        return $this->hasOneThrough(
+            Category::class,
+            SubCategory::class,
+            'id',           // SubCategory.id
+            'id',           // Category.id
+            'subcategory_id', // Course.subcategory_id
+            'category_id'   // SubCategory.category_id
+        );
     }
 
 public function subcategory()
     {
-        return $this->belongsTo(Subcategory::class, 'subcategory_id');
+        return $this->belongsTo(SubCategory::class, 'subcategory_id');
     }
 
-public function category()
-    {
-        return $this->hasOneThrough(Category::class, Subcategory::class, 'id', 'id', 'subcategory_id', 'category_id');
-    }
-
-
-
-  public function reviews()
+    public function reviews()
     {
         return $this->morphMany(Review::class, 'reviewable');
     }
 
-  
-public function goals()
-{
-    return $this->morphMany(CourseGoal::class, 'goalable');
-}
-   
-
-   public function sections()
-{
-    return $this->hasMany(CourseSection::class);
-}
+    public function sections()
+    {
+        return $this->hasMany(CourseSection::class);
+    }
 
     public function lectures()
     {
         return $this->hasMany(CourseLecture::class);
     }
-
- 
 
     public function notes()
     {
@@ -94,11 +97,11 @@ public function goals()
     }
 
     public function wishlists()
-{
-    return $this->hasMany(Wishlist::class);
-}
+    {
+        return $this->hasMany(Wishlist::class);
+    }
 
-public function quizzes()
+    public function quizzes()
     {
         return $this->hasMany(Quiz::class);
     }
@@ -106,17 +109,28 @@ public function quizzes()
     public function quizAttempts()
     {
         return $this->hasManyThrough(
-            QuizAttempt::class,    // Modèle cible (final)
-            Quiz::class,           // Modèle intermédiaire
-            'course_id',           // Clé étrangère sur la table intermédiaire (quizzes)
-            'quiz_id',             // Clé étrangère sur la table cible (quiz_attempts)
-            'id',                  // Clé primaire sur la table courante (courses)
-            'id'                   // Clé primaire sur la table intermédiaire (quizzes)
+            QuizAttempt::class,    // Target model
+            Quiz::class,           // Intermediate model
+            'course_id',           // Foreign key on quizzes table
+            'quiz_id',             // Foreign key on quiz_attempts table
+            'id',                  // Local key on courses table
+            'id'                   // Local key on quizzes table
         );
     }
 
-    public function courseable()
+public function questions()
     {
-        return $this->morphTo();
+        return $this->hasMany(Question::class);
+    }
+
+public function instructor()
+    {
+        return $this->courseable;
+    }
+
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'orders', 'course_id', 'user_id')
+                    ->where('payment_status', 'paid');
     }
 }

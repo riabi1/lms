@@ -7,10 +7,12 @@ use Darryldecode\Cart\Facades\CartFacade as Cart;
 use Srmklive\PayPal\Services\PayPal as PayPalClient;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Invoice;
+
 
 class PaypalPaymentController extends Controller
 {
-    public function payWithPaypal(Request $request, CartController $cartController)
+  public function payWithPaypal(Request $request, CartController $cartController)
     {
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'Please log in.');
@@ -108,7 +110,7 @@ class PaypalPaymentController extends Controller
         }
     }
 
-    public function paypalSuccess(Request $request, CartController $cartController)
+   public function paypalSuccess(Request $request, CartController $cartController)
     {
         try {
             $provider = new PayPalClient;
@@ -123,16 +125,22 @@ class PaypalPaymentController extends Controller
 
             if (isset($orderDetails['status']) && $orderDetails['status'] === 'COMPLETED') {
                 $transactionId = $orderDetails['id'];
-                $cartController->processOrder($transactionId, 'PayPal');
-                return redirect()->route('order.success')->with('success', 'Payment successful! Transaction ID: ' . $transactionId);
+                $invoiceId = $cartController->processOrder($transactionId, 'PayPal');
+                $invoice = Invoice::findOrFail($invoiceId);
+                return redirect()->route('checkout.success')
+                                 ->with('success', 'Payment successful! Transaction ID: ' . $transactionId)
+                                 ->with('invoice', $invoice);
             } elseif (isset($orderDetails['status']) && $orderDetails['status'] === 'APPROVED') {
                 $response = $provider->capturePaymentOrder($orderId);
                 Log::info('PayPal Capture Response', ['response' => $response]);
 
                 if (isset($response['status']) && $response['status'] === 'COMPLETED') {
                     $transactionId = $response['id'];
-                    $cartController->processOrder($transactionId, 'PayPal');
-                    return redirect()->route('order.success')->with('success', 'Payment successful! Transaction ID: ' . $transactionId);
+                    $invoiceId = $cartController->processOrder($transactionId, 'PayPal');
+                    $invoice = Invoice::findOrFail($invoiceId);
+                    return redirect()->route('checkout.success')
+                                     ->with('success', 'Payment successful! Transaction ID: ' . $transactionId)
+                                     ->with('invoice', $invoice);
                 } else {
                     Log::error('PayPal Capture Failed', ['response' => $response]);
                     return redirect()->route('checkout.create')->with('error', 'PayPal Error: Payment capture failed');

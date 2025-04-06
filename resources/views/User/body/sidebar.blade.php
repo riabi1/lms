@@ -62,18 +62,6 @@
                 <div class="menu-title">Reviews</div>
             </a>
         </li>
-
-       <li>
-            <a href="#">
-                <div class="parent-icon"><i class='bx bx-lock-alt'></i></div>
-                <div class="menu-title">Change Password</div>
-            </a>
-        </li>
-
-
- 
-
- 
       <li>
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
