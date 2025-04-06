@@ -39,6 +39,7 @@
       </a>
       <ul class="mm-collapse">
         <li><a href="{{ route('admin.instructors.index') }}"><i class='bx bx-radio-circle'></i>All Instructor</a></li>
+       <li><a href="{{ route('admin.users.index') }}"><i class='bx bx-radio-circle'></i>All Users</a></li>
       </ul>
     </li>
 
@@ -58,21 +59,9 @@
         <div class="menu-title">Manage Coupon</div>
       </a>
       <ul class="mm-collapse">
-        <li><a href="#"><i class='bx bx-radio-circle'></i>All Coupon</a></li>
+        <li><a href="{{ route('admin.coupon.index') }}"><i class='bx bx-radio-circle'></i>All Coupon</a></li>
       </ul>
     </li>
-
-    <li>
-      <a class="has-arrow" href="javascript:;">
-        <div class="parent-icon"><i class='bx bx-bookmark-heart'></i></div>
-        <div class="menu-title">Manage Setting</div>
-      </a>
-      <ul class="mm-collapse">
-        <li><a href="#"><i class='bx bx-radio-circle'></i>Manage SMTP</a></li>
-        <li><a href="#"><i class='bx bx-radio-circle'></i>Site Setting</a></li>
-      </ul>
-    </li>
-
    <li>
     <a class="has-arrow" href="javascript:;">
         <div class="parent-icon"><i class='bx bx-bookmark-heart'></i></div>
@@ -86,6 +75,31 @@
         </li>
     </ul>
 </li>
+   <li>
+      <a class="has-arrow" href="javascript:;">
+        <div class="parent-icon"><i class='bx bx-bookmark-heart'></i></div>
+        <div class="menu-title">Manage Review</div>
+      </a>
+      <ul class="mm-collapse">
+        <li><a href="{{ route('admin.pending.review') }}"><i class='bx bx-radio-circle'></i>Pending Review</a></li>
+        <li><a href="{{ route('admin.active.review') }}"><i class='bx bx-radio-circle'></i>Active Review</a></li>
+      </ul>
+    </li>
+  <li>
+    <a class="has-arrow" href="javascript:;" aria-expanded="false">
+        <div class="parent-icon"><i class='bx bx-bookmark-heart'></i></div>
+        <div class="menu-title">Manage Settings</div>
+    </a>
+    <ul class="mm-collapse">
+        <li>
+            <a href="{{ route('admin.site.settings') }}">
+                <i class='bx bx-radio-circle'></i>Site Settings
+            </a>
+        </li>
+    </ul>
+</li>
+
+
 
     <li>
       <a class="has-arrow" href="javascript:;">
@@ -97,27 +111,7 @@
       </ul>
     </li>
 
-    <li>
-      <a class="has-arrow" href="javascript:;">
-        <div class="parent-icon"><i class='bx bx-bookmark-heart'></i></div>
-        <div class="menu-title">Manage Review</div>
-      </a>
-      <ul class="mm-collapse">
-        <li><a href="{{ route('admin.pending.review') }}"><i class='bx bx-radio-circle'></i>Pending Review</a></li>
-        <li><a href="{{ route('admin.active.review') }}"><i class='bx bx-radio-circle'></i>Active Review</a></li>
-      </ul>
-    </li>
-
-    <li>
-      <a class="has-arrow" href="javascript:;">
-        <div class="parent-icon"><i class='bx bx-bookmark-heart'></i></div>
-        <div class="menu-title">Manage All User</div>
-      </a>
-      <ul class="mm-collapse">
-        <li><a href="#"><i class='bx bx-radio-circle'></i>All User</a></li>
-        <li><a href="#"><i class='bx bx-radio-circle'></i>All Instructor</a></li>
-      </ul>
-    </li>
+ 
 
     <li>
       <a class="has-arrow" href="javascript:;">

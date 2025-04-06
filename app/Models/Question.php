@@ -1,14 +1,15 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
 class Question extends Model
 {
-    protected $fillable = ['user_id', 'course_id', 'instructor_id', 'question_text', 'answer_text'];
+    protected $fillable = [
+        'user_id', 'course_id', 'instructor_id', 'subject', 'question', 'answer_text', 'status',
+    ];
 
-    public function user()
+   public function user()
     {
         return $this->belongsTo(User::class);
     }
@@ -17,8 +18,8 @@ class Question extends Model
     {
         return $this->belongsTo(Course::class);
     }
-
-    public function instructor()
+  
+  public function instructor()
     {
         return $this->belongsTo(Instructor::class);
     }

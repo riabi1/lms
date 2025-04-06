@@ -67,9 +67,9 @@
                                     @endif
                                 </td>
                                 <td>{{ $item->course_name ?? 'N/A' }}</td>
-                                <td>{{ $item->instructor->name ?? 'N/A' }}</td>
+                                <td>{{ $item->courseable?->name ?? 'N/A' }}</td> <!-- Updated to match course details -->
                                 <td>{{ $item->category->category_name ?? 'N/A' }}</td>
-                                <td>${{ number_format($item->selling_price ?? 0, 2) }}</td>
+                                <td>{{ number_format($item->selling_price ?? 0, 2) }} TND</td> <!-- Adjusted currency to TND -->
                                 <td>
                                     <span class="badge {{ $item->status ? 'bg-success' : 'bg-danger' }}">
                                         {{ $item->status ? 'Active' : 'Inactive' }}
@@ -136,7 +136,7 @@
             $toggle.prop('disabled', true);
 
             $.ajax({
-                url: "{{ route('admin.courses.updateStatus') }}", // Corrigé pour correspondre au contrôleur
+                url: "{{ route('admin.courses.updateStatus') }}",
                 method: "POST",
                 data: {
                     course_id: courseId,

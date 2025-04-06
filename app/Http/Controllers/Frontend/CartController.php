@@ -9,7 +9,8 @@ use App\Models\Order;
 use App\Models\Instructor;
 use Illuminate\Support\Facades\Auth;
 use Darryldecode\Cart\Facades\CartFacade as Cart;
-use Carbon\Carbon;
+use App\Notifications\OrderPlacedNotification;
+use App\Models\Invoice;
 
 class CartController extends Controller
 {
@@ -221,30 +222,58 @@ class CartController extends Controller
         return view('User.checkout.checkout', compact('cartItems', 'subtotal', 'couponDiscount', 'total', 'coupons', 'adjustedPrices'));
     }
 
-    public function processOrder($transactionId, $paymentMethod)
-    {
-        $cartItems = Cart::getContent();
-        $subtotal = Cart::getSubTotal();
-        $coupons = session('coupons', []);
-        $couponDiscount = array_sum(array_column($coupons, 'discount_amount'));
-        $totalDiscount = $couponDiscount > 0 && $subtotal > 0 ? $couponDiscount : 0;
+  public function processOrder($transactionId, $paymentMethod)
+{
+    $cartItems = Cart::getContent();
+    $subtotal = Cart::getSubTotal();
+    $coupons = session('coupons', []);
+    $couponDiscount = array_sum(array_column($coupons, 'discount_amount'));
+    $totalDiscount = $couponDiscount > 0 && $subtotal > 0 ? $couponDiscount : 0;
+    $total = max(0, $subtotal - $totalDiscount);
 
-        foreach ($cartItems as $item) {
-            $itemDiscount = $totalDiscount > 0 ? ($item->price / $subtotal) * $totalDiscount : 0;
-            Order::create([
-                'user_id' => Auth::id(),
-                'course_id' => $item->id,
-                'instructor_id' => $item->attributes['instructor_id'],
-                'course_title' => $item->name,
-                'price' => $item->price,
-                'discount_amount' => round($itemDiscount, 2),
-                'currency' => 'USD',
-                'payment_status' => 'paid',
-                'payment_id' => $transactionId,
-                'payment_method' => $paymentMethod,
-            ]);
+    $orders = [];
+    foreach ($cartItems as $item) {
+        $itemDiscount = $totalDiscount > 0 ? ($item->price / $subtotal) * $totalDiscount : 0;
+        $order = Order::create([
+            'user_id' => Auth::id(),
+            'course_id' => $item->id,
+            'instructor_id' => $item->attributes['instructor_id'],
+            'course_title' => $item->name,
+            'price' => $item->price,
+            'discount_amount' => round($itemDiscount, 2),
+            'currency' => 'USD',
+            'payment_status' => 'paid',
+            'payment_id' => $transactionId,
+            'payment_method' => $paymentMethod,
+        ]);
+
+        $instructor = Instructor::find($item->attributes['instructor_id']);
+        if ($instructor) {
+            $instructor->notify(new OrderPlacedNotification($order));
         }
-        Cart::clear();
-        session()->forget('coupons');
+
+        $orders[] = [
+            'course_title' => $item->name,
+            'price' => $item->price,
+            'discount' => round($itemDiscount, 2),
+        ];
     }
+
+    $invoiceNumber = 'INV-' . strtoupper(uniqid());
+    $invoice = Invoice::create([
+        'user_id' => Auth::id(),
+        'invoice_number' => $invoiceNumber,
+        'subtotal' => $subtotal,
+        'discount' => $totalDiscount,
+        'total' => $total,
+        'payment_method' => $paymentMethod,
+        'payment_id' => $transactionId,
+        'items' => json_encode($orders), // Assurez-vous que c'est bien "items"
+    ]);
+
+    Cart::clear();
+    session()->forget('coupons');
+
+    return $invoice->id;
+}
 }

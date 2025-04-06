@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Darryldecode\Cart\Facades\CartFacade as Cart;
 use Omnipay\Omnipay;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Invoice;
 
 class StripePaymentController extends Controller
 {
@@ -49,8 +50,11 @@ class StripePaymentController extends Controller
 
             if ($response->isSuccessful()) {
                 $transactionId = $response->getTransactionReference();
-                $cartController->processOrder($transactionId, 'Stripe');
-                return redirect()->route('order.success')->with('success', 'Payment successful! Transaction ID: ' . $transactionId);
+                $invoiceId = $cartController->processOrder($transactionId, 'Stripe');
+                $invoice = Invoice::findOrFail($invoiceId);
+                return redirect()->route('checkout.success')
+                                 ->with('success', 'Payment successful! Transaction ID: ' . $transactionId)
+                                 ->with('invoice', $invoice);
             } else {
                 return redirect()->route('checkout.create')->with('error', $response->getMessage());
             }

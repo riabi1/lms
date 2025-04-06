@@ -73,8 +73,8 @@
                     <label for="certificate" class="form-label">Certificate Available</label>
                     <select name="certificate" class="form-select @error('certificate') is-invalid @enderror">
                         <option value="" selected disabled>Select an option</option>
-                        <option value="Yes" {{ old('certificate', $course->certificate) == 'Yes' ? 'selected' : '' }}>Yes</option>
-                        <option value="No" {{ old('certificate', $course->certificate) == 'No' ? 'selected' : '' }}>No</option>
+                        <option value="yes" {{ old('certificate', $course->certificate) == 'Yes' ? 'selected' : '' }}>Yes</option>
+                        <option value="no" {{ old('certificate', $course->certificate) == 'No' ? 'selected' : '' }}>No</option>
                     </select>
                     @error('certificate')
                         <span class="invalid-feedback">{{ $message }}</span>

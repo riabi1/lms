@@ -63,7 +63,25 @@
           @enderror
         </div>
       </div>
+<h4 class="mt-4 mb-3">Change Password</h4>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">New Password</label>
+                    <input class="form-control" type="password" name="new_password" value="{{ old('new_password') }}">
+                    <small class="text-muted">Minimum 8 characters (leave blank to keep current password)</small>
+                    @error('new_password')
+                        <div class="text-danger">{{ $message }}</div>
+                    @enderror
+                </div>
 
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Confirm New Password</label>
+                    <input class="form-control" type="password" name="new_password_confirmation">
+                    @error('new_password_confirmation')
+                        <div class="text-danger">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
       <button class="btn btn-primary" type="submit">Save Changes</button>
     </form>
 

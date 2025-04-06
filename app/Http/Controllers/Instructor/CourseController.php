@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Instructor;
 
 use App\Http\Controllers\Controller;
@@ -7,10 +8,9 @@ use App\Models\Category;
 use App\Models\SubCategory;
 use App\Models\Course;
 use App\Models\CourseGoal;
-use Intervention\Image\ImageManager;
-use Intervention\Image\Drivers\Gd\Driver;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Carbon\Carbon;
 
 class CourseController extends Controller
@@ -20,7 +20,7 @@ class CourseController extends Controller
         $instructorId = Auth::guard('instructor')->id();
         $courses = Course::where('courseable_type', 'App\Models\Instructor')
             ->where('courseable_id', $instructorId)
-            ->with('category')
+            ->with('subcategory')
             ->latest('id')
             ->get();
         return view('instructor.courses.index', compact('courses'));
@@ -28,8 +28,9 @@ class CourseController extends Controller
 
     public function create()
     {
-        $categories = Category::latest()->get();
-        return view('instructor.courses.create', compact('categories'));
+        $categories = Category::orderBy('category_name')->get();
+        $subcategories = SubCategory::orderBy('subcategory_name')->get();
+        return view('instructor.courses.create', compact('categories', 'subcategories'));
     }
 
     public function store(Request $request)
@@ -43,55 +44,63 @@ class CourseController extends Controller
 
         try {
             $validated = $request->validate([
-                'category_id' => 'required|exists:categories,id',
                 'subcategory_id' => 'required|exists:sub_categories,id',
-                'course_title' => 'required|string|max:255',
-                'course_name' => 'required|string|max:255',
+                'course_title' => 'required|string|max:65535',
+                'course_name' => 'required|string|max:65535',
                 'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
                 'video' => 'nullable|mimes:mp4,avi,mov|max:102400',
-                'description' => 'nullable|string',
-                'label' => 'nullable|string|in:Beginner,Intermediate,Advanced',
-                'duration' => 'nullable|string',
-                'certificate' => 'nullable|in:Yes,No',
-                'selling_price' => 'nullable|numeric',
-                'discount_price' => 'nullable|numeric',
-                'prerequisites' => 'nullable|string',
-                'bestseller' => 'nullable|boolean',
-                'featured' => 'nullable|boolean',
-                'highestrated' => 'nullable|boolean',
-                'CourseGoals.*' => 'nullable|string',
+                'description' => 'nullable|string|max:4294967295',
+                'label' => 'nullable|in:Beginner,Intermediate,Advanced',
+                'duration' => 'nullable|string|max:255',
+                'resources' => 'nullable|string|max:255',
+                'certificate' => 'nullable|in:yes,no',
+                'selling_price' => 'nullable|integer|min:0',
+                'discount_price' => 'nullable|integer|min:0|lt:selling_price',
+                'prerequisites' => 'nullable|string|max:65535',
+                'bestseller' => 'nullable|in:0,1',
+                'featured' => 'nullable|in:0,1',
+                'highestrated' => 'nullable|in:0,1',
+                'CourseGoals.*' => 'nullable|string|max:255',
             ]);
             \Log::info('Validated Data:', $validated);
 
+            $instructorId = Auth::guard('instructor')->id();
             $courseImage = $this->uploadFile($request->file('image'), 'upload/course_images/thumbnail');
             $courseVideo = $this->uploadFile($request->file('video'), 'upload/course_images/video');
 
-            $course = Course::create([
-                'category_id' => $request->category_id,
-                'subcategory_id' => $request->subcategory_id,
+            $courseData = [
+                'subcategory_id' => $validated['subcategory_id'],
                 'courseable_type' => 'App\Models\Instructor',
-                'courseable_id' => Auth::guard('instructor')->id(),
-                'course_title' => $request->course_title,
-                'course_name' => $request->course_name,
-                'course_name_slug' => strtolower(str_replace(' ', '-', $request->course_name)),
-                'description' => $request->description,
-                'video' => $courseVideo,
-                'label' => $request->label,
-                'duration' => $request->duration,
-                'certificate' => $request->certificate,
-                'selling_price' => $request->selling_price,
-                'discount_price' => $request->discount_price,
-                'prerequisites' => $request->prerequisites,
-                'bestseller' => $request->bestseller ?? 0,
-                'featured' => $request->featured ?? 0,
-                'highestrated' => $request->highestrated ?? 0,
-                'status' => 1,
+                'courseable_id' => $instructorId,
+                'course_title' => $validated['course_title'],
+                'course_name' => $validated['course_name'],
+                'course_name_slug' => Str::slug($validated['course_name']),
                 'course_image' => $courseImage,
+                'description' => $validated['description'] ?? null,
+                'video' => $courseVideo,
+                'label' => $validated['label'] ?? null,
+                'duration' => $validated['duration'] ?? null,
+                'resources' => $validated['resources'] ?? null,
+                'certificate' => $validated['certificate'] ?? null,
+                'selling_price' => $validated['selling_price'] ?? null,
+                'discount_price' => $validated['discount_price'] ?? null,
+                'prerequisites' => $validated['prerequisites'] ?? null,
+                'bestseller' => $validated['bestseller'] ?? '0',
+                'featured' => $validated['featured'] ?? '0',
+                'highestrated' => $validated['highestrated'] ?? '0',
+                'status' => 1,
                 'created_at' => Carbon::now(),
-            ]);
+            ];
+
+            \Log::info('Course Data to Insert:', $courseData);
+
+            $course = Course::create($courseData);
 
             \Log::info('Course Created:', ['id' => $course->id, 'data' => $course->toArray()]);
-            $this->saveGoals($course->id, $request->CourseGoals);
+
+            if (!empty($validated['CourseGoals'])) {
+                $this->saveGoals($course->id, $validated['CourseGoals']);
+            }
 
             return redirect()->route('instructor.courses.index')->with([
                 'message' => 'Course Inserted Successfully',
@@ -112,53 +121,85 @@ class CourseController extends Controller
         $course->load('goals');
         return view('instructor.courses.show', compact('course'));
     }
-public function edit(Course $course)
-{
-    $this->authorizeCourse($course);
-    $goals = $course->goals; // Utilise la relation polymorphique
-    $categories = Category::latest()->get();
-    $subcategories = SubCategory::latest()->get();
-    return view('instructor.courses.edit', compact('course', 'categories', 'subcategories', 'goals'));
-}
+
+    public function edit(Course $course)
+    {
+        $this->authorizeCourse($course);
+        $goals = $course->goals;
+        $categories = Category::orderBy('category_name')->get();
+        $subcategories = SubCategory::orderBy('subcategory_name')->get();
+        return view('instructor.courses.edit', compact('course', 'categories', 'subcategories', 'goals'));
+    }
 
     public function update(Request $request, Course $course)
     {
         $this->authorizeCourse($course);
 
-        $course->update($request->except('CourseGoals', 'image', 'video', 'course_id') + [
-            'course_name_slug' => strtolower(str_replace(' ', '-', $request->course_name)),
-        ]);
+        try {
+            $validated = $request->validate([
+                'subcategory_id' => 'required|exists:sub_categories,id',
+                'course_title' => 'required|string|max:65535',
+                'course_name' => 'required|string|max:65535',
+                'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                'video' => 'nullable|mimes:mp4,avi,mov|max:102400',
+                'description' => 'nullable|string|max:4294967295',
+                'label' => 'nullable|in:Beginner,Intermediate,Advanced',
+                'duration' => 'nullable|string|max:255',
+                'resources' => 'nullable|string|max:255',
+                'certificate' => 'nullable|in:yes,no',
+                'selling_price' => 'nullable|integer|min:0',
+                'discount_price' => 'nullable|integer|min:0|lt:selling_price',
+                'prerequisites' => 'nullable|string|max:65535',
+                'bestseller' => 'nullable|in:0,1',
+                'featured' => 'nullable|in:0,1',
+                'highestrated' => 'nullable|in:0,1',
+                'CourseGoals.*' => 'nullable|string|max:255',
+            ]);
 
-        if ($request->hasFile('image')) {
-            $this->deleteFile($course->course_image, 'upload/course_images/thumbnail');
-            $course->update(['course_image' => $this->uploadFile($request->file('image'), 'upload/course_images/thumbnail')]);
+            if ($request->hasFile('image')) {
+                $this->deleteFile($course->course_image, 'upload/course_images/thumbnail');
+                $course->course_image = $this->uploadFile($request->file('image'), 'upload/course_images/thumbnail');
+            }
+            if ($request->hasFile('video')) {
+                $this->deleteFile($course->video, 'upload/course_images/video');
+                $course->video = $this->uploadFile($request->file('video'), 'upload/course_images/video');
+            }
+
+            $course->update([
+                'subcategory_id' => $validated['subcategory_id'],
+                'course_title' => $validated['course_title'],
+                'course_name' => $validated['course_name'],
+                'course_name_slug' => Str::slug($validated['course_name']),
+                'course_image' => $course->course_image ?? null,
+                'description' => $validated['description'] ?? null,
+                'video' => $course->video ?? null,
+                'label' => $validated['label'] ?? null,
+                'duration' => $validated['duration'] ?? null,
+                'resources' => $validated['resources'] ?? null,
+                'certificate' => $validated['certificate'] ?? null,
+                'selling_price' => $validated['selling_price'] ?? null,
+                'discount_price' => $validated['discount_price'] ?? null,
+                'prerequisites' => $validated['prerequisites'] ?? null,
+                'bestseller' => $validated['bestseller'] ?? '0',
+                'featured' => $validated['featured'] ?? '0',
+                'highestrated' => $validated['highestrated'] ?? '0',
+            ]);
+
+            if (!empty($validated['CourseGoals'])) {
+                $this->saveGoals($course->id, $validated['CourseGoals']);
+            }
+
+            return redirect()->route('instructor.courses.index')->with([
+                'message' => 'Course Updated Successfully',
+                'alert-type' => 'success'
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Course Update Failed:', ['error' => $e->getMessage()]);
+            return redirect()->back()->with([
+                'message' => 'Failed to update course: ' . $e->getMessage(),
+                'alert-type' => 'error'
+            ])->withInput();
         }
-
-        if ($request->hasFile('video')) {
-            $this->deleteFile($course->video, 'upload/course_images/video');
-            $course->update(['video' => $this->uploadFile($request->file('video'), 'upload/course_images/video')]);
-        }
-
-        $this->saveGoals($course->id, $request->CourseGoals);
-
-        return redirect()->route('instructor.courses.index')->with([
-            'message' => 'Course Updated Successfully',
-            'alert-type' => 'success'
-        ]);
-    }
-
-    public function destroy(Course $course)
-    {
-        $this->authorizeCourse($course);
-        $this->deleteFile($course->course_image, 'upload/course_images/thumbnail');
-        $this->deleteFile($course->video, 'upload/course_images/video');
-        CourseGoal::where('course_id', $course->id)->delete();
-        $course->delete();
-
-        return redirect()->route('instructor.courses.index')->with([
-            'message' => 'Course Deleted Successfully',
-            'alert-type' => 'success'
-        ]);
     }
 
     public function getSubCategory($category_id)
@@ -184,55 +225,63 @@ public function edit(Course $course)
             return null;
         }
 
-        // Générer un nom unique 
-        $filename = date('YmdHi') . '_' . $file->getClientOriginalName();
+        // Generate a unique filename
+        $fileName = time() . '_' . $file->getClientOriginalName();
 
-        // Stocker dans storage/app/public/<path>/
-        if (str_contains($path, 'thumbnail')) {
-            // Traitement des images avec Intervention Image
-            $manager = new ImageManager(new Driver());
-            $img = $manager->read($file)->resize(370, 246)->toJpeg(80);
-            Storage::disk('public')->put("$path/$filename", (string) $img);
-        } else {
-            $file->storeAs($path, $filename, 'public');
+        // Define both storage paths
+        $publicPath = public_path($path); // C:\Users\Riabi\OneDrive\Bureau\lms\public\storage\upload\course_images\thumbnail
+        $storagePath = storage_path('app/public/' . $path); // C:\Users\Riabi\OneDrive\Bureau\lms\storage\app\public\upload\course_images\thumbnail
+
+        // Ensure directories exist
+        if (!file_exists($publicPath)) {
+            mkdir($publicPath, 0755, true);
+        }
+        if (!file_exists($storagePath)) {
+            mkdir($storagePath, 0755, true);
         }
 
-        if (!Storage::disk('public')->exists("$path/$filename")) {
-            \Log::error('File upload failed:', ['path' => "$path/$filename"]);
-            return null;
-        }
+        // Save the file in both locations
+        $file->move($publicPath, $fileName); // Save to public/storage
+        copy($publicPath . '/' . $fileName, $storagePath . '/' . $fileName); // Copy to storage/app/public
 
-        \Log::info('File uploaded successfully:', ['path' => "$path/$filename"]);
+        \Log::info('File uploaded to both locations:', [
+            'public' => $publicPath . '/' . $fileName,
+            'storage' => $storagePath . '/' . $fileName,
+        ]);
 
-        return $filename;
+        return $fileName; // Return only the filename for DB storage
     }
 
     private function deleteFile($filename, $path)
     {
-        if ($filename && Storage::disk('public')->exists("$path/$filename")) {
-            Storage::disk('public')->delete("$path/$filename");
-            \Log::info('Deleted file:', ['path' => "$path/$filename"]);
-        }
-    }
+        if ($filename) {
+            $publicFile = public_path($path . '/' . $filename);
+            $storageFile = storage_path('app/public/' . $path . '/' . $filename);
 
-private function saveGoals($courseId, $goals)
-{
-    if ($goals) {
-        // Supprime les anciens objectifs pour ce cours
-        CourseGoal::where('goalable_id', $courseId)
-                  ->where('goalable_type', Course::class)
-                  ->delete();
-
-        // Ajoute les nouveaux objectifs
-        foreach ($goals as $goal) {
-            if ($goal) {
-                CourseGoal::create([
-                    'goalable_id' => $courseId,
-                    'goalable_type' => Course::class,
-                    'goal_name' => $goal
-                ]);
+            if (file_exists($publicFile)) {
+                unlink($publicFile);
+                \Log::info('Deleted file from public:', ['path' => $publicFile]);
+            }
+            if (file_exists($storageFile)) {
+                unlink($storageFile);
+                \Log::info('Deleted file from storage:', ['path' => $storageFile]);
             }
         }
     }
-}
+
+    private function saveGoals($courseId, $goals)
+    {
+        CourseGoal::where('goalable_id', $courseId)
+            ->where('goalable_type', Course::class)
+            ->delete();
+
+        foreach (array_filter($goals) as $goal) {
+            CourseGoal::create([
+                'goalable_id' => $courseId,
+                'goalable_type' => Course::class,
+                'goal_name' => $goal,
+            ]);
+        }
+        \Log::info('Course goals saved:', ['course_id' => $courseId, 'goals' => $goals]);
+    }
 }

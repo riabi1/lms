@@ -78,6 +78,11 @@ class User extends Authenticatable implements MustVerifyEmail
     return $this->hasMany(Review::class, 'user_id');
 }
 
+public function questions()
+    {
+        return $this->hasMany(Question::class);
+    }
+
 public function orders()
     {
         return $this->hasMany(Order::class); // Assurez-vous que la classe Order existe
@@ -109,11 +114,10 @@ public function sentMessages()
 /**
      * Relation polymorphique avec user_course_progress
      */
-    public function courseProgress()
+  public function courseProgress()
     {
         return $this->morphMany(UserCourseProgress::class, 'trackable');
     }
-
     /**
      * Relation polymorphique avec wishlists
      */

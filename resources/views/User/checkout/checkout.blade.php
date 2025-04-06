@@ -98,13 +98,12 @@
                             </div>
 
                             <div class="tab-pane fade" id="paypal" role="tabpanel" aria-labelledby="paypal-tab">
-                                <form action="{{ route('pay.paypal') }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="btn theme-btn w-100">
-                                        <i class="la la-paypal"></i> Pay {{ number_format($total, 2) }} USD with PayPal
-                                    </button>
-                                    <p class="text-muted small mt-2">You will be redirected to PayPal to complete your payment.</p>
-                                </form>
+                                <div>
+                                      <a href="{{ route('pay.paypal') }}" class="btn theme-btn w-100">
+                                          <i class="la la-paypal"></i> Pay {{ number_format($total, 2) }} USD with PayPal
+                                      </a>
+                                      <p class="text-muted small mt-2">You will be redirected to PayPal to complete your payment.</p>
+                                  </div>
                             </div>
                         </div>
                     </div>

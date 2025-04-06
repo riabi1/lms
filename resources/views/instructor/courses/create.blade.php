@@ -1,254 +1,252 @@
 @extends('Instructor.layout.Instructor_layout')
-@section('instructor')
 
-<!-- Scripts nécessaires -->
+@section('instructor')
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
 
 <div class="page-content">
-    <!-- Breadcrumb -->
-    <div class="page-breadcrumb d-none d-sm-flex align-items-center mb-3">
+    <div class="page-breadcrumb d-none d-sm-flex align-items-center mb-4 px-4">
         <div class="ps-3">
             <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0 p-0">
-                    <li class="breadcrumb-item"><a href="{{ route('instructor.dashboard') }}"><i class="bx bx-home-alt"></i></a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Add Course</li>
+                <ol class="breadcrumb mb-0 p-0 bg-light rounded-3 shadow-sm">
+                    <li class="breadcrumb-item"><a href="{{ route('instructor.dashboard') }}" class="text-danger"><i class="bx bx-home-alt"></i></a></li>
+                    <li class="breadcrumb-item active text-dark" aria-current="page">Add Course</li>
                 </ol>
             </nav>
         </div>
     </div>
-    <!-- End Breadcrumb -->
 
-    <div class="card">
-        <div class="card-body p-4">
-            <h5 class="mb-4">Add Course</h5>
+    <div class="container">
+        <div class="card shadow-lg border-0 rounded-4">
+            <div class="card-header bg-gradient-red text-white py-3 rounded-top-4">
+                <h5 class="mb-0"><i class="bx bx-book-add me-2"></i>Add New Course</h5>
+            </div>
+            <div class="card-body p-4">
+                @if (session('message'))
+                    <div class="alert alert-{{ session('alert-type') }} alert-dismissible fade show" role="alert">
+                        {{ session('message') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
 
-            <form id="myForm" action="{{ route('instructor.courses.store') }}" method="POST" class="row g-3" enctype="multipart/form-data">
-                @csrf
+                <form id="myForm" action="{{ route('instructor.courses.store') }}" method="POST" class="row g-4" enctype="multipart/form-data">
+                    @csrf
 
-                <div class="form-group col-md-6">
-                    <label for="course_name" class="form-label">Course Name <span class="text-danger">*</span></label>
-                    <input type="text" name="course_name" class="form-control @error('course_name') is-invalid @enderror" id="course_name" value="{{ old('course_name') }}">
-                    @error('course_name')
-                        <span class="invalid-feedback">{{ $message }}</span>
-                    @enderror
-                </div>
+                    <div class="col-md-6">
+                        <label for="course_name" class="form-label fw-bold">Course Name <span class="text-danger">*</span></label>
+                        <input type="text" name="course_name" class="form-control shadow-sm @error('course_name') is-invalid @enderror" id="course_name" value="{{ old('course_name') }}" required>
+                        @error('course_name')
+                            <span class="invalid-feedback">{{ $message }}</span>
+                        @enderror
+                    </div>
 
-                <div class="form-group col-md-6">
-                    <label for="course_title" class="form-label">Course Title <span class="text-danger">*</span></label>
-                    <input type="text" name="course_title" class="form-control @error('course_title') is-invalid @enderror" id="course_title" value="{{ old('course_title') }}">
-                    @error('course_title')
-                        <span class="invalid-feedback">{{ $message }}</span>
-                    @enderror
-                </div>
+                    <div class="col-md-6">
+                        <label for="course_title" class="form-label fw-bold">Course Title <span class="text-danger">*</span></label>
+                        <input type="text" name="course_title" class="form-control shadow-sm @error('course_title') is-invalid @enderror" id="course_title" value="{{ old('course_title') }}" required>
+                        @error('course_title')
+                            <span class="invalid-feedback">{{ $message }}</span>
+                        @enderror
+                    </div>
 
-                <div class="form-group col-md-6">
-                    <label for="image" class="form-label">Course Image</label>
-                    <input class="form-control @error('image') is-invalid @enderror" name="image" type="file" id="image" accept="image/jpeg,image/png,image/jpg">
-                    @error('image')
-                        <span class="invalid-feedback">{{ $message }}</span>
-                    @enderror
-                </div>
+                    <div class="col-md-6">
+                        <label for="image" class="form-label fw-bold">Course Image</label>
+                        <input class="form-control shadow-sm @error('image') is-invalid @enderror" name="image" type="file" id="image" accept="image/jpeg,image/png,image/jpg">
+                        <small class="text-muted">Max 2MB, JPEG/PNG/JPG</small>
+                        @error('image')
+                            <span class="invalid-feedback">{{ $message }}</span>
+                        @enderror
+                    </div>
 
-                <div class="form-group col-md-6">
-                    <label class="form-label">Image Preview</label>
-                    <img id="showImage" src="{{ asset('upload/no_image.jpg') }}" alt="Preview" class="rounded-circle p-1 bg-primary" style="width: 100px; height: 100px; object-fit: cover;">
-                </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Image Preview</label>
+                        <img id="showImage" src="{{ asset('upload/no_image.jpg') }}" alt="Preview" class="rounded-circle shadow-sm p-1 bg-light" style="width: 100px; height: 100px; object-fit: cover;">
+                    </div>
 
-                <div class="form-group col-md-6">
-                    <label for="video" class="form-label">Course Intro Video</label>
-                    <input type="file" name="video" class="form-control @error('video') is-invalid @enderror" id="video" accept="video/mp4,video/avi,video/mov">
-                    @error('video')
-                        <span class="invalid-feedback">{{ $message }}</span>
-                    @enderror
-                </div>
+                    <div class="col-md-6">
+                        <label for="video" class="form-label fw-bold">Course Intro Video</label>
+                        <input type="file" name="video" class="form-control shadow-sm @error('video') is-invalid @enderror" id="video" accept="video/mp4,video/avi,video/mov">
+                        <small class="text-muted">Max 100MB, MP4/AVI/MOV</small>
+                        @error('video')
+                            <span class="invalid-feedback">{{ $message }}</span>
+                        @enderror
+                    </div>
 
-                <div class="form-group col-md-6">
-                    <!-- Espace vide pour alignement -->
-                </div>
+                    <div class="col-md-6">
+                        <label for="category_id" class="form-label fw-bold">Course Category <span class="text-danger">*</span></label>
+                        <select name="category_id" id="category_id" class="form-select shadow-sm @error('category_id') is-invalid @enderror" required>
+                            <option value="" selected disabled>Select a category</option>
+                            @foreach ($categories as $cat)
+                                <option value="{{ $cat->id }}" {{ old('category_id') == $cat->id ? 'selected' : '' }}>{{ $cat->category_name }}</option>
+                            @endforeach
+                        </select>
+                        @error('category_id')
+                            <span class="invalid-feedback">{{ $message }}</span>
+                        @enderror
+                    </div>
 
-                <div class="form-group col-md-6">
-                    <label for="category_id" class="form-label">Course Category <span class="text-danger">*</span></label>
-                    <select name="category_id" id="category_id" class="form-select @error('category_id') is-invalid @enderror">
-                        <option value="" selected disabled>Select a category</option>
-                        @foreach ($categories as $cat)
-                            <option value="{{ $cat->id }}" {{ old('category_id') == $cat->id ? 'selected' : '' }}>{{ $cat->category_name }}</option>
-                        @endforeach
-                    </select>
-                    @error('category_id')
-                        <span class="invalid-feedback">{{ $message }}</span>
-                    @enderror
-                </div>
+                    <div class="col-md-6">
+                        <label for="subcategory_id" class="form-label fw-bold">Course Subcategory <span class="text-danger">*</span></label>
+                        <select name="subcategory_id" id="subcategory_id" class="form-select shadow-sm @error('subcategory_id') is-invalid @enderror" required>
+                            <option value="" selected>Select a subcategory</option>
+                        </select>
+                        @error('subcategory_id')
+                            <span class="invalid-feedback">{{ $message }}</span>
+                        @enderror
+                    </div>
 
-                <div class="form-group col-md-6">
-                    <label for="subcategory_id" class="form-label">Course Subcategory <span class="text-danger">*</span></label>
-                    <select name="subcategory_id" id="subcategory_id" class="form-select @error('subcategory_id') is-invalid @enderror">
-                        <option value="" selected>Select a subcategory</option>
-                        <!-- Populated via AJAX -->
-                    </select>
-                    @error('subcategory_id')
-                        <span class="invalid-feedback">{{ $message }}</span>
-                    @enderror
-                </div>
+                    <div class="col-md-6">
+                        <label for="certificate" class="form-label fw-bold">Certificate Available</label>
+                        <select name="certificate" class="form-select shadow-sm @error('certificate') is-invalid @enderror">
+                            <option value="" selected disabled>Select an option</option>
+                            <option value="yes" {{ old('certificate') == 'Yes' ? 'selected' : '' }}>Yes</option>
+                            <option value="no" {{ old('certificate') == 'Yo' ? 'selected' : '' }}>No</option>
+                        </select>
+                        @error('certificate')
+                            <span class="invalid-feedback">{{ $message }}</span>
+                        @enderror
+                    </div>
 
-                <div class="form-group col-md-6">
-                    <label for="certificate" class="form-label">Certificate Available</label>
-                    <select name="certificate" class="form-select @error('certificate') is-invalid @enderror">
-                        <option value="" selected disabled>Select an option</option>
-                        <option value="Yes" {{ old('certificate') == 'Yes' ? 'selected' : '' }}>Yes</option>
-                        <option value="No" {{ old('certificate') == 'No' ? 'selected' : '' }}>No</option>
-                    </select>
-                    @error('certificate')
-                        <span class="invalid-feedback">{{ $message }}</span>
-                    @enderror
-                </div>
+                    <div class="col-md-6">
+                        <label for="label" class="form-label fw-bold">Course Level</label>
+                        <select name="label" class="form-select shadow-sm @error('label') is-invalid @enderror">
+                            <option value="" selected disabled>Select an option</option>
+                            <option value="Beginner" {{ old('label') == 'Beginner' ? 'selected' : '' }}>Beginner</option>
+                            <option value="Intermediate" {{ old('label') == 'Intermediate' ? 'selected' : '' }}>Intermediate</option>
+                            <option value="Advanced" {{ old('label') == 'Advanced' ? 'selected' : '' }}>Advanced</option>
+                        </select>
+                        @error('label')
+                            <span class="invalid-feedback">{{ $message }}</span>
+                        @enderror
+                    </div>
 
-                <div class="form-group col-md-6">
-                    <label for="label" class="form-label">Course Label</label>
-                    <select name="label" class="form-select @error('label') is-invalid @enderror">
-                        <option value="" selected disabled>Select an option</option>
-                        <option value="Beginner" {{ old('label') == 'Beginner' ? 'selected' : '' }}>Beginner</option>
-                        <option value="Intermediate" {{ old('label') == 'Intermediate' ? 'selected' : '' }}>Intermediate</option>
-                        <option value="Advanced" {{ old('label') == 'Advanced' ? 'selected' : '' }}>Advanced</option>
-                    </select>
-                    @error('label')
-                        <span class="invalid-feedback">{{ $message }}</span>
-                    @enderror
-                </div>
+                    <div class="col-md-3">
+                        <label for="selling_price" class="form-label fw-bold">Course Price</label>
+                        <input type="number" name="selling_price" class="form-control shadow-sm @error('selling_price') is-invalid @enderror" id="selling_price" value="{{ old('selling_price') }}" min="0">
+                        @error('selling_price')
+                            <span class="invalid-feedback">{{ $message }}</span>
+                        @enderror
+                    </div>
 
-                <div class="form-group col-md-3">
-                    <label for="selling_price" class="form-label">Course Price</label>
-                    <input type="number" step="0.01" name="selling_price" class="form-control @error('selling_price') is-invalid @enderror" id="selling_price" value="{{ old('selling_price') }}">
-                    @error('selling_price')
-                        <span class="invalid-feedback">{{ $message }}</span>
-                    @enderror
-                </div>
+                    <div class="col-md-3">
+                        <label for="discount_price" class="form-label fw-bold">Discount Price</label>
+                        <input type="number" name="discount_price" class="form-control shadow-sm @error('discount_price') is-invalid @enderror" id="discount_price" value="{{ old('discount_price') }}" min="0">
+                        @error('discount_price')
+                            <span class="invalid-feedback">{{ $message }}</span>
+                        @enderror
+                    </div>
 
-                <div class="form-group col-md-3">
-                    <label for="discount_price" class="form-label">Discount Price</label>
-                    <input type="number" step="0.01" name="discount_price" class="form-control @error('discount_price') is-invalid @enderror" id="discount_price" value="{{ old('discount_price') }}">
-                    @error('discount_price')
-                        <span class="invalid-feedback">{{ $message }}</span>
-                    @enderror
-                </div>
+                    <div class="col-md-3">
+                        <label for="duration" class="form-label fw-bold">Duration</label>
+                        <input type="text" name="duration" class="form-control shadow-sm @error('duration') is-invalid @enderror" id="duration" value="{{ old('duration') }}" placeholder="e.g., 10 hours">
+                        @error('duration')
+                            <span class="invalid-feedback">{{ $message }}</span>
+                        @enderror
+                    </div>
 
-                <div class="form-group col-md-3">
-                    <label for="duration" class="form-label">Duration</label>
-                    <input type="text" name="duration" class="form-control @error('duration') is-invalid @enderror" id="duration" value="{{ old('duration') }}" placeholder="e.g., 10 hours">
-                    @error('duration')
-                        <span class="invalid-feedback">{{ $message }}</span>
-                    @enderror
-                </div>
+                    <div class="col-md-3">
+                        <label for="resources" class="form-label fw-bold">Resources</label>
+                        <input type="text" name="resources" class="form-control shadow-sm @error('resources') is-invalid @enderror" id="resources" value="{{ old('resources') }}" placeholder="e.g., Worksheets">
+                        @error('resources')
+                            <span class="invalid-feedback">{{ $message }}</span>
+                        @enderror
+                    </div>
 
-                <div class="form-group col-md-12">
-                    <label for="prerequisites" class="form-label">Course Prerequisites</label>
-                    <textarea name="prerequisites" class="form-control @error('prerequisites') is-invalid @enderror" id="prerequisites" placeholder="Enter prerequisites..." rows="3">{{ old('prerequisites') }}</textarea>
-                    @error('prerequisites')
-                        <span class="invalid-feedback">{{ $message }}</span>
-                    @enderror
-                </div>
+                    <div class="col-md-12">
+                        <label for="prerequisites" class="form-label fw-bold">Course Prerequisites</label>
+                        <textarea name="prerequisites" class="form-control shadow-sm @error('prerequisites') is-invalid @enderror" id="prerequisites" placeholder="Enter prerequisites..." rows="3">{{ old('prerequisites') }}</textarea>
+                        @error('prerequisites')
+                            <span class="invalid-feedback">{{ $message }}</span>
+                        @enderror
+                    </div>
 
-                <div class="form-group col-md-12">
-                    <label for="description" class="form-label">Course Description</label>
-                    <textarea name="description" class="form-control @error('description') is-invalid @enderror" id="myeditorinstance">{{ old('description') }}</textarea>
-                    @error('description')
-                        <span class="invalid-feedback">{{ $message }}</span>
-                    @enderror
-                </div>
+                    <div class="col-md-12">
+                        <label for="description" class="form-label fw-bold">Course Description</label>
+                        <textarea name="description" class="form-control shadow-sm @error('description') is-invalid @enderror" id="description" rows="5">{{ old('description') }}</textarea>
+                        @error('description')
+                            <span class="invalid-feedback">{{ $message }}</span>
+                        @enderror
+                    </div>
 
-                <div class="form-group col-md-12">
-                    <p class="mb-2">Course Goals</p>
-                    <div class="row add_item">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="goals" class="form-label">Goals</label>
-                                <input type="text" name="course_goals[]" id="goals" class="form-control" placeholder="Enter a goal" value="{{ old('course_goals.0') }}">
+                    <div class="col-md-12">
+                        <label class="form-label fw-bold">Course Goals</label>
+                        <div class="row add_item">
+                            <div class="col-md-6">
+                                <input type="text" name="CourseGoals[]" class="form-control shadow-sm mb-2" placeholder="Enter a goal" value="{{ old('CourseGoals.0') }}">
+                            </div>
+                            <div class="col-md-6">
+                                <button type="button" class="btn btn-success btn-sm addeventmore"><i class="fa fa-plus-circle"></i> Add More</button>
                             </div>
                         </div>
-                        <div class="form-group col-md-6" style="padding-top: 30px;">
-                            <a class="btn btn-success addeventmore"><i class="fa fa-plus-circle"></i> Add More</a>
-                        </div>
                     </div>
-                </div>
 
-                <hr>
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="bestseller" value="1" id="bestseller" {{ old('bestseller') ? 'checked' : '' }}>
-                            <label class="form-check-label" for="bestseller">BestSeller</label>
+                    <div class="col-md-12">
+                        <hr>
+                        <div class="row g-4">
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="bestseller" value="1" id="bestseller" {{ old('bestseller') ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="bestseller">Bestseller</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="featured" value="1" id="featured" {{ old('featured') ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="featured">Featured</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="highestrated" value="1" id="highestrated" {{ old('highestrated') ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="highestrated">Highest Rated</label>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="featured" value="1" id="featured" {{ old('featured') ? 'checked' : '' }}>
-                            <label class="form-check-label" for="featured">Featured</label>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="highestrated" value="1" id="highestrated" {{ old('highestrated') ? 'checked' : '' }}>
-                            <label class="form-check-label" for="highestrated">Highest Rated</label>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="col-md-12">
-                    <div class="d-md-flex d-grid align-items-center gap-3">
-                        <button type="submit" class="btn btn-primary px-4">Save Changes</button>
+                    <div class="col-md-12 text-center">
+                        <button type="submit" class="btn btn-primary px-5 py-2 shadow-sm">Save Course</button>
                     </div>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Add Multiple Goals Template -->
-<div style="visibility: hidden">
-    <div class="whole_extra_item_add" id="whole_extra_item_add">
-        <div class="whole_extra_item_delete" id="whole_extra_item_delete">
-            <div class="container mt-2">
-                <div class="row">
-                    <div class="form-group col-md-6">
-                        <label for="goals">Goals</label>
-                        <input type="text" name="course_goals[]" id="goals" class="form-control" placeholder="Enter a goal">
-                    </div>
-                    <div class="form-group col-md-6" style="padding-top: 20px">
-                        <span class="btn btn-success btn-sm addeventmore"><i class="fa fa-plus-circle"></i> Add</span>
-                        <span class="btn btn-danger btn-sm removeeventmore"><i class="fa fa-minus-circle"></i> Remove</span>
-                    </div>
-                </div>
+                </form>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Scripts -->
+<div style="visibility: hidden">
+    <div class="whole_extra_item_add" id="whole_extra_item_add">
+        <div class="row whole_extra_item_delete mb-2">
+            <div class="col-md-6">
+                <input type="text" name="CourseGoals[]" class="form-control shadow-sm" placeholder="Enter a goal">
+            </div>
+            <div class="col-md-6">
+                <button type="button" class="btn btn-danger btn-sm removeeventmore"><i class="fa fa-minus-circle"></i> Remove</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script type="text/javascript">
     $(document).ready(function() {
-        // Ajouter/Supprimer des objectifs
-        var counter = 0;
+        // Add/Remove Goals
         $(document).on("click", ".addeventmore", function() {
             var whole_extra_item_add = $("#whole_extra_item_add").html();
             $(this).closest(".add_item").append(whole_extra_item_add);
-            counter++;
         });
-        $(document).on("click", ".removeeventmore", function(event) {
-            $(this).closest("#whole_extra_item_delete").remove();
-            counter -= 1;
+        $(document).on("click", ".removeeventmore", function() {
+            $(this).closest(".whole_extra_item_delete").remove();
         });
 
-        // Prévisualisation de l'image
+        // Image Preview
         $('#image').change(function(e) {
             var reader = new FileReader();
             reader.onload = function(e) {
                 $('#showImage').attr('src', e.target.result);
-            }
+            };
             reader.readAsDataURL(e.target.files[0]);
         });
 
-        // Chargement des sous-catégories via AJAX
-        $('select[name="category_id"]').on('change', function() {
+        // Load Subcategories via AJAX
+        $('#category_id').on('change', function() {
             var category_id = $(this).val();
             if (category_id) {
                 $.ajax({
@@ -256,7 +254,7 @@
                     type: "GET",
                     dataType: "json",
                     success: function(data) {
-                        var $subcategorySelect = $('select[name="subcategory_id"]');
+                        var $subcategorySelect = $('#subcategory_id');
                         $subcategorySelect.empty();
                         $subcategorySelect.append('<option value="" selected>Select a subcategory</option>');
                         if (data.length > 0) {
@@ -269,15 +267,15 @@
                     },
                     error: function(xhr, status, error) {
                         console.error('AJAX Error:', status, error);
-                        $('select[name="subcategory_id"]').html('<option value="">Error loading subcategories</option>');
+                        $('#subcategory_id').html('<option value="">Error loading subcategories</option>');
                     }
                 });
             } else {
-                $('select[name="subcategory_id"]').html('<option value="" selected>Select a subcategory</option>');
+                $('#subcategory_id').html('<option value="" selected>Select a subcategory</option>');
             }
         });
 
-        // Validation du formulaire avec jQuery Validate
+        // Form Validation
         $('#myForm').validate({
             rules: {
                 course_name: { required: true },
@@ -287,22 +285,32 @@
                 image: { accept: "image/jpeg,image/png,image/jpg" },
                 video: { accept: "video/mp4,video/avi,video/mov" },
                 selling_price: { number: true, min: 0 },
-                discount_price: { number: true, min: 0 }
+                discount_price: { 
+                    number: true, 
+                    min: 0,
+                    lessThan: '#selling_price'
+                },
+                'CourseGoals[]': { maxlength: 255 }
             },
             messages: {
                 course_name: { required: 'Please enter the course name' },
                 course_title: { required: 'Please enter the course title' },
                 category_id: { required: 'Please select a category' },
                 subcategory_id: { required: 'Please select a subcategory' },
-                image: { accept: 'Please upload a valid image file (JPEG, PNG, JPG)' },
-                video: { accept: 'Please upload a valid video file (MP4, AVI, MOV)' },
-                selling_price: { number: 'Please enter a valid number', min: 'Price cannot be negative' },
-                discount_price: { number: 'Please enter a valid number', min: 'Discount price cannot be negative' }
+                image: { accept: 'Please upload a valid image (JPEG, PNG, JPG)' },
+                video: { accept: 'Please upload a valid video (MP4, AVI, MOV)' },
+                selling_price: { number: 'Must be a number', min: 'Cannot be negative' },
+                discount_price: { 
+                    number: 'Must be a number', 
+                    min: 'Cannot be negative',
+                    lessThan: 'Must be less than selling price'
+                },
+                'CourseGoals[]': { maxlength: 'Goal cannot exceed 255 characters' }
             },
             errorElement: 'span',
             errorPlacement: function(error, element) {
                 error.addClass('invalid-feedback');
-                element.closest('.form-group').append(error);
+                element.closest('.col-md-6, .col-md-3, .col-md-12').append(error);
             },
             highlight: function(element) {
                 $(element).addClass('is-invalid');
@@ -311,7 +319,12 @@
                 $(element).removeClass('is-invalid');
             }
         });
+
+        $.validator.addMethod('lessThan', function(value, element, param) {
+            var sellingPrice = $(param).val();
+            if (!value || !sellingPrice) return true;
+            return parseFloat(value) < parseFloat(sellingPrice);
+        }, 'Discount price must be less than selling price');
     });
 </script>
-
 @endsection

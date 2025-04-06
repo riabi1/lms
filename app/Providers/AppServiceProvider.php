@@ -2,22 +2,28 @@
 
 namespace App\Providers;
 
+use Illuminate\Support\Facades\View;
+use App\Models\SiteSetting;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
-    public function register(): void
+    public function boot()
     {
-        //
+        View::composer('*', function ($view) {
+            $siteSettings = SiteSetting::firstOrCreate(
+                ['id' => 1],
+                [
+                    'phone' => '+216 28-587-753',
+                    'email' => 'lmspfee@gmail.com',
+                    'logo' => 'frontend/images/logo.png',
+                ]
+            );
+            $view->with('siteSettings', $siteSettings);
+        });
     }
 
-    /**
-     * Bootstrap any application services.
-     */
-    public function boot(): void
+    public function register()
     {
         //
     }

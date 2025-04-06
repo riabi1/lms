@@ -9,7 +9,6 @@ class Review extends Model
 {
     use HasFactory;
 
-    // Champs remplissables correspondant à la table `reviews`
     protected $fillable = [
         'reviewable_type',
         'reviewable_id',
@@ -21,7 +20,6 @@ class Review extends Model
         'updated_at',
     ];
 
-    // Conversion du champ status en booléen
     protected $casts = [
         'status' => 'boolean',
     ];
@@ -38,18 +36,22 @@ class Review extends Model
         return $this->belongsTo(User::class);
     }
 
-    // Méthode pour récupérer le cours (si reviewable est un Course)
-    public function course()
+    // Accessor pour vérifier si la review concerne un cours
+    public function getIsCourseAttribute()
     {
-        return $this->reviewable_type === 'App\Models\Course' 
-            ? $this->reviewable 
-            : null;
+        return $this->reviewable_type === 'App\Models\Course';
     }
 
-    // Méthode pour récupérer l'instructeur indirectement via le cours
-    public function instructor()
+    // Accessor pour récupérer le cours (non comme une relation)
+    public function getCourseAttribute()
     {
-        if ($this->reviewable_type === 'App\Models\Course' && $this->reviewable) {
+        return $this->is_course ? $this->reviewable : null;
+    }
+
+    // Accessor pour récupérer l'instructeur via le cours
+    public function getInstructorAttribute()
+    {
+        if ($this->is_course && $this->reviewable) {
             $course = $this->reviewable;
             return $course->courseable_type === 'App\Models\Instructor' && $course->courseable_id
                 ? Instructor::find($course->courseable_id)

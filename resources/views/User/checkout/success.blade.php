@@ -15,8 +15,18 @@
                         {{ session('success') }}
                     </div>
                 @endif
+                @if (isset($invoice))
+                    <a href="{{ route('invoice.download', $invoice->id) }}" class="btn theme-btn mt-4">
+                        <i class="fas fa-download"></i> Download Invoice ({{ $invoice->invoice_number }})
+                    </a>
+                @endif
                 <a href="{{ route('home') }}" class="btn theme-btn mt-4">Return to Home</a>
             </div>
         </div>
     </section>
+@endsection
+
+<!-- Optional: Include Font Awesome for the download icon -->
+@section('scripts')
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 @endsection

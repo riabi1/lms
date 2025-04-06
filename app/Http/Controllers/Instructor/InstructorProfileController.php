@@ -27,9 +27,7 @@ class InstructorProfileController extends Controller
                 'photo' => 'nullable|image|max:5120|mimes:jpg,png,jpeg',
                 'bio' => 'nullable|string',
                 'experience' => 'nullable|string',
-                'skills' => 'nullable|array', // Valide que skills est un tableau
-                'skills.*.name' => 'required|string|max:50', // Nom de la compétence requis
-                'skills.*.level' => 'required|integer|min:0|max:100', // Niveau entre 0 et 100
+                'specialty' => 'nullable|string|max:255',
                 'education' => 'nullable|string',
                 'website' => 'nullable|url|max:255',
                 'location' => 'nullable|string|max:255',
@@ -37,28 +35,17 @@ class InstructorProfileController extends Controller
 
             $instructor = Auth::guard('instructor')->user();
 
-            // Mise à jour des champs de base
             $instructor->name = $request->name;
             $instructor->email = $request->email;
             $instructor->phone = $request->phone;
             $instructor->address = $request->address;
             $instructor->bio = $request->bio;
             $instructor->experience = $request->experience;
+            $instructor->specialty = $request->specialty;
             $instructor->education = $request->education;
             $instructor->website = $request->website;
             $instructor->location = $request->location;
 
-            // Traitement des compétences
-            if ($request->has('skills')) {
-                $skills = array_map(function ($skill) {
-                    return trim($skill['name']) . ':' . $skill['level'];
-                }, $request->input('skills'));
-                $instructor->skills = implode(',', $skills);
-            } else {
-                $instructor->skills = null;
-            }
-
-            // Gestion de l'upload de la photo
             if ($request->hasFile('photo')) {
                 if ($instructor->photo && Storage::exists('public/upload/instructor_images/' . $instructor->photo)) {
                     Storage::delete('public/upload/instructor_images/' . $instructor->photo);
@@ -71,7 +58,8 @@ class InstructorProfileController extends Controller
 
             $instructor->save();
 
-            return redirect()->route('instructor.profile.edit')->with('status', 'Profile updated successfully!');
+            return redirect()->route('instructor.profile.edit')
+                ->with('status', 'Profile updated successfully!');
         } catch (\Exception $e) {
             return redirect()->back()
                 ->withInput()

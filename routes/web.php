@@ -2,28 +2,32 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\User\NotesController;
 use App\Http\Controllers\User\ReviewController;
 use App\Http\Controllers\User\QuizzesController;
+use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Frontend\CartController;
 use App\Http\Controllers\User\MyCourseController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Frontend\IndexController;
 use App\Http\Controllers\Admin\AllOrdersController;
 use App\Http\Controllers\Instructor\QuizController;
+use App\Http\Controllers\Admin\CouponViewController;
+use App\Http\Controllers\Frontend\InvoiceController;
 use App\Http\Controllers\Instructor\OrderController;
 use App\Http\Controllers\Admin\AdminCourseController;
 use App\Http\Controllers\Admin\AdminReviewController;
 use App\Http\Controllers\Admin\SubCategoryController;
 use App\Http\Controllers\Instructor\CourseController;
 use App\Http\Controllers\Instructor\CouponController; 
+use App\Http\Controllers\Frontend\PaypalPaymentController;
+use App\Http\Controllers\Frontend\StripePaymentController;
 use App\Http\Controllers\Instructor\NotificationController;
 use App\Http\Controllers\Instructor\CourseLectureController;
 use App\Http\Controllers\Instructor\CourseSectionController;
 use App\Http\Controllers\Admin\InstructorManagementController;
 use App\Http\Controllers\Instructor\ReviewController as InstructorReviewController;
-use App\Http\Controllers\Frontend\StripePaymentController;
-use App\Http\Controllers\Frontend\PaypalPaymentController;
 
 // Home Page Route
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -74,7 +78,7 @@ Route::get('/order/success', function () {
     Route::post('/mycourses/{courseId}/notes', [NotesController::class, 'store'])->name('mycourses.notes.store');
     Route::put('/mycourses/notes/{id}', [NotesController::class, 'update'])->name('mycourses.notes.update');
     Route::delete('/mycourses/notes/{id}', [NotesController::class, 'destroy'])->name('mycourses.notes.destroy');
-
+  
     //User Quiz routes
     Route::get('/quizzes', [QuizzesController::class, 'index'])->name('quizzes.index');
 
@@ -83,28 +87,47 @@ Route::get('/order/success', function () {
 
 // Admin Routes
 Route::prefix('admin')->name('admin.')->group(function () {
+    // Include admin authentication routes
     require base_path('routes/auth/admin.php');
 
+    // Dashboard route (requires admin authentication)
     Route::get('/dashboard', function () {
         return view('admin.index');
     })->middleware(['auth:admin'])->name('dashboard');
+
+    // Routes requiring authentication and verification
     Route::middleware(['auth:admin', 'verified'])->group(function () {
         // Resource Routes
         Route::resource('categories', CategoryController::class)->except(['show']);
         Route::resource('subcategories', SubCategoryController::class)->except(['show']);
         Route::resource('courses', AdminCourseController::class)->names('courses');
         Route::resource('instructors', InstructorManagementController::class)->names('instructors');
-        // Courses  Routes
-       Route::post('/courses/update-status', [AdminCourseController::class, 'updateCourseStatus'])->name('courses.updateStatus');
+
+        // Course Routes
+        Route::post('/courses/update-status', [AdminCourseController::class, 'updateCourseStatus'])->name('courses.updateStatus');
+
         // Instructor Routes
-       Route::post('/instructors/update-status', [InstructorManagementController::class, 'updateStatus'])->name('instructors.updateStatus');
+        Route::post('/instructors/update-status', [InstructorManagementController::class, 'updateStatus'])->name('instructors.updateStatus');
+
         // Review Routes
         Route::get('/pending/review', [AdminReviewController::class, 'pending'])->name('pending.review');
         Route::get('/active/review', [AdminReviewController::class, 'active'])->name('active.review');
         Route::post('/update/review/status', [AdminReviewController::class, 'updateStatus'])->name('update.review.status');
 
+        // Order Routes
         Route::get('/orders', [AllOrdersController::class, 'index'])->name('orders.index');
-    Route::get('/orders/{id}', [AllOrdersController::class, 'show'])->name('orders.show');
+        Route::get('/orders/{id}', [AllOrdersController::class, 'show'])->name('orders.show');
+
+        // Coupon Routes
+        Route::get('/coupons', [CouponViewController::class, 'index'])->name('coupon.index');
+        Route::get('/coupons/{coupon}', [CouponViewController::class, 'show'])->name('coupon.show');
+
+        // Users Route
+        Route::get('/users', [UserController::class, 'index'])->name('users.index');
+
+        // Site Settings Routes
+        Route::get('/site-settings', [SettingController::class, 'siteSetting'])->name('site.settings');
+        Route::post('/site-settings/update', [SettingController::class, 'updateSite'])->name('site.update');
     });
 });
 
@@ -135,9 +158,6 @@ Route::prefix('instructor')->name('instructor.')->group(function () {
      Route::post('/instructor/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAllAsRead');
      //review notif
      Route::get('/instructor/reviews/{review}', [ReviewController::class, 'show'])->name('reviews.show');
-    
-   
-  
     });
 });
 
@@ -149,4 +169,8 @@ Route::get('/instructor/details/{id}', [IndexController::class, 'InstructorDetai
 Route::get('/courses', [IndexController::class, 'AllCourses'])->name('courses.all');
 
 Route::get('/courses', [IndexController::class, 'courses'])->name('course.list');
+
+  // invoice 
+ Route::get('/checkout/success', [InvoiceController::class, 'success'])->name('checkout.success');
+Route::get('/invoice/{invoice}/download', [InvoiceController::class, 'download'])->name('invoice.download');
 
