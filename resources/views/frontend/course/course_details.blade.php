@@ -90,9 +90,7 @@
                     <button class="btn theme-btn theme-btn-sm theme-btn-transparent lh-28 mr-2 mb-2" data-toggle="modal" data-target="#shareModal">
                         <i class="la la-share mr-1"></i>Share
                     </button>
-                    <button class="btn theme-btn theme-btn-sm theme-btn-transparent lh-28 mb-2" data-toggle="modal" data-target="#reportModal">
-                        <i class="la la-flag mr-1"></i>Report abuse
-                    </button>
+                   
                 </div>
             </div>
         </div>
@@ -652,121 +650,310 @@
         </div>
     </div>
 
-    <div class="modal fade modal-container" id="reportModal" tabindex="-1" role="dialog" aria-labelledby="reportModalTitle" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content">
-                <div class="modal-header border-bottom-gray">
-                    <div class="pr-2">
-                        <h5 class="modal-title fs-19 font-weight-semi-bold lh-24" id="reportModalTitle">Report Abuse</h5>
-                        <p class="pt-1 fs-14 lh-24">Flagged content is reviewed by Aduca staff to determine whether it violates Terms of Service or Community Guidelines. If you have a question or technical issue, please contact our
-                            <a href="contact.html" class="text-color hover-underline">Support team here</a>.
-                        </p>
-                    </div>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true" class="la la-times"></span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <form method="post" action="">
-                        @csrf
-                        <input type="hidden" name="course_id" value="{{ $course->id }}">
-                        <div class="input-box">
-                            <label class="label-text">Select Report Type</label>
-                            <div class="form-group">
-                                <div class="select-container w-auto">
-                                    <select class="select-container-select" name="report_type" required>
-                                        <option value="">-- Select One --</option>
-                                        <option value="1">Inappropriate Course Content</option>
-                                        <option value="2">Inappropriate Behavior</option>
-                                        <option value="3">Aduca Policy Violation</option>
-                                        <option value="4">Spammy Content</option>
-                                        <option value="5">Other</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="input-box">
-                            <label class="label-text">Write Message</label>
-                            <div class="form-group">
-                                <textarea class="form-control form--control pl-3" name="description" placeholder="Provide additional details here..." rows="5" required></textarea>
-                            </div>
-                        </div>
-                        <div class="btn-box text-right pt-2">
-                            <button type="button" class="btn font-weight-medium mr-3" data-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn theme-btn theme-btn-sm lh-30">Submit <i class="la la-arrow-right icon ml-1"></i></button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
+   
 
     <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="{{ asset('js/tooltipster.bundle.min.js') }}"></script>
-    <script>
-    $(document).ready(function() {
-        // Section toggle for accordion
-        $('.section-toggle').on('click', function() {
-            const content = $(this).closest('.card').find('.section-content');
-            const plusIcon = $(this).find('.la-plus');
-            const minusIcon = $(this).find('.la-minus');
-            if (content.is(':visible')) {
-                content.hide();
-                plusIcon.show();
-                minusIcon.hide();
-            } else {
-                content.show();
-                plusIcon.hide();
-                minusIcon.show();
+  <!-- Previous template content remains unchanged -->
+
+<!-- Scripts -->
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="{{ asset('js/tooltipster.bundle.min.js') }}"></script>
+<script>
+$(document).ready(function() {
+    console.log('jQuery loaded and document ready');
+
+    // Section toggle for accordion
+    $('.section-toggle').on('click', function() {
+        const content = $(this).closest('.card').find('.section-content');
+        const plusIcon = $(this).find('.la-plus');
+        const minusIcon = $(this).find('.la-minus');
+        if (content.is(':visible')) {
+            content.hide();
+            plusIcon.show();
+            minusIcon.hide();
+        } else {
+            content.show();
+            plusIcon.hide();
+            minusIcon.show();
+        }
+    });
+
+    // Initialize Tooltipster
+    $('.card-preview').tooltipster({
+        theme: 'tooltipster-shadow',
+        interactive: true,
+        contentAsHTML: true,
+        maxWidth: 400,
+        side: 'right',
+        distance: 10
+    });
+    console.log('Tooltipster initialized');
+
+    // Handle wishlist button clicks
+    $('.wishlist-btn').on('click', function(e) {
+        e.preventDefault();
+        console.log('Wishlist button clicked');
+        var $button = $(this);
+        var courseId = $button.data('course-id');
+        var isWishlisted = $button.hasClass('wishlisted');
+        var url = isWishlisted ? '/wishlist/remove/' + courseId : '/wishlist/add/' + courseId;
+
+        $.ajax({
+            url: url,
+            method: 'POST',
+            data: {
+                _token: $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(response) {
+                console.log('Wishlist AJAX success:', response);
+                if (response.status === 'success') {
+                    if (isWishlisted) {
+                        $button.removeClass('wishlisted');
+                        $button.find('i').removeClass('la-heart').addClass('la-heart-o');
+                        $button.attr('title', 'Add to Wishlist');
+                        $button.find('.swapping-btn').text($button.find('.swapping-btn').data('text-original'));
+                    } else {
+                        $button.addClass('wishlisted');
+                        $button.find('i').removeClass('la-heart-o').addClass('la-heart');
+                        $button.attr('title', 'Remove from Wishlist');
+                        $button.find('.swapping-btn').text($button.find('.swapping-btn').data('text-swap'));
+                    }
+                }
+            },
+            error: function(xhr) {
+                console.error('Wishlist AJAX error:', xhr);
+                var response = xhr.responseJSON;
+                alert(response.message || 'An error occurred.');
             }
         });
+    });
 
-        // Initialize Tooltipster
-        $('.card-preview').tooltipster({
-            theme: 'tooltipster-shadow',
-            interactive: true,
-            contentAsHTML: true,
-            maxWidth: 400,
-            side: 'right',
-            distance: 10
+    // Handle Add to Cart form submissions
+    $('form[action*="/cart/add"]').on('submit', function(e) {
+        e.preventDefault();
+        console.log('Add to cart form submitted');
+        var $form = $(this);
+        var courseId = $form.attr('action').match(/\/cart\/add\/(\d+)/)[1];
+        var $button = $form.find('button[type="submit"]');
+        var $message = $('<div class="cart-message"></div>').appendTo('body');
+
+        if (!courseId) {
+            console.error('Course ID is undefined');
+            $message.html('<div class="alert alert-danger">Error: Course ID is missing.</div>').css({
+                position: 'fixed',
+                top: '20px',
+                right: '20px',
+                zIndex: 10000,
+                maxWidth: '300px',
+                padding: '10px',
+                borderRadius: '4px',
+                backgroundColor: '#fff',
+                boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+            });
+            setTimeout(function() { $message.remove(); }, 3000);
+            return;
+        }
+
+        console.log('Sending AJAX request for course ID:', courseId);
+        $.ajax({
+            url: '{{ route("cart.add", ":id") }}'.replace(':id', courseId),
+            method: 'POST',
+            data: {
+                _token: $('meta[name="csrf-token"]').attr('content')
+            },
+            dataType: 'json',
+            beforeSend: function() {
+                $button.prop('disabled', true).text('Adding...');
+            },
+            success: function(response) {
+                console.log('Cart AJAX success:', response);
+                $button.prop('disabled', false).text('Add to Cart');
+                if (response.redirect) {
+                    $message.html('<div class="alert alert-info">Please log in to add this course to your cart.</div>').css({
+                        position: 'fixed',
+                        top: '20px',
+                        right: '20px',
+                        zIndex: 10000,
+                        maxWidth: '300px',
+                        padding: '10px',
+                        borderRadius: '4px',
+                        backgroundColor: '#fff',
+                        boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+                    });
+                    setTimeout(function() {
+                        console.log('Redirecting to:', response.redirect);
+                        window.location.href = response.redirect;
+                    }, 1500);
+                } else if (response.success) {
+                    $message.html('<div class="alert alert-success">' + response.message + '</div>').css({
+                        position: 'fixed',
+                        top: '20px',
+                        right: '20px',
+                        zIndex: 10000,
+                        maxWidth: '300px',
+                        padding: '10px',
+                        borderRadius: '4px',
+                        backgroundColor: '#fff',
+                        boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+                    });
+                    // Update cart count and subtotal
+                    if ($('#cartQty').length) {
+                        $('#cartQty').text(response.cartCount);
+                    }
+                    if ($('#cartSubTotal').length) {
+                        $('#cartSubTotal').text('TND ' + response.cartSubTotal);
+                    }
+                    // Update cart dropdown
+                    console.log('Updating cart dropdown');
+                    $.ajax({
+                        url: '{{ route("cart") }}',
+                        method: 'GET',
+                        success: function(html) {
+                            console.log('Cart dropdown HTML received');
+                            var $newCart = $(html).find('#cartDropdown').html();
+                            $('#cartDropdown').html($newCart);
+                            // Rebind remove-from-cart handlers in dropdown
+                            bindCartDropdownHandlers();
+                        },
+                        error: function(xhr) {
+                            console.error('Cart dropdown AJAX error:', xhr);
+                        }
+                    });
+                } else {
+                    $message.html('<div class="alert alert-info">' + (response.info || response.message || 'Action completed.') + '</div>').css({
+                        position: 'fixed',
+                        top: '20px',
+                        right: '20px',
+                        zIndex: 10000,
+                        maxWidth: '300px',
+                        padding: '10px',
+                        borderRadius: '4px',
+                        backgroundColor: '#fff',
+                        boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+                    });
+                }
+                setTimeout(function() { $message.remove(); }, 3000);
+            },
+            error: function(xhr) {
+                console.error('Cart AJAX error:', xhr);
+                $button.prop('disabled', false).text('Add to Cart');
+                var response = xhr.responseJSON || {};
+                $message.html('<div class="alert alert-danger">' + (response.error || response.message || 'An error occurred.') + '</div>').css({
+                    position: 'fixed',
+                    top: '20px',
+                    right: '20px',
+                    zIndex: 10000,
+                    maxWidth: '300px',
+                    padding: '10px',
+                    borderRadius: '4px',
+                    backgroundColor: '#fff',
+                    boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+                });
+                setTimeout(function() { $message.remove(); }, 3000);
+            }
         });
+    });
 
-        // Handle wishlist button clicks
-        $('.wishlist-btn').on('click', function(e) {
+    // Function to bind remove-from-cart handlers in cart dropdown
+    function bindCartDropdownHandlers() {
+        $('#cartDropdown .remove-from-cart').off('click').on('click', function(e) {
             e.preventDefault();
-            var $button = $(this);
-            var courseId = $button.data('course-id');
-            var isWishlisted = $button.hasClass('wishlisted');
-            var url = isWishlisted ? '/wishlist/remove/' + courseId : '/wishlist/add/' + courseId;
+            console.log('Remove from cart button clicked in dropdown');
+            var courseId = $(this).data('id');
+            var $cartItem = $('#cart-item-' + courseId);
+            var $message = $('<div class="cart-message"></div>').appendTo('body');
 
             $.ajax({
-                url: url,
-                method: 'POST',
-                data: {
-                    _token: '{{ csrf_token() }}'
-                },
+                url: '{{ route("cart.remove", ":id") }}'.replace(':id', courseId),
+                method: 'GET',
+                dataType: 'json',
                 success: function(response) {
-                    if (response.status === 'success') {
-                        if (isWishlisted) {
-                            $button.removeClass('wishlisted');
-                            $button.find('i').removeClass('la-heart').addClass('la-heart-o');
-                            $button.attr('title', 'Add to Wishlist');
-                            $button.find('.swapping-btn').text($button.find('.swapping-btn').data('text-original'));
-                        } else {
-                            $button.addClass('wishlisted');
-                            $button.find('i').removeClass('la-heart-o').addClass('la-heart');
-                            $button.attr('title', 'Remove from Wishlist');
-                            $button.find('.swapping-btn').text($button.find('.swapping-btn').data('text-swap'));
+                    console.log('Remove from cart AJAX success:', response);
+                    if (response.redirect) {
+                        $message.html('<div class="alert alert-info">Please log in to remove this course from your cart.</div>').css({
+                            position: 'fixed',
+                            top: '20px',
+                            right: '20px',
+                            zIndex: 10000,
+                            maxWidth: '300px',
+                            padding: '10px',
+                            borderRadius: '4px',
+                            backgroundColor: '#fff',
+                            boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+                        });
+                        setTimeout(function() {
+                            window.location.href = response.redirect;
+                        }, 1500);
+                    } else if (response.success) {
+                        $cartItem.remove();
+                        $message.html('<div class="alert alert-success">' + response.message + '</div>').css({
+                            position: 'fixed',
+                            top: '20px',
+                            right: '20px',
+                            zIndex: 10000,
+                            maxWidth: '300px',
+                            padding: '10px',
+                            borderRadius: '4px',
+                            backgroundColor: '#fff',
+                            boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+                        });
+                        if ($('#cartQty').length) {
+                            $('#cartQty').text(response.cartCount);
                         }
+                        if ($('#cartSubTotal').length) {
+                            $('#cartSubTotal').text('TND ' + response.cartSubTotal);
+                        }
+                        if (response.cartCount === 0) {
+                            $('#cartDropdown').html(
+                                '<li class="media media-card">' +
+                                '<div class="media-body fs-15 text-center">' +
+                                '<p class="text-muted lh-18">Your cart is empty</p>' +
+                                '</div></li>' +
+                                '<li class="mt-3">' +
+                                '<a href="{{ route('cart') }}" class="btn theme-btn w-100 py-2">Go to Cart <i class="la la-arrow-right icon ml-1"></i></a>' +
+                                '</li>'
+                            );
+                        }
+                    } else {
+                        $message.html('<div class="alert alert-info">' + (response.message || 'Action completed.') + '</div>').css({
+                            position: 'fixed',
+                            top: '20px',
+                            right: '20px',
+                            zIndex: 10000,
+                            maxWidth: '300px',
+                            padding: '10px',
+                            borderRadius: '4px',
+                            backgroundColor: '#fff',
+                            boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+                        });
                     }
+                    setTimeout(function() { $message.remove(); }, 3000);
                 },
                 error: function(xhr) {
-                    var response = xhr.responseJSON;
-                    alert(response.message || 'An error occurred.');
+                    console.error('Remove from cart AJAX error:', xhr);
+                    var response = xhr.responseJSON || {};
+                    $message.html('<div class="alert alert-danger">' + (response.message || 'An error occurred.') + '</div>').css({
+                        position: 'fixed',
+                        top: '20px',
+                        right: '20px',
+                        zIndex: 10000,
+                        maxWidth: '300px',
+                        padding: '10px',
+                        borderRadius: '4px',
+                        backgroundColor: '#fff',
+                        boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+                    });
+                    setTimeout(function() { $message.remove(); }, 3000);
                 }
             });
         });
-    });
-    </script>
+    }
+
+    // Initial binding for cart dropdown handlers
+    bindCartDropdownHandlers();
+
+  
+});
+</script>
 @endsection

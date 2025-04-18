@@ -50,7 +50,7 @@
                             <td>
                                 <a href="{{ route('instructor.courses.show', $item->id) }}" class="btn btn-primary btn-sm" title="View"><i class="lni lni-eye"></i></a>
                                 <a href="{{ route('instructor.courses.edit', $item->id) }}" class="btn btn-info btn-sm" title="Edit"><i class="lni lni-eraser"></i></a>
-                                <a href="{{ route('instructor.course_sections.index', $item->id) }}" class="btn btn-warning btn-sm" title="Sections"><i class="lni lni-list"></i></a>
+                                <a href="{{ route('instructor.course_lectures.index', $item->id) }}" class="btn btn-warning btn-sm" title="Sections"><i class="lni lni-list"></i></a>
                             </td>
                         </tr>
                         @empty

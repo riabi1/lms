@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\SiteSetting;
-use Intervention\Image\Facades\Image;
+use Illuminate\Support\Facades\Storage;
 
 class SettingController extends Controller
 {
@@ -15,7 +15,7 @@ class SettingController extends Controller
     public function siteSetting()
     {
         $site = SiteSetting::firstOrCreate(
-            ['id' => 1], // Assuming single-record settings table
+            ['id' => 1],
             [
                 'phone' => 'N/A',
                 'email' => 'example@example.com',
@@ -38,9 +38,11 @@ class SettingController extends Controller
             'phone' => 'required|string|max:20',
             'email' => 'required|email|max:255',
             'address' => 'nullable|string|max:255',
-          
             'copyright' => 'nullable|string|max:255',
-            'logo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048', // Max 2MB
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        ], [
+            'logo.mimes' => 'The logo must be a JPEG, PNG, or JPG file.',
+            'logo.max' => 'The logo must not exceed 2MB.',
         ]);
 
         $site = SiteSetting::findOrFail($siteId);
@@ -48,21 +50,30 @@ class SettingController extends Controller
             'phone' => $request->phone,
             'email' => $request->email,
             'address' => $request->address,
-           
             'copyright' => $request->copyright,
         ];
 
         if ($request->hasFile('logo')) {
-            // Delete old logo if it exists and is not the default
-            if ($site->logo && file_exists(public_path($site->logo)) && $site->logo !== 'images/default-logo.png') {
-                unlink(public_path($site->logo));
-            }
+            try {
+                // Delete old logo if it exists and isn't default
+                if ($site->logo && $site->logo !== 'images/default-logo.png' && Storage::disk('public')->exists($site->logo)) {
+                    Storage::disk('public')->delete($site->logo);
+                }
 
-            $image = $request->file('logo');
-            $nameGen = hexdec(uniqid()) . '.' . $image->getClientOriginalExtension();
-            $savePath = 'upload/logo/' . $nameGen;
-            Image::make($image)->resize(140, 41)->save(public_path($savePath));
-            $data['logo'] = $savePath;
+                $image = $request->file('logo');
+                $nameGen = hexdec(uniqid()) . '.' . $image->getClientOriginalExtension();
+                $savePath = 'logo/' . $nameGen;
+
+                // Store the image
+                $image->storeAs('public', $savePath);
+
+                $data['logo'] = $savePath;
+            } catch (\Exception $e) {
+                return redirect()->back()->with([
+                    'message' => 'Failed to upload logo: ' . $e->getMessage(),
+                    'alert-type' => 'error'
+                ])->withInput();
+            }
         }
 
         $site->update($data);

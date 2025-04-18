@@ -20,6 +20,13 @@
 
   <meta name="csrf-token" content="{{ csrf_token() }}">
 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.theme.default.min.css">
+
+
+
+
   <!-- inject:css -->
   <link rel="stylesheet" href="{{ asset('frontend/css/bootstrap.min.css') }}">
   <link rel="stylesheet" href="{{ asset('frontend/css/line-awesome.css') }}">
@@ -38,7 +45,7 @@
 <link rel="stylesheet" href="{{ asset('css/tooltipster.bundle.css') }}">
 
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.css">
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     @if (session('success'))

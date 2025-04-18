@@ -25,6 +25,7 @@ class InstructorProfileController extends Controller
                 'phone' => 'nullable|string|max:20',
                 'address' => 'nullable|string|max:255',
                 'photo' => 'nullable|image|max:5120|mimes:jpg,png,jpeg',
+                'cv' => 'nullable|file|max:2048|mimes:pdf', // Added CV validation
                 'bio' => 'nullable|string',
                 'experience' => 'nullable|string',
                 'specialty' => 'nullable|string|max:255',
@@ -46,6 +47,7 @@ class InstructorProfileController extends Controller
             $instructor->website = $request->website;
             $instructor->location = $request->location;
 
+            // Handle photo upload
             if ($request->hasFile('photo')) {
                 if ($instructor->photo && Storage::exists('public/upload/instructor_images/' . $instructor->photo)) {
                     Storage::delete('public/upload/instructor_images/' . $instructor->photo);
@@ -54,6 +56,17 @@ class InstructorProfileController extends Controller
                 $filename = date('YmdHi') . '_' . $file->getClientOriginalName();
                 $file->storeAs('public/upload/instructor_images', $filename);
                 $instructor->photo = $filename;
+            }
+
+            // Handle CV upload
+            if ($request->hasFile('cv')) {
+                if ($instructor->cv && Storage::exists('public/' . $instructor->cv)) {
+                    Storage::delete('public/' . $instructor->cv);
+                }
+                $cvFile = $request->file('cv');
+                $cvFilename = date('YmdHi') . '_cv_' . $cvFile->getClientOriginalName();
+                $cvFile->storeAs('public/upload/instructor_cvs', $cvFilename);
+                $instructor->cv = 'upload/instructor_cvs/' . $cvFilename;
             }
 
             $instructor->save();

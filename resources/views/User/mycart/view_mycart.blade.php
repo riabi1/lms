@@ -109,7 +109,7 @@
                             <div class="bg-gray p-4 mt-4" id="cart-summary">
                                 <p>Subtotal: <span id="subtotal">{{ number_format($subtotal, 2) }} TND</span></p>
                                 @if ($couponDiscount > 0)
-                                    <p>Total Coupon Discount: <span id="coupon-discount">-{{ number_format($couponDiscount, 2) }} TND</span></p>
+                                    <p id="coupon-discount-container">Total Coupon Discount: <span id="coupon-discount">-{{ number_format($couponDiscount, 2) }} TND</span></p>
                                 @endif
                                 <h4>Total: <span id="total-price">{{ number_format($total, 2) }} TND</span></h4>
                                 <a href="{{ route('checkout.create') }}" class="btn theme-btn w-100 mt-3">Checkout <i class="la la-arrow-right"></i></a>
@@ -133,7 +133,7 @@
             var row = $('#cart-row-' + courseId);
 
             $.ajax({
-                url: '{{ route("cart.remove", "") }}/' + courseId,
+                url: '{{ route("cart.remove", ":id") }}'.replace(':id', courseId), // Dynamically replace :id
                 type: 'GET',
                 dataType: 'json',
                 headers: {
@@ -152,16 +152,15 @@
                             $('#coupon-list').remove();
                         } else if (response.couponDiscount > 0) {
                             if (!document.getElementById('coupon-discount')) {
-                                $('#subtotal').after('<p>Total Coupon Discount: <span id="coupon-discount">-' + response.couponDiscount + ' TND</span></p>');
+                                $('#subtotal').after('<p id="coupon-discount-container">Total Coupon Discount: <span id="coupon-discount">-' + response.couponDiscount + ' TND</span></p>');
                             } else {
                                 $('#coupon-discount').text('-' + response.couponDiscount + ' TND');
                             }
                         } else {
                             $('#coupon-list').remove();
-                            $('#coupon-discount').parent().remove();
+                            $('#coupon-discount-container').remove();
                         }
 
-                        // Update header cart count if it exists
                         if ($('#cartQty').length) {
                             $('#cartQty').text(response.cartCount);
                         }
@@ -180,5 +179,3 @@
     });
     </script>
 @endsection
-
-

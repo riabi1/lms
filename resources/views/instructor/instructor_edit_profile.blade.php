@@ -35,6 +35,25 @@
                         @enderror
                     </div>
 
+                    <!-- CV Field -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Curriculum Vitae (CV)</label>
+                        <div class="d-flex align-items-center mb-2">
+                            @if($instructor->cv)
+                                <a href="{{ Storage::url($instructor->cv) }}" target="_blank" class="me-3 text-primary">
+                                    <i class="la la-file-pdf-o"></i> Current CV
+                                </a>
+                            @else
+                                <span class="me-3 text-muted">No CV uploaded</span>
+                            @endif
+                            <input type="file" name="cv" class="form-control" accept=".pdf">
+                        </div>
+                        <small class="text-muted">Max 2MB, .pdf only</small>
+                        @error('cv')
+                            <div class="text-danger mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
+
                     <div class="row g-3">
                         <!-- Nom -->
                         <div class="col-md-6">
@@ -133,24 +152,25 @@
                         </div>
 
                         <!-- Nouveau Mot de Passe (Optionnel) -->
-                         <h4 class="mt-4 mb-3">Change Password</h4>
-                          <div class="row">
-                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold">New Password (Optional)</label>
-                            <input class="form-control" type="password" name="new_password">
-                            <small class="text-muted">Leave blank if you don’t want to change it</small>
-                            @error('new_password')
-                                <div class="text-danger mt-1">{{ $message }}</div>
-                            @enderror
-                        </div>
+                        <h4 class="mt-4 mb-3">Change Password</h4>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">New Password (Optional)</label>
+                                <input class="form-control" type="password" name="new_password">
+                                <small class="text-muted">Leave blank if you don’t want to change it</small>
+                                @error('new_password')
+                                    <div class="text-danger mt-1">{{ $message }}</div>
+                                @enderror
+                            </div>
 
-                        <!-- Confirmation du Nouveau Mot de Passe -->
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Confirm New Password</label>
-                            <input class="form-control" type="password" name="new_password_confirmation">
-                            @error('new_password_confirmation')
-                                <div class="text-danger mt-1">{{ $message }}</div>
-                            @enderror
+                            <!-- Confirmation du Nouveau Mot de Passe -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Confirm New Password</label>
+                                <input class="form-control" type="password" name="new_password_confirmation">
+                                @error('new_password_confirmation')
+                                    <div class="text-danger mt-1">{{ $message }}</div>
+                                @enderror
+                            </div>
                         </div>
                     </div>
 

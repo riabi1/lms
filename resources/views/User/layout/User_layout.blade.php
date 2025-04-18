@@ -35,8 +35,23 @@
     <!-- Toastr -->
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.css">
 
-    <!-- jQuery dans head pour éviter les conflits -->
+    <!-- jQuery in head to avoid conflicts -->
     <script src="{{ asset('backend/assets/js/jquery.min.js') }}"></script>
+
+    <!-- Page-specific styles -->
+    @stack('styles')
+
+    <!-- Custom Sidebar Styles -->
+    <style>
+        .metismenu a {
+            text-decoration: none !important;
+        }
+        .metismenu a:hover,
+        .metismenu a:focus,
+        .metismenu a.mm-active {
+            text-decoration: none !important;
+        }
+    </style>
 
     <title>@yield('title', 'User Dashboard')</title>
 </head>
@@ -54,7 +69,9 @@
 
         <!-- Start Page Wrapper -->
         <div class="page-wrapper">
-            @yield('userdashboard')
+            <div class="page-content">
+                @yield('userdashboard')
+            </div>
         </div>
         <!-- End Page Wrapper -->
 
@@ -88,7 +105,7 @@
     <script>
         @if(Session::has('message'))
         var type = "{{ Session::get('alert-type','info') }}"
-        switch (type) {
+        switch(type){
             case 'info':
                 toastr.info(" {{ Session::get('message') }} ");
                 break;
@@ -100,16 +117,13 @@
                 break;
             case 'error':
                 toastr.error(" {{ Session::get('message') }} ");
-                break;
+                break; 
         }
-        @endif
+        @endif 
     </script>
 
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
-
-    <!-- Custom Scripts -->
-    @include('frontend.body.script')
 
     <!-- Initialize MetisMenu -->
     <script>
@@ -117,13 +131,45 @@
             $('#menu').metisMenu({
                 toggle: false
             });
+            console.log('MetisMenu initialized');
         });
     </script>
 
     <!-- Perfect Scrollbar -->
     <script>
-        new PerfectScrollbar(".page-content");
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!window.location.pathname.includes('messages')) {
+                new PerfectScrollbar('.page-content');
+            }
+        });
     </script>
+
+    <!-- Debug Bootstrap Dropdowns -->
+    <script>
+        $(document).ready(function() {
+            // Check if Bootstrap dropdown is loaded
+            if (typeof $.fn.dropdown === 'undefined') {
+                console.error('Bootstrap dropdown plugin is not loaded');
+            } else {
+                console.log('Bootstrap dropdown plugin is loaded');
+            }
+
+            // Log dropdown clicks
+            $('.dropdown-toggle').on('click', function() {
+                console.log('Dropdown toggle clicked:', $(this).attr('id'));
+            });
+
+            // Manually initialize Bootstrap dropdowns to rule out conflicts
+            $('.dropdown-toggle').each(function() {
+                new bootstrap.Dropdown(this);
+                console.log('Initialized Bootstrap dropdown:', $(this).attr('id'));
+            });
+        });
+    </script>
+
+    <!-- Custom Scripts -->
+    @include('frontend.body.script')
+    @stack('scripts')
 </body>
 
 </html>

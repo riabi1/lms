@@ -14,6 +14,7 @@ use App\Models\CourseLecture;
 use App\Models\Payment;
 use App\Models\Order;
 use App\Models\Coupon;
+use App\Models\BlogPost;
 use Intervention\Image\Facades\Image;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
@@ -229,4 +230,6 @@ class IndexController extends Controller
 
         return view('frontend.course.course_list', compact('courses', 'categories'));
     }
+
+
 }

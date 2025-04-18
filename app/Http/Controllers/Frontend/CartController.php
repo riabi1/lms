@@ -11,55 +11,61 @@ use Illuminate\Support\Facades\Auth;
 use Darryldecode\Cart\Facades\CartFacade as Cart;
 use App\Notifications\OrderPlacedNotification;
 use App\Models\Invoice;
+use Carbon\Carbon;
 
 class CartController extends Controller
 {
     public function AddToCart(Request $request, $id)
-    {
-        $course = Course::with('courseable')->find($id);
-        if (!$course) {
-            return redirect()->back()->with('error', 'Course not found');
-        }
-
-        if (Auth::check()) {
-            $existingOrder = Order::where('user_id', Auth::id())
-                ->where('course_id', $id)
-                ->where('payment_status', 'paid')
-                ->exists();
-
-            if ($existingOrder) {
-                return redirect()->back()->with('info', 'You have already purchased this course. Start learning now!');
-            }
-        }
-
-        if (Cart::get($id)) {
-            return redirect()->back()->with('info', 'Course already in cart');
-        }
-
-        $effectivePrice = $course->discount_price !== null && $course->discount_price > 0 
-            ? max(0, $course->selling_price - $course->discount_price) 
-            : $course->selling_price;
-
-        $instructor = $course->courseable_type === 'App\Models\Instructor' && $course->courseable_id
-            ? Instructor::find($course->courseable_id)
-            : null;
-
-        Cart::add([
-            'id' => $course->id,
-            'name' => $course->course_name,
-            'price' => $effectivePrice,
-            'quantity' => 1,
-            'attributes' => [
-                'instructor_name' => $instructor ? $instructor->name : 'Unknown Instructor',
-                'selling_price' => $course->selling_price ?? 0,
-                'discount_price' => $course->discount_price ?? 0,
-                'image' => $course->course_image,
-                'instructor_id' => $instructor ? $instructor->id : null,
-            ]
-        ]);
-
-        return redirect()->back()->with('success', 'Course added to the cart successfully!');
+{
+    $course = Course::with('courseable')->find($id);
+    if (!$course) {
+        return response()->json(['error' => 'Course not found'], 404);
     }
+
+    if (Auth::check()) {
+        $existingOrder = Order::where('user_id', Auth::id())
+            ->where('course_id', $id)
+            ->where('payment_status', 'paid')
+            ->exists();
+
+        if ($existingOrder) {
+            return response()->json(['info' => 'You have already purchased this course. Start learning now!'], 200);
+        }
+    } else {
+        return response()->json(['redirect' => route('login'), 'message' => 'Please log in to add this course to your cart.'], 401);
+    }
+
+   
+
+    $effectivePrice = $course->discount_price !== null && $course->discount_price > 0 
+        ? max(0, $course->selling_price - $course->discount_price) 
+        : $course->selling_price;
+
+    $instructor = $course->courseable_type === 'App\Models\Instructor' && $course->courseable_id
+        ? Instructor::find($course->courseable_id)
+        : null;
+
+    Cart::add([
+        'id' => $course->id,
+        'name' => $course->course_name,
+        'price' => $effectivePrice,
+        'quantity' => 1,
+        'attributes' => [
+            'instructor_name' => $instructor ? $instructor->name : 'Unknown Instructor',
+            'selling_price' => $course->selling_price ?? 0,
+            'discount_price' => $course->discount_price ?? 0,
+            'image' => $course->course_image,
+            'instructor_id' => $instructor ? $instructor->id : null,
+        ]
+    ]);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Course added to the cart successfully!',
+        'cartCount' => Cart::getContent()->count(),
+        'cartSubTotal' => number_format(Cart::getSubTotal(), 2),
+    ], 200);
+}
 
     public function MyCart()
     {
@@ -85,47 +91,47 @@ class CartController extends Controller
             ], 401);
         }
 
-        if (Cart::get($id)) {
-            Cart::remove($id);
-
-            $subtotal = Cart::getSubTotal();
-            $coupons = session('coupons', []);
-            $totalPrice = $subtotal;
-            $couponDiscount = 0;
-
-            if (!empty($coupons) && !Cart::isEmpty()) {
-                $updatedCoupons = [];
-                foreach ($coupons as $couponData) {
-                    $coupon = Coupon::where('coupon_name', $couponData['coupon_name'])->first();
-                    if ($coupon && $this->isCouponApplicable($coupon, Cart::getContent()->toArray())) {
-                        $discount = round($subtotal * $coupon->coupon_discount / 100);
-                        $updatedCoupons[$coupon->coupon_name] = [
-                            'coupon_name' => $coupon->coupon_name,
-                            'discount_amount' => $discount,
-                        ];
-                        $couponDiscount += $discount;
-                    }
-                }
-                session(['coupons' => $updatedCoupons]);
-                $totalPrice = max(0, $subtotal - $couponDiscount);
-            } else {
-                session()->forget('coupons');
-            }
-
+        if (!Cart::get($id)) {
             return response()->json([
-                'success' => true,
-                'subtotal' => number_format($subtotal, 2),
-                'totalPrice' => number_format($totalPrice, 2),
-                'couponDiscount' => number_format($couponDiscount, 2),
-                'cartCount' => Cart::getContent()->count(),
-                'message' => 'Item removed from cart!'
-            ], 200);
+                'success' => false,
+                'message' => 'Item not found in cart'
+            ], 404);
         }
 
+        Cart::remove($id);
+
+        $subtotal = Cart::getSubTotal();
+        $coupons = session('coupons', []);
+        $couponDiscount = 0;
+        $updatedCoupons = [];
+
+        if (!empty($coupons) && !Cart::isEmpty()) {
+            foreach ($coupons as $couponData) {
+                $coupon = Coupon::where('coupon_name', $couponData['coupon_name'])->first();
+                if ($coupon && $this->isCouponApplicable($coupon, Cart::getContent()->toArray())) {
+                    $discount = round($subtotal * $coupon->coupon_discount / 100, 2);
+                    $updatedCoupons[$coupon->coupon_name] = [
+                        'coupon_name' => $coupon->coupon_name,
+                        'discount_amount' => $discount,
+                    ];
+                    $couponDiscount += $discount;
+                }
+            }
+            session(['coupons' => $updatedCoupons]);
+        } else {
+            session()->forget('coupons');
+        }
+
+        $totalPrice = max(0, $subtotal - $couponDiscount);
+
         return response()->json([
-            'success' => false,
-            'message' => 'Item not found in cart'
-        ], 404);
+            'success' => true,
+            'subtotal' => number_format($subtotal, 2),
+            'totalPrice' => number_format($totalPrice, 2),
+            'couponDiscount' => number_format($couponDiscount, 2),
+            'cartCount' => Cart::getContent()->count(),
+            'message' => 'Item removed from cart!'
+        ], 200);
     }
 
     private function isCouponApplicable($coupon, $cart)
@@ -167,7 +173,7 @@ class CartController extends Controller
         }
 
         $subtotal = Cart::getSubTotal();
-        $discount = round($subtotal * $coupon->coupon_discount / 100);
+        $discount = round($subtotal * $coupon->coupon_discount / 100, 2);
 
         $coupons[$coupon->coupon_name] = [
             'coupon_name' => $coupon->coupon_name,
@@ -222,58 +228,58 @@ class CartController extends Controller
         return view('User.checkout.checkout', compact('cartItems', 'subtotal', 'couponDiscount', 'total', 'coupons', 'adjustedPrices'));
     }
 
-  public function processOrder($transactionId, $paymentMethod)
-{
-    $cartItems = Cart::getContent();
-    $subtotal = Cart::getSubTotal();
-    $coupons = session('coupons', []);
-    $couponDiscount = array_sum(array_column($coupons, 'discount_amount'));
-    $totalDiscount = $couponDiscount > 0 && $subtotal > 0 ? $couponDiscount : 0;
-    $total = max(0, $subtotal - $totalDiscount);
+    public function processOrder($transactionId, $paymentMethod)
+    {
+        $cartItems = Cart::getContent();
+        $subtotal = Cart::getSubTotal();
+        $coupons = session('coupons', []);
+        $couponDiscount = array_sum(array_column($coupons, 'discount_amount'));
+        $totalDiscount = $couponDiscount > 0 && $subtotal > 0 ? $couponDiscount : 0;
+        $total = max(0, $subtotal - $totalDiscount);
 
-    $orders = [];
-    foreach ($cartItems as $item) {
-        $itemDiscount = $totalDiscount > 0 ? ($item->price / $subtotal) * $totalDiscount : 0;
-        $order = Order::create([
-            'user_id' => Auth::id(),
-            'course_id' => $item->id,
-            'instructor_id' => $item->attributes['instructor_id'],
-            'course_title' => $item->name,
-            'price' => $item->price,
-            'discount_amount' => round($itemDiscount, 2),
-            'currency' => 'USD',
-            'payment_status' => 'paid',
-            'payment_id' => $transactionId,
-            'payment_method' => $paymentMethod,
-        ]);
+        $orders = [];
+        foreach ($cartItems as $item) {
+            $itemDiscount = $totalDiscount > 0 ? ($item->price / $subtotal) * $totalDiscount : 0;
+            $order = Order::create([
+                'user_id' => Auth::id(),
+                'course_id' => $item->id,
+                'instructor_id' => $item->attributes['instructor_id'],
+                'course_title' => $item->name,
+                'price' => $item->price,
+                'discount_amount' => round($itemDiscount, 2),
+                'currency' => 'USD',
+                'payment_status' => 'paid',
+                'payment_id' => $transactionId,
+                'payment_method' => $paymentMethod,
+            ]);
 
-        $instructor = Instructor::find($item->attributes['instructor_id']);
-        if ($instructor) {
-            $instructor->notify(new OrderPlacedNotification($order));
+            $instructor = Instructor::find($item->attributes['instructor_id']);
+            if ($instructor) {
+                $instructor->notify(new OrderPlacedNotification($order));
+            }
+
+            $orders[] = [
+                'course_title' => $item->name,
+                'price' => $item->price,
+                'discount' => round($itemDiscount, 2),
+            ];
         }
 
-        $orders[] = [
-            'course_title' => $item->name,
-            'price' => $item->price,
-            'discount' => round($itemDiscount, 2),
-        ];
+        $invoiceNumber = 'INV-' . strtoupper(uniqid());
+        $invoice = Invoice::create([
+            'user_id' => Auth::id(),
+            'invoice_number' => $invoiceNumber,
+            'subtotal' => $subtotal,
+            'discount' => $totalDiscount,
+            'total' => $total,
+            'payment_method' => $paymentMethod,
+            'payment_id' => $transactionId,
+            'items' => json_encode($orders),
+        ]);
+
+        Cart::clear();
+        session()->forget('coupons');
+
+        return $invoice->id;
     }
-
-    $invoiceNumber = 'INV-' . strtoupper(uniqid());
-    $invoice = Invoice::create([
-        'user_id' => Auth::id(),
-        'invoice_number' => $invoiceNumber,
-        'subtotal' => $subtotal,
-        'discount' => $totalDiscount,
-        'total' => $total,
-        'payment_method' => $paymentMethod,
-        'payment_id' => $transactionId,
-        'items' => json_encode($orders), // Assurez-vous que c'est bien "items"
-    ]);
-
-    Cart::clear();
-    session()->forget('coupons');
-
-    return $invoice->id;
-}
 }

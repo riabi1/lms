@@ -88,11 +88,7 @@ public function orders()
         return $this->hasMany(Order::class); // Assurez-vous que la classe Order existe
     }
 
-   
-    public function notifications()
-    {
-        return $this->morphMany(Notification::class, 'notifiable');
-    }
+
 
 
 
@@ -129,5 +125,15 @@ public function sentMessages()
     public function courses()
     {
         return $this->morphMany(Course::class, 'courseable');
+    }
+
+    public function comments()
+    {
+        return $this->hasMany(Comment::class);
+    }
+
+    public function commentReplies()
+    {
+        return $this->hasMany(CommentReply::class);
     }
 }
