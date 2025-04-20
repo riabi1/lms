@@ -47,11 +47,11 @@
                             <td>{{ $item->category ? $item->category->category_name : 'No Category' }}</td>
                             <td>{{ $item->selling_price ? number_format($item->selling_price, 2) . ' TND' : 'N/A' }}</td>
                             <td>{{ $item->discount_price ? number_format($item->discount_price, 2) . ' TND' : 'N/A' }}</td>
-                            <td>
-                                <a href="{{ route('instructor.courses.show', $item->id) }}" class="btn btn-primary btn-sm" title="View"><i class="lni lni-eye"></i></a>
-                                <a href="{{ route('instructor.courses.edit', $item->id) }}" class="btn btn-info btn-sm" title="Edit"><i class="lni lni-eraser"></i></a>
-                                <a href="{{ route('instructor.course_lectures.index', $item->id) }}" class="btn btn-warning btn-sm" title="Sections"><i class="lni lni-list"></i></a>
-                            </td>
+                         <td>
+                            <a href="{{ route('instructor.courses.show', $item->id) }}" class="btn btn-primary btn-sm" title="View"><i class="lni lni-eye"></i></a>
+                            <a href="{{ route('instructor.courses.edit', $item->id) }}" class="btn btn-info btn-sm" title="Edit"><i class="lni lni-eraser"></i></a>
+                            <a href="{{ route('instructor.course_sections.index', $item->id) }}" class="btn btn-warning btn-sm" title="Sections"><i class="lni lni-list"></i></a>
+                        </td>
                         </tr>
                         @empty
                         <tr>

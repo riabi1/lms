@@ -16,14 +16,19 @@ class AuthenticatedSessionController extends Controller
   }
   
   public function store(LoginRequest $request): RedirectResponse
-  {
-    $credentials = $request->only('email', 'password');
-    if (Auth::guard('web')->attempt($credentials)) {
-      $request->session()->regenerate();
-      return redirect()->intended(route('dashboard'));
+    {
+        $credentials = $request->only('email', 'password');
+        if (Auth::guard('web')->attempt($credentials)) {
+            $request->session()->regenerate();
+            
+            // Check for redirect query parameter
+            $intendedUrl = $request->query('redirect', route('dashboard'));
+            $request->session()->put('url.intended', $intendedUrl);
+            
+            return redirect()->intended($intendedUrl);
+        }
+        return back()->withErrors(['email' => 'Invalid credentials'])->onlyInput('email');
     }
-    return back()->withErrors(['email' => 'Invalid credentials'])->onlyInput('email');
-  }
 
   public function destroy(Request $request): RedirectResponse
   {

@@ -1,6 +1,6 @@
 @php
-    // Fetch categories, default to empty collection if null
-    $categories = $categories ?? App\Models\Category::latest()->limit(6)->get() ?? collect();
+   // Fetch categories, default to empty collection if null
+$categories = $categories ?? App\Models\Category::latest()->limit(6)->get() ?? collect();
 @endphp
 
 <section class="category-area pb-90px">
@@ -84,9 +84,5 @@
     padding: 15px;
     background: rgba(0, 0, 0, 0.6); /* Optional: semi-transparent background for text readability */
     color: white;
-}
-
-.category-item:hover .cat__img {
-    transform: none; /* Removes any hover scaling effect */
 }
 </style>

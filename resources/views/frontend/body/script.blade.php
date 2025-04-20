@@ -665,4 +665,192 @@ const Toast = Swal.mixin({
 
 
 
+<script>
+$(document).ready(function() {
+    // Sync temp cart on page load for authenticated users
+    @auth
+        var tempCart = JSON.parse(localStorage.getItem('tempCart')) || [];
+        if (tempCart.length > 0) {
+            $.ajax({
+                url: '{{ route("cart.sync") }}',
+                method: 'POST',
+                data: {
+                    _token: $('meta[name="csrf-token"]').attr('content'),
+                    tempCart: tempCart
+                },
+                dataType: 'json',
+                success: function(response) {
+                    console.log('Temp cart sync success:', response);
+                    if (response.success) {
+                        // Clear localStorage
+                        localStorage.removeItem('tempCart');
+                        // Update cart UI
+                        if ($('#cartQty').length) {
+                            $('#cartQty').text(response.cartCount);
+                        }
+                        if ($('#cartSubTotal').length) {
+                            $('#cartSubTotal').text('TND ' + response.cartSubTotal);
+                        }
+                        // Refresh cart dropdown
+                        $.ajax({
+                            url: '{{ route("cart") }}',
+                            method: 'GET',
+                            success: function(html) {
+                                var $newCart = $(html).find('#cartDropdown').html();
+                                $('#cartDropdown').html($newCart);
+                                bindCartDropdownHandlers();
+                            },
+                            error: function(xhr) {
+                                console.error('Cart dropdown refresh error:', xhr);
+                            }
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    console.error('Temp cart sync error:', xhr);
+                }
+            });
+        }
+    @endauth
 
+    // Remove-from-cart handler
+    $('.remove-from-cart').on('click', function(e) {
+        e.preventDefault();
+        var courseId = $(this).data('id');
+        var cartRow = $('#cart-row-' + courseId); // Cart page row
+        var cartItem = $('#cart-item-' + courseId); // Header dropdown item
+
+        $.ajax({
+            url: '{{ route("cart.remove", ":id") }}'.replace(':id', courseId),
+            type: 'GET',
+            dataType: 'json',
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(response) {
+                if (response.success) {
+                    // Remove item from cart page or header
+                    if (cartRow.length) {
+                        cartRow.remove();
+                    }
+                    if (cartItem.length) {
+                        cartItem.remove();
+                    }
+
+                    // Update cart count
+                    if ($('#cartQty').length) {
+                        $('#cartQty').text(response.cartCount);
+                    }
+
+                    // Update cart page elements if present
+                    if ($('#subtotal').length && $('#total-price').length) {
+                        $('#subtotal').text(response.subtotal + ' TND');
+                        $('#total-price').text(response.totalPrice + ' TND');
+
+                        if (response.cartCount === 0) {
+                            $('#cart-items').html('<tr><td colspan="4" class="text-center">Cart is empty.</td></tr>');
+                            $('#cart-summary').remove();
+                            $('#coupon-list').remove();
+                        } else if (response.couponDiscount > 0) {
+                            if (!document.getElementById('coupon-discount')) {
+                                $('#subtotal').after('<p id="coupon-discount-container">Total Coupon Discount: <span id="coupon-discount">-' + response.couponDiscount + ' TND</span></p>');
+                            } else {
+                                $('#coupon-discount').text('-' + response.couponDiscount + ' TND');
+                            }
+                        } else {
+                            $('#coupon-list').remove();
+                            $('#coupon-discount-container').remove();
+                        }
+                    }
+
+                    // Update header dropdown
+                    if ($('#cartDropdown').length) {
+                        if (response.cartCount === 0) {
+                            $('#cartDropdown').html(
+                                '<li class="media media-card">' +
+                                '<div class="media-body fs-15 text-center">' +
+                                '<p class="text-muted lh-18">Your cart is empty</p>' +
+                                '</div></li>' +
+                                '<li class="mt-3">' +
+                                '<a href="{{ route('cart') }}" class="btn theme-btn w-100 py-2">Go to Cart <i class="la la-arrow-right icon ml-1"></i></a>' +
+                                '</li>'
+                            );
+                        } else {
+                            $('#cartSubTotal').text('TND ' + response.subtotal);
+                        }
+                    }
+
+                    alert(response.message);
+                } else {
+                    alert(response.message);
+                }
+            },
+            error: function(xhr) {
+                alert('An error occurred while removing the item.');
+                console.error(xhr);
+            }
+        });
+    });
+
+    // Function to bind remove-from-cart handlers in cart dropdown
+    function bindCartDropdownHandlers() {
+        $('#cartDropdown .remove-from-cart').off('click').on('click', function(e) {
+            e.preventDefault();
+            console.log('Remove from cart button clicked in dropdown');
+            var courseId = $(this).data('id');
+            var $cartItem = $('#cart-item-' + courseId);
+            var $message = $('#cart-message-' + courseId).length ? $('#cart-message-' + courseId) : $('<div class="cart-message"></div>').appendTo('body');
+
+            $.ajax({
+                url: '{{ route("cart.remove", ":id") }}'.replace(':id', courseId),
+                method: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    console.log('Remove from cart AJAX success:', response);
+                    if (response.redirect) {
+                        $message.html('<div class="alert alert-info">Please log in to remove this course from your cart.</div>');
+                        setTimeout(function() {
+                            window.location.href = response.redirect;
+                        }, 1500);
+                    } else if (response.success) {
+                        $cartItem.remove();
+                        $message.html('<div class="alert alert-success">' + response.message + '</div>');
+                        if ($('#cartQty').length) {
+                            $('#cartQty').text(response.cartCount);
+                        }
+                        if ($('#cartSubTotal').length) {
+                            $('#cartSubTotal').text('TND ' + response.cartSubTotal);
+                        }
+                        if (response.cartCount === 0) {
+                            $('#cartDropdown').html(
+                                '<li class="media media-card">' +
+                                '<div class="media-body fs-15 text-center">' +
+                                '<p class="text-muted lh-18">Your cart is empty</p>' +
+                                '</div></li>' +
+                                '<li class="mt-3">' +
+                                '<a href="{{ route('cart') }}" class="btn theme-btn w-100 py-2">Go to Cart <i class="la la-arrow-right icon ml-1"></i></a>' +
+                                '</li>'
+                            );
+                        }
+                        // Update course card button state
+                        $('.add-to-cart[data-course-id="' + courseId + '"]').each(function() {
+                            $(this).data('in-cart', false).removeAttr('data-in-cart')
+                                .prop('disabled', false)
+                                .html('<i class="la la-shopping-cart fs-18 mr-1"></i> Add to Cart');
+                        });
+                    } else {
+                        $message.html('<div class="alert alert-info">' + (response.message || 'Action completed.') + '</div>');
+                    }
+                    setTimeout(function() { $message.empty(); }, 3000);
+                },
+                error: function(xhr) {
+                    console.error('Remove from cart AJAX error:', xhr);
+                    var response = xhr.responseJSON || {};
+                    $message.html('<div class="alert alert-danger">' + (response.message || 'An error occurred.') + '</div>');
+                    setTimeout(function() { $message.empty(); }, 3000);
+                }
+            });
+        });
+    }
+});
+</script>

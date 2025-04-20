@@ -22,6 +22,67 @@ use Carbon\Carbon;
 
 class IndexController extends Controller
 {
+    public function index()
+    {
+        $courses = Course::with(['courseable', 'reviews', 'goals'])
+            ->where('status', 1)
+            ->orderBy('id', 'ASC')
+            ->limit(6)
+            ->get();
+
+        $categories = Category::orderBy('category_name', 'ASC')->get();
+
+        // Recommendation logic
+        $recommendedCourses = collect();
+        $recommendationMessage = '';
+
+        if (Auth::check()) {
+            // Get categories where user has purchased 2 or more courses
+            $userOrders = Order::where('user_id', Auth::id())
+                ->where('payment_status', 'paid')
+                ->with(['course.subcategory.category'])
+                ->get();
+
+            // Count courses per category
+            $categoryCounts = $userOrders->groupBy(function ($order) {
+                return $order->course->subcategory->category->id;
+            })->map->count();
+
+            // Find categories with 2 or more purchases
+            $preferredCategories = $categoryCounts->filter(function ($count) {
+                return $count >= 2;
+            })->keys();
+
+            if ($preferredCategories->isNotEmpty()) {
+                // Get up to 3 unpurchased courses from preferred categories
+                $purchasedCourseIds = $userOrders->pluck('course_id')->toArray();
+                $recommendedCourses = Course::with(['courseable', 'reviews', 'goals'])
+                    ->where('status', 1)
+                    ->whereNotIn('id', $purchasedCourseIds)
+                    ->whereHas('subcategory', function ($query) use ($preferredCategories) {
+                        $query->whereIn('category_id', $preferredCategories);
+                    })
+                    ->inRandomOrder()
+                    ->limit(3)
+                    ->get();
+
+                if ($recommendedCourses->isNotEmpty()) {
+                    $categoryNames = Category::whereIn('id', $preferredCategories)
+                        ->pluck('category_name')
+                        ->implode(', ');
+                    $recommendationMessage = "Since you like courses in {$categoryNames}, we recommend these courses:";
+                }
+            }
+        }
+
+        return view('frontend.index', compact(
+            'courses',
+            'categories',
+            'recommendedCourses',
+            'recommendationMessage'
+        ));
+    }
+
     public function CourseDetails($id, $slug)
     {
         $course = Course::with([
@@ -230,6 +291,4 @@ class IndexController extends Controller
 
         return view('frontend.course.course_list', compact('courses', 'categories'));
     }
-
-
 }

@@ -1,7 +1,7 @@
 @extends('frontend.master')
 
 @section('title')
-Course List | Easy Learning
+    Course List | Easy Learning
 @endsection
 
 @section('home')
@@ -249,7 +249,6 @@ Course List | Easy Learning
 
 <!-- Scripts -->
 <meta name="csrf-token" content="{{ csrf_token() }}">
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="{{ asset('js/tooltipster.bundle.min.js') }}"></script>
 <script>
 $(document).ready(function() {
@@ -267,7 +266,7 @@ $(document).ready(function() {
     console.log('Tooltipster initialized');
 
     // Handle wishlist button clicks
-    $('.wishlist-btn').on('click', function(e) {
+    $('.wishlist-btn').off('click').on('click', function(e) {
         e.preventDefault();
         console.log('Wishlist button clicked');
         var $button = $(this);
@@ -304,7 +303,7 @@ $(document).ready(function() {
     });
 
     // Handle Add/Remove from Cart button clicks
-    $('.add-to-cart').on('click', function(e) {
+    $('.add-to-cart').off('click').on('click', function(e) {
         e.preventDefault();
         console.log('Cart button clicked');
         var $button = $(this);
@@ -330,7 +329,16 @@ $(document).ready(function() {
             success: function(response) {
                 console.log('Cart AJAX success:', response);
                 if (response.redirect) {
-                    $message.html('<div class="alert alert-info">Please log in to ' + (isInCart ? 'remove this course from your cart.' : 'add this course to your cart.') + '</div>');
+                    // Non-authenticated: Store course in localStorage
+                    let tempCart = JSON.parse(localStorage.getItem('tempCart')) || [];
+                    const itemIndex = tempCart.findIndex(item => item.courseId === response.course_id);
+                    if (itemIndex > -1) {
+                        tempCart[itemIndex].quantity += 1;
+                    } else {
+                        tempCart.push({ courseId: response.course_id, quantity: 1 });
+                    }
+                    localStorage.setItem('tempCart', JSON.stringify(tempCart));
+                    $message.html('<div class="alert alert-info">Please log in to add this course to your cart.</div>');
                     setTimeout(function() {
                         console.log('Redirecting to:', response.redirect);
                         window.location.href = response.redirect;
@@ -377,8 +385,25 @@ $(document).ready(function() {
             error: function(xhr) {
                 console.error('Cart AJAX error:', xhr);
                 var response = xhr.responseJSON || {};
-                $message.html('<div class="alert alert-danger">' + (response.error || response.message || 'An error occurred.') + '</div>');
-                setTimeout(function() { $message.empty(); }, 3000);
+                if (xhr.status === 401 && response.redirect) {
+                    // Handle 401 Unauthorized for non-authenticated users
+                    let tempCart = JSON.parse(localStorage.getItem('tempCart')) || [];
+                    const itemIndex = tempCart.findIndex(item => item.courseId === response.course_id);
+                    if (itemIndex > -1) {
+                        tempCart[itemIndex].quantity += 1;
+                    } else {
+                        tempCart.push({ courseId: response.course_id, quantity: 1 });
+                    }
+                    localStorage.setItem('tempCart', JSON.stringify(tempCart));
+                    $message.html('<div class="alert alert-info">Please log in to add this course to your cart.</div>');
+                    setTimeout(function() {
+                        console.log('Redirecting to:', response.redirect);
+                        window.location.href = response.redirect;
+                    }, 1500);
+                } else {
+                    $message.html('<div class="alert alert-danger">' + (response.error || response.message || 'An error occurred.') + '</div>');
+                    setTimeout(function() { $message.empty(); }, 3000);
+                }
             }
         });
     });

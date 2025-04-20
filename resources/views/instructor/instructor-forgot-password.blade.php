@@ -35,7 +35,7 @@
           <div class="col-12 col-xl-7 col-xxl-8 auth-cover-left align-items-center justify-content-center d-none d-xl-flex">
             <div class="card shadow-none bg-transparent rounded-0 mb-0">
               <div class="card-body">
-                <img src="{{ asset('backend/assets/images/login-images/forgot-password-cover.svg') }}" class="img-fluid auth-img-cover-login" width="650" alt="" />
+                <img src="{{ asset('backend/assets/images/login-images/forgotpassword.jpg') }}" class="img-fluid auth-img-cover-login" width="650" alt="" />
               </div>
             </div>
           </div>

@@ -15,14 +15,22 @@ use Carbon\Carbon;
 
 class CartController extends Controller
 {
-    public function AddToCart(Request $request, $id)
-{
-    $course = Course::with('courseable')->find($id);
-    if (!$course) {
-        return response()->json(['error' => 'Course not found'], 404);
-    }
+public function AddToCart(Request $request, $id)
+    {
+        $course = Course::with('courseable')->find($id);
+        if (!$course) {
+            return response()->json(['error' => 'Course not found'], 404);
+        }
 
-    if (Auth::check()) {
+        if (!Auth::check()) {
+            // Non-authenticated: Return redirect URL with course ID
+            return response()->json([
+                'redirect' => route('login') . '?redirect=' . urlencode(route('cart')),
+                'message' => 'Please log in to add this course to your cart.',
+                'course_id' => $course->id
+            ], 401);
+        }
+
         $existingOrder = Order::where('user_id', Auth::id())
             ->where('course_id', $id)
             ->where('payment_status', 'paid')
@@ -31,41 +39,93 @@ class CartController extends Controller
         if ($existingOrder) {
             return response()->json(['info' => 'You have already purchased this course. Start learning now!'], 200);
         }
-    } else {
-        return response()->json(['redirect' => route('login'), 'message' => 'Please log in to add this course to your cart.'], 401);
+
+        $effectivePrice = $course->discount_price !== null && $course->discount_price > 0 
+            ? max(0, $course->selling_price - $course->discount_price) 
+            : $course->selling_price;
+
+        $instructor = $course->courseable_type === 'App\Models\Instructor' && $course->courseable_id
+            ? Instructor::find($course->courseable_id)
+            : null;
+
+        Cart::add([
+            'id' => $course->id,
+            'name' => $course->course_name,
+            'price' => $effectivePrice,
+            'quantity' => 1,
+            'attributes' => [
+                'instructor_name' => $instructor ? $instructor->name : 'Unknown Instructor',
+                'selling_price' => $course->selling_price ?? 0,
+                'discount_price' => $course->discount_price ?? 0,
+                'image' => $course->course_image,
+                'instructor_id' => $instructor ? $instructor->id : null,
+            ]
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Course added to the cart successfully!',
+            'cartCount' => Cart::getContent()->count(),
+            'cartSubTotal' => number_format(Cart::getSubTotal(), 2),
+        ], 200);
     }
 
-   
+    public function syncTempCart(Request $request)
+    {
+        if (!Auth::check()) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
 
-    $effectivePrice = $course->discount_price !== null && $course->discount_price > 0 
-        ? max(0, $course->selling_price - $course->discount_price) 
-        : $course->selling_price;
+        $tempCart = $request->input('tempCart', []);
+        $response = ['success' => true, 'added' => 0];
 
-    $instructor = $course->courseable_type === 'App\Models\Instructor' && $course->courseable_id
-        ? Instructor::find($course->courseable_id)
-        : null;
+        foreach ($tempCart as $item) {
+            $course = Course::with('courseable')->find($item['courseId']);
+            if (!$course) {
+                continue;
+            }
 
-    Cart::add([
-        'id' => $course->id,
-        'name' => $course->course_name,
-        'price' => $effectivePrice,
-        'quantity' => 1,
-        'attributes' => [
-            'instructor_name' => $instructor ? $instructor->name : 'Unknown Instructor',
-            'selling_price' => $course->selling_price ?? 0,
-            'discount_price' => $course->discount_price ?? 0,
-            'image' => $course->course_image,
-            'instructor_id' => $instructor ? $instructor->id : null,
-        ]
-    ]);
+            // Check if already purchased
+            $existingOrder = Order::where('user_id', Auth::id())
+                ->where('course_id', $course->id)
+                ->where('payment_status', 'paid')
+                ->exists();
+            if ($existingOrder) {
+                continue;
+            }
 
-    return response()->json([
-        'success' => true,
-        'message' => 'Course added to the cart successfully!',
-        'cartCount' => Cart::getContent()->count(),
-        'cartSubTotal' => number_format(Cart::getSubTotal(), 2),
-    ], 200);
-}
+            $effectivePrice = $course->discount_price !== null && $course->discount_price > 0 
+                ? max(0, $course->selling_price - $course->discount_price) 
+                : $course->selling_price;
+
+            $instructor = $course->courseable_type === 'App\Models\Instructor' && $course->courseable_id
+                ? Instructor::find($course->courseable_id)
+                : null;
+
+            Cart::add([
+                'id' => $course->id,
+                'name' => $course->course_name,
+                'price' => $effectivePrice,
+                'quantity' => $item['quantity'],
+                'attributes' => [
+                    'instructor_name' => $instructor ? $instructor->name : 'Unknown Instructor',
+                    'selling_price' => $course->selling_price ?? 0,
+                    'discount_price' => $course->discount_price ?? 0,
+                    'image' => $course->course_image,
+                    'instructor_id' => $instructor ? $instructor->id : null,
+                ]
+            ]);
+
+            $response['added']++;
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => $response['added'] . ' course(s) added to cart',
+            'cartCount' => Cart::getContent()->count(),
+            'cartSubTotal' => number_format(Cart::getSubTotal(), 2),
+        ], 200);
+    }
 
     public function MyCart()
     {

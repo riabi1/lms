@@ -505,48 +505,53 @@ Author Email:   contact@techydevs.com
         }
 
         /*=========== Bootstrap Tooltip ============*/
-        $('[data-toggle="tooltip"]').tooltip();
+        // Initialize Bootstrap tooltips, excluding Tooltipster elements
+        $('[data-toggle="tooltip"]')
+            .not(".card-preview, [data-tooltip-content]")
+            .tooltip();
 
         /*=========== Isotope ============*/
-        // bind filter button click
+        // Bind filter button click
         $document.on("click", ".portfolio-filter li", function () {
             var filterData = $(this).attr("data-filter");
 
-            // use filterFn if matches value
-            $(isotopListItem).isotope({
-                filter: filterData,
-            });
+            // Check if Isotope is available
+            if (typeof $.fn.isotope === "function") {
+                $(isotopListItem).isotope({
+                    filter: filterData,
+                });
 
-            $(".portfolio-filter li").removeClass("active");
-            $(this).addClass("active");
+                $(".portfolio-filter li").removeClass("active");
+                $(this).addClass("active");
+            } else {
+                console.error("Isotope is not loaded");
+            }
         });
 
-        // portfolio list
+        // Portfolio list
         if ($(isotopListItem).length) {
-            $(isotopListItem).isotope({
-                itemSelector: ".generic-portfolio-item",
-                percentPosition: true,
-                masonry: {
-                    // use outer width of grid-sizer for columnWidth
-                    columnWidth: ".generic-portfolio-item",
-                    horizontalOrder: true,
-                },
-            });
+            if (typeof $.fn.isotope === "function") {
+                $(isotopListItem).isotope({
+                    itemSelector: ".generic-portfolio-item",
+                    percentPosition: true,
+                    masonry: {
+                        // Use outer width of grid-sizer for columnWidth
+                        columnWidth: ".generic-portfolio-item",
+                        horizontalOrder: true,
+                    },
+                });
+            } else {
+                console.error("Isotope is not loaded");
+            }
         }
-        /*==== fancybox  =====*/
+
+        /*==== Fancybox =====*/
         if ($(myFancybox).length) {
-            $(myFancybox).fancybox();
-        }
-        /*==== Card preview =====*/
-        if ($(cardPreview).length) {
-            $(cardPreview).tooltipster({
-                contentCloning: true,
-                interactive: true,
-                side: "right",
-                delay: 100,
-                animation: "swing",
-                //trigger: 'click'
-            });
+            if (typeof $.fn.fancybox === "function") {
+                $(myFancybox).fancybox();
+            } else {
+                console.error("Fancybox is not loaded");
+            }
         }
         /*==== jqte text editor =====*/
         if ($(userTextEditor).length) {

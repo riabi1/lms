@@ -54,16 +54,16 @@ Route::name('')->group(function () {
         return view('User.index');
     })->middleware(['auth:web', 'verified'])->name('dashboard');
 
-    Route::middleware(['auth:web', 'auth:sanctum'])->group(function () {
-        // Cart Routes
-        Route::get('/cart', [CartController::class, 'MyCart'])->name('cart');
-        Route::post('/cart/add/{id}', [CartController::class, 'AddToCart'])->name('cart.add');
-        Route::get('/cart/remove/{id}', [CartController::class, 'CartRemove'])->name('cart.remove');
-        Route::post('/coupon/apply', [CartController::class, 'CouponApply'])->name('coupon.apply');
-        Route::get('/coupon/remove/{couponName}', [CartController::class, 'CouponRemove'])->name('coupon.remove');
-        Route::get('/checkout', [CartController::class, 'CheckoutCreate'])->name('checkout.create');
-        Route::get('/handle-pending-cart', [CartController::class, 'handlePendingCart'])->name('handle.pending.cart');
-       
+    Route::middleware('auth:web')->group(function () {
+    // Cart Routes
+    Route::get('/cart', [CartController::class, 'MyCart'])->name('cart');
+    Route::get('/cart/remove/{id}', [CartController::class, 'CartRemove'])->name('cart.remove');
+    Route::post('/coupon/apply', [CartController::class, 'CouponApply'])->name('coupon.apply');
+    Route::get('/coupon/remove/{couponName}', [CartController::class, 'CouponRemove'])->name('coupon.remove');
+    Route::get('/checkout', [CartController::class, 'CheckoutCreate'])->name('checkout.create');
+    Route::get('/handle-pending-cart', [CartController::class, 'handlePendingCart'])->name('handle.pending.cart');
+    Route::post('/cart/sync', [CartController::class, 'syncTempCart'])->name('cart.sync');
+
 
         // Stripe Payment Routes
         Route::post('/pay/stripe', [StripePaymentController::class, 'payWithStripe'])->name('pay.stripe');
@@ -223,7 +223,7 @@ Route::prefix('instructor')->name('instructor.')->group(function () {
 
 // Frontend Routes (Public)
 Route::get('/course/details/{id}/{slug}', [IndexController::class, 'CourseDetails'])->name('course.details');
-
+Route::post('/cart/add/{id}', [CartController::class, 'AddToCart'])->name('cart.add');
 Route::get('/category/{id}/{slug}', [IndexController::class, 'CategoryCourse'])->name('category.course');
 Route::get('/subcategory/{id}/{slug}', [IndexController::class, 'SubCategoryCourse'])->name('subcategory.course');
 Route::get('/instructor/details/{id}', [IndexController::class, 'InstructorDetails'])->name('instructor.details');
