@@ -21,7 +21,7 @@
 
         <div class="card">
             <div class="card-header py-3">
-                <h5 class="mb-0">Coupon Details: {{ $coupon->coupon_name }}</h5>
+                <h5 class="mb-0">Coupon Details: {{ $coupon->code }}</h5>
             </div>
             <div class="card-body">
                 @if (session('message'))
@@ -34,22 +34,25 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Coupon Name:</label>
-                            <p class="mb-0">{{ $coupon->coupon_name }}</p>
+                            <label class="form-label fw-bold">Coupon Code:</label>
+                            <p class="mb-0">{{ $coupon->code }}</p>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-bold">Discount:</label>
-                            <p class="mb-0">{{ $coupon->coupon_discount }}%</p>
+                            <p class="mb-0">
+                                {{ number_format($coupon->coupon_discount, 2) }}
+                                {{ $coupon->discount_type === 'percentage' ? '%' : 'USD' }}
+                            </p>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-bold">Course:</label>
-                            <p class="mb-0">{{ $coupon->course ? $coupon->course->course_name : 'Not Assigned' }}</p>
+                            <p class="mb-0">{{ $coupon->couponable ? $coupon->couponable->course_name : 'Not Assigned' }}</p>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="mb-3">
                             <label class="form-label fw-bold">Instructor:</label>
-                            <p class="mb-0">{{ $coupon->instructor ? $coupon->instructor->name : 'Not Assigned' }}</p>
+                            <p class="mb-0">{{ $coupon->couponable && $coupon->couponable->courseable ? $coupon->couponable->courseable->name : 'Not Assigned' }}</p>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-bold">Validity:</label>

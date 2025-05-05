@@ -1,5 +1,8 @@
 @extends('Instructor.layout.Instructor_layout')
+
 @section('instructor')
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
 
 <div class="page-content">
     <!-- Breadcrumb -->
@@ -9,32 +12,20 @@
                 <ol class="breadcrumb mb-0 p-0">
                     <li class="breadcrumb-item"><a href="{{ route('instructor.dashboard') }}"><i class="bx bx-home-alt"></i></a></li>
                     <li class="breadcrumb-item"><a href="{{ route('instructor.courses.index') }}">Courses</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">{{ $course->course_name }} - Sections & Lectures</li>
+                    <li class="breadcrumb-item"><a href="{{ route('instructor.course_sections.index', $course->id) }}">{{ $course->course_name }}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Add Lecture</li>
                 </ol>
             </nav>
         </div>
         <div class="ms-auto">
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSectionModal">Add Section</button>
+            <a href="{{ route('instructor.course_sections.index', $course->id) }}" class="btn btn-primary px-5">Back to Sections</a>
         </div>
     </div>
-    <!-- End Breadcrumb -->
 
-    <div class="row">
-        <div class="col-12">
-            <div class="card radius-10">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <img src="{{ $course->course_image ? asset('storage/upload/course_images/thumbnail/' . $course->course_image) : asset('upload/no_image.jpg') }}"
-                             class="rounded-circle p-1 border" width="90" height="90" alt="{{ $course->course_name }}">
-                        <div class="flex-grow-1 ms-3">
-                            <h5 class="mt-0">{{ $course->course_name }}</h5>
-                            <p class="mb-0">{{ $course->course_title }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <div class="card">
+        <div class="card-body p-4">
+            <h5 class="mb-4">Add New Lecture to {{ $course->course_name }}</h5>
 
-            <!-- Messages Flash -->
             @if (session('message'))
                 <div class="alert alert-{{ session('alert-type', 'info') }} alert-dismissible fade show" role="alert">
                     {{ session('message') }}
@@ -42,184 +33,163 @@
                 </div>
             @endif
 
-            @forelse ($sections as $key => $item)
-                <div class="card mt-3">
-                    <div class="card-body p-4">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h6 class="mb-0">{{ $item->section_title }}</h6>
-                            <div class="btn-group">
-                                <a href="{{ route('instructor.course_sections.edit', [$course->id, $item->id]) }}" class="btn btn-sm btn-info">Edit</a>
-                                <form action="{{ route('instructor.course_sections.destroy', [$course->id, $item->id]) }}" method="POST" style="display:inline;">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this section and its lectures?');">Delete</button>
-                                </form>
-                                <button class="btn btn-sm btn-primary" onclick="toggleLectureForm('lectureContainer{{ $key }}')">Add Lecture</button>
-                            </div>
-                        </div>
+            <form id="lectureForm" action="{{ route('instructor.course_lectures.store', $course->id) }}" method="POST" class="row g-3" enctype="multipart/form-data">
+                @csrf
 
-                        <!-- Lectures existantes -->
-                        <div class="mt-3">
-                            @forelse ($item->lectures as $lecture)
-                                <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
-                                    <span><strong>{{ $loop->iteration }}.</strong> {{ $lecture->lecture_title }}</span>
-                                    <div class="btn-group">
-                                        <a href="{{ route('instructor.course_lectures.show', [$course->id, $lecture->id]) }}" class="btn btn-sm btn-primary">View</a>
-                                        <a href="{{ route('instructor.course_lectures.edit', [$course->id, $lecture->id]) }}" class="btn btn-sm btn-info">Edit</a>
-                                        <form action="{{ route('instructor.course_lectures.destroy', [$course->id, $lecture->id]) }}" method="POST" style="display:inline;">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this lecture?');">Delete</button>
-                                        </form>
-                                    </div>
-                                </div>
-                            @empty
-                                <p class="text-muted">No lectures available for this section.</p>
-                            @endforelse
-                        </div>
-
-                        <!-- Formulaire dynamique pour ajouter une leçon -->
-                        <div id="lectureContainer{{ $key }}" class="mt-3" style="display: none;">
-                            <form id="lectureForm{{ $key }}" enctype="multipart/form-data">
-                                @csrf
-                                <input type="hidden" name="course_id" value="{{ $course->id }}">
-                                <input type="hidden" name="section_id" value="{{ $item->id }}">
-
-                                <h6>Lecture Content</h6>
-                                <div class="border p-3 mb-3 bg-light">
-                                    <div class="mb-3">
-                                        <label class="form-label">Lecture Title <span class="text-danger">*</span></label>
-                                        <input type="text" name="lecture_title" class="form-control" placeholder="Enter Lecture Title" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Content</label>
-                                        <textarea name="content" class="form-control" placeholder="Enter Lecture Content"></textarea>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Video URL</label>
-                                        <input type="url" name="url" class="form-control" placeholder="Add Video URL">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Main Video (MP4/WebM, max 100MB)</label>
-                                        <input type="file" name="video" class="form-control" accept="video/mp4,video/webm">
-                                    </div>
-                                </div>
-
-                                <h6>Additional Resources</h6>
-                                <div class="border p-3 mb-3 bg-light">
-                                    <div class="mb-3">
-                                        <label class="form-label">Additional Video (MP4/WebM, max 100MB)</label>
-                                        <input type="file" name="additional_video" class="form-control" accept="video/mp4,video/webm">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Resource File (PDF/DOC/JPG/PNG, max 20MB)</label>
-                                        <input type="file" name="file_path" class="form-control" accept=".pdf,.doc,.docx,image/jpeg,image/png">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">External Link</label>
-                                        <input type="url" name="external_link" class="form-control" placeholder="Add External Link">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Resources Description</label>
-                                        <textarea name="resources_description" class="form-control" placeholder="Describe the resources"></textarea>
-                                    </div>
-                                </div>
-
-                                <button type="button" class="btn btn-primary" onclick="saveLecture('{{ $course->id }}', '{{ $item->id }}', 'lectureForm{{ $key }}')">Save Lecture</button>
-                                <button type="button" class="btn btn-secondary" onclick="toggleLectureForm('lectureContainer{{ $key }}')">Cancel</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            @empty
-                <div class="alert alert-info mt-3" role="alert">
-                    No sections available for this course. Add a section to get started.
-                </div>
-            @endforelse
-        </div>
-    </div>
-</div>
-
-<!-- Modal for Adding Section -->
-<div class="modal fade" id="addSectionModal" tabindex="-1" aria-labelledby="addSectionModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addSectionModalLabel">Add Section</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="sectionForm" action="{{ route('instructor.course_sections.store', $course->id) }}" method="POST">
-                    @csrf
-                    <div class="mb-3">
-                        <label for="section_title" class="form-label">Section Title <span class="text-danger">*</span></label>
-                        <input type="text" name="section_title" class="form-control @error('section_title') is-invalid @enderror" id="section_title" value="{{ old('section_title') }}" required>
-                        @error('section_title')
+                <!-- Section Selection -->
+                <div class="col-md-12">
+                    <h6 class="mb-3">Lecture Section</h6>
+                    <div class="form-group">
+                        <label for="section_id" class="form-label">Section <span class="text-danger">*</span></label>
+                        <select name="section_id" class="form-control @error('section_id') is-invalid @enderror" id="section_id" required>
+                            <option value="" disabled {{ old('section_id') ? '' : 'selected' }}>Select a section</option>
+                            @foreach ($sections as $section)
+                                <option value="{{ $section->id }}" {{ old('section_id', $section->id ?? '') == $section->id ? 'selected' : '' }}>
+                                    {{ $section->section_title }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('section_id')
                             <span class="invalid-feedback">{{ $message }}</span>
                         @enderror
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Save Section</button>
+                </div>
+
+                <!-- Main Lecture Content -->
+                <div class="col-md-12">
+                    <h6 class="mb-3">Main Lecture Content (Visible on Platform)</h6>
+                    <div class="border p-3 mb-3 bg-light rounded">
+                        <div class="form-group">
+                            <label for="lecture_title" class="form-label">Lecture Title <span class="text-danger">*</span></label>
+                            <input type="text" name="lecture_title" class="form-control @error('lecture_title') is-invalid @enderror" 
+                                   id="lecture_title" value="{{ old('lecture_title') }}" placeholder="Enter lecture title" required>
+                            @error('lecture_title')
+                                <span class="invalid-feedback">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="form-group mt-3">
+                            <label for="url" class="form-label">Video URL</label>
+                            <input type="url" name="url" class="form-control @error('url') is-invalid @enderror" 
+                                   id="url" value="{{ old('url') }}" placeholder="https://example.com/video">
+                            @error('url')
+                                <span class="invalid-feedback">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="form-group mt-3">
+                            <label for="video" class="form-label">Upload Main Video (MP4/WebM, max 100MB)</label>
+                            <input type="file" name="video" class="form-control @error('video') is-invalid @enderror" 
+                                   id="video" accept="video/mp4,video/webm">
+                            @error('video')
+                                <span class="invalid-feedback">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="form-group mt-3">
+                            <label for="content" class="form-label">Lecture Content</label>
+                            <textarea name="content" class="form-control @error('content') is-invalid @enderror" 
+                                      id="content" rows="5" placeholder="Enter lecture content">{{ old('content') }}</textarea>
+                            @error('content')
+                                <span class="invalid-feedback">{{ $message }}</span>
+                            @enderror
+                        </div>
                     </div>
-                </form>
-            </div>
+                </div>
+
+                <!-- Additional Resources -->
+                <div class="col-md-12">
+                    <h6 class="mb-3">Additional Resources (Downloadable by Students)</h6>
+                    <div class="border p-3 bg-light rounded">
+                        <div class="form-group">
+                            <label for="additional_video" class="form-label">Upload Additional Video (MP4/WebM, max 100MB)</label>
+                            <input type="file" name="additional_video" class="form-control @error('additional_video') is-invalid @enderror" 
+                                   id="additional_video" accept="video/mp4,video/webm">
+                            @error('additional_video')
+                                <span class="invalid-feedback">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="form-group mt-3">
+                            <label for="file_path" class="form-label">Upload Resource File (PDF/DOC/JPG/PNG, max 20MB)</label>
+                            <input type="file" name="file_path" class="form-control @error('file_path') is-invalid @enderror" 
+                                   id="file_path" accept=".pdf,.doc,.docx,image/jpeg,image/png">
+                            @error('file_path')
+                                <span class="invalid-feedback">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="form-group mt-3">
+                            <label for="external_link" class="form-label">External Resource Link</label>
+                            <input type="url" name="external_link" class="form-control @error('external_link') is-invalid @enderror" 
+                                   id="external_link" value="{{ old('external_link') }}" placeholder="https://example.com/resource">
+                            @error('external_link')
+                                <span class="invalid-feedback">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="form-group mt-3">
+                            <label for="resources_description" class="form-label">Resources Description</label>
+                            <textarea name="resources_description" class="form-control @error('resources_description') is-invalid @enderror" 
+                                      id="resources_description" rows="4" placeholder="Describe the resources">{{ old('resources_description') }}</textarea>
+                            @error('resources_description')
+                                <span class="invalid-feedback">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="col-md-12 mt-4">
+                    <div class="d-flex gap-3">
+                        <button type="submit" class="btn btn-primary px-4">Save Lecture</button>
+                        <a href="{{ route('instructor.course_sections.index', $course->id) }}" class="btn btn-secondary px-4">Cancel</a>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
-<!-- Scripts -->
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-    function toggleLectureForm(containerId) {
-        const container = document.getElementById(containerId);
-        container.style.display = container.style.display === 'none' || container.style.display === '' ? 'block' : 'none';
-    }
-
-    function saveLecture(courseId, sectionId, formId) {
-        const form = document.getElementById(formId);
-        const formData = new FormData(form);
-
-        fetch("{{ route('instructor.course_lectures.store', $course->id) }}", {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+<script type="text/javascript">
+    $(document).ready(function() {
+        $('#lectureForm').validate({
+            rules: {
+                section_id: { required: true },
+                lecture_title: { required: true, maxlength: 255 },
+                url: { url: true },
+                video: { accept: "video/mp4,video/webm", filesize: 104857600 },
+                additional_video: { accept: "video/mp4,video/webm", filesize: 104857600 },
+                file_path: { accept: ".pdf,.doc,.docx,image/jpeg,image/png", filesize: 20971520 },
+                external_link: { url: true },
+                resources_description: { maxlength: 1000 }
             },
-            body: formData,
-        })
-        .then(response => response.json())
-        .then(data => {
-            const Toast = Swal.mixin({
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 3000,
-                timerProgressBar: true,
-            });
-
-            if (data.success) {
-                Toast.fire({
-                    icon: 'success',
-                    title: data.success
-                }).then(() => {
-                    window.location.reload(); // Recharge la page pour afficher la nouvelle leçon
-                });
-            } else {
-                Toast.fire({
-                    icon: 'error',
-                    title: data.error || 'Error saving lecture'
-                });
+            messages: {
+                section_id: { required: "Please select a section" },
+                lecture_title: { required: "Please enter a lecture title", maxlength: "Title cannot exceed 255 characters" },
+                url: { url: "Please enter a valid URL" },
+                video: { accept: "Only MP4 or WebM files are allowed", filesize: "File must be less than 100MB" },
+                additional_video: { accept: "Only MP4 or WebM files are allowed", filesize: "File must be less than 100MB" },
+                file_path: { accept: "Only PDF, DOC, JPG, or PNG files are allowed", filesize: "File must be less than 20MB" },
+                external_link: { url: "Please enter a valid URL" },
+                resources_description: { maxlength: "Description cannot exceed 1000 characters" }
+            },
+            errorElement: 'span',
+            errorPlacement: function(error, element) {
+                error.addClass('invalid-feedback');
+                element.closest('.form-group').append(error);
+            },
+            highlight: function(element) {
+                $(element).addClass('is-invalid');
+            },
+            unhighlight: function(element) {
+                $(element).removeClass('is-invalid');
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Oops...',
-                text: 'Something went wrong!',
-            });
         });
-    }
+
+        $.validator.addMethod('filesize', function(value, element, param) {
+            return this.optional(element) || (element.files[0] && element.files[0].size <= param);
+        });
+    });
 </script>
 @endsection

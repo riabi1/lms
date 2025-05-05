@@ -37,7 +37,7 @@
                         <tr>
                             <td>{{ $key + 1 }}</td>
                             <td>
-                                <img src="{{ $item->course_image ? asset('storage/upload/course_images/thumbnail/' . $item->course_image) : asset('upload/no_image.jpg') }}" 
+                                <img src="{{ $item->course_image ? asset('upload/course_images/thumbnail/' . $item->course_image) : asset('upload/no_image.jpg') }}" 
                                      alt="{{ $item->course_name }}" 
                                      style="width: 70px; height: 40px; object-fit: cover;" 
                                      class="img-fluid"

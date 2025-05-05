@@ -13,7 +13,6 @@
                     </ol>
                 </nav>
             </div>
-          
         </div>
 
         <div class="card">
@@ -30,7 +29,7 @@
                         <thead>
                             <tr>
                                 <th>ID</th>
-                                <th>Coupon Name</th>
+                                <th>Coupon Code</th>
                                 <th>Discount</th>
                                 <th>Course</th>
                                 <th>Instructor</th>
@@ -42,10 +41,13 @@
                             @forelse ($coupons as $coupon)
                                 <tr>
                                     <td>{{ $coupon->id }}</td>
-                                    <td>{{ $coupon->coupon_name }}</td>
-                                    <td>{{ $coupon->coupon_discount }}%</td>
-                                    <td>{{ $coupon->course ? $coupon->course->course_name : 'N/A' }}</td>
-                                    <td>{{ $coupon->instructor ? $coupon->instructor->name : 'N/A' }}</td>
+                                    <td>{{ $coupon->code }}</td>
+                                    <td>
+                                        {{ number_format($coupon->coupon_discount, 2) }}
+                                        {{ $coupon->discount_type === 'percentage' ? '%' : 'USD' }}
+                                    </td>
+                                    <td>{{ $coupon->couponable ? $coupon->couponable->course_name : 'N/A' }}</td>
+                                    <td>{{ $coupon->couponable && $coupon->couponable->courseable ? $coupon->couponable->courseable->name : 'N/A' }}</td>
                                     <td>{{ $coupon->coupon_validity ? \Carbon\Carbon::parse($coupon->coupon_validity)->format('d M Y') : 'N/A' }}</td>
                                     <td>
                                         <div class="btn-group">

@@ -77,6 +77,8 @@ class Instructor extends Authenticatable implements MustVerifyEmail
     {
         return $this->morphMany(Course::class, 'courseable');
     }
+
+    
     /**
      * Send the email verification notification.
      *

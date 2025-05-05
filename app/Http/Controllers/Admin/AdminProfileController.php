@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
 
 class AdminProfileController extends Controller
@@ -25,7 +24,7 @@ class AdminProfileController extends Controller
                 'phone' => 'nullable|string|max:20',
                 'address' => 'nullable|string|max:255',
                 'photo' => 'nullable|image|max:5120|mimes:jpg,png',
-                'new_password' => 'nullable|string|min:8|confirmed', // Optionnel, avec confirmation
+                'new_password' => 'nullable|string|min:8|confirmed',
             ]);
 
             $admin = Auth::guard('admin')->user();
@@ -38,12 +37,13 @@ class AdminProfileController extends Controller
 
             // Gestion de la photo
             if ($request->hasFile('photo')) {
-                if ($admin->photo && Storage::exists('public/upload/admin_images/' . $admin->photo)) {
-                    Storage::delete('public/upload/admin_images/' . $admin->photo);
+                // Supprimer l'ancienne photo si elle existe
+                if ($admin->photo && file_exists(public_path('upload/admin_images/' . $admin->photo))) {
+                    unlink(public_path('upload/admin_images/' . $admin->photo));
                 }
                 $file = $request->file('photo');
-                $filename = date('YmdHi') . $file->getClientOriginalName();
-                $file->storeAs('public/upload/admin_images', $filename);
+                $filename = date('YmdHi') . '_' . $file->getClientOriginalName();
+                $file->move(public_path('upload/admin_images'), $filename);
                 $admin->photo = $filename;
             }
 

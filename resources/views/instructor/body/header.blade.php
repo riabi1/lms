@@ -70,7 +70,7 @@
             <div class="user-box dropdown px-3">
                 <a class="d-flex align-items-center nav-link dropdown-toggle gap-3 dropdown-toggle-nocaret" href="#" 
                    role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    <img src="{{ $instructor && $instructor->photo ? Storage::url('upload/instructor_images/' . $instructor->photo) : asset('upload/no_image.jpg') }}"
+                    <img src="{{ $instructor && $instructor->photo ? asset('upload/instructor_images/' . $instructor->photo) : asset('upload/no_image.jpg') }}"
                          class="user-img rounded-circle" alt="Profil" style="width: 40px; height: 40px;">
                     <div class="user-info">
                         <p class="user-name mb-0 fw-semibold">{{ $instructor->name ?? 'Instructor' }}</p>

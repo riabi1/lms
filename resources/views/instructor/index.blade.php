@@ -20,7 +20,7 @@
         <div class="mb-3">
             <div class="d-flex align-items-center">
                 <img class="rounded-circle me-3"
-                     src="{{ $instructor->photo ? Storage::url('upload/instructor_images/' . $instructor->photo) : asset('upload/no_image.jpg') }}"
+                     src="{{ $instructor && $instructor->photo ? asset('upload/instructor_images/' . $instructor->photo) : asset('upload/no_image.jpg') }}"
                      alt="{{ $instructor->name }}'s Profile"
                      style="width: 100px; height: 100px; object-fit: cover;">
                 <div>

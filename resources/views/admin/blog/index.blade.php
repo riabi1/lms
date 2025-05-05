@@ -26,7 +26,6 @@
                     <thead>
                         <tr>
                             <th>Sl</th>
-                            <th>Image</th>
                             <th>Name</th>
                             <th>Slug</th>
                             <th>Action</th>
@@ -36,13 +35,7 @@
                         @foreach ($categories as $key => $category)
                         <tr>
                             <td>{{ $key + 1 }}</td>
-                            <td>
-                                @if ($category->image)
-                                    <img src="{{ Storage::url($category->image) }}" alt="{{ $category->name }}" style="width: 70px; height: 40px;">
-                                @else
-                                    <img src="{{ asset('upload/no_image.jpg') }}" alt="No Image" style="width: 70px; height: 40px;">
-                                @endif
-                            </td>
+                           
                             <td>{{ $category->name }}</td>
                             <td>{{ $category->slug }}</td>
                             <td>

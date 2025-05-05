@@ -110,7 +110,7 @@
                             <div class="mb-3">
                                 <label class="form-label">Options (comma-separated) <span class="text-danger">*</span></label>
                                 <input type="text" name="questions[{{ $index }}][options]" class="form-control @error("questions.$index.options") is-invalid @enderror" 
-                                       value="{{ old("questions.$index.options", implode(',', $question->options)) }}" placeholder="e.g., Option 1, Option 2, Option 3" required>
+                                       value="{{ old("questions.$index.options", implode(',', json_decode($question->options, true))) }}" placeholder="e.g., Option 1, Option 2, Option 3" required>
                                 @error("questions.$index.options")
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror

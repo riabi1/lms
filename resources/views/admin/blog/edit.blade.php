@@ -28,17 +28,9 @@
                     @enderror
                 </div>
 
-                <div class="form-group col-md-6">
-                    <label for="image" class="form-label">Image</label>
-                    <input type="file" name="image" class="form-control" id="image">
-                    @error('image')
-                        <span class="text-danger">{{ $message }}</span>
-                    @enderror
-                </div>
+               
 
-                <div class="col-md-6">
-                    <img id="showImage" src="{{ $category->image ? Storage::url($category->image) : asset('upload/no_image.jpg') }}" alt="{{ $category->name }}" style="width: 100px; height: 100px; object-fit: cover;">
-                </div>
+             
 
               
 

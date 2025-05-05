@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Category;
-use Illuminate\Support\Facades\Storage;
 
 class CategoryController extends Controller
 {
@@ -28,15 +27,14 @@ class CategoryController extends Controller
         ]);
 
         try {
-            
             $image = $request->file('image');
-            $filename = date('YmdHi') . '_' . $image->getClientOriginalName(); 
-            $imagePath = $image->storeAs('upload/category_images', $filename, 'public');
+            $filename = date('YmdHi') . '_' . $image->getClientOriginalName();
+            $image->move(public_path('upload/category_images'), $filename); // Stocker dans public
 
             Category::create([
                 'category_name' => $request->category_name,
                 'category_slug' => strtolower(str_replace(' ', '-', $request->category_name)),
-                'image' => $filename, 
+                'image' => $filename, // Stocker uniquement le nom du fichier
             ]);
 
             return redirect()->route('admin.categories.index')->with([
@@ -63,7 +61,7 @@ class CategoryController extends Controller
 
         $request->validate([
             'category_name' => 'required|string|max:255|unique:categories,category_name,' . $id,
-            'image' => 'sometimes|image|mimes:jpg,png,jpeg|max:5120', 
+            'image' => 'nullable|image|mimes:jpg,png,jpeg|max:5120',
         ]);
 
         try {
@@ -73,15 +71,16 @@ class CategoryController extends Controller
             ];
 
             if ($request->hasFile('image')) {
-                if ($category->image && Storage::disk('public')->exists('upload/category_images/' . $category->image)) {
-                    Storage::disk('public')->delete('upload/category_images/' . $category->image);
+                // Supprimer l'ancienne image si elle existe
+                if ($category->image && file_exists(public_path('upload/category_images/' . $category->image))) {
+                    unlink(public_path('upload/category_images/' . $category->image));
                 }
 
                 // Stocker la nouvelle image
                 $image = $request->file('image');
                 $filename = date('YmdHi') . '_' . $image->getClientOriginalName();
-                $imagePath = $image->storeAs('upload/category_images', $filename, 'public');
-                $data['image'] = $filename; 
+                $image->move(public_path('upload/category_images'), $filename);
+                $data['image'] = $filename;
             }
 
             $category->update($data);
@@ -104,8 +103,8 @@ class CategoryController extends Controller
             $category = Category::findOrFail($id);
 
             // Supprimer l'image si elle existe
-            if ($category->image && Storage::disk('public')->exists('upload/category_images/' . $category->image)) {
-                Storage::disk('public')->delete('upload/category_images/' . $category->image);
+            if ($category->image && file_exists(public_path('upload/category_images/' . $category->image))) {
+                unlink(public_path('upload/category_images/' . $category->image));
             }
 
             $category->delete();

@@ -24,7 +24,7 @@
                         <label class="form-label fw-semibold">Profile Photo</label>
                         <div class="d-flex align-items-center mb-2">
                             <img class="rounded-circle me-3 shadow-sm"
-                                 src="{{ $instructor->photo ? Storage::url('upload/instructor_images/' . $instructor->photo) : asset('upload/no_image.jpg') }}"
+                                 src="{{ $instructor->photo ? asset('upload/instructor_images/' . $instructor->photo) : asset('upload/no_image.jpg') }}"
                                  alt="{{ $instructor->name }}'s Profile"
                                  style="width: 100px; height: 100px; object-fit: cover; border: 2px solid #ddd;">
                             <input type="file" name="photo" class="form-control" accept="image/jpeg,image/png,image/jpg">
@@ -40,7 +40,7 @@
                         <label class="form-label fw-semibold">Curriculum Vitae (CV)</label>
                         <div class="d-flex align-items-center mb-2">
                             @if($instructor->cv)
-                                <a href="{{ Storage::url($instructor->cv) }}" target="_blank" class="me-3 text-primary">
+                                <a href="{{ asset('upload/instructor_cvs/' . $instructor->cv) }}" target="_blank" class="me-3 text-primary">
                                     <i class="la la-file-pdf-o"></i> Current CV
                                 </a>
                             @else

@@ -291,4 +291,6 @@ class IndexController extends Controller
 
         return view('frontend.course.course_list', compact('courses', 'categories'));
     }
+
+    
 }

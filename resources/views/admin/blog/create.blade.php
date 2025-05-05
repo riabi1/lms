@@ -26,17 +26,7 @@
                     @enderror
                 </div>
 
-                <div class="form-group col-md-6">
-                    <label for="image" class="form-label">Blog Category Image</label>
-                    <input class="form-control" name="image" type="file" id="image">
-                    @error('image')
-                        <span class="text-danger">{{ $message }}</span>
-                    @enderror
-                </div>
-
-                <div class="col-md-6">
-                    <img id="showImage" src="{{ asset('upload/no_image.jpg') }}" alt="No Image" class="rounded-circle p-1 bg-primary" width="80">
-                </div>
+                
 
                 <div class="col-md-12">
                     <div class="d-md-flex d-grid align-items-center gap-3">

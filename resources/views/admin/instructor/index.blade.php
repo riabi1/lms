@@ -128,10 +128,9 @@
                                 <th>CV</th>
                                 <td>
                                     @if ($instructor->cv)
-                                        <a href="{{ asset('storage/' . $instructor->cv) }}" 
-                                           target="_blank" 
+                                        <a href="{{ route('admin.instructors.downloadCv', $instructor->id) }}" 
                                            class="btn btn-sm btn-primary">
-                                            <i class="bx bx-download"></i> View/Download CV
+                                            <i class="bx bx-download"></i> Download CV
                                         </a>
                                     @else
                                         <span class="text-muted">No CV uploaded</span>

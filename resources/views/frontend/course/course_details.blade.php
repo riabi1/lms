@@ -35,6 +35,56 @@
     background-color: #f8d7da;
     color: #721c24;
 }
+.preview-course-video {
+    position: relative;
+    overflow: hidden;
+}
+.preview-course-video-content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+.preview-course-video-content:hover {
+    background-color: rgba(0, 0, 0, 0.3);
+}
+.preview-course-video-content .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+.preview-course-video-content .play-button {
+    position: relative;
+    z-index: 1;
+    width: 70px;
+    height: 70px;
+    transform: scale(1);
+    transition: transform 0.3s ease;
+}
+.preview-course-video-content:hover .play-button {
+    transform: scale(1.1);
+}
+.preview-course-video-content .play-button svg {
+    width: 100%;
+    height: 100%;
+    fill: #fff;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+.preview-course-video-content p {
+    position: relative;
+    z-index: 1;
+    margin-top: 15px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
 </style>
 
 <!-- BREADCRUMB AREA -->
@@ -369,10 +419,10 @@
                                         <div class="preview-course-video-content">
                                             <div class="overlay"></div>
                                             <div class="play-button">
-                                                <svg version="1.1" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="-307.4 338.8 91.8 91.8" style="enable-background:new -307.4 338.8 91.8 91.8;" xml:space="preserve">
+                                                <svg version="1.1" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="-307.4 338.8 91.8 91.8" xml:space="preserve">
                                                     <g>
-                                                        <circle class="st0" cx="-261.5" cy="384.7" r="45.9"></circle>
-                                                        <path class="st1" d="M-272.9,363.2l35.8,20.7c0.7,0.4,0.7,1.3,0,1.7l-35.8,20.7c-0.7,0.4-1.5-0.1-1.5-0.9V364C-274.4,363.3-273.5,362.8-272.9,363.2z"></path>
+                                                        <circle class="st0" cx="-261.5" cy="384.7" r="45.9" fill="rgba(0,0,0,0.7)"></circle>
+                                                        <path class="st1" d="M-272.9,363.2l35.8,20.7c0.7,0.4,0.7,1.3,0,1.7l-35.8,20.7c-0.7,0.4-1.5-0.1-1.5-0.9V364C-274.4,363.3-273.5,362.8-272.9,363.2z" fill="#fff"></path>
                                                     </g>
                                                 </svg>
                                             </div>

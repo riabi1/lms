@@ -21,10 +21,11 @@ class CommentController extends Controller
                     'message' => $comment->message,
                     'approved' => $comment->approved,
                     'created_at' => $comment->created_at,
+                    'post_id' => $comment->blog_post_id,
                     'post_title' => $comment->blogPost->title ?? 'N/A',
                     'user_name' => $comment->user->name ?? 'Unknown',
                     'type' => 'comment',
-                    'parent_comment' => null,
+                    'parent_id' => null,
                 ];
             });
 
@@ -38,17 +39,28 @@ class CommentController extends Controller
                     'message' => $reply->message,
                     'approved' => $reply->approved,
                     'created_at' => $reply->created_at,
+                    'post_id' => $reply->comment->blog_post_id ?? null,
                     'post_title' => $reply->comment->blogPost->title ?? 'N/A',
                     'user_name' => $reply->user->name ?? 'Unknown',
                     'type' => 'reply',
-                    'parent_comment' => $reply->comment->message ?? 'N/A',
+                    'parent_id' => $reply->comment_id ?? null,
                 ];
             });
 
-        // Merge and sort by created_at
-        $items = $comments->concat($replies)->sortByDesc('created_at')->values();
+        // Group items by blog post
+        $groupedItems = $comments->concat($replies)
+            ->groupBy('post_id')
+            ->map(function ($items, $postId) {
+                return [
+                    'post_id' => $postId,
+                    'post_title' => $items->first()['post_title'],
+                    'items' => $items->sortByDesc('created_at')->values()
+                ];
+            })
+            ->sortBy('post_title')
+            ->values();
 
-        return view('admin.comments.index', compact('items'));
+        return view('admin.comments.index', compact('groupedItems'));
     }
 
     public function toggleApproval(Request $request, $id, $type = 'comment')
@@ -63,9 +75,9 @@ class CommentController extends Controller
             $item->approved = !$item->approved;
             $item->save();
 
-            return redirect()->route('admin.comments.index')->with('success', 'Status updated successfully.');
+            return response()->json(['success' => true, 'message' => 'Status updated successfully.', 'approved' => $item->approved]);
         } catch (\Exception $e) {
-            return redirect()->route('admin.comments.index')->with('error', 'Failed to update status: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Failed to update status: ' . $e->getMessage()], 500);
         }
     }
 

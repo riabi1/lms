@@ -2,7 +2,7 @@
     <div class="container">
         <!-- Section Heading -->
         <div class="section-heading text-center mb-5">
-            <h5 class="ribbon ribbon-lg mb-3 text-uppercase text-primary">News Feeds</h5>
+            <h5 class="ribbon ribbon-lg mb-2">News Feeds</h5>
             <h2 class="section__title fw-bold mb-2">Latest News & Articles</h2>
             <span class="section-divider mx-auto" style="width: 60px; height: 3px; background-color: #007bff;"></span>
         </div><!-- end section-heading -->

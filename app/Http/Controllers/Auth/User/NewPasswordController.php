@@ -12,7 +12,7 @@ class NewPasswordController extends Controller
 {
     public function create(Request $request)
     {
-        return view('frontend.dashboard.change_password', [
+        return view('User.change_password', [
             'token' => $request->route('token'),
             'email' => $request->email,
         ]);

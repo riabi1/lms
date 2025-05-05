@@ -29,7 +29,7 @@ class BlogCommentNotification extends Notification
             'type' => 'comment',
             'blog_id' => $this->blogPost->id,
             'blog_title' => $this->blogPost->title,
-            'comment_id' => $this->comment->id, // Ajout de l'ID du commentaire
+            'comment_id' => $this->comment->id,
             'message' => "Nouveau commentaire sur votre blog '{$this->blogPost->title}' par {$this->comment->user->name}",
         ];
     }

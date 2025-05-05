@@ -59,7 +59,7 @@
                             <label class="form-label fw-bold">Profile Photo</label>
                             <div class="d-flex align-items-center flex-wrap mb-2">
                                 <img class="rounded-circle me-3 shadow-sm"
-                                     src="{{ $admin->photo ? Storage::url('upload/admin_images/' . $admin->photo) : asset('upload/no_image.jpg') }}"
+                                     src="{{ $admin->photo ? asset('upload/admin_images/' . $admin->photo) : asset('upload/no_image.jpg') }}"
                                      alt="{{ $admin->name }}'s Profile"
                                      style="width: 100px; height: 100px; object-fit: cover;">
                                 <div class="flex-grow-1">

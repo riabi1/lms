@@ -2,39 +2,32 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Coupon extends Model
 {
-    use HasFactory;
-
-   
     protected $fillable = [
-        'coupon_name',
+        'code',
         'coupon_discount',
+        'discount_type',
+        'max_uses',
+        'uses',
         'coupon_validity',
-        'course_id',
-        'instructor_id', 
+        'status',
+        'couponable_id',
+        'couponable_type',
         'created_at',
         'updated_at',
     ];
 
-    /**
-     * Relation avec le modèle Course.
-     * Un coupon appartient à un cours.
-     */
-public function course()
-    {
-        return $this->belongsTo(Course::class, 'course_id');
-    }
+    protected $casts = [
+        'coupon_validity' => 'date',
+        'coupon_discount' => 'decimal:2',
+        'status' => 'integer',
+    ];
 
-    /**
-     * Relation avec le modèle User (instructeur).
-     * Un coupon appartient à un instructeur.
-     */
- public function instructor()
+    public function couponable()
     {
-        return $this->belongsTo(Instructor::class, 'instructor_id');
+        return $this->morphTo();
     }
 }

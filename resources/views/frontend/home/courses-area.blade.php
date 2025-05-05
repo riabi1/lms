@@ -47,6 +47,51 @@ $categories = App\Models\Category::orderBy('category_name', 'ASC')->get();
 .card-content-wrapper {
     overflow: visible !important;
 }
+/* Uniform Card Size */
+.card.card-item.card-preview {
+    height: 380px; /* Fixed height for all cards */
+    width: 100%; /* Ensure full width within column */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.card-image {
+    height: 200px; /* Fixed image height */
+    overflow: hidden;
+}
+.card-img-top {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Ensure images fill space uniformly */
+}
+.card-body {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 15px;
+}
+.card-title {
+    font-size: 16px;
+    line-height: 1.4;
+    max-height: 44px; /* Limit to ~2 lines */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+.ribbon.ribbon-blue-bg {
+    font-size: 12px;
+    max-width: 100%;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+.responsive-column-half {
+    display: flex;
+    align-items: stretch; /* Ensure cards stretch to same height in row */
+}
 </style>
 
 <section class="course-area pb-120px">
@@ -100,15 +145,18 @@ $categories = App\Models\Category::orderBy('category_name', 'ASC')->get();
                   </a>
                   <div class="course-badge-labels">
                     @if ($course->bestseller == 1)
-                    <div class="course-badge">Bestseller</div>
+                      <div class="course-badge red">Bestseller</div>
                     @endif
                     @if ($course->highestrated == 1)
-                    <div class="course-badge sky-blue">Highest Rated</div>
+                      <div class="course-badge blue">Highest Rated</div>
+                    @endif
+                    @if ($course->featured == 1)
+                      <div class="course-badge green">featured</div>
                     @endif
                     @if ($course->discount_price == null)
-                    <div class="course-badge blue">New</div>
+                      <div class="course-badge blue">New</div>
                     @else
-                    <div class="course-badge blue">{{ $discountPercentage }}%</div>
+                      <div class="course-badge blue">{{ $discountPercentage }}%</div>
                     @endif
                   </div>
                 </div><!-- end card-image -->
@@ -119,11 +167,11 @@ $categories = App\Models\Category::orderBy('category_name', 'ASC')->get();
                   </h5>
                   <div class="d-flex justify-content-between align-items-center">
                     @if ($finalPrice < $course->selling_price)
-                    <p class="card-price text-black font-weight-bold">{{ number_format($finalPrice, 2) }} TND
-                      <span class="before-price font-weight-medium">{{ number_format($course->selling_price, 2) }} TND</span>
-                    </p>
+                      <p class="card-price text-black font-weight-bold">{{ number_format($finalPrice, 2) }} TND
+                        <span class="before-price font-weight-medium">{{ number_format($course->selling_price, 2) }} TND</span>
+                      </p>
                     @else
-                    <p class="card-price text-black font-weight-bold">{{ number_format($finalPrice, 2) }} TND</p>
+                      <p class="card-price text-black font-weight-bold">{{ number_format($finalPrice, 2) }} TND</p>
                     @endif
                   </div>
                 </div><!-- end card-body -->
@@ -239,15 +287,18 @@ $categories = App\Models\Category::orderBy('category_name', 'ASC')->get();
                   </a>
                   <div class="course-badge-labels">
                     @if ($course->bestseller == 1)
-                    <div class="course-badge">Bestseller</div>
+                      <div class="course-badge red">Bestseller</div>
                     @endif
                     @if ($course->highestrated == 1)
-                    <div class="course-badge sky-blue">Highest Rated</div>
+                      <div class="course-badge blue">Highest Rated</div>
+                    @endif
+                    @if ($course->featured == 1)
+                      <div class="course-badge green">featured</div>
                     @endif
                     @if ($course->discount_price == null)
-                    <div class="course-badge blue">New</div>
+                      <div class="course-badge blue">New</div>
                     @else
-                    <div class="course-badge blue">{{ $discountPercentage }}%</div>
+                      <div class="course-badge blue">{{ $discountPercentage }}%</div>
                     @endif
                   </div>
                 </div><!-- end card-image -->
@@ -258,11 +309,11 @@ $categories = App\Models\Category::orderBy('category_name', 'ASC')->get();
                   </h5>
                   <div class="d-flex justify-content-between align-items-center">
                     @if ($finalPrice < $course->selling_price)
-                    <p class="card-price text-black font-weight-bold">{{ number_format($finalPrice, 2) }} TND
-                      <span class="before-price font-weight-medium">{{ number_format($course->selling_price, 2) }} TND</span>
-                    </p>
+                      <p class="card-price text-black font-weight-bold">{{ number_format($finalPrice, 2) }} TND
+                        <span class="before-price font-weight-medium">{{ number_format($course->selling_price, 2) }} TND</span>
+                      </p>
                     @else
-                    <p class="card-price text-black font-weight-bold">{{ number_format($finalPrice, 2) }} TND</p>
+                      <p class="card-price text-black font-weight-bold">{{ number_format($finalPrice, 2) }} TND</p>
                     @endif
                   </div>
                 </div><!-- end card-body -->

@@ -22,8 +22,8 @@ class AdminPasswordResetLinkController extends Controller
             $request->only('email')
         );
 
-        return $status === Password::RESET_LINK_SENT
-            ? back()->with('status', 'Password reset link sent successfully!')
+            return $status === Password::RESET_LINK_SENT
+            ? back()->with(['message' => __($status), 'alert-type' => 'success'])
             : back()->withErrors(['email' => __($status)]);
     }
 }

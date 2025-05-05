@@ -55,7 +55,7 @@ class SettingController extends Controller
 
         if ($request->hasFile('logo')) {
             try {
-                // Delete old logo if it exists and isn't default
+                // Delete old logo if it exists and isn't the default
                 if ($site->logo && $site->logo !== 'images/default-logo.png' && Storage::disk('public')->exists($site->logo)) {
                     Storage::disk('public')->delete($site->logo);
                 }
@@ -64,9 +64,10 @@ class SettingController extends Controller
                 $nameGen = hexdec(uniqid()) . '.' . $image->getClientOriginalExtension();
                 $savePath = 'logo/' . $nameGen;
 
-                // Store the image
+                // Store the image in storage/app/public/logo/
                 $image->storeAs('public', $savePath);
 
+                // Save relative path to database (e.g., logo/1234567890.png)
                 $data['logo'] = $savePath;
             } catch (\Exception $e) {
                 return redirect()->back()->with([

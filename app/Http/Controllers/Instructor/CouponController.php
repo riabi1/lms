@@ -14,7 +14,11 @@ class CouponController extends Controller
     public function index()
     {
         $instructorId = Auth::guard('instructor')->id();
-        $coupons = Coupon::where('instructor_id', $instructorId)
+        $coupons = Coupon::where('couponable_type', 'App\\Models\\Course')
+            ->whereIn('couponable_id', Course::where('courseable_type', 'App\\Models\\Instructor')
+                ->where('courseable_id', $instructorId)
+                ->pluck('id'))
+            ->with('couponable') // Eager-load the couponable relationship
             ->latest()
             ->get();
 
@@ -24,7 +28,7 @@ class CouponController extends Controller
     public function create()
     {
         $instructorId = Auth::guard('instructor')->id();
-        $courses = Course::where('courseable_type', 'App\Models\Instructor')
+        $courses = Course::where('courseable_type', 'App\\Models\\Instructor')
             ->where('courseable_id', $instructorId)
             ->get();
 
@@ -36,8 +40,10 @@ class CouponController extends Controller
         $instructorId = Auth::guard('instructor')->id();
 
         $request->validate([
-            'coupon_name' => 'required|string|max:255|unique:coupons,coupon_name',
-            'coupon_discount' => 'required|numeric|min:0|max:100',
+            'code' => 'required|string|max:255|unique:coupons,code',
+            'coupon_discount' => 'required|numeric|min:0',
+            'discount_type' => 'required|in:fixed,percentage',
+            'max_uses' => 'nullable|integer|min:1',
             'coupon_validity' => 'required|date|after_or_equal:today',
             'course_id' => [
                 'required',
@@ -49,15 +55,19 @@ class CouponController extends Controller
                     }
                 },
             ],
+            'status' => 'required|in:0,1',
         ]);
 
         Coupon::create([
-            'coupon_name' => strtoupper($request->coupon_name),
+            'code' => strtoupper($request->code),
             'coupon_discount' => $request->coupon_discount,
+            'discount_type' => $request->discount_type,
+            'max_uses' => $request->max_uses,
+            'uses' => 0,
             'coupon_validity' => $request->coupon_validity,
-            'instructor_id' => $instructorId,
-            'course_id' => $request->course_id,
-            'status' => 1, // Actif par défaut
+            'status' => $request->status,
+            'couponable_id' => $request->course_id,
+            'couponable_type' => 'App\\Models\\Course',
             'created_at' => Carbon::now(),
         ]);
 
@@ -69,46 +79,51 @@ class CouponController extends Controller
         $this->authorizeInstructor($coupon);
 
         $instructorId = Auth::guard('instructor')->id();
-        $courses = Course::where('courseable_type', 'App\Models\Instructor')
+        $courses = Course::where('courseable_type', 'App\\Models\\Instructor')
             ->where('courseable_id', $instructorId)
             ->get();
 
         return view('instructor.coupon.edit', compact('coupon', 'courses'));
     }
 
-   public function update(Request $request, Coupon $coupon)
-{
-    $this->authorizeInstructor($coupon);
-    $instructorId = Auth::guard('instructor')->id();
+    public function update(Request $request, Coupon $coupon)
+    {
+        $this->authorizeInstructor($coupon);
+        $instructorId = Auth::guard('instructor')->id();
 
-    $request->validate([
-        'coupon_name' => 'required|string|max:255|unique:coupons,coupon_name,' . $coupon->id,
-        'coupon_discount' => 'required|numeric|min:0|max:100',
-        'coupon_validity' => 'required|date|after_or_equal:today',
-        'course_id' => [
-            'required',
-            'exists:courses,id',
-            function ($attribute, $value, $fail) use ($instructorId) {
-                $course = Course::find($value);
-                if (!$course || $course->courseable_type !== 'App\Models\Instructor' || $course->courseable_id !== $instructorId) {
-                    $fail('The selected course does not belong to you.');
-                }
-            },
-        ],
-        'status' => 'required|in:0,1', // Ajout de la validation pour status
-    ]);
+        $request->validate([
+            'code' => 'required|string|max:255|unique:coupons,code,' . $coupon->id,
+            'coupon_discount' => 'required|numeric|min:0',
+            'discount_type' => 'required|in:fixed,percentage',
+            'max_uses' => 'nullable|integer|min:1',
+            'coupon_validity' => 'required|date|after_or_equal:today',
+            'course_id' => [
+                'required',
+                'exists:courses,id',
+                function ($attribute, $value, $fail) use ($instructorId) {
+                    $course = Course::find($value);
+                    if (!$course || $course->courseable_type !== 'App\Models\Instructor' || $course->courseable_id !== $instructorId) {
+                        $fail('The selected course does not belong to you.');
+                    }
+                },
+            ],
+            'status' => 'required|in:0,1',
+        ]);
 
-    $coupon->update([
-        'coupon_name' => strtoupper($request->coupon_name),
-        'coupon_discount' => $request->coupon_discount,
-        'coupon_validity' => $request->coupon_validity,
-        'course_id' => $request->course_id,
-        'status' => $request->status, // Mise à jour du statut
-        'updated_at' => Carbon::now(),
-    ]);
+        $coupon->update([
+            'code' => strtoupper($request->code),
+            'coupon_discount' => $request->coupon_discount,
+            'discount_type' => $request->discount_type,
+            'max_uses' => $request->max_uses,
+            'coupon_validity' => $request->coupon_validity,
+            'couponable_id' => $request->course_id,
+            'couponable_type' => 'App\\Models\\Course',
+            'status' => $request->status,
+            'updated_at' => Carbon::now(),
+        ]);
 
-    return redirect()->route('instructor.coupon.index')->with('success', 'Coupon updated successfully');
-}
+        return redirect()->route('instructor.coupon.index')->with('success', 'Coupon updated successfully');
+    }
 
     public function destroy(Coupon $coupon)
     {
@@ -120,19 +135,21 @@ class CouponController extends Controller
 
     private function authorizeInstructor(Coupon $coupon)
     {
-        if ($coupon->instructor_id !== Auth::guard('instructor')->id()) {
+        $instructorId = Auth::guard('instructor')->id();
+        $course = Course::find($coupon->couponable_id);
+        if (!$course || $course->courseable_type !== 'App\Models\Instructor' || $course->courseable_id !== $instructorId) {
             abort(403, 'Unauthorized action.');
         }
     }
-public function toggleStatus(Coupon $coupon)
+
+    public function toggleStatus(Coupon $coupon)
     {
         $this->authorizeInstructor($coupon);
 
-        $coupon->status = $coupon->status == 1 ? 0 : 1; // Basculer entre 1 (actif) et 0 (inactif)
+        $coupon->status = $coupon->status == 1 ? 0 : 1;
         $coupon->updated_at = Carbon::now();
         $coupon->save();
 
         return redirect()->route('instructor.coupon.index')->with('success', 'Coupon status updated successfully');
     }
-
 }

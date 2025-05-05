@@ -56,10 +56,10 @@
                                 </td>
                                 <td class="text-right align-middle">
                                     @if (isset($item->attributes['selling_price']) && isset($item->attributes['discount_price']) && $item->attributes['discount_price'] > 0)
-                                        <del>{{ number_format($item->attributes['selling_price'], 2) }} TND</del><br>
-                                        {{ number_format($item->price, 2) }} TND
+                                        <del>{{ number_format($item->attributes['selling_price'], 2) }} USD</del><br>
+                                        {{ number_format($item->price, 2) }} USD
                                     @else
-                                        {{ number_format($item->price, 2) }} TND
+                                        {{ number_format($item->price, 2) }} USD
                                     @endif
                                 </td>
                                 <td class="text-center align-middle">
@@ -75,26 +75,37 @@
                 </table>
 
                 @if ($cartItems->count() > 0)
+                    @php
+                        $courseIds = $cartItems->pluck('id')->toArray();
+                        $hasCoupons = \App\Models\Coupon::where('couponable_type', 'App\\Models\\Course')
+                            ->whereIn('couponable_id', $courseIds)
+                            ->where('coupon_validity', '>=', \Carbon\Carbon::today()->format('Y-m-d'))
+                            ->where('status', 1)
+                            ->exists();
+                    @endphp
+
                     <div class="row pt-4">
                         <div class="col-lg-8">
-                            <form action="{{ route('coupon.apply') }}" method="POST" id="coupon-form">
-                                @csrf
-                                <div class="input-group">
-                                    <input class="form-control" type="text" name="coupon_name" placeholder="Enter coupon code" required>
-                                    <button type="submit" class="btn theme-btn">Apply Coupon</button>
-                                </div>
-                                @error('coupon_name')
-                                    <span class="text-danger">{{ $message }}</span>
-                                @enderror
-                            </form>
+                            @if ($hasCoupons)
+                                <form action="{{ route('coupon.apply') }}" method="POST" id="coupon-form">
+                                    @csrf
+                                    <div class="input-group">
+                                        <input class="form-control" type="text" name="code" placeholder="Enter coupon code" required>
+                                        <button type="submit" class="btn theme-btn">Apply Coupon</button>
+                                    </div>
+                                    @error('code')
+                                        <span class="text-danger">{{ $message }}</span>
+                                    @enderror
+                                </form>
+                            @endif
                             @if (!empty($coupons))
                                 <div class="mt-3" id="coupon-list">
                                     <h6>Applied Coupons:</h6>
                                     <ul class="list-unstyled">
                                         @foreach ($coupons as $coupon)
                                             <li class="d-flex justify-content-between align-items-center mb-2">
-                                                <span>{{ e($coupon['coupon_name']) }} (-{{ number_format($coupon['discount_amount'], 2) }} TND)</span>
-                                                <a href="{{ route('coupon.remove', $coupon['coupon_name']) }}" class="btn btn-warning btn-sm">Remove</a>
+                                                <span>{{ e($coupon['code']) }} (-{{ number_format($coupon['discount_amount'], 2) }} USD)</span>
+                                                <a href="{{ route('coupon.remove', $coupon['code']) }}" class="btn btn-warning btn-sm">Remove</a>
                                             </li>
                                         @endforeach
                                     </ul>
@@ -104,11 +115,11 @@
 
                         <div class="col-lg-4">
                             <div class="bg-gray p-4 mt-4" id="cart-summary">
-                                <p>Subtotal: <span id="subtotal">{{ number_format($subtotal, 2) }} TND</span></p>
+                                <p>Subtotal: <span id="subtotal">{{ number_format($subtotal, 2) }} USD</span></p>
                                 @if ($couponDiscount > 0)
-                                    <p id="coupon-discount-container">Total Coupon Discount: <span id="coupon-discount">-{{ number_format($couponDiscount, 2) }} TND</span></p>
+                                    <p id="coupon-discount-container">Total Coupon Discount: <span id="coupon-discount">-{{ number_format($couponDiscount, 2) }} USD</span></p>
                                 @endif
-                                <h4>Total: <span id="total-price">{{ number_format($total, 2) }} TND</span></h4>
+                                <h4>Total: <span id="total-price">{{ number_format($total, 2) }} USD</span></h4>
                                 <a href="{{ route('checkout.create') }}" class="btn theme-btn w-100 mt-3">Checkout <i class="la la-arrow-right"></i></a>
                             </div>
                         </div>
@@ -150,28 +161,30 @@
                         }
 
                         // Update totals
-                        $('#subtotal').text(response.subtotal + ' TND');
-                        $('#total-price').text(response.totalPrice + ' TND');
+                        $('#subtotal').text(response.subtotal + ' USD');
+                        $('#total-price').text(response.totalPrice + ' USD');
 
                         // Handle empty cart
                         if (response.cartCount === 0) {
                             $('#cart-items').html('<tr><td colspan="4" class="text-center">Cart is empty.</td></tr>');
                             $('#cart-summary').remove();
                             $('#coupon-list').remove();
-                            $('#cartDropdown').html(
-                                '<li class="media media-card">' +
-                                '<div class="media-body fs-15 text-center">' +
-                                '<p class="text-muted lh-18">Your cart is empty</p>' +
-                                '</div></li>' +
-                                '<li class="mt-3">' +
-                                '<a href="{{ route('cart') }}" class="btn theme-btn w-100 py-2">Go to Cart <i class="la la-arrow-right icon ml-1"></i></a>' +
-                                '</li>'
-                            );
+                            if ($('#cartDropdown').length) {
+                                $('#cartDropdown').html(
+                                    '<li class="media media-card">' +
+                                    '<div class="media-body fs-15 text-center">' +
+                                    '<p class="text-muted lh-18">Your cart is empty</p>' +
+                                    '</div></li>' +
+                                    '<li class="mt-3">' +
+                                    '<a href="{{ route('cart') }}" class="btn theme-btn w-100 py-2">Go to Cart <i class="la la-arrow-right icon ml-1"></i></a>' +
+                                    '</li>'
+                                );
+                            }
                         } else if (response.couponDiscount > 0) {
                             if (!document.getElementById('coupon-discount')) {
-                                $('#subtotal').after('<p id="coupon-discount-container">Total Coupon Discount: <span id="coupon-discount">-' + response.couponDiscount + ' TND</span></p>');
+                                $('#subtotal').after('<p id="coupon-discount-container">Total Coupon Discount: <span id="coupon-discount">-' + response.couponDiscount + ' USD</span></p>');
                             } else {
-                                $('#coupon-discount').text('-' + response.couponDiscount + ' TND');
+                                $('#coupon-discount').text('-' + response.couponDiscount + ' USD');
                             }
                         } else {
                             $('#coupon-list').remove();
@@ -183,21 +196,23 @@
                             $('#cartQty').text(response.cartCount);
                         }
                         if ($('#cartSubTotal').length) {
-                            $('#cartSubTotal').text('TND ' + response.subtotal);
+                            $('#cartSubTotal').text('USD ' + response.subtotal);
                         }
 
-                        // Refresh header cart dropdown
-                        $.ajax({
-                            url: '{{ route("cart") }}',
-                            method: 'GET',
-                            success: function(html) {
-                                var $newCart = $(html).find('#cartDropdown').html();
-                                $('#cartDropdown').html($newCart);
-                            },
-                            error: function(xhr) {
-                                console.error('Cart dropdown refresh error:', xhr);
-                            }
-                        });
+                        // Refresh header cart dropdown if it exists
+                        if ($('#cartDropdown').length) {
+                            $.ajax({
+                                url: '{{ route("cart") }}',
+                                method: 'GET',
+                                success: function(html) {
+                                    var $newCart = $(html).find('#cartDropdown').html();
+                                    $('#cartDropdown').html($newCart);
+                                },
+                                error: function(xhr) {
+                                    console.error('Cart dropdown refresh error:', xhr);
+                                }
+                            });
+                        }
 
                         alert(response.message);
                     } else {

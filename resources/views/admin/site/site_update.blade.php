@@ -61,13 +61,23 @@
                     <!-- Logo -->
                     <div class="col-md-6">
                         <label for="logo" class="form-label fw-bold">Site Logo</label>
-                        <input class="form-control" name="logo" type="file" id="logo" accept="image/jpeg,image/png">
+                        <input class="form-control" name="logo" type="file" id="logo" accept="image/jpeg,image/png,image/jpg">
                         <small class="text-muted">JPEG/PNG, max 2MB, recommended ~140x41px</small>
                         @error('logo') <span class="text-danger small">{{ $message }}</span> @enderror
-                    </div>
-                    <div class="col-md-6">
-                        <img id="showImage" src="{{ $site->logo ? Storage::url($site->logo) : asset('images/default-logo.png') }}" 
-                             alt="Site Logo" class="rounded p-1 border bg-light" style="max-width: 140px; height: auto;">
+                        <div class="mt-2">
+                            @php
+                                $logoUrl = $site->logo ? Storage::disk('public')->url($site->logo) : asset('images/default-logo.png');
+                            @endphp
+                            <img id="showImage" 
+                                 src="{{ $logoUrl }}" 
+                                 alt="Site Logo" 
+                                 class="rounded p-1 border bg-light" 
+                                 style="max-width: 140px; height: auto;"
+                                 onerror="this.src='{{ asset('images/default-logo.png') }}';">
+                            @if ($site->logo)
+                                <p class="text-muted small mt-1">Current logo path: {{ $site->logo }}</p>
+                            @endif
+                        </div>
                     </div>
 
                     <!-- Submit Button -->
@@ -84,18 +94,33 @@
             $(document).ready(function() {
                 $('#logo').on('change', function(e) {
                     const file = e.target.files[0];
-                    if (file && ['image/jpeg', 'image/png'].includes(file.type)) {
+                    const validImageTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+                    const maxSize = 2 * 1024 * 1024; // 2MB in bytes
+
+                    if (file) {
+                        if (!validImageTypes.includes(file.type)) {
+                            alert('Please select a valid JPEG or PNG image.');
+                            $('#logo').val('');
+                            $('#showImage').attr('src', '{{ $site->logo ? Storage::disk('public')->url($site->logo) : asset('images/default-logo.png') }}');
+                            return;
+                        }
+
+                        if (file.size > maxSize) {
+                            alert('The logo must not exceed 2MB.');
+                            $('#logo').val('');
+                            $('#showImage').attr('src', '{{ $site->logo ? Storage::disk('public')->url($site->logo) : asset('images/default-logo.png') }}');
+                            return;
+                        }
+
                         const reader = new FileReader();
                         reader.onload = function(e) {
-                            $('#showImage').attr('src', e.target.result);
+                            $('#showImage').attr('src', e.target.result).show();
                         };
                         reader.onerror = function() {
                             alert('Error reading the image file.');
-                        };
+                            $('#logo').val('');
+                            $('#showImage').attr('src', '{{ $site->logo ? Storage::disk('public')->url($site->logo) : asset('images/default-logo.png') }}');
                         reader.readAsDataURL(file);
-                    } else {
-                        alert('Please select a valid JPEG or PNG image.');
-                        e.target.value = '';
                     }
                 });
             });

@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\SearchController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\Admin\UserController;
@@ -26,6 +27,7 @@ use App\Http\Controllers\Frontend\InvoiceController;
 use App\Http\Controllers\Instructor\OrderController;
 use App\Http\Controllers\Admin\AdminCourseController;
 use App\Http\Controllers\Admin\AdminReviewController;
+use App\Http\Controllers\Admin\ExcelReportController;
 use App\Http\Controllers\Admin\SubCategoryController;
 use App\Http\Controllers\Frontend\BlogShowController;
 use App\Http\Controllers\Instructor\CouponController;
@@ -39,9 +41,9 @@ use App\Http\Controllers\Instructor\CourseLectureController;
 use App\Http\Controllers\Instructor\CourseSectionController;
 use App\Http\Controllers\Admin\InstructorManagementController;
 use App\Http\Controllers\Instructor\InstructorEarningsController;
-use App\Http\Controllers\Instructor\ReviewController as InstructorReviewController;
-use App\Http\Controllers\Instructor\ReportController as InstructorReportController;
 use App\Http\Controllers\Admin\ReportController as AdminReportController;
+use App\Http\Controllers\Instructor\ReportController as InstructorReportController;
+use App\Http\Controllers\Instructor\ReviewController as InstructorReviewController;
 
 // Home Page Route
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -55,15 +57,14 @@ Route::name('')->group(function () {
     })->middleware(['auth:web', 'verified'])->name('dashboard');
 
     Route::middleware('auth:web')->group(function () {
-    // Cart Routes
-    Route::get('/cart', [CartController::class, 'MyCart'])->name('cart');
-    Route::get('/cart/remove/{id}', [CartController::class, 'CartRemove'])->name('cart.remove');
-    Route::post('/coupon/apply', [CartController::class, 'CouponApply'])->name('coupon.apply');
-    Route::get('/coupon/remove/{couponName}', [CartController::class, 'CouponRemove'])->name('coupon.remove');
-    Route::get('/checkout', [CartController::class, 'CheckoutCreate'])->name('checkout.create');
-    Route::get('/handle-pending-cart', [CartController::class, 'handlePendingCart'])->name('handle.pending.cart');
-    Route::post('/cart/sync', [CartController::class, 'syncTempCart'])->name('cart.sync');
-
+        // Cart Routes
+        Route::get('/cart', [CartController::class, 'MyCart'])->name('cart');
+        Route::get('/cart/remove/{id}', [CartController::class, 'CartRemove'])->name('cart.remove');
+        Route::post('/coupon/apply', [CartController::class, 'CouponApply'])->name('coupon.apply');
+        Route::get('/coupon/remove/{couponName}', [CartController::class, 'CouponRemove'])->name('coupon.remove');
+        Route::get('/checkout', [CartController::class, 'CheckoutCreate'])->name('checkout.create');
+        Route::get('/handle-pending-cart', [CartController::class, 'handlePendingCart'])->name('handle.pending.cart');
+        Route::post('/cart/sync', [CartController::class, 'syncTempCart'])->name('cart.sync');
 
         // Stripe Payment Routes
         Route::post('/pay/stripe', [StripePaymentController::class, 'payWithStripe'])->name('pay.stripe');
@@ -109,18 +110,15 @@ Route::name('')->group(function () {
         Route::post('/blog/{slug}/comments', [BlogArticleController::class, 'storeComment'])->name('comments.store');
         Route::post('/blog/{slug}/comments/{commentId}/reply', [BlogArticleController::class, 'replyComment'])->name('comments.reply');
 
-        // Chat Routes pour User
-       
-            Route::get('/chat', [MessageController::class, 'index'])->name('chat');
-            Route::get('/messages/{conversation}', [MessageController::class, 'show'])->name('messages.show');
-            Route::post('/messages/{conversation}/send', [MessageController::class, 'send'])->name('messages.send');
-//report
-            Route::get('/report', [ReportController::class, 'create'])->name('report');
-    Route::post('/report', [ReportController::class, 'store'])->name('report.submit');
-    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+        // Chat Routes for User
+        Route::get('/chat', [MessageController::class, 'index'])->name('chat');
+        Route::get('/messages/{conversation}', [MessageController::class, 'show'])->name('messages.show');
+        Route::post('/messages/{conversation}/send', [MessageController::class, 'send'])->name('messages.send');
 
-        
-       
+        // Report Routes
+        Route::get('/report', [ReportController::class, 'create'])->name('report');
+        Route::post('/report', [ReportController::class, 'store'])->name('report.submit');
+        Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     });
 });
 
@@ -140,6 +138,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::post('/courses/update-status', [AdminCourseController::class, 'updateCourseStatus'])->name('courses.updateStatus');
         Route::post('/instructors/update-status', [InstructorManagementController::class, 'updateStatus'])->name('instructors.updateStatus');
+        Route::get('/instructors/{id}/download-cv', [InstructorManagementController::class, 'downloadCv'])->name('instructors.downloadCv');
 
         Route::get('/pending/review', [AdminReviewController::class, 'pending'])->name('pending.review');
         Route::get('/active/review', [AdminReviewController::class, 'active'])->name('active.review');
@@ -168,10 +167,18 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::get('/earnings', [EarningsController::class, 'index'])->name('earnings');
 
-      
-
         Route::get('/reports', [AdminReportController::class, 'index'])->name('reports.index');
-    Route::patch('/reports/{report}', [AdminReportController::class, 'update'])->name('reports.update');
+        Route::patch('/reports/{report}', [AdminReportController::class, 'update'])->name('reports.update');
+
+        // Excel Export Routes
+       Route::get('/excel', [ExcelReportController::class, 'index'])->name('excel.index');
+    Route::get('/excel/enrollments/export', [ExcelReportController::class, 'exportEnrollments'])->name('excel.enrollments.export');
+    Route::get('/excel/payments/export', [ExcelReportController::class, 'exportPayments'])->name('excel.payments.export');
+    Route::get('/excel/users/export', [ExcelReportController::class, 'exportUsers'])->name('excel.users.export');
+    Route::get('/excel/instructors/export', [ExcelReportController::class, 'exportInstructors'])->name('excel.instructors.export');
+    Route::get('/excel/orders/export', [ExcelReportController::class, 'exportOrders'])->name('excel.orders.export');
+    Route::get('/excel/courses/export', [ExcelReportController::class, 'exportCourses'])->name('excel.courses.export');
+    Route::get('/excel/all/export', [ExcelReportController::class, 'exportAll'])->name('excel.all.export');
     });
 });
 
@@ -206,18 +213,18 @@ Route::prefix('instructor')->name('instructor.')->group(function () {
         Route::resource('blog', BlogController::class);
         Route::post('/instructor/comments/{comment}/reply', [BlogController::class, 'replyComment'])->name('comments.reply');
         
-        // Chat Routes pour Instructor
+        // Chat Routes for Instructor
         Route::get('/chat', [MessageController::class, 'index'])->name('chat');
         Route::get('/messages/{conversation}', [MessageController::class, 'show'])->name('messages.show');
         Route::post('/messages/{conversation}/send', [MessageController::class, 'send'])->name('messages.send');
         Route::get('/notifications/{notification}/mark-as-read', [MessageController::class, 'markNotificationAsRead'])->name('notifications.markAsRead');
 
         Route::get('/earnings', [InstructorEarningsController::class, 'index'])->name('earnings');
-        //report
-       Route::get('/reports', [InstructorReportController::class, 'index'])->name('reports.index');
+
+        // Report Routes
+        Route::get('/reports', [InstructorReportController::class, 'index'])->name('reports.index');
         Route::get('/reports/create', [InstructorReportController::class, 'create'])->name('reports.create');
         Route::post('/reports', [InstructorReportController::class, 'store'])->name('reports.store');
-  
     });
 });
 
@@ -227,7 +234,7 @@ Route::post('/cart/add/{id}', [CartController::class, 'AddToCart'])->name('cart.
 Route::get('/category/{id}/{slug}', [IndexController::class, 'CategoryCourse'])->name('category.course');
 Route::get('/subcategory/{id}/{slug}', [IndexController::class, 'SubCategoryCourse'])->name('subcategory.course');
 Route::get('/instructor/details/{id}', [IndexController::class, 'InstructorDetails'])->name('instructor.details');
-Route::get('/courses', [IndexController::class, 'AllCourses'])->name('courses.all');
+Route::get('/Allcourses', [IndexController::class, 'AllCourses'])->name('courses.all');
 Route::get('/courses', [IndexController::class, 'courses'])->name('course.list');
 
 // Invoice Routes
@@ -236,3 +243,4 @@ Route::get('/invoice/{invoice}/download', [InvoiceController::class, 'download']
 
 Route::get('/blog', [BlogArticleController::class, 'index'])->name('blog.list');
 Route::get('/blog/{slug}', [BlogArticleController::class, 'show'])->name('blog.detail');
+Route::get('/search', [SearchController::class, 'search'])->name('search');

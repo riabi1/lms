@@ -44,7 +44,7 @@
                 <div class="col-md-6">
                     <div class="mb-3">
                         <p><strong>Course Image:</strong></p>
-                        <img src="{{ $course->course_image ? asset('storage/upload/course_images/thumbnail/' . $course->course_image) : asset('upload/no_image.jpg') }}" 
+                        <img src="{{ $course->course_image ? asset('upload/course_images/thumbnail/' . $course->course_image) : asset('upload/no_image.jpg') }}" 
                              alt="{{ $course->course_name }}" 
                              style="max-width: 300px; height: auto;" 
                              class="img-fluid rounded">
@@ -54,7 +54,7 @@
                         <p><strong>Course Video:</strong></p>
                         @if ($course->video)
                             <video width="300" height="200" controls class="img-fluid rounded">
-                                <source src="{{ asset('storage/upload/course_images/video/' . $course->video) }}" type="video/mp4">
+                                <source src="{{ asset('upload/course_images/video/' . $course->video) }}" type="video/mp4">
                                 Your browser does not support the video tag.
                             </video>
                         @else

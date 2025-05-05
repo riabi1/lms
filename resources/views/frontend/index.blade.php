@@ -36,15 +36,16 @@
     <!--======================================
             END COURSE AREA
     ======================================-->
-
+    @include('frontend.home.courses-area-two')
     <!--================================
              START TESTIMONIAL AREA
     =================================-->
+    
     @include('frontend.home.testimonial-area')
     <!--================================
             END TESTIMONIAL AREA
     =================================-->
-
+    @include('frontend.home.about-area')
     <!-- ================================
            START BLOG AREA
     ================================= -->

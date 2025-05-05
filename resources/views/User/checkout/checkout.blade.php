@@ -33,6 +33,7 @@
                         <table class="table table-bordered">
                             <thead>
                                 <tr>
+                                    <th>Image</th>
                                     <th>Course</th>
                                     <th>Instructor</th>
                                     <th class="text-right">Price</th>
@@ -41,9 +42,21 @@
                             <tbody>
                                 @foreach ($cartItems as $item)
                                     <tr>
-                                        <td>{{ e($item->name) }}</td>
-                                        <td>{{ e($item->attributes['instructor_name'] ?? 'Unknown') }}</td>
-                                        <td class="text-right">{{ number_format($adjustedPrices[$item->id], 2) }} USD</td>
+                                        <td>
+                                            <img 
+                                                src="{{ $item->cartable->course_image ? asset('storage/upload/course_images/thumbnail/' . $item->cartable->course_image) : ($item->attributes['image'] ? asset('storage/upload/course_images/thumbnail/' . $item->attributes['image']) : asset('images/no_image.jpg')) }}"
+                                                alt="{{ e($item->cartable->course_name ?? $item->name) }}"
+                                                class="lazy rounded"
+                                                style="width: 60px; height: auto;"
+                                                loading="lazy"
+                                                onerror="this.src='{{ asset('images/no_image.jpg') }}'"
+                                            >
+                                        </td>
+                                        <td>{{ e($item->cartable->course_name ?? $item->name) }}</td>
+                                        <td>{{ e($item->cartable->courseable->name ?? $item->attributes['instructor_name'] ?? 'Unknown') }}</td>
+                                        <td class="text-right">
+                                            {{ number_format($adjustedPrices[$item->id] ?? ($item->price * $item->quantity), 2) }} USD
+                                        </td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -99,11 +112,11 @@
 
                             <div class="tab-pane fade" id="paypal" role="tabpanel" aria-labelledby="paypal-tab">
                                 <div>
-                                      <a href="{{ route('pay.paypal') }}" class="btn theme-btn w-100">
-                                          <i class="la la-paypal"></i> Pay {{ number_format($total, 2) }} USD with PayPal
-                                      </a>
-                                      <p class="text-muted small mt-2">You will be redirected to PayPal to complete your payment.</p>
-                                  </div>
+                                    <a href="{{ route('pay.paypal') }}" class="btn theme-btn w-100">
+                                        <i class="la la-paypal"></i> Pay {{ number_format($total, 2) }} USD with PayPal
+                                    </a>
+                                    <p class="text-muted small mt-2">You will be redirected to PayPal to complete your payment.</p>
+                                </div>
                             </div>
                         </div>
                     </div>

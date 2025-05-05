@@ -36,7 +36,7 @@
         </div>
 
         <div class="col-md-6">
-          <img id="showImage" src="{{ asset('upload/no_image.jpg') }}" alt="No Image" class="rounded-circle p-1 bg-primary" width="80">
+          <img id="showImage" src="{{ asset('images/default.jpg') }}" alt="Preview" class="rounded-circle p-1 bg-primary" width="80">
         </div>
 
         <div class="col-md-12">

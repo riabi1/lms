@@ -13,12 +13,12 @@ class InstructorManagementController extends Controller
      */
     public function index(Request $request)
     {
-        $allinstructor = Instructor::withCount('courses')->latest()->get(); // Charger le nombre de cours
-        $section = $request->query('section', 'list'); // Par défaut : liste
+        $allinstructor = Instructor::withCount('courses')->latest()->get();
+        $section = $request->query('section', 'list');
         $instructor = null;
 
         if ($section === 'show' && $request->query('id')) {
-            $instructor = Instructor::with('courses')->find($request->query('id')); // Charger les cours pour les détails
+            $instructor = Instructor::with('courses')->find($request->query('id'));
             if (!$instructor) {
                 return redirect()->route('admin.instructors.index')->with('message', 'Instructor not found')->with('alert-type', 'error');
             }
@@ -52,5 +52,22 @@ class InstructorManagementController extends Controller
             'message' => 'Instructor status updated successfully!',
             'status' => $instructor->status,
         ]);
+    }
+
+    /**
+     * Download the instructor's CV.
+     */
+    public function downloadCv($id)
+    {
+        $instructor = Instructor::findOrFail($id);
+
+        // Check if CV exists
+        if (!$instructor->cv || !file_exists(public_path('upload/instructor_cvs/' . $instructor->cv))) {
+            return redirect()->back()->with('message', 'CV file not found')->with('alert-type', 'error');
+        }
+
+        $filePath = public_path('upload/instructor_cvs/' . $instructor->cv);
+
+        return response()->download($filePath, $instructor->cv);
     }
 }

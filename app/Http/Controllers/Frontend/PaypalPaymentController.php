@@ -3,33 +3,59 @@ namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Darryldecode\Cart\Facades\CartFacade as Cart;
 use Srmklive\PayPal\Services\PayPal as PayPalClient;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Invoice;
-
+use App\Models\CartItem;
+use App\Models\Course;
 
 class PaypalPaymentController extends Controller
 {
-  public function payWithPaypal(Request $request, CartController $cartController)
+    public function payWithPaypal(Request $request, CartController $cartController)
     {
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'Please log in.');
         }
 
-        if (Cart::isEmpty()) {
+        // Fetch cart items
+        $cartItems = CartItem::with(['cartable' => function ($query) {
+            $query->select('id', 'course_name', 'selling_price', 'discount_price');
+        }])
+            ->where('user_id', Auth::id())
+            ->where('cartable_type', 'App\Models\Course')
+            ->get()
+            ->filter(function ($item) {
+                return $item->cartable && Course::where('id', $item->cartable_id)->exists();
+            })
+            ->map(function ($item) {
+                return (object) [
+                    'id' => $item->cartable_id,
+                    'name' => $item->cartable->course_name ?? ($item->options['course_name'] ?? 'Unknown Course'),
+                    'price' => $item->price,
+                    'quantity' => 1,
+                    'instructor_name' => $item->options['instructor_name'] ?? 'Unknown Instructor'
+                ];
+            });
+
+        if ($cartItems->isEmpty()) {
             return redirect()->route('checkout.create')->with('error', 'Your cart is empty.');
         }
 
-        $cartItems = Cart::getContent();
-        $subtotal = Cart::getSubTotal();
+        // Calculate prices
+        $subtotal = $cartItems->sum(fn($item) => $item->price);
         $coupons = session('coupons', []);
         $couponDiscount = array_sum(array_column($coupons, 'discount_amount'));
         $total = max(0, $subtotal - $couponDiscount);
 
+        // Handle zero total
         if ($total <= 0) {
-            return redirect()->route('checkout.create')->with('error', 'Total amount must be greater than zero.');
+            $transactionId = 'FREE-' . uniqid();
+            $invoiceId = $cartController->processOrder($transactionId, 'Free');
+            $invoice = Invoice::findOrFail($invoiceId);
+            return redirect()->route('checkout.success')
+                           ->with('success', 'Order processed successfully! No payment required.')
+                           ->with('invoice', $invoice);
         }
 
         try {
@@ -42,22 +68,21 @@ class PaypalPaymentController extends Controller
                 return redirect()->route('checkout.create')->with('error', 'PayPal Error: Authentication failed');
             }
 
-            $items = [];
-            foreach ($cartItems as $item) {
+            $items = $cartItems->map(function ($item) use ($subtotal, $couponDiscount) {
                 $itemPrice = $couponDiscount > 0 && $subtotal > 0
                     ? max(0, $item->price - ($item->price / $subtotal) * $couponDiscount)
                     : $item->price;
 
-                $items[] = [
+                return [
                     'name' => $item->name,
-                    'quantity' => 1,
+                    'quantity' => $item->quantity,
                     'unit_amount' => [
                         'currency_code' => 'USD',
                         'value' => number_format($itemPrice, 2, '.', ''),
                     ],
-                    'description' => 'Course by ' . $item->attributes['instructor_name'],
+                    'description' => 'Course by ' . $item->instructor_name,
                 ];
-            }
+            })->toArray();
 
             $itemTotal = array_sum(array_map(fn($item) => floatval($item['unit_amount']['value']), $items));
 
@@ -110,7 +135,7 @@ class PaypalPaymentController extends Controller
         }
     }
 
-   public function paypalSuccess(Request $request, CartController $cartController)
+    public function paypalSuccess(Request $request, CartController $cartController)
     {
         try {
             $provider = new PayPalClient;
@@ -128,8 +153,8 @@ class PaypalPaymentController extends Controller
                 $invoiceId = $cartController->processOrder($transactionId, 'PayPal');
                 $invoice = Invoice::findOrFail($invoiceId);
                 return redirect()->route('checkout.success')
-                                 ->with('success', 'Payment successful! Transaction ID: ' . $transactionId)
-                                 ->with('invoice', $invoice);
+                                ->with('success', 'Payment successful! Transaction ID: ' . $transactionId)
+                                ->with('invoice', $invoice);
             } elseif (isset($orderDetails['status']) && $orderDetails['status'] === 'APPROVED') {
                 $response = $provider->capturePaymentOrder($orderId);
                 Log::info('PayPal Capture Response', ['response' => $response]);
@@ -139,8 +164,8 @@ class PaypalPaymentController extends Controller
                     $invoiceId = $cartController->processOrder($transactionId, 'PayPal');
                     $invoice = Invoice::findOrFail($invoiceId);
                     return redirect()->route('checkout.success')
-                                     ->with('success', 'Payment successful! Transaction ID: ' . $transactionId)
-                                     ->with('invoice', $invoice);
+                                    ->with('success', 'Payment successful! Transaction ID: ' . $transactionId)
+                                    ->with('invoice', $invoice);
                 } else {
                     Log::error('PayPal Capture Failed', ['response' => $response]);
                     return redirect()->route('checkout.create')->with('error', 'PayPal Error: Payment capture failed');

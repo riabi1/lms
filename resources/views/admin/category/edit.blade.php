@@ -37,7 +37,7 @@
         </div>
 
         <div class="col-md-6">
-          <img id="showImage" src="{{ asset('storage/' . $category->image) }}" alt="{{ $category->category_name }}" class="rounded-circle p-1 bg-primary" width="80">
+          <img id="showImage" src="{{ $category->image ? asset('upload/category_images/' . $category->image) : asset('images/default.jpg') }}" alt="{{ $category->category_name }}" class="rounded-circle p-1 bg-primary" width="80">
         </div>
 
         <div class="col-md-12">
