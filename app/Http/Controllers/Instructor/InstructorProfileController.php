@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Instructor;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
 
 class InstructorProfileController extends Controller
@@ -25,6 +24,7 @@ class InstructorProfileController extends Controller
                 'phone' => 'nullable|string|max:20',
                 'address' => 'nullable|string|max:255',
                 'photo' => 'nullable|image|max:5120|mimes:jpg,png,jpeg',
+                'cv' => 'nullable|file|max:2048|mimes:pdf',
                 'bio' => 'nullable|string',
                 'experience' => 'nullable|string',
                 'specialty' => 'nullable|string|max:255',
@@ -46,14 +46,28 @@ class InstructorProfileController extends Controller
             $instructor->website = $request->website;
             $instructor->location = $request->location;
 
+            // Handle photo upload
             if ($request->hasFile('photo')) {
-                if ($instructor->photo && Storage::exists('public/upload/instructor_images/' . $instructor->photo)) {
-                    Storage::delete('public/upload/instructor_images/' . $instructor->photo);
+                // Delete old photo if it exists
+                if ($instructor->photo && file_exists(public_path('upload/instructor_images/' . $instructor->photo))) {
+                    unlink(public_path('upload/instructor_images/' . $instructor->photo));
                 }
                 $file = $request->file('photo');
                 $filename = date('YmdHi') . '_' . $file->getClientOriginalName();
-                $file->storeAs('public/upload/instructor_images', $filename);
+                $file->move(public_path('upload/instructor_images'), $filename);
                 $instructor->photo = $filename;
+            }
+
+            // Handle CV upload
+            if ($request->hasFile('cv')) {
+                // Delete old CV if it exists
+                if ($instructor->cv && file_exists(public_path('upload/instructor_cvs/' . $instructor->cv))) {
+                    unlink(public_path('upload/instructor_cvs/' . $instructor->cv));
+                }
+                $cvFile = $request->file('cv');
+                $cvFilename = date('YmdHi') . '_cv_' . $cvFile->getClientOriginalName();
+                $cvFile->move(public_path('upload/instructor_cvs'), $cvFilename);
+                $instructor->cv = $cvFilename;
             }
 
             $instructor->save();
@@ -73,6 +87,8 @@ class InstructorProfileController extends Controller
             'current_password' => 'required',
             'new_password' => 'required|string|min:8|confirmed',
         ]);
+
+
 
         $instructor = Auth::guard('instructor')->user();
 

@@ -134,6 +134,29 @@
 .wishlist-btn.wishlisted i {
     color: #F16767;
 }
+.cart-message {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10000;
+    padding: 10px;
+    border-radius: 4px;
+    max-width: 300px;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+.alert-info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+}
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+}
+.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+}
 </style>
 
 <section class="course-area section-padding bg-white">
@@ -187,9 +210,9 @@
                             </div><!-- end rating-wrap -->
                             <div class="d-flex justify-content-between align-items-center mt-2">
                                 @if($finalPrice < $course->selling_price)
-                                    <p class="card-price text-dark fw-bold fs-16">${{ number_format($finalPrice, 2) }} <span class="before-price text-muted fs-14 text-decoration-line-through">${{ number_format($course->selling_price, 2) }}</span></p>
+                                    <p class="card-price text-dark fw-bold fs-16">{{ number_format($finalPrice, 2) }} TND <span class="before-price text-muted fs-14 text-decoration-line-through">{{ number_format($course->selling_price, 2) }} TND</span></p>
                                 @else
-                                    <p class="card-price text-dark fw-bold fs-16">${{ number_format($finalPrice, 2) }}</p>
+                                    <p class="card-price text-dark fw-bold fs-16">{{ number_format($finalPrice, 2) }} TND</p>
                                 @endif
                                 @auth
                                     <button class="wishlist-btn icon-element icon-element-sm shadow-sm cursor-pointer border-0 bg-transparent {{ $isWishlisted ? 'wishlisted' : '' }}"
@@ -228,6 +251,11 @@
         $isWishlisted = auth()->check() && \App\Models\Wishlist::where('trackable_type', 'App\Models\User')
             ->where('trackable_id', auth()->id())
             ->where('course_id', $course->id)
+            ->exists();
+        $isInCart = \Darryldecode\Cart\Facades\CartFacade::get($course->id) !== null;
+        $hasPurchased = Auth::check() && App\Models\Order::where('user_id', Auth::id())
+            ->where('course_id', $course->id)
+            ->where('payment_status', 'paid')
             ->exists();
     @endphp
     <div class="tooltip_templates" style="display: none;">
@@ -271,10 +299,15 @@
                         @endforelse
                     </ul>
                     <div class="d-flex justify-content-between align-items-center mt-2">
-                        <form action="{{ route('cart.add', $course->id) }}" method="POST">
-                            @csrf
-                            <button type="submit" class="btn theme-btn btn-sm px-3"><i class="la la-shopping-cart mr-1"></i> Add to Cart</button>
-                        </form>
+                        @if($hasPurchased)
+                            <a href="{{ route('course.start', [$course->id, $course->course_name_slug]) }}" class="btn theme-btn btn-sm px-3">
+                                <i class="la la-play-circle mr-1 fs-18"></i> Start Learning
+                            </a>
+                        @else
+                            <button class="btn theme-btn btn-sm px-3 add-to-cart" data-course-id="{{ $course->id }}" {{ $isInCart ? 'data-in-cart="true"' : '' }}>
+                                <i class="la la-shopping-cart mr-1"></i> {{ $isInCart ? 'In Cart' : 'Add to Cart' }}
+                            </button>
+                        @endif
                         @auth
                             <button class="wishlist-btn icon-element icon-element-sm shadow-sm cursor-pointer border-0 bg-transparent {{ $isWishlisted ? 'wishlisted' : '' }}"
                                     data-course-id="{{ $course->id }}"
@@ -287,6 +320,7 @@
                             </a>
                         @endauth
                     </div>
+                    <div id="cart-message-{{ $course->id }}" class="cart-message"></div>
                 </div>
             </div><!-- end card -->
         </div>
@@ -295,11 +329,13 @@
 
 <!-- Scripts -->
 @push('scripts')
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tooltipster/4.2.8/js/tooltipster.bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" integrity="sha512-c42qTSw/wPZ3/5LBzD+Bw5f7bSF2oxou6wEb+I/lqeaKV5FDIfMvvRp772y4jcJLKuGUOpbJMdg/BTl50fJYAw==" crossorigin="anonymous" referrerpolicy="no-referrer">
     <script>
         $(document).ready(function() {
+            console.log('jQuery loaded and document ready');
+
             // Initialiser Tooltipster
             $('.card-preview').tooltipster({
                 theme: 'tooltipster-shadow',
@@ -309,6 +345,7 @@
                 side: 'right',
                 distance: 10
             });
+            console.log('Tooltipster initialized');
 
             // Animation des compteurs
             $('.counter__title').each(function() {
@@ -335,8 +372,9 @@
             );
 
             // Handle wishlist button clicks
-            $('.wishlist-btn').on('click', function(e) {
+            $('.wishlist-btn').off('click').on('click', function(e) {
                 e.preventDefault();
+                console.log('Wishlist button clicked');
                 var $button = $(this);
                 var courseId = $button.data('course-id');
                 var isWishlisted = $button.hasClass('wishlisted');
@@ -346,9 +384,10 @@
                     url: url,
                     method: 'POST',
                     data: {
-                        _token: '{{ csrf_token() }}'
+                        _token: $('meta[name="csrf-token"]').attr('content')
                     },
                     success: function(response) {
+                        console.log('Wishlist AJAX success:', response);
                         if (response.status === 'success') {
                             if (isWishlisted) {
                                 $button.removeClass('wishlisted');
@@ -370,11 +409,242 @@
                         }
                     },
                     error: function(xhr) {
+                        console.error('Wishlist AJAX error:', xhr);
                         var response = xhr.responseJSON;
                         alert(response.message || 'An error occurred.');
                     }
                 });
             });
+
+            // Handle Add/Remove from Cart button clicks
+            $('.add-to-cart').off('click').on('click', function(e) {
+                e.preventDefault();
+                console.log('Cart button clicked');
+                var $button = $(this);
+                var courseId = $button.data('course-id');
+                var isInCart = $button.data('in-cart') === true;
+                var $message = $('#cart-message-' + courseId).length ? $('#cart-message-' + courseId) : $('<div class="cart-message"></div>').appendTo('body');
+                var url = isInCart ? '{{ route("cart.remove", ":id") }}'.replace(':id', courseId) : '{{ route("cart.add", ":id") }}'.replace(':id', courseId);
+                var method = isInCart ? 'GET' : 'POST';
+
+                if (!courseId) {
+                    console.error('Course ID is undefined');
+                    $message.html('<div class="alert alert-danger">Error: Course ID is missing.</div>').css({
+                        position: 'fixed',
+                        top: '20px',
+                        right: '20px',
+                        zIndex: 10000
+                    });
+                    setTimeout(function() { $message.remove(); }, 3000);
+                    return;
+                }
+
+                console.log('Sending AJAX request for course ID:', courseId, 'Action:', isInCart ? 'Remove' : 'Add');
+                $.ajax({
+                    url: url,
+                    method: method,
+                    data: isInCart ? {} : { _token: $('meta[name="csrf-token"]').attr('content') },
+                    dataType: 'json',
+                    beforeSend: function() {
+                        $button.prop('disabled', true).html('<i class="la la-shopping-cart mr-1"></i> ' + (isInCart ? 'Removing...' : 'Adding...'));
+                    },
+                    success: function(response) {
+                        console.log('Cart AJAX success:', response);
+                        $button.prop('disabled', false);
+                        if (response.redirect) {
+                            // Non-authenticated: Store course in localStorage
+                            let tempCart = JSON.parse(localStorage.getItem('tempCart')) || [];
+                            const itemIndex = tempCart.findIndex(item => item.courseId === response.course_id);
+                            if (itemIndex > -1) {
+                                tempCart[itemIndex].quantity += 1;
+                            } else {
+                                tempCart.push({ courseId: response.course_id, quantity: 1 });
+                            }
+                            localStorage.setItem('tempCart', JSON.stringify(tempCart));
+                            $message.html('<div class="alert alert-info">Please log in to add this course to your cart.</div>').css({
+                                position: 'fixed',
+                                top: '20px',
+                                right: '20px',
+                                zIndex: 10000
+                            });
+                            setTimeout(function() {
+                                console.log('Redirecting to:', response.redirect);
+                                window.location.href = response.redirect;
+                            }, 1500);
+                        } else if (response.success) {
+                            $message.html('<div class="alert alert-success">' + response.message + '</div>').css({
+                                position: 'fixed',
+                                top: '20px',
+                                right: '20px',
+                                zIndex: 10000
+                            });
+                            if (isInCart) {
+                                // Remove from cart
+                                $button.data('in-cart', false).removeAttr('data-in-cart');
+                                $button.html('<i class="la la-shopping-cart mr-1"></i> Add to Cart');
+                            } else {
+                                // Add to cart
+                                $button.data('in-cart', true);
+                                $button.html('<i class="la la-shopping-cart mr-1"></i> In Cart');
+                            }
+                            // Update all buttons for this course
+                            $('.add-to-cart[data-course-id="' + courseId + '"]').each(function() {
+                                $(this).data('in-cart', !isInCart).prop('disabled', !isInCart)
+                                    .html('<i class="la la-shopping-cart mr-1"></i> ' + (isInCart ? 'Add to Cart' : 'In Cart'));
+                            });
+                            // Update cart count and subtotal
+                            if ($('#cartQty').length) {
+                                $('#cartQty').text(response.cartCount);
+                            }
+                            if ($('#cartSubTotal').length) {
+                                $('#cartSubTotal').text('TND ' + response.cartSubTotal);
+                            }
+                            // Update cart dropdown
+                            console.log('Updating cart dropdown');
+                            $.ajax({
+                                url: '{{ route("cart") }}',
+                                method: 'GET',
+                                success: function(html) {
+                                    console.log('Cart dropdown HTML received');
+                                    var $newCart = $(html).find('#cartDropdown').html();
+                                    $('#cartDropdown').html($newCart);
+                                    // Rebind remove-from-cart handlers in dropdown
+                                    bindCartDropdownHandlers();
+                                },
+                                error: function(xhr) {
+                                    console.error('Cart dropdown AJAX error:', xhr);
+                                }
+                            });
+                        } else {
+                            $message.html('<div class="alert alert-info">' + (response.info || response.message || 'Action completed.') + '</div>').css({
+                                position: 'fixed',
+                                top: '20px',
+                                right: '20px',
+                                zIndex: 10000
+                            });
+                        }
+                        setTimeout(function() { $message.remove(); }, 3000);
+                    },
+                    error: function(xhr) {
+                        console.error('Cart AJAX error:', xhr);
+                        $button.prop('disabled', false).html('<i class="la la-shopping-cart mr-1"></i> ' + (isInCart ? 'In Cart' : 'Add to Cart'));
+                        var response = xhr.responseJSON || {};
+                        if (xhr.status === 401 && response.redirect) {
+                            // Handle 401 Unauthorized for non-authenticated users
+                            let tempCart = JSON.parse(localStorage.getItem('tempCart')) || [];
+                            const itemIndex = tempCart.findIndex(item => item.courseId === response.course_id);
+                            if (itemIndex > -1) {
+                                tempCart[itemIndex].quantity += 1;
+                            } else {
+                                tempCart.push({ courseId: response.course_id, quantity: 1 });
+                            }
+                            localStorage.setItem('tempCart', JSON.stringify(tempCart));
+                            $message.html('<div class="alert alert-info">Please log in to add this course to your cart.</div>').css({
+                                position: 'fixed',
+                                top: '20px',
+                                right: '20px',
+                                zIndex: 10000
+                            });
+                            setTimeout(function() {
+                                console.log('Redirecting to:', response.redirect);
+                                window.location.href = response.redirect;
+                            }, 1500);
+                        } else {
+                            $message.html('<div class="alert alert-danger">' + (response.error || response.message || 'An error occurred.') + '</div>').css({
+                                position: 'fixed',
+                                top: '20px',
+                                right: '20px',
+                                zIndex: 10000
+                            });
+                            setTimeout(function() { $message.remove(); }, 3000);
+                        }
+                    }
+                });
+            });
+
+            // Function to bind remove-from-cart handlers in cart dropdown
+            function bindCartDropdownHandlers() {
+                $('#cartDropdown .remove-from-cart').off('click').on('click', function(e) {
+                    e.preventDefault();
+                    console.log('Remove from cart button clicked in dropdown');
+                    var courseId = $(this).data('id');
+                    var $cartItem = $('#cart-item-' + courseId);
+                    var $message = $('#cart-message-' + courseId).length ? $('#cart-message-' + courseId) : $('<div class="cart-message"></div>').appendTo('body');
+
+                    $.ajax({
+                        url: '{{ route("cart.remove", ":id") }}'.replace(':id', courseId),
+                        method: 'GET',
+                        dataType: 'json',
+                        success: function(response) {
+                            console.log('Remove from cart AJAX success:', response);
+                            if (response.redirect) {
+                                $message.html('<div class="alert alert-info">Please log in to remove this course from your cart.</div>').css({
+                                    position: 'fixed',
+                                    top: '20px',
+                                    right: '20px',
+                                    zIndex: 10000
+                                });
+                                setTimeout(function() {
+                                    window.location.href = response.redirect;
+                                }, 1500);
+                            } else if (response.success) {
+                                $cartItem.remove();
+                                $message.html('<div class="alert alert-success">' + response.message + '</div>').css({
+                                    position: 'fixed',
+                                    top: '20px',
+                                    right: '20px',
+                                    zIndex: 10000
+                                });
+                                if ($('#cartQty').length) {
+                                    $('#cartQty').text(response.cartCount);
+                                }
+                                if ($('#cartSubTotal').length) {
+                                    $('#cartSubTotal').text('TND ' + response.cartSubTotal);
+                                }
+                                if (response.cartCount === 0) {
+                                    $('#cartDropdown').html(
+                                        '<li class="media media-card">' +
+                                        '<div class="media-body fs-15 text-center">' +
+                                        '<p class="text-muted lh-18">Your cart is empty</p>' +
+                                        '</div></li>' +
+                                        '<li class="mt-3">' +
+                                        '<a href="{{ route('cart') }}" class="btn theme-btn w-100 py-2">Go to Cart <i class="la la-arrow-right icon ml-1"></i></a>' +
+                                        '</li>'
+                                    );
+                                }
+                                // Update course card button state
+                                $('.add-to-cart[data-course-id="' + courseId + '"]').each(function() {
+                                    $(this).data('in-cart', false).removeAttr('data-in-cart')
+                                        .prop('disabled', false)
+                                        .html('<i class="la la-shopping-cart mr-1"></i> Add to Cart');
+                                });
+                            } else {
+                                $message.html('<div class="alert alert-info">' + (response.message || 'Action completed.') + '</div>').css({
+                                    position: 'fixed',
+                                    top: '20px',
+                                    right: '20px',
+                                    zIndex: 10000
+                                });
+                            }
+                            setTimeout(function() { $message.remove(); }, 3000);
+                        },
+                        error: function(xhr) {
+                            console.error('Remove from cart AJAX error:', xhr);
+                            var response = xhr.responseJSON || {};
+                            $message.html('<div class="alert alert-danger">' + (response.message || 'An error occurred.') + '</div>').css({
+                                position: 'fixed',
+                                top: '20px',
+                                right: '20px',
+                                zIndex: 10000
+                            });
+                            setTimeout(function() { $message.remove(); }, 3000);
+                        }
+                    });
+                });
+            }
+
+            // Initial binding for cart dropdown handlers
+            bindCartDropdownHandlers();
         });
     </script>
 @endpush

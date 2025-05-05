@@ -59,17 +59,17 @@
                             <tr>
                                 <td>{{ $key + 1 }}</td>
                                 <td>
-                                    @if ($item->course_image && Storage::exists('public/upload/course_images/thumbnail/' . $item->course_image))
-                                        <img src="{{ asset('storage/upload/course_images/thumbnail/' . $item->course_image) }}" 
+                                    @if ($item->course_image && file_exists(public_path('upload/course_images/thumbnail/' . $item->course_image)))
+                                        <img src="{{ asset('upload/course_images/thumbnail/' . $item->course_image) }}" 
                                              alt="{{ $item->course_name }}" class="course-image">
                                     @else
                                         <span class="text-muted">No image</span>
                                     @endif
                                 </td>
                                 <td>{{ $item->course_name ?? 'N/A' }}</td>
-                                <td>{{ $item->courseable?->name ?? 'N/A' }}</td> <!-- Updated to match course details -->
+                                <td>{{ $item->courseable?->name ?? 'N/A' }}</td>
                                 <td>{{ $item->category->category_name ?? 'N/A' }}</td>
-                                <td>{{ number_format($item->selling_price ?? 0, 2) }} TND</td> <!-- Adjusted currency to TND -->
+                                <td>{{ number_format($item->selling_price ?? 0, 2) }} TND</td>
                                 <td>
                                     <span class="badge {{ $item->status ? 'bg-success' : 'bg-danger' }}">
                                         {{ $item->status ? 'Active' : 'Inactive' }}
@@ -123,7 +123,7 @@
             "language": {
                 "emptyTable": "No courses available in table"
             },
-            "order": [[0, 'asc']] // Tri par numéro par défaut
+            "order": [[0, 'asc']]
         });
 
         // Gestion du toggle de statut via AJAX

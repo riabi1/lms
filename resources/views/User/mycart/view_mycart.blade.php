@@ -41,7 +41,7 @@
                         @forelse ($cartItems as $item)
                             <tr id="cart-row-{{ $item->id }}">
                                 <td class="text-center align-middle">
-                                    <img src="{{ $item->attributes->image ? asset('storage/upload/course_images/thumbnail/' . $item->attributes->image) : asset('images/no_image.jpg') }}" 
+                                    <img src="{{ isset($item->attributes['image']) ? asset('storage/upload/course_images/thumbnail/' . $item->attributes['image']) : asset('images/no_image.jpg') }}" 
                                          alt="{{ e($item->name) }}" 
                                          class="rounded lazy" 
                                          style="width: 75px; height: auto;"
@@ -50,16 +50,16 @@
                                 </td>
                                 <td class="align-middle">
                                     <strong>{{ e($item->name) }}</strong><br>
-                                    By <a href="{{ $item->attributes->instructor_id ? route('instructor.details', $item->attributes->instructor_id) : '#' }}">
-                                        {{ e($item->attributes->instructor_name ?? 'Unknown Instructor') }}
+                                    By <a href="{{ isset($item->attributes['instructor_id']) ? route('instructor.details', $item->attributes['instructor_id']) : '#' }}">
+                                        {{ e($item->attributes['instructor_name'] ?? 'Unknown Instructor') }}
                                     </a>
                                 </td>
                                 <td class="text-right align-middle">
-                                    @if (isset($item->attributes->selling_price) && isset($item->attributes->discount_price) && $item->attributes->discount_price > 0)
-                                        <del>{{ number_format($item->attributes->selling_price, 2) }} TND</del><br>
-                                        {{ number_format($item->price, 2) }} TND
+                                    @if (isset($item->attributes['selling_price']) && isset($item->attributes['discount_price']) && $item->attributes['discount_price'] > 0)
+                                        <del>{{ number_format($item->attributes['selling_price'], 2) }} USD</del><br>
+                                        {{ number_format($item->price, 2) }} USD
                                     @else
-                                        {{ number_format($item->price, 2) }} TND
+                                        {{ number_format($item->price, 2) }} USD
                                     @endif
                                 </td>
                                 <td class="text-center align-middle">
@@ -75,29 +75,37 @@
                 </table>
 
                 @if ($cartItems->count() > 0)
+                    @php
+                        $courseIds = $cartItems->pluck('id')->toArray();
+                        $hasCoupons = \App\Models\Coupon::where('couponable_type', 'App\\Models\\Course')
+                            ->whereIn('couponable_id', $courseIds)
+                            ->where('coupon_validity', '>=', \Carbon\Carbon::today()->format('Y-m-d'))
+                            ->where('status', 1)
+                            ->exists();
+                    @endphp
+
                     <div class="row pt-4">
                         <div class="col-lg-8">
-                            <form action="{{ route('coupon.apply') }}" method="POST" id="coupon-form">
-                                @csrf
-                                <div class="input-group">
-                                    <input class="form-control" type="text" name="coupon_name" placeholder="Enter coupon code" required>
-                                    <button type="submit" class="btn theme-btn">Apply Coupon</button>
-                                </div>
-                                @error('coupon_name')
-                                    <span class="text-danger">{{ $message }}</span>
-                                @enderror
-                            </form>
+                            @if ($hasCoupons)
+                                <form action="{{ route('coupon.apply') }}" method="POST" id="coupon-form">
+                                    @csrf
+                                    <div class="input-group">
+                                        <input class="form-control" type="text" name="code" placeholder="Enter coupon code" required>
+                                        <button type="submit" class="btn theme-btn">Apply Coupon</button>
+                                    </div>
+                                    @error('code')
+                                        <span class="text-danger">{{ $message }}</span>
+                                    @enderror
+                                </form>
+                            @endif
                             @if (!empty($coupons))
                                 <div class="mt-3" id="coupon-list">
                                     <h6>Applied Coupons:</h6>
                                     <ul class="list-unstyled">
                                         @foreach ($coupons as $coupon)
                                             <li class="d-flex justify-content-between align-items-center mb-2">
-                                                <span>{{ e($coupon['coupon_name']) }} (-{{ number_format($coupon['discount_amount'], 2) }} TND)</span>
-                                                <form action="{{ route('coupon.remove', $coupon['coupon_name']) }}" method="POST" class="d-inline">
-                                                    @csrf
-                                                    <button type="submit" class="btn btn-warning btn-sm">Remove</button>
-                                                </form>
+                                                <span>{{ e($coupon['code']) }} (-{{ number_format($coupon['discount_amount'], 2) }} USD)</span>
+                                                <a href="{{ route('coupon.remove', $coupon['code']) }}" class="btn btn-warning btn-sm">Remove</a>
                                             </li>
                                         @endforeach
                                     </ul>
@@ -107,11 +115,11 @@
 
                         <div class="col-lg-4">
                             <div class="bg-gray p-4 mt-4" id="cart-summary">
-                                <p>Subtotal: <span id="subtotal">{{ number_format($subtotal, 2) }} TND</span></p>
+                                <p>Subtotal: <span id="subtotal">{{ number_format($subtotal, 2) }} USD</span></p>
                                 @if ($couponDiscount > 0)
-                                    <p>Total Coupon Discount: <span id="coupon-discount">-{{ number_format($couponDiscount, 2) }} TND</span></p>
+                                    <p id="coupon-discount-container">Total Coupon Discount: <span id="coupon-discount">-{{ number_format($couponDiscount, 2) }} USD</span></p>
                                 @endif
-                                <h4>Total: <span id="total-price">{{ number_format($total, 2) }} TND</span></h4>
+                                <h4>Total: <span id="total-price">{{ number_format($total, 2) }} USD</span></h4>
                                 <a href="{{ route('checkout.create') }}" class="btn theme-btn w-100 mt-3">Checkout <i class="la la-arrow-right"></i></a>
                             </div>
                         </div>
@@ -124,46 +132,86 @@
 
 @section('scripts')
     @parent
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
     $(document).ready(function() {
-        $('.remove-from-cart').on('click', function(e) {
+        // Prevent double event binding
+        $('.remove-from-cart').off('click').on('click', function(e) {
             e.preventDefault();
             var courseId = $(this).data('id');
             var row = $('#cart-row-' + courseId);
+            var cartItem = $('#cart-item-' + courseId); // Header dropdown item
 
             $.ajax({
-                url: '{{ route("cart.remove", "") }}/' + courseId,
+                url: '{{ route("cart.remove", ":id") }}'.replace(':id', courseId),
                 type: 'GET',
                 dataType: 'json',
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 },
                 success: function(response) {
+                    if (response.redirect) {
+                        window.location.href = response.redirect;
+                        return;
+                    }
                     if (response.success) {
+                        // Remove from cart page and header
                         row.remove();
+                        if (cartItem.length) {
+                            cartItem.remove();
+                        }
 
-                        $('#subtotal').text(response.subtotal + ' TND');
-                        $('#total-price').text(response.totalPrice + ' TND');
+                        // Update totals
+                        $('#subtotal').text(response.subtotal + ' USD');
+                        $('#total-price').text(response.totalPrice + ' USD');
 
+                        // Handle empty cart
                         if (response.cartCount === 0) {
                             $('#cart-items').html('<tr><td colspan="4" class="text-center">Cart is empty.</td></tr>');
                             $('#cart-summary').remove();
                             $('#coupon-list').remove();
+                            if ($('#cartDropdown').length) {
+                                $('#cartDropdown').html(
+                                    '<li class="media media-card">' +
+                                    '<div class="media-body fs-15 text-center">' +
+                                    '<p class="text-muted lh-18">Your cart is empty</p>' +
+                                    '</div></li>' +
+                                    '<li class="mt-3">' +
+                                    '<a href="{{ route('cart') }}" class="btn theme-btn w-100 py-2">Go to Cart <i class="la la-arrow-right icon ml-1"></i></a>' +
+                                    '</li>'
+                                );
+                            }
                         } else if (response.couponDiscount > 0) {
                             if (!document.getElementById('coupon-discount')) {
-                                $('#subtotal').after('<p>Total Coupon Discount: <span id="coupon-discount">-' + response.couponDiscount + ' TND</span></p>');
+                                $('#subtotal').after('<p id="coupon-discount-container">Total Coupon Discount: <span id="coupon-discount">-' + response.couponDiscount + ' USD</span></p>');
                             } else {
-                                $('#coupon-discount').text('-' + response.couponDiscount + ' TND');
+                                $('#coupon-discount').text('-' + response.couponDiscount + ' USD');
                             }
                         } else {
                             $('#coupon-list').remove();
-                            $('#coupon-discount').parent().remove();
+                            $('#coupon-discount-container').remove();
                         }
 
-                        // Update header cart count if it exists
+                        // Update header cart count
                         if ($('#cartQty').length) {
                             $('#cartQty').text(response.cartCount);
+                        }
+                        if ($('#cartSubTotal').length) {
+                            $('#cartSubTotal').text('USD ' + response.subtotal);
+                        }
+
+                        // Refresh header cart dropdown if it exists
+                        if ($('#cartDropdown').length) {
+                            $.ajax({
+                                url: '{{ route("cart") }}',
+                                method: 'GET',
+                                success: function(html) {
+                                    var $newCart = $(html).find('#cartDropdown').html();
+                                    $('#cartDropdown').html($newCart);
+                                },
+                                error: function(xhr) {
+                                    console.error('Cart dropdown refresh error:', xhr);
+                                }
+                            });
                         }
 
                         alert(response.message);
@@ -180,5 +228,3 @@
     });
     </script>
 @endsection
-
-

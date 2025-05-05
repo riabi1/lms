@@ -24,13 +24,32 @@
                         <label class="form-label fw-semibold">Profile Photo</label>
                         <div class="d-flex align-items-center mb-2">
                             <img class="rounded-circle me-3 shadow-sm"
-                                 src="{{ $instructor->photo ? Storage::url('upload/instructor_images/' . $instructor->photo) : asset('upload/no_image.jpg') }}"
+                                 src="{{ $instructor->photo ? asset('upload/instructor_images/' . $instructor->photo) : asset('upload/no_image.jpg') }}"
                                  alt="{{ $instructor->name }}'s Profile"
                                  style="width: 100px; height: 100px; object-fit: cover; border: 2px solid #ddd;">
                             <input type="file" name="photo" class="form-control" accept="image/jpeg,image/png,image/jpg">
                         </div>
                         <small class="text-muted">Max 5MB, .jpg/.png</small>
                         @error('photo')
+                            <div class="text-danger mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <!-- CV Field -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Curriculum Vitae (CV)</label>
+                        <div class="d-flex align-items-center mb-2">
+                            @if($instructor->cv)
+                                <a href="{{ asset('upload/instructor_cvs/' . $instructor->cv) }}" target="_blank" class="me-3 text-primary">
+                                    <i class="la la-file-pdf-o"></i> Current CV
+                                </a>
+                            @else
+                                <span class="me-3 text-muted">No CV uploaded</span>
+                            @endif
+                            <input type="file" name="cv" class="form-control" accept=".pdf">
+                        </div>
+                        <small class="text-muted">Max 2MB, .pdf only</small>
+                        @error('cv')
                             <div class="text-danger mt-1">{{ $message }}</div>
                         @enderror
                     </div>
@@ -133,24 +152,25 @@
                         </div>
 
                         <!-- Nouveau Mot de Passe (Optionnel) -->
-                         <h4 class="mt-4 mb-3">Change Password</h4>
-                          <div class="row">
-                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold">New Password (Optional)</label>
-                            <input class="form-control" type="password" name="new_password">
-                            <small class="text-muted">Leave blank if you don’t want to change it</small>
-                            @error('new_password')
-                                <div class="text-danger mt-1">{{ $message }}</div>
-                            @enderror
-                        </div>
+                        <h4 class="mt-4 mb-3">Change Password</h4>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">New Password (Optional)</label>
+                                <input class="form-control" type="password" name="new_password">
+                                <small class="text-muted">Leave blank if you don’t want to change it</small>
+                                @error('new_password')
+                                    <div class="text-danger mt-1">{{ $message }}</div>
+                                @enderror
+                            </div>
 
-                        <!-- Confirmation du Nouveau Mot de Passe -->
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Confirm New Password</label>
-                            <input class="form-control" type="password" name="new_password_confirmation">
-                            @error('new_password_confirmation')
-                                <div class="text-danger mt-1">{{ $message }}</div>
-                            @enderror
+                            <!-- Confirmation du Nouveau Mot de Passe -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Confirm New Password</label>
+                                <input class="form-control" type="password" name="new_password_confirmation">
+                                @error('new_password_confirmation')
+                                    <div class="text-danger mt-1">{{ $message }}</div>
+                                @enderror
+                            </div>
                         </div>
                     </div>
 

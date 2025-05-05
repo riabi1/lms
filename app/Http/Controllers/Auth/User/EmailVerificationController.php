@@ -18,7 +18,7 @@ class EmailVerificationController extends Controller
         if ($request->user('web') && $request->user('web')->hasVerifiedEmail()) {
             return redirect()->route('dashboard');
         }
-        return view('frontend.dashboard.user-verify-email');
+        return view('User.user-verify-email');
     }
 
     /**

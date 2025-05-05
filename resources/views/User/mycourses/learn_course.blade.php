@@ -40,15 +40,7 @@
             justify-content: center;
             align-items: center;
         }
-        .spinner .path {
-            stroke: #BE3144; /* Bright red for spinner */
-            animation: dash 1.5s ease-in-out infinite;
-        }
-        @keyframes dash {
-            0% { stroke-dasharray: 1, 150; stroke-dashoffset: 0; }
-            50% { stroke-dasharray: 90, 150; stroke-dashoffset: -35; }
-            100% { stroke-dasharray: 90, 150; stroke-dashoffset: -124; }
-        }
+       
 
         /* Header */
         .header-menu-area {
@@ -114,22 +106,13 @@
             font-size: 1rem;
             transition: width 0.5s ease;
         }
-        .lecture-video-item {
-            background: #D99D81;
-            padding: 25px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-        }
+      
         #mediaContainer iframe, #mediaContainer video {
             border-radius: 10px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
         }
 
-        /* Tabs */
-        .lecture-tab-body {
-            background: #D99D81;
-            border-bottom: 1px solid #D99D81;
-        }
+        
         .nav-tabs .nav-link {
             padding: 15px 30px;
             font-weight: 600;
@@ -137,10 +120,7 @@
             border: none;
             transition: all 0.3s;
         }
-        .nav-tabs .nav-link.active {
-            color: #BE3144; /* Bright red for active tab */
-            border-bottom: 3px solid #BE3144;
-        }
+     
 
         /* Overview Section */
         .lecture-overview-wrap {
@@ -152,27 +132,9 @@
             color: #09122C; /* Dark blue for headings */
             margin-bottom: 15px;
         }
-        .lecture-overview-stats-wrap {
-            background: #D99D81;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-        }
+      
        
         
-        .generic-list-item li {
-            font-size: 1.1rem;
-            margin-bottom: 12px;
-        }
-        .generic-list-item li span {
-            font-weight: 600;
-            color: #872341; /* Deep red for labels */
-        }
-        .section-block {
-            height: 1px;
-            background: #fff;
-            margin: 25px 0;
-        }
 
         /* Notes Section */
         .note-card {
@@ -189,15 +151,7 @@
         .note-card.favorite {
             border: 2px solid #E17564; /* Soft peach for favorite border */
         }
-        .bg-light-blue { background: #09122C; color: #fff; } /* Dark blue */
-        .bg-light-green { background: #872341; color: #fff; } /* Deep red */
-        .bg-light-yellow { background: #BE3144; color: #fff; } /* Bright red */
-        .bg-light-pink { background: #E17564; color: #09122C; } /* Soft peach */
-        .note-header {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #09122C; /* Dark blue for headers (adjusts on colored backgrounds) */
-        }
+   
         .btn-add-note {
             background: #BE3144; /* Bright red for add button */
             color: #fff;
@@ -210,85 +164,10 @@
             background: #872341; /* Deep red on hover */
             transform: translateY(-2px);
         }
-        .alert-info {
-            background: #E17564; /* Soft peach for alert */
-            color: #09122C; /* Dark blue text */
-            border: none;
-            border-radius: 10px;
-            padding: 15px;
-            font-weight: 500;
-        }
-
-        /* Sidebar */
-        .course-dashboard-sidebar-wrap {
-            background: #D99D81;
-            padding: 20px;
-            border-left: 1px solid #e5e5e5;
-            border-radius: 10px;
-        }
-        .course-dashboard-side-heading h3 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #09122C; /* Dark blue for heading */
-        }
     
-    .course-item-link {
-        padding: 20px;
-        border-radius: 8px;
-        background: #BE3144;
-        margin-bottom: 10px;
-        transition: background 0.3s;
-    }
 
-    .course-item-link.active, .course-item-link:hover {
-        background: #BE3144;
-        color: #fff;
-    }
-
-    .course-item-link.active h4, .course-item-link:hover h4 {
-        color: #fff; /* Assure que le titre suit */
-    }
-
-        #accordionCourseExample {
-        background: #09122C;
-        border-radius: 10px;
-        padding: 15px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-        .accordion .btn-link {
-            padding: 15px;
-            background: #f9f9f9;
-            border-radius: 8px;
-            color: #09122C; /* Dark blue for text */
-            font-weight: 600;
-            text-decoration: none;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: background 0.3s;
-        }
-        .accordion .btn-link:hover {
-            background: #E17564; /* Soft peach on hover */
-            color: #09122C;
-        }
-        .course-item-link {
-            padding: 15px;
-            border-radius: 8px;
-            transition: background 0.3s;
-        }
-        .course-item-link.active {
-            background: #BE3144; /* Bright red for active item */
-            color: #fff;
-        }
-        .course-item-link.active h4 {
-            color: #fff;
-        }
-
-        /* Modals */
-        .modal-content {
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-        }
+       
+        
         .modal-header {
             background: #09122C; /* Dark blue for modal header */
             color: #fff;
@@ -298,18 +177,7 @@
         .modal-body {
             padding: 25px;
         }
-        .theme-btn {
-            background: #BE3144; /* Bright red for buttons */
-            color: #fff;
-            padding: 10px 25px;
-            border-radius: 20px;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-        .theme-btn:hover {
-            background: #872341; /* Deep red on hover */
-            transform: translateY(-2px);
-        }
+    
     </style>
 </head>
 <body>
@@ -392,9 +260,7 @@
                             <a href="#" class="btn theme-btn theme-btn-sm theme-btn-transparent lh-26 text-white mr-2" data-toggle="modal" data-target="#ratingModal">
                                 <i class="bx bx-star mr-1"></i> Leave a Rating
                             </a>
-                            <a href="#" class="btn theme-btn theme-btn-sm theme-btn-transparent lh-26 text-white mr-2" data-toggle="modal" data-target="#shareModal">
-                                <i class="bx bx-share-alt mr-1"></i> Share
-                            </a>
+                           
                            
                         </div>
                     </div>
@@ -845,31 +711,7 @@
     </div>
 
     <!-- Share Modal (Enhanced Design) -->
-    <div class="modal fade modal-container" id="shareModal" tabindex="-1" role="dialog">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content">
-                <div class="modal-header border-bottom-gray">
-                    <h5 class="modal-title fs-19 font-weight-semi-bold">Share this course</h5>
-                    <button type="button" class="close" data-dismiss="modal">
-                        <span aria-hidden="true" class="bx bx-x"></span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="copy-to-clipboard">
-                        <span class="success-message">Copied!</span>
-                        <div class="input-group">
-                            <input type="text" class="form-control form--control copy-input pl-3" value="{{ url('course/details/' . $course->id . '/' . $course->course_name_slug) }}" readonly>
-                            <div class="input-group-append">
-                                <button class="btn theme-btn theme-btn-sm copy-btn shadow-none"><i class="bx bx-copy mr-1"></i> Copy</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-              
-                </div>
-            </div>
-        </div>
-    </div>
+  
 
     <!-- Resources Modal (Enhanced Design) -->
     @foreach ($course->sections as $section)

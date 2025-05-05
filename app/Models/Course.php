@@ -4,17 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Category;
-use App\Models\SubCategory;
-use App\Models\Instructor;
-use App\Models\Review;
-use App\Models\CourseGoal;
-use App\Models\CourseSection;
-use App\Models\CourseLecture;
-use App\Models\CourseNote;
-use App\Models\Wishlist;
-use App\Models\Quiz;
-use App\Models\QuizAttempt;
 
 class Course extends Model
 {
@@ -35,7 +24,7 @@ class Course extends Model
         'video',
         'label',
         'duration',
-        'resources', // Added from schema
+        'resources',
         'certificate',
         'selling_price',
         'discount_price',
@@ -44,21 +33,30 @@ class Course extends Model
         'featured',
         'highestrated',
         'status',
-        'courseable_type', // Added for polymorphic relationship
-        'courseable_id',   // Added for polymorphic relationship
-        'created_at',      // Added to allow setting timestamp manually
+        'courseable_type',
+        'courseable_id',
+        'created_at',
     ];
 
-    public function goals()
-    {
-        return $this->morphMany(CourseGoal::class, 'goalable');
-    }
-
+    /**
+     * Get the owning courseable model (e.g., Instructor or Admin).
+     */
     public function courseable()
     {
         return $this->morphTo();
     }
 
+    /**
+     * Get the instructor for the course (if courseable_type is Instructor).
+     */
+    public function instructor()
+    {
+        return $this->courseable()->where('courseable_type', Instructor::class);
+    }
+
+    /**
+     * Get the category through the subcategory.
+     */
     public function category()
     {
         return $this->hasOneThrough(
@@ -71,41 +69,73 @@ class Course extends Model
         );
     }
 
-public function subcategory()
+    /**
+     * Get the subcategory for the course.
+     */
+    public function subcategory()
     {
         return $this->belongsTo(SubCategory::class, 'subcategory_id');
     }
 
+    /**
+     * Get the reviews for the course.
+     */
     public function reviews()
     {
         return $this->morphMany(Review::class, 'reviewable');
     }
 
+    /**
+     * Get the goals for the course.
+     */
+    public function goals()
+    {
+        return $this->morphMany(CourseGoal::class, 'goalable');
+    }
+
+    /**
+     * Get the sections for the course.
+     */
     public function sections()
     {
         return $this->hasMany(CourseSection::class);
     }
 
+    /**
+     * Get the lectures for the course.
+     */
     public function lectures()
     {
         return $this->hasMany(CourseLecture::class);
     }
 
+    /**
+     * Get the notes for the course (for the authenticated user).
+     */
     public function notes()
     {
         return $this->hasMany(CourseNote::class)->where('user_id', auth()->id());
     }
 
+    /**
+     * Get the wishlists for the course.
+     */
     public function wishlists()
     {
         return $this->hasMany(Wishlist::class);
     }
 
+    /**
+     * Get the quizzes for the course.
+     */
     public function quizzes()
     {
         return $this->hasMany(Quiz::class);
     }
 
+    /**
+     * Get the quiz attempts for the course through quizzes.
+     */
     public function quizAttempts()
     {
         return $this->hasManyThrough(
@@ -118,19 +148,24 @@ public function subcategory()
         );
     }
 
-public function questions()
+    /**
+     * Get the questions for the course.
+     */
+    public function questions()
     {
         return $this->hasMany(Question::class);
     }
 
-public function instructor()
-    {
-        return $this->courseable;
-    }
-
+    /**
+     * Get the users enrolled in the course (via paid orders).
+     */
     public function users()
     {
         return $this->belongsToMany(User::class, 'orders', 'course_id', 'user_id')
                     ->where('payment_status', 'paid');
+    }
+    public function coupons()
+    {
+        return $this->morphMany(Coupon::class, 'couponable');
     }
 }

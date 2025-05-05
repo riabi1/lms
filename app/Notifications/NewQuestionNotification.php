@@ -19,7 +19,7 @@ class NewQuestionNotification extends Notification
 
     public function via($notifiable)
     {
-        return ['database']; // Add 'mail' if email is configured
+        return ['database'];
     }
 
     public function toArray($notifiable)

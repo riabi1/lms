@@ -25,23 +25,45 @@
                 @csrf
                 @method('PUT')
 
-                <!-- Coupon Name -->
+                <!-- Coupon Code -->
                 <div class="col-md-6">
-                    <label for="coupon_name" class="form-label">Coupon Name</label>
-                    <input type="text" name="coupon_name" class="form-control @error('coupon_name') is-invalid @enderror" 
-                           id="coupon_name" value="{{ old('coupon_name', $coupon->coupon_name) }}" required>
-                    @error('coupon_name')
+                    <label for="code" class="form-label">Coupon Code</label>
+                    <input type="text" name="code" class="form-control @error('code') is-invalid @enderror" 
+                           id="code" value="{{ old('code', $coupon->code) }}" required>
+                    @error('code')
                         <span class="invalid-feedback">{{ $message }}</span>
                     @enderror
                 </div>
 
                 <!-- Coupon Discount -->
                 <div class="col-md-6">
-                    <label for="coupon_discount" class="form-label">Coupon Discount (%)</label>
+                    <label for="coupon_discount" class="form-label">Coupon Discount</label>
                     <input type="number" name="coupon_discount" class="form-control @error('coupon_discount') is-invalid @enderror" 
                            id="coupon_discount" value="{{ old('coupon_discount', $coupon->coupon_discount) }}" 
-                           min="0" max="100" step="1" required>
+                           min="0" step="0.01" required>
                     @error('coupon_discount')
+                        <span class="invalid-feedback">{{ $message }}</span>
+                    @enderror
+                </div>
+
+                <!-- Discount Type -->
+                <div class="col-md-6">
+                    <label for="discount_type" class="form-label">Discount Type</label>
+                    <select name="discount_type" class="form-select @error('discount_type') is-invalid @enderror" id="discount_type" required>
+                        <option value="fixed" {{ old('discount_type', $coupon->discount_type) == 'fixed' ? 'selected' : '' }}>Fixed Amount</option>
+                        <option value="percentage" {{ old('discount_type', $coupon->discount_type) == 'percentage' ? 'selected' : '' }}>Percentage</option>
+                    </select>
+                    @error('discount_type')
+                        <span class="invalid-feedback">{{ $message }}</span>
+                    @enderror
+                </div>
+
+                <!-- Max Uses -->
+                <div class="col-md-6">
+                    <label for="max_uses" class="form-label">Max Uses (Optional)</label>
+                    <input type="number" name="max_uses" class="form-control @error('max_uses') is-invalid @enderror" 
+                           id="max_uses" value="{{ old('max_uses', $coupon->max_uses) }}" min="1" step="1">
+                    @error('max_uses')
                         <span class="invalid-feedback">{{ $message }}</span>
                     @enderror
                 </div>
@@ -52,7 +74,7 @@
                     <select name="course_id" class="form-select @error('course_id') is-invalid @enderror" id="course_id" required>
                         <option value="">Select a course</option>
                         @foreach ($courses as $course)
-                            <option value="{{ $course->id }}" {{ old('course_id', $coupon->course_id) == $course->id ? 'selected' : '' }}>
+                            <option value="{{ $course->id }}" {{ old('course_id', $coupon->couponable_id) == $course->id ? 'selected' : '' }}>
                                 {{ $course->course_name }}
                             </option>
                         @endforeach
@@ -67,7 +89,7 @@
                     <label for="coupon_validity" class="form-label">Coupon Validity Date</label>
                     <input type="date" name="coupon_validity" class="form-control @error('coupon_validity') is-invalid @enderror" 
                            id="coupon_validity" min="{{ \Carbon\Carbon::today()->format('Y-m-d') }}" 
-                           value="{{ old('coupon_validity', $coupon->coupon_validity) }}" required>
+                           value="{{ old('coupon_validity', $coupon->coupon_validity->format('Y-m-d')) }}" required>
                     @error('coupon_validity')
                         <span class="invalid-feedback">{{ $message }}</span>
                     @enderror
@@ -100,15 +122,22 @@
 <script>
     $(document).ready(function() {
         $('#coupon_discount').on('input', function() {
-            let value = parseInt($(this).val());
-            if (value < 0 || value > 100) {
+            let value = parseFloat($(this).val());
+            let discountType = $('#discount_type').val();
+            $(this).removeClass('is-invalid');
+            $(this).next('.invalid-feedback').remove();
+
+            if (value < 0) {
                 $(this).addClass('is-invalid');
-                $(this).next('.invalid-feedback').remove();
-                $(this).after('<span class="invalid-feedback d-block">Discount must be between 0 and 100.</span>');
-            } else {
-                $(this).removeClass('is-invalid');
-                $(this).next('.invalid-feedback').remove();
+                $(this).after('<span class="invalid-feedback d-block">Discount must be at least 0.</span>');
+            } else if (discountType === 'percentage' && value > 100) {
+                $(this).addClass('is-invalid');
+                $(this).after('<span class="invalid-feedback d-block">Percentage discount cannot exceed 100.</span>');
             }
+        });
+
+        $('#discount_type').on('change', function() {
+            $('#coupon_discount').trigger('input'); // Re-validate discount when type changes
         });
     });
 </script>

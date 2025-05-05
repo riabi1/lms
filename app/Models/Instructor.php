@@ -9,6 +9,7 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Auth\Notifications\ResetPassword as ResetPasswordNotification;
 
+
 class Instructor extends Authenticatable implements MustVerifyEmail
 {
     use Notifiable;
@@ -33,6 +34,7 @@ class Instructor extends Authenticatable implements MustVerifyEmail
         'phone',
         'address',
         'photo',
+        'cv',
         'bio',           
         'experience',    
         'skills',        
@@ -75,6 +77,8 @@ class Instructor extends Authenticatable implements MustVerifyEmail
     {
         return $this->morphMany(Course::class, 'courseable');
     }
+
+    
     /**
      * Send the email verification notification.
      *

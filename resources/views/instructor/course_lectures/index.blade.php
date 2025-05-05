@@ -1,6 +1,6 @@
 @extends('Instructor.layout.Instructor_layout')
-@section('instructor')
 
+@section('instructor')
 <div class="page-content">
     <!-- Breadcrumb -->
     <div class="page-breadcrumb d-none d-sm-flex align-items-center mb-3">
@@ -18,13 +18,11 @@
             <a href="{{ route('instructor.course_lectures.create', [$course->id, $section->id]) }}" class="btn btn-primary">Add Lecture</a>
         </div>
     </div>
-    <!-- End Breadcrumb -->
 
     <div class="card">
         <div class="card-body">
             <h5 class="mb-4">{{ $course->course_name }} - Lectures in {{ $section->section_title }}</h5>
 
-            <!-- Messages Flash -->
             @if (session('message'))
                 <div class="alert alert-{{ session('alert-type', 'info') }} alert-dismissible fade show" role="alert">
                     {{ session('message') }}
@@ -78,5 +76,4 @@
         </div>
     </div>
 </div>
-
 @endsection

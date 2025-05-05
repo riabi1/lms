@@ -20,7 +20,7 @@ class OrderPlacedNotification extends Notification
 
     public function via($notifiable)
     {
-        return ['database']; // Stocke dans la base de données
+        return ['database']; 
     }
 
     public function toDatabase($notifiable)

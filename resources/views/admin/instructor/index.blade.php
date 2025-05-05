@@ -125,6 +125,19 @@
                                 <td>{{ $instructor->phone ?? 'N/A' }}</td>
                             </tr>
                             <tr>
+                                <th>CV</th>
+                                <td>
+                                    @if ($instructor->cv)
+                                        <a href="{{ route('admin.instructors.downloadCv', $instructor->id) }}" 
+                                           class="btn btn-sm btn-primary">
+                                            <i class="bx bx-download"></i> Download CV
+                                        </a>
+                                    @else
+                                        <span class="text-muted">No CV uploaded</span>
+                                    @endif
+                                </td>
+                            </tr>
+                            <tr>
                                 <th>Status</th>
                                 <td>
                                     <span class="badge {{ $instructor->status == 1 ? 'bg-success' : 'bg-danger' }}">
@@ -192,7 +205,7 @@
             $checkbox.prop('disabled', true);
 
             $.ajax({
-                url: "{{ route('admin.instructors.updateStatus') }}", // Corrigé pour correspondre au contrôleur
+                url: "{{ route('admin.instructors.updateStatus') }}",
                 method: "POST",
                 data: {
                     instructor_id: instructorId,

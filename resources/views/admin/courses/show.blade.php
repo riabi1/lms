@@ -31,8 +31,8 @@
         <div class="card radius-10">
             <div class="card-body">
                 <div class="d-flex align-items-center">
-                    @if ($course->course_image && Storage::exists('public/upload/course_images/thumbnail/' . $course->course_image))
-                        <img src="{{ asset('storage/upload/course_images/thumbnail/' . $course->course_image) }}" 
+                    @if ($course->course_image && file_exists(public_path('upload/course_images/thumbnail/' . $course->course_image)))
+                        <img src="{{ asset('upload/course_images/thumbnail/' . $course->course_image) }}" 
                              class="rounded-circle p-1 border" 
                              width="90" 
                              height="90" 
@@ -81,9 +81,9 @@
                                 <tr>
                                     <td><strong>Video:</strong></td>
                                     <td>
-                                        @if ($course->video && Storage::exists('public/upload/course_images/video/' . $course->video))
+                                        @if ($course->video && file_exists(public_path('upload/course_images/video/' . $course->video)))
                                             <video width="300" height="200" controls>
-                                                <source src="{{ asset('storage/upload/course_images/video/' . $course->video) }}" type="video/mp4">
+                                                <source src="{{ asset('upload/course_images/video/' . $course->video) }}" type="video/mp4">
                                                 Your browser does not support the video tag.
                                             </video>
                                         @else

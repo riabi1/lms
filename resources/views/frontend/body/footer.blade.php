@@ -229,10 +229,11 @@
             <div class="row align-items-center">
                 <div class="col-lg-4 responsive-column-half">
                     <div class="footer-item">
-                        <a href="index.html">
-                            <img src="{{ $siteSettings->logo ? asset($siteSettings->logo) : asset('frontend/images/logo.png') }}" 
-                                 alt="footer logo" class="footer__logo">
-                        </a>
+                            <a href="{{ url('/') }}" class="logo">
+                                <img src="{{ $siteSettings->logo ? Storage::url($siteSettings->logo) : asset('images/default-logo.png') }}" 
+                                     alt="logo" class="lazy logo-header" loading="lazy" 
+                                     onerror="this.src='{{ asset('images/no_image.jpg') }}'">
+                            </a>
                         <h3 style="color: #EC5252;">CONTACT US </h3>
                         <ul class="contact-list pt-4">
                             <li><a href="tel:{{ preg_replace('/[^0-9+]/', '', $siteSettings->phone) }}">{{ $siteSettings->phone }}</a></li>

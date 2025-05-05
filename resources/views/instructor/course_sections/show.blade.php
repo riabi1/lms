@@ -1,6 +1,6 @@
 @extends('Instructor.layout.Instructor_layout')
-@section('instructor')
 
+@section('instructor')
 <div class="page-content">
     <!-- Breadcrumb -->
     <div class="page-breadcrumb d-none d-sm-flex align-items-center mb-3">
@@ -15,16 +15,25 @@
             </nav>
         </div>
         <div class="ms-auto">
-            <a href="{{ route('instructor.course_sections.edit', [$course->id, $section->id]) }}" class="btn btn-primary">Edit Section</a>
+            <div class="btn-group">
+                <a href="{{ route('instructor.course_sections.edit', [$course->id, $section->id]) }}" class="btn btn-primary">Edit Section</a>
+                <form action="{{ route('instructor.course_sections.destroy', [$course->id, $section->id]) }}" method="POST" style="display:inline;">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-danger" 
+                            onclick="return confirm('Are you sure you want to delete this section and all its lectures?');"
+                            title="Deletes section and all associated lectures">
+                        Delete Section
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
-    <!-- End Breadcrumb -->
 
     <div class="card">
         <div class="card-body p-4">
             <h5 class="mb-4">{{ $section->section_title }}</h5>
 
-            <!-- Messages Flash -->
             @if (session('message'))
                 <div class="alert alert-{{ session('alert-type', 'info') }} alert-dismissible fade show" role="alert">
                     {{ session('message') }}
@@ -32,36 +41,67 @@
                 </div>
             @endif
 
-            <div class="row">
-                <div class="col-md-6">
+            <!-- Section Details -->
+            <div class="mb-4">
+                <h6>Section Details</h6>
+                <div class="border p-3 bg-light rounded">
                     <p><strong>Course:</strong> {{ $course->course_name }}</p>
+                    @if ($section->description)
+                        <p><strong>Description:</strong></p>
+                        <div>{!! nl2br(e($section->description)) !!}</div>
+                    @else
+                        <p><strong>Description:</strong> None</p>
+                    @endif
                 </div>
             </div>
 
-            <div class="mt-4">
-                <h6>Lectures:</h6>
-                @forelse ($section->lectures as $lecture)
-                    <div class="card mb-2">
-                        <div class="card-body d-flex justify-content-between align-items-center">
-                            <span>{{ $lecture->lecture_title }}</span>
-                            <div class="btn-group">
-                                <a href="{{ route('instructor.course_lectures.show', [$course->id, $lecture->id]) }}" class="btn btn-sm btn-primary">View</a>
-                                <a href="{{ route('instructor.course_lectures.edit', [$course->id, $lecture->id]) }}" class="btn btn-sm btn-info">Edit</a>
-                                <form action="{{ route('instructor.course_lectures.destroy', [$course->id, $lecture->id]) }}" method="POST" style="display:inline;">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this lecture?');">Delete</button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                @empty
-                    <div class="alert alert-info" role="alert">
-                        No lectures available for this section. <a href="{{ route('instructor.course_lectures.create', [$course->id, $section->id]) }}" class="alert-link">Add a lecture</a> to get started.
-                    </div>
-                @endforelse
+            <!-- Lectures -->
+            <div class="mb-4">
+                <h6>Lectures</h6>
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Lecture Title</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($section->lectures as $key => $lecture)
+                                <tr>
+                                    <td>{{ $key + 1 }}</td>
+                                    <td>{{ $lecture->lecture_title }}</td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <a href="{{ route('instructor.course_lectures.show', [$course->id, $lecture->id]) }}" class="btn btn-sm btn-primary">View</a>
+                                            <a href="{{ route('instructor.course_lectures.edit', [$course->id, $lecture->id]) }}" class="btn btn-sm btn-info">Edit</a>
+                                            <form action="{{ route('instructor.course_lectures.destroy', [$course->id, $lecture->id]) }}" method="POST" style="display:inline;">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-danger" 
+                                                        onclick="return confirm('Are you sure you want to delete this lecture?');"
+                                                        title="Delete this lecture">
+                                                    Delete
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="3" class="text-center">
+                                        No lectures available. 
+                                        <a href="{{ route('instructor.course_lectures.create', [$course->id, $section->id]) }}" class="alert-link">Add a lecture</a> to get started.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
+            <!-- Actions -->
             <div class="mt-4">
                 <a href="{{ route('instructor.course_sections.index', $course->id) }}" class="btn btn-secondary">Back to Sections</a>
                 <a href="{{ route('instructor.course_lectures.create', [$course->id, $section->id]) }}" class="btn btn-primary">Add Lecture</a>
@@ -69,5 +109,4 @@
         </div>
     </div>
 </div>
-
 @endsection

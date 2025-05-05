@@ -29,8 +29,10 @@
                     <thead>
                         <tr>
                             <th>Sl</th>
-                            <th>Coupon Name</th>
+                            <th>Code</th>
                             <th>Discount</th>
+                            <th>Max Uses</th>
+                            <th>Uses</th>
                             <th>Validity</th>
                             <th>Status</th>
                             <th>Course</th>
@@ -41,11 +43,16 @@
                         @forelse ($coupons as $key => $item)
                             <tr>
                                 <td>{{ $key + 1 }}</td>
-                                <td>{{ $item->coupon_name }}</td>
-                                <td>{{ $item->coupon_discount }}%</td>
+                                <td>{{ $item->code }}</td>
+                                <td>
+                                    {{ number_format($item->coupon_discount, 2) }}
+                                    {{ $item->discount_type == 'percentage' ? '%' : 'Fixed' }}
+                                </td>
+                                <td>{{ $item->max_uses ?? 'Unlimited' }}</td>
+                                <td>{{ $item->uses }}</td>
                                 <td>
                                     {{ \Carbon\Carbon::parse($item->coupon_validity)->format('d M Y') }}
-                                    @if ($item->coupon_validity >= \Carbon\Carbon::now()->format('Y-m-d'))
+                                    @if (\Carbon\Carbon::parse($item->coupon_validity)->isFuture() || \Carbon\Carbon::parse($item->coupon_validity)->isToday())
                                         <span class="badge bg-success ms-2">Valid</span>
                                     @else
                                         <span class="badge bg-danger ms-2">Expired</span>
@@ -59,10 +66,7 @@
                                     @endif
                                 </td>
                                 <td>
-                                    @php
-                                        $course = \App\Models\Course::find($item->course_id);
-                                    @endphp
-                                    {{ $course ? $course->course_name : 'N/A' }}
+                                    {{ $item->couponable ? $item->couponable->course_name : 'N/A' }}
                                 </td>
                                 <td>
                                     <a href="{{ route('instructor.coupon.edit', $item->id) }}" class="btn btn-info px-3">Edit</a>
@@ -82,7 +86,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="text-center">No coupons found.</td>
+                                <td colspan="9" class="text-center">No coupons found.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -92,7 +96,7 @@
     </div>
 </div>
 
-<!-- Inclure jQuery et DataTables -->
+<!-- Include jQuery and DataTables -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>

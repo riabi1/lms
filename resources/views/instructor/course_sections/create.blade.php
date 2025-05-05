@@ -1,7 +1,6 @@
 @extends('Instructor.layout.Instructor_layout')
-@section('instructor')
 
-<!-- Scripts pour validation -->
+@section('instructor')
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
 
@@ -18,14 +17,15 @@
                 </ol>
             </nav>
         </div>
+        <div class="ms-auto">
+            <a href="{{ route('instructor.course_sections.index', $course->id) }}" class="btn btn-secondary px-4">Back to Sections</a>
+        </div>
     </div>
-    <!-- End Breadcrumb -->
 
     <div class="card">
         <div class="card-body p-4">
             <h5 class="mb-4">Add New Section for {{ $course->course_name }}</h5>
 
-            <!-- Messages Flash -->
             @if (session('message'))
                 <div class="alert alert-{{ session('alert-type', 'info') }} alert-dismissible fade show" role="alert">
                     {{ session('message') }}
@@ -35,19 +35,32 @@
 
             <form id="sectionForm" action="{{ route('instructor.course_sections.store', $course->id) }}" method="POST" class="row g-3">
                 @csrf
-                <!-- Pas besoin de champ caché course_id, car il est dans l'URL et implicite via $course -->
-
-                <div class="form-group col-md-12">
-                    <label for="section_title" class="form-label">Section Title <span class="text-danger">*</span></label>
-                    <input type="text" name="section_title" class="form-control @error('section_title') is-invalid @enderror" 
-                           id="section_title" value="{{ old('section_title') }}" placeholder="Enter section title">
-                    @error('section_title')
-                        <span class="invalid-feedback">{{ $message }}</span>
-                    @enderror
-                </div>
 
                 <div class="col-md-12">
-                    <div class="d-md-flex d-grid align-items-center gap-3">
+                    <h6 class="mb-3">Section Details</h6>
+                    <div class="border p-3 bg-light rounded">
+                        <div class="form-group">
+                            <label for="section_title" class="form-label">Section Title <span class="text-danger">*</span></label>
+                            <input type="text" name="section_title" class="form-control @error('section_title') is-invalid @enderror" 
+                                   id="section_title" value="{{ old('section_title') }}" placeholder="Enter section title" required>
+                            @error('section_title')
+                                <span class="invalid-feedback">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="form-group mt-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea name="description" class="form-control @error('description') is-invalid @enderror" 
+                                      id="description" rows="4" placeholder="Describe the section">{{ old('description') }}</textarea>
+                            @error('description')
+                                <span class="invalid-feedback">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-12 mt-4">
+                    <div class="d-flex gap-3">
                         <button type="submit" class="btn btn-primary px-4">Save Section</button>
                         <a href="{{ route('instructor.course_sections.index', $course->id) }}" class="btn btn-secondary px-4">Cancel</a>
                     </div>
@@ -57,20 +70,20 @@
     </div>
 </div>
 
-<!-- Script de validation -->
 <script type="text/javascript">
     $(document).ready(function() {
         $('#sectionForm').validate({
             rules: {
-                section_title: {
-                    required: true,
-                    maxlength: 255
-                }
+                section_title: { required: true, maxlength: 255 },
+                description: { maxlength: 1000 }
             },
             messages: {
                 section_title: {
                     required: "Please enter a section title",
                     maxlength: "Section title cannot exceed 255 characters"
+                },
+                description: {
+                    maxlength: "Description cannot exceed 1000 characters"
                 }
             },
             errorElement: 'span',
@@ -87,5 +100,4 @@
         });
     });
 </script>
-
 @endsection

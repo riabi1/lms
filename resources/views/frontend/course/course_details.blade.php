@@ -12,6 +12,79 @@
 .wishlist-btn.wishlisted i {
     color: #F16767;
 }
+.cart-message {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10000;
+    padding: 10px;
+    border-radius: 4px;
+    max-width: 300px;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+.alert-info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+}
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+}
+.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+.preview-course-video {
+    position: relative;
+    overflow: hidden;
+}
+.preview-course-video-content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+.preview-course-video-content:hover {
+    background-color: rgba(0, 0, 0, 0.3);
+}
+.preview-course-video-content .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+.preview-course-video-content .play-button {
+    position: relative;
+    z-index: 1;
+    width: 70px;
+    height: 70px;
+    transform: scale(1);
+    transition: transform 0.3s ease;
+}
+.preview-course-video-content:hover .play-button {
+    transform: scale(1.1);
+}
+.preview-course-video-content .play-button svg {
+    width: 100%;
+    height: 100%;
+    fill: #fff;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+.preview-course-video-content p {
+    position: relative;
+    z-index: 1;
+    margin-top: 15px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
 </style>
 
 <!-- BREADCRUMB AREA -->
@@ -89,9 +162,6 @@
                     @endauth
                     <button class="btn theme-btn theme-btn-sm theme-btn-transparent lh-28 mr-2 mb-2" data-toggle="modal" data-target="#shareModal">
                         <i class="la la-share mr-1"></i>Share
-                    </button>
-                    <button class="btn theme-btn theme-btn-sm theme-btn-transparent lh-28 mb-2" data-toggle="modal" data-target="#reportModal">
-                        <i class="la la-flag mr-1"></i>Report abuse
                     </button>
                 </div>
             </div>
@@ -349,10 +419,10 @@
                                         <div class="preview-course-video-content">
                                             <div class="overlay"></div>
                                             <div class="play-button">
-                                                <svg version="1.1" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="-307.4 338.8 91.8 91.8" style="enable-background:new -307.4 338.8 91.8 91.8;" xml:space="preserve">
+                                                <svg version="1.1" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="-307.4 338.8 91.8 91.8" xml:space="preserve">
                                                     <g>
-                                                        <circle class="st0" cx="-261.5" cy="384.7" r="45.9"></circle>
-                                                        <path class="st1" d="M-272.9,363.2l35.8,20.7c0.7,0.4,0.7,1.3,0,1.7l-35.8,20.7c-0.7,0.4-1.5-0.1-1.5-0.9V364C-274.4,363.3-273.5,362.8-272.9,363.2z"></path>
+                                                        <circle class="st0" cx="-261.5" cy="384.7" r="45.9" fill="rgba(0,0,0,0.7)"></circle>
+                                                        <path class="st1" d="M-272.9,363.2l35.8,20.7c0.7,0.4,0.7,1.3,0,1.7l-35.8,20.7c-0.7,0.4-1.5-0.1-1.5-0.9V364C-274.4,363.3-273.5,362.8-272.9,363.2z" fill="#fff"></path>
                                                     </g>
                                                 </svg>
                                             </div>
@@ -368,6 +438,7 @@
                                     $discountPercentage = ($course->selling_price > 0 && $course->discount_price !== null)
                                         ? round(($course->discount_price / $course->selling_price) * 100)
                                         : 0;
+                                    $isInCart = \Darryldecode\Cart\Facades\CartFacade::get($course->id) !== null;
                                 @endphp
 
                                 <div class="preview-course-feature-content pt-40px">
@@ -391,12 +462,9 @@
                                                 <i class="la la-play-circle fs-18 mr-1"></i> Start Learning
                                             </a>
                                         @else
-                                            <form action="{{ route('cart.add', $course->id) }}" method="POST">
-                                                @csrf
-                                                <button type="submit" class="btn theme-btn flex-grow-1 mr-3">
-                                                    <i class="la la-shopping-cart fs-18 mr-1"></i> Add to Cart
-                                                </button>
-                                            </form>
+                                            <button class="btn theme-btn flex-grow-1 mr-3 add-to-cart" data-course-id="{{ $course->id }}" {{ $isInCart ? 'data-in-cart="true"' : '' }}>
+                                                <i class="la la-shopping-cart fs-18 mr-1"></i> {{ $isInCart ? 'In Cart' : 'Add to Cart' }}
+                                            </button>
                                         @endif
                                     </div>
                                     <div class="preview-course-incentives">
@@ -457,6 +525,7 @@
                                 ->where('trackable_id', auth()->id())
                                 ->where('course_id', $inscourse->id)
                                 ->exists();
+                            $insIsInCart = \Darryldecode\Cart\Facades\CartFacade::get($inscourse->id) !== null;
                         @endphp
                         <div class="card card-item card-preview" data-tooltip-content="#tooltip_content_{{ $inscourse->id }}">
                             <div class="card-image">
@@ -530,6 +599,7 @@
                 ->where('trackable_id', auth()->id())
                 ->where('course_id', $inscourse->id)
                 ->exists();
+            $insIsInCart = \Darryldecode\Cart\Facades\CartFacade::get($inscourse->id) !== null;
         @endphp
         <div class="tooltip_templates" style="display: none;">
             <div id="tooltip_content_{{ $inscourse->id }}">
@@ -573,12 +643,9 @@
                                     <i class="la la-play-circle mr-1 fs-18"></i> Start Learning
                                 </a>
                             @else
-                                <form action="{{ route('cart.add', $inscourse->id) }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="btn theme-btn flex-grow-1 mr-3">
-                                        <i class="la la-shopping-cart mr-1 fs-18"></i> Add to Cart
-                                    </button>
-                                </form>
+                                <button class="btn theme-btn flex-grow-1 mr-3 add-to-cart" data-course-id="{{ $inscourse->id }}" {{ $insIsInCart ? 'data-in-cart="true"' : '' }}>
+                                    <i class="la la-shopping-cart mr-1 fs-18"></i> {{ $insIsInCart ? 'In Cart' : 'Add to Cart' }}
+                                </button>
                             @endif
                             @auth
                                 <button class="wishlist-btn icon-element icon-element-sm shadow-sm cursor-pointer border-0 bg-transparent {{ $insIsWishlisted ? 'wishlisted' : '' }}"
@@ -592,6 +659,7 @@
                                 </a>
                             @endauth
                         </div>
+                        <div id="cart-message-{{ $inscourse->id }}" class="cart-message"></div>
                     </div>
                 </div>
             </div>
@@ -652,62 +720,15 @@
         </div>
     </div>
 
-    <div class="modal fade modal-container" id="reportModal" tabindex="-1" role="dialog" aria-labelledby="reportModalTitle" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content">
-                <div class="modal-header border-bottom-gray">
-                    <div class="pr-2">
-                        <h5 class="modal-title fs-19 font-weight-semi-bold lh-24" id="reportModalTitle">Report Abuse</h5>
-                        <p class="pt-1 fs-14 lh-24">Flagged content is reviewed by Aduca staff to determine whether it violates Terms of Service or Community Guidelines. If you have a question or technical issue, please contact our
-                            <a href="contact.html" class="text-color hover-underline">Support team here</a>.
-                        </p>
-                    </div>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true" class="la la-times"></span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <form method="post" action="">
-                        @csrf
-                        <input type="hidden" name="course_id" value="{{ $course->id }}">
-                        <div class="input-box">
-                            <label class="label-text">Select Report Type</label>
-                            <div class="form-group">
-                                <div class="select-container w-auto">
-                                    <select class="select-container-select" name="report_type" required>
-                                        <option value="">-- Select One --</option>
-                                        <option value="1">Inappropriate Course Content</option>
-                                        <option value="2">Inappropriate Behavior</option>
-                                        <option value="3">Aduca Policy Violation</option>
-                                        <option value="4">Spammy Content</option>
-                                        <option value="5">Other</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="input-box">
-                            <label class="label-text">Write Message</label>
-                            <div class="form-group">
-                                <textarea class="form-control form--control pl-3" name="description" placeholder="Provide additional details here..." rows="5" required></textarea>
-                            </div>
-                        </div>
-                        <div class="btn-box text-right pt-2">
-                            <button type="button" class="btn font-weight-medium mr-3" data-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn theme-btn theme-btn-sm lh-30">Submit <i class="la la-arrow-right icon ml-1"></i></button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <script src="{{ asset('js/tooltipster.bundle.min.js') }}"></script>
     <script>
     $(document).ready(function() {
+        console.log('jQuery loaded and document ready');
+
         // Section toggle for accordion
-        $('.section-toggle').on('click', function() {
+        $('.section-toggle').off('click').on('click', function() {
             const content = $(this).closest('.card').find('.section-content');
             const plusIcon = $(this).find('.la-plus');
             const minusIcon = $(this).find('.la-minus');
@@ -731,10 +752,12 @@
             side: 'right',
             distance: 10
         });
+        console.log('Tooltipster initialized');
 
         // Handle wishlist button clicks
-        $('.wishlist-btn').on('click', function(e) {
+        $('.wishlist-btn').off('click').on('click', function(e) {
             e.preventDefault();
+            console.log('Wishlist button clicked');
             var $button = $(this);
             var courseId = $button.data('course-id');
             var isWishlisted = $button.hasClass('wishlisted');
@@ -744,9 +767,10 @@
                 url: url,
                 method: 'POST',
                 data: {
-                    _token: '{{ csrf_token() }}'
+                    _token: $('meta[name="csrf-token"]').attr('content')
                 },
                 success: function(response) {
+                    console.log('Wishlist AJAX success:', response);
                     if (response.status === 'success') {
                         if (isWishlisted) {
                             $button.removeClass('wishlisted');
@@ -762,11 +786,242 @@
                     }
                 },
                 error: function(xhr) {
+                    console.error('Wishlist AJAX error:', xhr);
                     var response = xhr.responseJSON;
                     alert(response.message || 'An error occurred.');
                 }
             });
         });
+
+        // Handle Add/Remove from Cart button clicks
+        $('.add-to-cart').off('click').on('click', function(e) {
+            e.preventDefault();
+            console.log('Cart button clicked');
+            var $button = $(this);
+            var courseId = $button.data('course-id');
+            var isInCart = $button.data('in-cart') === true;
+            var $message = $('#cart-message-' + courseId).length ? $('#cart-message-' + courseId) : $('<div class="cart-message"></div>').appendTo('body');
+            var url = isInCart ? '{{ route("cart.remove", ":id") }}'.replace(':id', courseId) : '{{ route("cart.add", ":id") }}'.replace(':id', courseId);
+            var method = isInCart ? 'GET' : 'POST';
+
+            if (!courseId) {
+                console.error('Course ID is undefined');
+                $message.html('<div class="alert alert-danger">Error: Course ID is missing.</div>').css({
+                    position: 'fixed',
+                    top: '20px',
+                    right: '20px',
+                    zIndex: 10000
+                });
+                setTimeout(function() { $message.remove(); }, 3000);
+                return;
+            }
+
+            console.log('Sending AJAX request for course ID:', courseId, 'Action:', isInCart ? 'Remove' : 'Add');
+            $.ajax({
+                url: url,
+                method: method,
+                data: isInCart ? {} : { _token: $('meta[name="csrf-token"]').attr('content') },
+                dataType: 'json',
+                beforeSend: function() {
+                    $button.prop('disabled', true).html('<i class="la la-shopping-cart fs-18 mr-1"></i> ' + (isInCart ? 'Removing...' : 'Adding...'));
+                },
+                success: function(response) {
+                    console.log('Cart AJAX success:', response);
+                    $button.prop('disabled', false);
+                    if (response.redirect) {
+                        // Non-authenticated: Store course in localStorage
+                        let tempCart = JSON.parse(localStorage.getItem('tempCart')) || [];
+                        const itemIndex = tempCart.findIndex(item => item.courseId === response.course_id);
+                        if (itemIndex > -1) {
+                            tempCart[itemIndex].quantity += 1;
+                        } else {
+                            tempCart.push({ courseId: response.course_id, quantity: 1 });
+                        }
+                        localStorage.setItem('tempCart', JSON.stringify(tempCart));
+                        $message.html('<div class="alert alert-info">Please log in to add this course to your cart.</div>').css({
+                            position: 'fixed',
+                            top: '20px',
+                            right: '20px',
+                            zIndex: 10000
+                        });
+                        setTimeout(function() {
+                            console.log('Redirecting to:', response.redirect);
+                            window.location.href = response.redirect;
+                        }, 1500);
+                    } else if (response.success) {
+                        $message.html('<div class="alert alert-success">' + response.message + '</div>').css({
+                            position: 'fixed',
+                            top: '20px',
+                            right: '20px',
+                            zIndex: 10000
+                        });
+                        if (isInCart) {
+                            // Remove from cart
+                            $button.data('in-cart', false).removeAttr('data-in-cart');
+                            $button.html('<i class="la la-shopping-cart fs-18 mr-1"></i> Add to Cart');
+                        } else {
+                            // Add to cart
+                            $button.data('in-cart', true);
+                            $button.html('<i class="la la-shopping-cart fs-18 mr-1"></i> In Cart');
+                        }
+                        // Update all buttons for this course
+                        $('.add-to-cart[data-course-id="' + courseId + '"]').each(function() {
+                            $(this).data('in-cart', !isInCart).prop('disabled', !isInCart)
+                                .html('<i class="la la-shopping-cart fs-18 mr-1"></i> ' + (isInCart ? 'Add to Cart' : 'In Cart'));
+                        });
+                        // Update cart count and subtotal
+                        if ($('#cartQty').length) {
+                            $('#cartQty').text(response.cartCount);
+                        }
+                        if ($('#cartSubTotal').length) {
+                            $('#cartSubTotal').text('TND ' + response.cartSubTotal);
+                        }
+                        // Update cart dropdown
+                        console.log('Updating cart dropdown');
+                        $.ajax({
+                            url: '{{ route("cart") }}',
+                            method: 'GET',
+                            success: function(html) {
+                                console.log('Cart dropdown HTML received');
+                                var $newCart = $(html).find('#cartDropdown').html();
+                                $('#cartDropdown').html($newCart);
+                                // Rebind remove-from-cart handlers in dropdown
+                                bindCartDropdownHandlers();
+                            },
+                            error: function(xhr) {
+                                console.error('Cart dropdown AJAX error:', xhr);
+                            }
+                        });
+                    } else {
+                        $message.html('<div class="alert alert-info">' + (response.info || response.message || 'Action completed.') + '</div>').css({
+                            position: 'fixed',
+                            top: '20px',
+                            right: '20px',
+                            zIndex: 10000
+                        });
+                    }
+                    setTimeout(function() { $message.remove(); }, 3000);
+                },
+                error: function(xhr) {
+                    console.error('Cart AJAX error:', xhr);
+                    $button.prop('disabled', false).html('<i class="la la-shopping-cart fs-18 mr-1"></i> ' + (isInCart ? 'In Cart' : 'Add to Cart'));
+                    var response = xhr.responseJSON || {};
+                    if (xhr.status === 401 && response.redirect) {
+                        // Handle 401 Unauthorized for non-authenticated users
+                        let tempCart = JSON.parse(localStorage.getItem('tempCart')) || [];
+                        const itemIndex = tempCart.findIndex(item => item.courseId === response.course_id);
+                        if (itemIndex > -1) {
+                            tempCart[itemIndex].quantity += 1;
+                        } else {
+                            tempCart.push({ courseId: response.course_id, quantity: 1 });
+                        }
+                        localStorage.setItem('tempCart', JSON.stringify(tempCart));
+                        $message.html('<div class="alert alert-info">Please log in to add this course to your cart.</div>').css({
+                            position: 'fixed',
+                            top: '20px',
+                            right: '20px',
+                            zIndex: 10000
+                        });
+                        setTimeout(function() {
+                            console.log('Redirecting to:', response.redirect);
+                            window.location.href = response.redirect;
+                        }, 1500);
+                    } else {
+                        $message.html('<div class="alert alert-danger">' + (response.error || response.message || 'An error occurred.') + '</div>').css({
+                            position: 'fixed',
+                            top: '20px',
+                            right: '20px',
+                            zIndex: 10000
+                        });
+                        setTimeout(function() { $message.remove(); }, 3000);
+                    }
+                }
+            });
+        });
+
+        // Function to bind remove-from-cart handlers in cart dropdown
+        function bindCartDropdownHandlers() {
+            $('#cartDropdown .remove-from-cart').off('click').on('click', function(e) {
+                e.preventDefault();
+                console.log('Remove from cart button clicked in dropdown');
+                var courseId = $(this).data('id');
+                var $cartItem = $('#cart-item-' + courseId);
+                var $message = $('#cart-message-' + courseId).length ? $('#cart-message-' + courseId) : $('<div class="cart-message"></div>').appendTo('body');
+
+                $.ajax({
+                    url: '{{ route("cart.remove", ":id") }}'.replace(':id', courseId),
+                    method: 'GET',
+                    dataType: 'json',
+                    success: function(response) {
+                        console.log('Remove from cart AJAX success:', response);
+                        if (response.redirect) {
+                            $message.html('<div class="alert alert-info">Please log in to remove this course from your cart.</div>').css({
+                                position: 'fixed',
+                                top: '20px',
+                                right: '20px',
+                                zIndex: 10000
+                            });
+                            setTimeout(function() {
+                                window.location.href = response.redirect;
+                            }, 1500);
+                        } else if (response.success) {
+                            $cartItem.remove();
+                            $message.html('<div class="alert alert-success">' + response.message + '</div>').css({
+                                position: 'fixed',
+                                top: '20px',
+                                right: '20px',
+                                zIndex: 10000
+                            });
+                            if ($('#cartQty').length) {
+                                $('#cartQty').text(response.cartCount);
+                            }
+                            if ($('#cartSubTotal').length) {
+                                $('#cartSubTotal').text('TND ' + response.cartSubTotal);
+                            }
+                            if (response.cartCount === 0) {
+                                $('#cartDropdown').html(
+                                    '<li class="media media-card">' +
+                                    '<div class="media-body fs-15 text-center">' +
+                                    '<p class="text-muted lh-18">Your cart is empty</p>' +
+                                    '</div></li>' +
+                                    '<li class="mt-3">' +
+                                    '<a href="{{ route('cart') }}" class="btn theme-btn w-100 py-2">Go to Cart <i class="la la-arrow-right icon ml-1"></i></a>' +
+                                    '</li>'
+                                );
+                            }
+                            // Update course card button state
+                            $('.add-to-cart[data-course-id="' + courseId + '"]').each(function() {
+                                $(this).data('in-cart', false).removeAttr('data-in-cart')
+                                    .prop('disabled', false)
+                                    .html('<i class="la la-shopping-cart fs-18 mr-1"></i> Add to Cart');
+                            });
+                        } else {
+                            $message.html('<div class="alert alert-info">' + (response.message || 'Action completed.') + '</div>').css({
+                                position: 'fixed',
+                                top: '20px',
+                                right: '20px',
+                                zIndex: 10000
+                            });
+                        }
+                        setTimeout(function() { $message.remove(); }, 3000);
+                    },
+                    error: function(xhr) {
+                        console.error('Remove from cart AJAX error:', xhr);
+                        var response = xhr.responseJSON || {};
+                        $message.html('<div class="alert alert-danger">' + (response.message || 'An error occurred.') + '</div>').css({
+                            position: 'fixed',
+                            top: '20px',
+                            right: '20px',
+                            zIndex: 10000
+                        });
+                        setTimeout(function() { $message.remove(); }, 3000);
+                    }
+                });
+            });
+        }
+
+        // Initial binding for cart dropdown handlers
+        bindCartDropdownHandlers();
     });
     </script>
 @endsection

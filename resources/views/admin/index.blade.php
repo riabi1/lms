@@ -15,10 +15,11 @@
             </div>
         @endif
 
+         
         <div class="mb-3">
             <div class="d-flex align-items-center">
                 <img class="rounded-circle me-3"
-                     src="{{ $admin->photo ? Storage::url('upload/admin_images/' . $admin->photo) : asset('upload/no_image.jpg') }}"
+                    src="{{ $admin && $admin->photo ? asset('upload/admin_images/' . $admin->photo) : asset('upload/no_image.jpg') }}"
                      alt="{{ $admin->name }}'s Profile"
                      style="width: 100px; height: 100px; object-fit: cover;">
                 <h2>Hello, {{ $admin->name }}</h2>
@@ -32,6 +33,7 @@
             <div class="alert alert-danger mt-3">{{ session('error') }}</div>
         @endif
     </div>
+
 </div>
 
 @push('scripts')

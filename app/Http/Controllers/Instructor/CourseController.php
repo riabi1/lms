@@ -9,7 +9,6 @@ use App\Models\SubCategory;
 use App\Models\Course;
 use App\Models\CourseGoal;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 
@@ -228,26 +227,18 @@ class CourseController extends Controller
         // Generate a unique filename
         $fileName = time() . '_' . $file->getClientOriginalName();
 
-        // Define both storage paths
-        $publicPath = public_path($path); // C:\Users\Riabi\OneDrive\Bureau\lms\public\storage\upload\course_images\thumbnail
-        $storagePath = storage_path('app/public/' . $path); // C:\Users\Riabi\OneDrive\Bureau\lms\storage\app\public\upload\course_images\thumbnail
+        // Define the public path
+        $publicPath = public_path($path);
 
-        // Ensure directories exist
+        // Ensure directory exists
         if (!file_exists($publicPath)) {
             mkdir($publicPath, 0755, true);
         }
-        if (!file_exists($storagePath)) {
-            mkdir($storagePath, 0755, true);
-        }
 
-        // Save the file in both locations
-        $file->move($publicPath, $fileName); // Save to public/storage
-        copy($publicPath . '/' . $fileName, $storagePath . '/' . $fileName); // Copy to storage/app/public
+        // Save the file to public/upload
+        $file->move($publicPath, $fileName);
 
-        \Log::info('File uploaded to both locations:', [
-            'public' => $publicPath . '/' . $fileName,
-            'storage' => $storagePath . '/' . $fileName,
-        ]);
+        \Log::info('File uploaded:', ['path' => $publicPath . '/' . $fileName]);
 
         return $fileName; // Return only the filename for DB storage
     }
@@ -256,15 +247,10 @@ class CourseController extends Controller
     {
         if ($filename) {
             $publicFile = public_path($path . '/' . $filename);
-            $storageFile = storage_path('app/public/' . $path . '/' . $filename);
 
             if (file_exists($publicFile)) {
                 unlink($publicFile);
-                \Log::info('Deleted file from public:', ['path' => $publicFile]);
-            }
-            if (file_exists($storageFile)) {
-                unlink($storageFile);
-                \Log::info('Deleted file from storage:', ['path' => $storageFile]);
+                \Log::info('Deleted file:', ['path' => $publicFile]);
             }
         }
     }

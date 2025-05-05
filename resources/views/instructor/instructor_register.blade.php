@@ -8,7 +8,9 @@
   <!-- Favicon -->
   <link rel="icon" href="{{ asset('backend/assets/images/favicon-32x32.png') }}" type="image/png" />
   <!-- Plugins -->
-  <link href="{{ asset('backend/assets/plugins/simplebar/css/simplebar.css') }}" rel="stylesheet" />
+  <link href="{{ asset('backend/assets/plugins/simplebar/cssর
+
+/css/simplebar.css') }}" rel="stylesheet" />
   <link href="{{ asset('backend/assets/plugins/perfect-scrollbar/css/perfect-scrollbar.css') }}" rel="stylesheet" />
   <link href="{{ asset('backend/assets/plugins/metismenu/css/metisMenu.min.css') }}" rel="stylesheet" />
   <!-- Loader -->
@@ -35,7 +37,7 @@
           <div class="col-12 col-xl-7 col-xxl-8 auth-cover-left align-items-center justify-content-center d-none d-xl-flex">
             <div class="card shadow-none bg-transparent rounded-0 mb-0">
               <div class="card-body">
-                <img src="{{ asset('backend/assets/images/login-images/login-cover.svg') }}" class="img-fluid auth-img-cover-login" width="650" alt="Instructor Register Cover" />
+                <img src="{{ asset('backend/assets/images/login-images/instructorlogin.png') }}" class="img-fluid auth-img-cover-login" width="650" alt="" />
               </div>
             </div>
           </div>
@@ -46,14 +48,14 @@
               <div class="card-body p-sm-5">
                 <div class="">
                   <div class="mb-3 text-center">
-                    <img src="{{ asset('backend/assets/images/logo-icon.png') }}" width="60" alt="Logo">
+                    <img src="{{ asset('frontend/images/logo2.png') }}" width="60" alt="Logo">
                   </div>
                   <div class="text-center mb-4">
                     <h5>Instructor Register</h5>
                     <p class="mb-0">Create an instructor account and start teaching!</p>
                   </div>
                   <div class="form-body">
-                    <form class="row g-3" method="POST" action="{{ route('instructor.register') }}">
+                    <form class="row g-3" method="POST" action="{{ route('instructor.register') }}" enctype="multipart/form-data">
                       @csrf
 
                       <!-- Name Field -->
@@ -93,6 +95,15 @@
                           <input type="password" id="password_confirmation" name="password_confirmation" class="form-control border-end-0" placeholder="Confirm Password" required>
                           <a href="javascript:;" class="input-group-text bg-transparent"><i class="bx bx-hide"></i></a>
                         </div>
+                      </div>
+
+                      <!-- CV Field -->
+                      <div class="col-12">
+                        <label for="cv" class="form-label">Upload CV (PDF)</label>
+                        <input type="file" id="cv" name="cv" class="form-control @error('cv') is-invalid @enderror" accept=".pdf">
+                        @error('cv')
+                        <span class="text-danger">{{ $message }}</span>
+                        @enderror
                       </div>
 
                       <!-- Checkboxes -->

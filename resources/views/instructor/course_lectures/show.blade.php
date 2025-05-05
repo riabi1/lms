@@ -1,6 +1,6 @@
 @extends('Instructor.layout.Instructor_layout')
-@section('instructor')
 
+@section('instructor')
 <div class="page-content">
     <!-- Breadcrumb -->
     <div class="page-breadcrumb d-none d-sm-flex align-items-center mb-3">
@@ -25,13 +25,11 @@
             </div>
         </div>
     </div>
-    <!-- End Breadcrumb -->
 
     <div class="card">
         <div class="card-body p-4">
             <h5 class="mb-4">{{ $lecture->lecture_title }}</h5>
 
-            <!-- Messages Flash -->
             @if (session('message'))
                 <div class="alert alert-{{ session('alert-type', 'info') }} alert-dismissible fade show" role="alert">
                     {{ session('message') }}
@@ -39,42 +37,57 @@
                 </div>
             @endif
 
-            <div class="row">
+            <!-- Lecture Details -->
+            <div class="row mb-4">
                 <div class="col-md-6">
-                    <p><strong>Section:</strong> {{ $lecture->section->section_title }}</p>
                     <p><strong>Course:</strong> {{ $course->course_name }}</p>
+                    <p><strong>Section:</strong> {{ $lecture->section->section_title }}</p>
                     @if ($lecture->url)
                         <p><strong>Video URL:</strong> <a href="{{ $lecture->url }}" target="_blank" rel="noopener noreferrer">{{ $lecture->url }}</a></p>
                     @endif
+                </div>
+                <div class="col-md-6">
                     @if ($lecture->video)
-                        <p><strong>Uploaded Video:</strong> <a href="{{ asset('storage/' . $lecture->video) }}" target="_blank" rel="noopener noreferrer">View Video</a></p>
+                        <p><strong>Uploaded Video:</strong></p>
+                        <video width="100%" height="200" controls preload="metadata" class="rounded">
+                            <source src="{{ asset('upload/lectures/videos/' . $lecture->video) }}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    @else
+                        <p><strong>Uploaded Video:</strong> None</p>
                     @endif
                 </div>
             </div>
 
+            <!-- Lecture Content -->
             @if ($lecture->content)
-                <div class="mt-4">
-                    <p><strong>Content:</strong></p>
-                    <div class="border p-3 bg-light">{{ $lecture->content }}</div>
+                <div class="mb-4">
+                    <h6>Lecture Content</h6>
+                    <div class="border p-3 bg-light rounded">{!! nl2br(e($lecture->content)) !!}</div>
                 </div>
             @endif
 
-            <div class="mt-4">
+            <!-- Additional Resources -->
+            <div class="mb-4">
                 <h6>Additional Resources</h6>
                 @if ($lecture->additional_video || $lecture->file_path || $lecture->external_link || $lecture->resources_description)
-                    <div class="border p-3 bg-light">
+                    <div class="border p-3 bg-light rounded">
                         @if ($lecture->additional_video)
-                            <p><strong>Additional Video:</strong> <a href="{{ asset('storage/' . $lecture->additional_video) }}" target="_blank" rel="noopener noreferrer">View Additional Video</a></p>
+                            <p><strong>Additional Video:</strong></p>
+                            <video width="100%" height="200" controls preload="metadata" class="rounded">
+                                <source src="{{ asset('upload/lectures/videos/' . $lecture->additional_video) }}" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
                         @endif
                         @if ($lecture->file_path)
-                            <p><strong>Resource File:</strong> <a href="{{ asset('storage/' . $lecture->file_path) }}" target="_blank" rel="noopener noreferrer">Download File</a></p>
+                            <p><strong>Resource File:</strong> <a href="{{ asset('upload/lectures/files/' . $lecture->file_path) }}" target="_blank" rel="noopener noreferrer">Download File</a></p>
                         @endif
                         @if ($lecture->external_link)
                             <p><strong>External Link:</strong> <a href="{{ $lecture->external_link }}" target="_blank" rel="noopener noreferrer">{{ $lecture->external_link }}</a></p>
                         @endif
                         @if ($lecture->resources_description)
                             <p><strong>Resources Description:</strong></p>
-                            <div>{{ $lecture->resources_description }}</div>
+                            <div>{!! nl2br(e($lecture->resources_description)) !!}</div>
                         @endif
                     </div>
                 @else
@@ -82,11 +95,11 @@
                 @endif
             </div>
 
+            <!-- Actions -->
             <div class="mt-4">
                 <a href="{{ route('instructor.course_sections.show', [$course->id, $lecture->section_id]) }}" class="btn btn-secondary">Back to Section</a>
             </div>
         </div>
     </div>
 </div>
-
 @endsection

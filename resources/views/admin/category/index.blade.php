@@ -35,7 +35,7 @@
             <tr>
               <td>{{ $key + 1 }}</td>
               <td>
-               <img src="{{ Storage::url('upload/category_images/' . $item->image) }}" alt="{{ $item->category_name }}" style="width: 70px; height: 40px;">
+                <img src="{{ $item->image ? asset('upload/category_images/' . $item->image) : asset('images/default.jpg') }}" alt="{{ $item->category_name }}" style="width: 70px; height: 40px;">
               </td>
               <td>{{ $item->category_name }}</td>
               <td>

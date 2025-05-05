@@ -8,18 +8,24 @@ use App\Models\Course;
 use App\Models\CourseSection;
 use App\Models\CourseLecture;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class CourseLectureController extends Controller
 {
+    /**
+     * Display a listing of lectures for a section.
+     */
     public function index(Course $course, CourseSection $section)
     {
         $this->authorizeCourse($course);
         $this->authorizeSection($course, $section);
-        $lectures = $section->lectures()->latest()->get(); // Utilise la relation
+        $lectures = $section->lectures()->latest()->get();
         return view('instructor.course_lectures.index', compact('course', 'section', 'lectures'));
     }
 
+    /**
+     * Show the form for creating a new lecture.
+     */
     public function create(Course $course, CourseSection $section = null)
     {
         $this->authorizeCourse($course);
@@ -27,43 +33,42 @@ class CourseLectureController extends Controller
         return view('instructor.course_lectures.create', compact('course', 'sections', 'section'));
     }
 
+    /**
+     * Store a newly created lecture.
+     */
     public function store(Request $request, Course $course)
     {
         $this->authorizeCourse($course);
 
-        $request->validate([
-            'lecture_title' => 'required|string|max:255',
-            'section_id' => 'required|exists:course_sections,id',
-            'url' => 'nullable|url',
-            'video' => 'nullable|file|mimes:mp4,webm|max:102400', // 100MB max
-            'content' => 'nullable|string',
-            'additional_video' => 'nullable|file|mimes:mp4,webm|max:102400', // 100MB max
-            'file_path' => 'nullable|file|mimes:pdf,doc,docx,jpg,png|max:20480', // 20MB max
-            'external_link' => 'nullable|url',
-            'resources_description' => 'nullable|string|max:1000',
-        ]);
+        try {
+            $validated = $this->validateLectureData($request);
+            $section = CourseSection::findOrFail($validated['section_id']);
+            $this->authorizeSection($course, $section);
 
-        $data = $request->except(['video', 'additional_video', 'file_path']);
-        $data['course_id'] = $course->id;
+            $data = $validated;
+            $data['course_id'] = $course->id;
 
-        // Gestion des fichiers
-        if ($request->hasFile('video')) {
-            $data['video'] = $request->file('video')->store('upload/lectures/videos', 'public');
+            // Handle file uploads
+            $data['video'] = $this->uploadFile($request->file('video'), 'upload/lectures/videos');
+            $data['additional_video'] = $this->uploadFile($request->file('additional_video'), 'upload/lectures/videos');
+            $data['file_path'] = $this->uploadFile($request->file('file_path'), 'upload/lectures/files');
+
+            CourseLecture::create($data);
+
+            return redirect()->route('instructor.course_sections.show', [$course->id, $validated['section_id']])
+                ->with(['message' => 'Lecture added successfully', 'alert-type' => 'success']);
+        } catch (\Exception $e) {
+            Log::error('Lecture creation failed:', ['error' => $e->getMessage()]);
+            return redirect()->back()->with([
+                'message' => 'Failed to create lecture: ' . $e->getMessage(),
+                'alert-type' => 'error'
+            ])->withInput();
         }
-        if ($request->hasFile('additional_video')) {
-            $data['additional_video'] = $request->file('additional_video')->store('upload/lectures/videos', 'public');
-        }
-        if ($request->hasFile('file_path')) {
-            $data['file_path'] = $request->file('file_path')->store('upload/lectures/files', 'public');
-        }
-
-        CourseLecture::create($data);
-
-        return redirect()->route('instructor.course_sections.show', [$course->id, $request->section_id])
-            ->with('message', 'Lecture added successfully')
-            ->with('alert-type', 'success');
     }
 
+    /**
+     * Display the specified lecture.
+     */
     public function show(Course $course, CourseLecture $lecture)
     {
         $this->authorizeCourse($course);
@@ -71,20 +76,93 @@ class CourseLectureController extends Controller
         return view('instructor.course_lectures.show', compact('course', 'lecture'));
     }
 
+    /**
+     * Show the form for editing the specified lecture.
+     */
     public function edit(Course $course, CourseLecture $lecture)
     {
         $this->authorizeCourse($course);
         $this->authorizeLecture($course, $lecture);
-        $sections = CourseSection::where('course_id', $course->id)->get(); // Pour permettre de changer de section
+        $sections = CourseSection::where('course_id', $course->id)->get();
         return view('instructor.course_lectures.edit', compact('course', 'lecture', 'sections'));
     }
 
+    /**
+     * Update the specified lecture.
+     */
     public function update(Request $request, Course $course, CourseLecture $lecture)
     {
         $this->authorizeCourse($course);
         $this->authorizeLecture($course, $lecture);
 
-        $request->validate([
+        try {
+            $validated = $this->validateLectureData($request);
+            $section = CourseSection::findOrFail($validated['section_id']);
+            $this->authorizeSection($course, $section);
+
+            $data = $validated;
+
+            // Handle file uploads and delete old files
+            if ($request->hasFile('video')) {
+                $this->deleteFile($lecture->video, 'upload/lectures/videos');
+                $data['video'] = $this->uploadFile($request->file('video'), 'upload/lectures/videos');
+            }
+            if ($request->hasFile('additional_video')) {
+                $this->deleteFile($lecture->additional_video, 'upload/lectures/videos');
+                $data['additional_video'] = $this->uploadFile($request->file('additional_video'), 'upload/lectures/videos');
+            }
+            if ($request->hasFile('file_path')) {
+                $this->deleteFile($lecture->file_path, 'upload/lectures/files');
+                $data['file_path'] = $this->uploadFile($request->file('file_path'), 'upload/lectures/files');
+            }
+
+            $lecture->update($data);
+
+            return redirect()->route('instructor.course_sections.show', [$course->id, $lecture->section_id])
+                ->with(['message' => 'Lecture updated successfully', 'alert-type' => 'success']);
+        } catch (\Exception $e) {
+            Log::error('Lecture update failed:', ['error' => $e->getMessage()]);
+            return redirect()->back()->with([
+                'message' => 'Failed to update lecture: ' . $e->getMessage(),
+                'alert-type' => 'error'
+            ])->withInput();
+        }
+    }
+
+    /**
+     * Remove the specified lecture.
+     */
+    public function destroy(Course $course, CourseLecture $lecture)
+    {
+        $this->authorizeCourse($course);
+        $this->authorizeLecture($course, $lecture);
+
+        try {
+            // Delete associated files
+            $this->deleteFile($lecture->video, 'upload/lectures/videos');
+            $this->deleteFile($lecture->additional_video, 'upload/lectures/videos');
+            $this->deleteFile($lecture->file_path, 'upload/lectures/files');
+
+            $sectionId = $lecture->section_id;
+            $lecture->delete();
+
+            return redirect()->route('instructor.course_sections.show', [$course->id, $sectionId])
+                ->with(['message' => 'Lecture deleted successfully', 'alert-type' => 'success']);
+        } catch (\Exception $e) {
+            Log::error('Lecture deletion failed:', ['error' => $e->getMessage()]);
+            return redirect()->back()->with([
+                'message' => 'Failed to delete lecture: ' . $e->getMessage(),
+                'alert-type' => 'error'
+            ]);
+        }
+    }
+
+    /**
+     * Validate lecture data for store and update.
+     */
+    private function validateLectureData(Request $request)
+    {
+        return $request->validate([
             'lecture_title' => 'required|string|max:255',
             'section_id' => 'required|exists:course_sections,id',
             'url' => 'nullable|url',
@@ -95,62 +173,10 @@ class CourseLectureController extends Controller
             'external_link' => 'nullable|url',
             'resources_description' => 'nullable|string|max:1000',
         ]);
-
-        $data = $request->except(['video', 'additional_video', 'file_path']);
-
-        // Gestion des fichiers avec suppression des anciens si remplacés
-        if ($request->hasFile('video')) {
-            if ($lecture->video) {
-                Storage::disk('public')->delete($lecture->video);
-            }
-            $data['video'] = $request->file('video')->store('upload/lectures/videos', 'public');
-        }
-        if ($request->hasFile('additional_video')) {
-            if ($lecture->additional_video) {
-                Storage::disk('public')->delete($lecture->additional_video);
-            }
-            $data['additional_video'] = $request->file('additional_video')->store('upload/lectures/videos', 'public');
-        }
-        if ($request->hasFile('file_path')) {
-            if ($lecture->file_path) {
-                Storage::disk('public')->delete($lecture->file_path);
-            }
-            $data['file_path'] = $request->file('file_path')->store('upload/lectures/files', 'public');
-        }
-
-        $lecture->update($data);
-
-        return redirect()->route('instructor.course_sections.show', [$course->id, $lecture->section_id])
-            ->with('message', 'Lecture updated successfully')
-            ->with('alert-type', 'success');
-    }
-
-    public function destroy(Course $course, CourseLecture $lecture)
-    {
-        $this->authorizeCourse($course);
-        $this->authorizeLecture($course, $lecture);
-
-        // Supprimer les fichiers associés
-        if ($lecture->video) {
-            Storage::disk('public')->delete($lecture->video);
-        }
-        if ($lecture->additional_video) {
-            Storage::disk('public')->delete($lecture->additional_video);
-        }
-        if ($lecture->file_path) {
-            Storage::disk('public')->delete($lecture->file_path);
-        }
-
-        $sectionId = $lecture->section_id;
-        $lecture->delete();
-
-        return redirect()->route('instructor.course_sections.show', [$course->id, $sectionId])
-            ->with('message', 'Lecture deleted successfully')
-            ->with('alert-type', 'success');
     }
 
     /**
-     * Vérifie si l'instructeur est autorisé à accéder au cours (polymorphique).
+     * Authorize course access for the instructor.
      */
     private function authorizeCourse(Course $course)
     {
@@ -161,7 +187,7 @@ class CourseLectureController extends Controller
     }
 
     /**
-     * Vérifie si la leçon appartient au cours.
+     * Authorize lecture access within the course.
      */
     private function authorizeLecture(Course $course, CourseLecture $lecture)
     {
@@ -171,12 +197,53 @@ class CourseLectureController extends Controller
     }
 
     /**
-     * Vérifie si la section appartient au cours.
+     * Authorize section access within the course.
      */
     private function authorizeSection(Course $course, CourseSection $section)
     {
         if ($section->course_id !== $course->id) {
             abort(404, 'Section not found.');
+        }
+    }
+
+    /**
+     * Upload a file to the specified public path.
+     */
+    private function uploadFile($file, $path)
+    {
+        if (!$file) {
+            return null;
+        }
+
+        $fileName = time() . '_' . $file->getClientOriginalName();
+        $publicPath = public_path($path);
+
+        if (!file_exists($publicPath)) {
+            mkdir($publicPath, 0755, true);
+        }
+
+        try {
+            $file->move($publicPath, $fileName);
+            Log::info('File uploaded:', ['path' => $publicPath . '/' . $fileName]);
+        } catch (\Exception $e) {
+            Log::error('File upload failed:', ['path' => $publicPath, 'error' => $e->getMessage()]);
+            throw $e;
+        }
+
+        return $fileName;
+    }
+
+    /**
+     * Delete a file from the specified public path.
+     */
+    private function deleteFile($filename, $path)
+    {
+        if ($filename) {
+            $filePath = public_path($path . '/' . $filename);
+            if (file_exists($filePath)) {
+                unlink($filePath);
+                Log::info('File deleted:', ['path' => $filePath]);
+            }
         }
     }
 }

@@ -35,7 +35,7 @@
           <div class="col-12 col-xl-7 col-xxl-8 auth-cover-left align-items-center justify-content-center d-none d-xl-flex">
             <div class="card shadow-none bg-transparent rounded-0 mb-0">
               <div class="card-body">
-                <img src="{{ asset('backend/assets/images/login-images/login-cover.svg') }}" class="img-fluid auth-img-cover-login" width="650" alt="" />
+                <img src="{{ asset('backend/assets/images/login-images/forgotpassword.jpg') }}" class="img-fluid auth-img-cover-login" width="650" alt="" />
               </div>
             </div>
           </div>
@@ -45,7 +45,7 @@
               <div class="card-body p-sm-5">
                 <div class="">
                   <div class="mb-3 text-center">
-                    <img src="{{ asset('backend/assets/images/logo-icon.png') }}" width="60" alt="">
+                    <img src="{{ asset('frontend/images/logo2.png') }}" width="60" alt="">
                   </div>
                   <div class="text-center mb-4">
                     <h5 class="">Instructor Forgot Password</h5>
@@ -95,7 +95,7 @@
   <!--app JS-->
   <script src="{{ asset('backend/assets/js/app.js') }}"></script>
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-  <script>
+ <script>
     @if(Session::has('message'))
     var type = "{{ Session::get('alert-type','info') }}"
     switch (type) {
@@ -113,7 +113,7 @@
         break;
     }
     @endif
-  </script>
+</script>
 </body>
 
 </html>

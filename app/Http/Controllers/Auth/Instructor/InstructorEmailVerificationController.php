@@ -38,7 +38,7 @@ class InstructorEmailVerificationController extends Controller
             $request->session()->regenerate();
         }
 
-        // Corrigé : Redirige vers 'instructor.dashboard' au lieu de 'instructor.verification.notice'
+        
         return redirect()->route('instructor.dashboard')->with('message', 'Email vérifié avec succès !');
     }
 
