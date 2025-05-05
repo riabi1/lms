@@ -1,3 +1,4 @@
+
 @extends('frontend.master')
 
 @section('title')
@@ -41,12 +42,11 @@
                         @forelse ($cartItems as $item)
                             <tr id="cart-row-{{ $item->id }}">
                                 <td class="text-center align-middle">
-                                    <img src="{{ isset($item->attributes['image']) ? asset('storage/upload/course_images/thumbnail/' . $item->attributes['image']) : asset('images/no_image.jpg') }}" 
+                                    <img src="{{ isset($item->attributes['image']) ? asset('upload/course_images/thumbnail/' . $item->attributes['image']) : asset('images/default-course.jpg') }}" 
                                          alt="{{ e($item->name) }}" 
                                          class="rounded lazy" 
                                          style="width: 75px; height: auto;"
-                                         loading="lazy"
-                                         onerror="this.src='{{ asset('images/no_image.jpg') }}'">
+                                         loading="lazy">
                                 </td>
                                 <td class="align-middle">
                                     <strong>{{ e($item->name) }}</strong><br>

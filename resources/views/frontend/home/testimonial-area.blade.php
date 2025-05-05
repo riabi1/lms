@@ -47,24 +47,73 @@
 </section>
 
 <style>
-.card-item { 
+.testimonial-area .card-item { 
     padding: 15px; 
     background: white; 
     border-radius: 5px; 
     box-shadow: 0 1px 5px rgba(0,0,0,0.1); 
-    min-height: 180px; 
+    width: 300px; /* Fixed width for all cards */
+    height: 250px; /* Fixed height for all cards */
+    display: flex; 
+    flex-direction: column; 
+    justify-content: space-between; 
+    overflow: hidden; /* Prevent content from overflowing */
 }
-.media-img img { 
+.testimonial-area .card-body {
+    display: flex;
+    flex-direction: column;
+    height: 100%; /* Ensure card-body takes full height */
+}
+.testimonial-area .media-img img { 
     width: 40px; 
     height: 40px; 
     border-radius: 50%; 
 }
-.media-body h5 { font-size: 16px; color: #333; }
-.lh-18 { font-size: 13px; color: #666; }
-.card-text { font-size: 13px; color: #666; }
-.review-stars .la-star { font-size: 14px; }
+.testimonial-area .media-body h5 { 
+    font-size: 16px; 
+    color: #333; 
+    white-space: nowrap; /* Prevent name from wrapping */
+    overflow: hidden; 
+    text-overflow: ellipsis; /* Truncate long names */
+}
+.testimonial-area .lh-18 { 
+    font-size: 13px; 
+    color: #666; 
+}
+.testimonial-area .card-text { 
+    font-size: 13px; 
+    color: #666; 
+    flex-grow: 1; /* Allow text to take available space */
+    overflow: hidden; /* Hide overflow text */
+    text-overflow: ellipsis; /* Add ellipsis for truncated text */
+    display: -webkit-box;
+    -webkit-line-clamp: 4; /* Limit to 4 lines */
+    -webkit-box-orient: vertical; /* Truncate vertically */
+}
+.testimonial-area .review-stars { 
+    display: flex; 
+    flex-wrap: nowrap; /* Prevent stars from wrapping to a new line */
+    align-items: center; 
+}
+.testimonial-area .review-stars .la-star { 
+    font-size: 14px; 
+    margin-right: 2px; /* Small spacing between stars */
+}
 @media (max-width: 768px) { 
-    .card-item { min-height: 160px; } 
-    .media-img img { width: 35px; height: 35px; }
+    .testimonial-area .card-item { 
+        width: 250px; /* Slightly smaller width for mobile */
+        height: 220px; /* Slightly smaller height for mobile */
+    }
+    .testimonial-area .media-img img { 
+        width: 35px; 
+        height: 35px; 
+    }
+    .testimonial-area .card-text {
+        -webkit-line-clamp: 3; /* Reduce to 3 lines on mobile */
+    }
+    .testimonial-area .review-stars .la-star { 
+        font-size: 12px; /* Slightly smaller stars on mobile */
+        margin-right: 1px; 
+    }
 }
 </style>

@@ -138,7 +138,7 @@
                     <!-- Logo & Menu Toggles -->
                     <div class="col-lg-2">
                         <div class="logo-box d-flex align-items-center">
-                            <a href="{{ url('/') }}" class="logo">
+                             <a href="{{ url('/') }}" class="logo">
                                 <img src="{{ $siteSettings->logo ? Storage::url($siteSettings->logo) : asset('images/default-logo.png') }}"
                                      alt="Logo" class="lazy logo-header" loading="lazy"
                                      onerror="this.src='{{ asset('images/no_image.jpg') }}'">
@@ -238,12 +238,11 @@
                                                     @foreach ($cartItems as $item)
                                                         <li class="media media-card border-bottom pb-2 mb-2" id="cart-item-{{ $item->cartable_id }}">
                                                             <a href="{{ url('course/details/'.$item->cartable_id.'/'.Str::slug($item->cartable->course_name)) }}" class="media-img mr-3">
-                                                                <img src="{{ $item->cartable->course_image ? asset('storage/upload/course_images/thumbnail/' . $item->cartable->course_image) : asset('images/no_image.jpg') }}"
+                                                                <img src="{{ $item->cartable->course_image ? asset('upload/course_images/thumbnail/' . $item->cartable->course_image) : asset('images/default-course.jpg') }}"
                                                                      alt="{{ e($item->cartable->course_name) }}"
                                                                      class="lazy rounded"
                                                                      style="width: 60px; height: auto;"
-                                                                     loading="lazy"
-                                                                     onerror="this.src='{{ asset('images/no_image.jpg') }}'">
+                                                                     loading="lazy">
                                                             </a>
                                                             <div class="media-body">
                                                                 <h5 class="fs-14 font-weight-bold">
@@ -260,12 +259,11 @@
                                                     @foreach ($tempCartItems as $item)
                                                         <li class="media media-card border-bottom pb-2 mb-2" id="cart-item-{{ $item['courseId'] }}">
                                                             <a href="{{ url('course/details/'.$item['courseId'].'/'.Str::slug($item['course_name'])) }}" class="media-img mr-3">
-                                                                <img src="{{ $item['image'] ? asset('storage/upload/course_images/thumbnail/' . $item['image']) : asset('images/no_image.jpg') }}"
+                                                                <img src="{{ $item['image'] ? asset('upload/course_images/thumbnail/' . $item['image']) : asset('images/default-course.jpg') }}"
                                                                      alt="{{ e($item['course_name']) }}"
                                                                      class="lazy rounded"
                                                                      style="width: 60px; height: auto;"
-                                                                     loading="lazy"
-                                                                     onerror="this.src='{{ asset('images/no_image.jpg') }}'">
+                                                                     loading="lazy">
                                                             </a>
                                                             <div class="media-body">
                                                                 <h5 class="fs-14 font-weight-bold">
@@ -324,7 +322,7 @@
     </div>
 </header>
 
-<!-- Inline CSS (unchanged) -->
+<!-- Inline CSS -->
 <style>
     /* General Header Styles */
     .header-menu-area {
@@ -508,7 +506,7 @@
     }
 </style>
 
-<!-- JavaScript (updated for cart handling) -->
+<!-- JavaScript -->
 <script>
 $(document).ready(function() {
     // Sticky Header with Dynamic Padding
@@ -591,7 +589,7 @@ $(document).ready(function() {
                         $resultsList.append(`
                             <li>
                                 <a href="${course.url}" class="d-flex align-items-center">
-                                    <img src="${course.image}" alt="${course.title}" class="course-image" onerror="this.src='{{ asset('images/no_image.jpg') }}'">
+                                    <img src="${course.image}" alt="${course.title}" class="course-image">
                                     <div>
                                         <div class="course-title">${course.title}</div>
                                         <div class="course-price">TND ${course.price}</div>

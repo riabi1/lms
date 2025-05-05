@@ -124,7 +124,10 @@
                             <div class="card card-item card-preview" data-tooltip-content="#tooltip_content_{{ $course->id }}">
                                 <div class="card-image">
                                     <a href="{{ route('course.details', [$course->id, $course->course_name_slug]) }}" class="d-block">
-                                        <img class="card-img-top lazy" src="{{ asset('storage/upload/course_images/thumbnail/' . $course->course_image) }}" alt="{{ $course->course_title }}" onerror="this.src='{{ asset('images/default-course.jpg') }}'">
+                                        <img class="card-img-top lazy" 
+                                             src="{{ $course->course_image ? asset('upload/course_images/thumbnail/' . $course->course_image) : asset('images/default-course.jpg') }}" 
+                                             alt="{{ $course->course_title }}"
+                                             loading="lazy">
                                     </a>
                                     <div class="course-badge-labels">
                                         @if ($course->bestseller == 1)
