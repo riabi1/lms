@@ -34,7 +34,7 @@
     transition: color 0.3s ease;
 }
 .wishlist-btn.wishlisted i {
-    color:#F16767;
+    color: #F16767;
 }
 </style>
 
@@ -107,7 +107,9 @@
                             <div class="card card-item card-preview">
                                 <div class="card-image">
                                     <a href="{{ route('course.details', [$course->id, $course->course_name_slug]) }}" class="d-block">
-                                        <img class="card-img-top lazy" src="{{ asset('storage/upload/course_images/thumbnail/' . $course->course_image) }}" alt="{{ $course->course_title }}" onerror="this.src='{{ asset('images/default-course.jpg') }}'">
+                                        <img class="card-img-top lazy" 
+                                             src="{{ $course->course_image ? asset('upload/course_images/thumbnail/' . $course->course_image) : 'https://via.placeholder.com/300x200?text=No+Image' }}" 
+                                             alt="{{ $course->course_title }}">
                                     </a>
                                     <div class="course-badge-labels">
                                         @if ($course->bestseller == 1)

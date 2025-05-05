@@ -256,20 +256,23 @@
                         <div class="course-overview-card pt-4">
                             <h3 class="fs-24 font-weight-semi-bold pb-4">About the instructor</h3>
                             <div class="instructor-wrap">
-                                <div class="media media-card">
-                                    <div class="instructor-img">
-                                        <a href="{{ $instructor ? route('instructor.details', $instructor->id) : '#' }}" class="media-img d-block">
-                                            <img class="lazy" src="{{ $instructor && $instructor->photo ? asset('storage/upload/instructor_images/' . $instructor->photo) : asset('images/no_image.jpg') }}" alt="Instructor image" loading="lazy" onerror="this.src='{{ asset('images/no_image.jpg') }}'">
-                                        </a>
-                                        <ul class="generic-list-item pt-3">
-                                            <li><i class="la la-play-circle-o mr-2 text-color-3"></i> {{ $instructorCourses->count() ?? 0 }} Courses</li>
-                                            <li><a href="{{ $instructor ? route('instructor.details', $instructor->id) : '#' }}">View all Courses</a></li>
-                                        </ul>
+                                <div class="media media-card align-items-center">
+                                    <div class="media-img mr-4 rounded-full">
+                                        <img class="rounded-full lazy" 
+                                             src="{{ $instructor && $instructor->photo ? asset('upload/instructor_images/' . $instructor->photo) : asset('images/default-instructor.jpg') }}" 
+                                             alt="Instructor image" 
+                                             loading="lazy">
                                     </div>
                                     <div class="media-body">
                                         <h5><a href="{{ $instructor ? route('instructor.details', $instructor->id) : '#' }}">{{ $instructor->name ?? 'Unknown Instructor' }}</a></h5>
                                         <span class="d-block lh-18 pt-2 pb-3">Joined {{ $instructor && $instructor->created_at ? \Carbon\Carbon::parse($instructor->created_at)->diffForHumans() : 'N/A' }}</span>
-                                        <p class="text-black lh-18 pb-3">{{ $instructor->email ?? 'No email available' }}</p>
+                                        <p class="text организаций
+
+black lh-18 pb-3">{{ $instructor->email ?? 'No email available' }}</p>
+                                        <ul class="generic-list-item pt-3">
+                                            <li><i class="la la-play-circle-o mr-2 text-color-3"></i> {{ $instructorCourses->count() ?? 0 }} Courses</li>
+                                            <li><a href="{{ $instructor ? route('instructor.details', $instructor->id) : '#' }}">View all Courses</a></li>
+                                        </ul>
                                     </div>
                                 </div>
                             </div>
@@ -349,8 +352,11 @@
                                 @endphp
                                 @forelse ($reviews as $item)
                                     <div class="media media-card border-bottom border-bottom-gray pb-4 mb-4">
-                                        <div class="media-img mr-4 rounded-full">
-                                            <img class="rounded-full lazy" src="{{ $item->user->photo ? asset('storage/upload/user_images/' . $item->user->photo) : asset('images/no_image.jpg') }}" alt="User image" loading="lazy" onerror="this.src='{{ asset('images/no_image.jpg') }}'">
+                                        <div class="media-img mr-4">
+                                            <img class="rounded-circle" 
+                                                 src="{{ $item->user->photo ? Storage::url('upload/user_images/' . $item->user->photo) : asset('upload/no_image.jpg') }}" 
+                                                 alt="{{ $item->user->name ?? 'Anonymous' }}'s Profile" 
+                                                 style="width: 100px; height: 100px; object-fit: cover;">
                                         </div>
                                         <div class="media-body">
                                             <div class="d-flex flex-wrap align-items-center justify-content-between pb-1">
@@ -415,7 +421,10 @@
                             <div class="card-body">
                                 <div class="preview-course-video">
                                     <a href="javascript:void(0)" data-toggle="modal" data-target="#previewModal">
-                                        <img src="{{ $course->course_image ? asset('storage/upload/course_images/thumbnail/' . $course->course_image) : asset('images/no_image.jpg') }}" alt="course-img" class="w-100 rounded lazy" loading="lazy" onerror="this.src='{{ asset('images/no_image.jpg') }}'">
+                                        <img src="{{ $course->course_image ? asset('upload/course_images/thumbnail/' . $course->course_image) : asset('images/default-course.jpg') }}" 
+                                             alt="course-img" 
+                                             class="w-100 rounded lazy" 
+                                             loading="lazy">
                                         <div class="preview-course-video-content">
                                             <div class="overlay"></div>
                                             <div class="play-button">
@@ -530,7 +539,10 @@
                         <div class="card card-item card-preview" data-tooltip-content="#tooltip_content_{{ $inscourse->id }}">
                             <div class="card-image">
                                 <a href="{{ url('course/details/'.$inscourse->id.'/'.$inscourse->course_name_slug) }}" class="d-block">
-                                    <img class="card-img-top lazy" src="{{ $inscourse->course_image ? asset('storage/upload/course_images/thumbnail/' . $inscourse->course_image) : asset('images/no_image.jpg') }}" alt="Card image cap" loading="lazy" onerror="this.src='{{ asset('images/no_image.jpg') }}'">
+                                    <img class="card-img-top lazy" 
+                                         src="{{ $inscourse->course_image ? asset('upload/course_images/thumbnail/' . $inscourse->course_image) : asset('images/default-course.jpg') }}" 
+                                         alt="Card image cap" 
+                                         loading="lazy">
                                 </a>
                                 <div class="course-badge-labels">
                                     @if ($inscourse->bestseller == 1)
@@ -711,9 +723,11 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <video controls crossorigin playsinline poster="{{ $course->course_image ? asset('storage/upload/course_images/thumbnail/' . $course->course_image) : asset('images/no_image.jpg') }}" id="player">
-                        <source src="{{ $course->video ? asset('storage/upload/course_images/video/' . $course->video) : '' }}" type="video/mp4" />
-                        <p>Your browser doesn't support HTML5 video. Here is a <a href="{{ $course->video ? asset('storage/upload/course_images/video/' . $course->video) : '#' }}">link to the video</a> instead.</p>
+                    <video controls crossorigin playsinline 
+                           poster="{{ $course->course_image ? asset('upload/course_images/thumbnail/' . $course->course_image) : asset('images/default-course.jpg') }}" 
+                           id="player">
+                        <source src="{{ $course->video ? asset('upload/course_images/video/' . $course->video) : '' }}" type="video/mp4" />
+                        <p>Your browser doesn't support HTML5 video. Here is a <a href="{{ $course->video ? asset('upload/course_images/video/' . $course->video) : '#' }}">link to the video</a> instead.</p>
                     </video>
                 </div>
             </div>

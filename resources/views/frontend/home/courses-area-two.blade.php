@@ -36,15 +36,18 @@ $bestsellers = App\Models\Course::with(['courseable', 'reviews', 'goals'])
                             ->where('course_id', $course->id)
                             ->exists();
                         $isInCart = \Darryldecode\Cart\Facades\CartFacade::get($course->id) !== null;
+                        $hasPurchased = auth()->check() && \App\Models\Order::where('user_id', auth()->id())
+                            ->where('course_id', $course->id)
+                            ->where('payment_status', 'paid')
+                            ->exists();
                     @endphp
                     <div class="col-lg-4 responsive-column-half">
                         <div class="card card-item card-preview" data-tooltip-content="#tooltip_content_{{ $course->id }}">
                             <div class="card-image">
                                 <a href="{{ route('course.details', ['id' => $course->id, 'slug' => $course->course_name_slug]) }}" class="d-block">
                                     <img class="card-img-top lazy" 
-                                         src="{{ asset('storage/upload/course_images/thumbnail/' . $course->course_image) }}"
-                                         alt="Course image" 
-                                         onerror="this.src='{{ asset('images/no_image.jpg') }}'">
+                                         src="{{ $course->course_image ? asset('upload/course_images/thumbnail/' . $course->course_image) : asset('images/no_image.jpg') }}"
+                                         alt="Course image">
                                 </a>
                                 <div class="course-badge-labels">
                                     @if ($course->bestseller == 1)
@@ -124,9 +127,15 @@ $bestsellers = App\Models\Course::with(['courseable', 'reviews', 'goals'])
                                         @endforelse
                                     </ul>
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <button class="btn theme-btn flex-grow-1 mr-3 add-to-cart" data-course-id="{{ $course->id }}" {{ $isInCart ? 'data-in-cart="true"' : '' }}>
-                                            <i class="la la-shopping-cart fs-18 mr-1"></i> {{ $isInCart ? 'In Cart' : 'Add to Cart' }}
-                                        </button>
+                                        @if ($hasPurchased)
+                                            <a href="{{ route('course.start', [$course->id, \Str::slug($course->course_name)]) }}" class="btn theme-btn flex-grow-1 mr-3">
+                                                <i class="la la-play-circle fs-18 mr-1"></i> Start Learning
+                                            </a>
+                                        @else
+                                            <button class="btn theme-btn flex-grow-1 mr-3 add-to-cart" data-course-id="{{ $course->id }}" {{ $isInCart ? 'data-in-cart="true"' : '' }}>
+                                                <i class="la la-shopping-cart fs-18 mr-1"></i> {{ $isInCart ? 'In Cart' : 'Add to Cart' }}
+                                            </button>
+                                        @endif
                                         @auth
                                             <button class="wishlist-btn icon-element icon-element-sm shadow-sm cursor-pointer border-0 bg-transparent {{ $isWishlisted ? 'wishlisted' : '' }}"
                                                     data-course-id="{{ $course->id }}"

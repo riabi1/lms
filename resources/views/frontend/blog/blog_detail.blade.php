@@ -44,8 +44,8 @@
                 <div class="instructor-wrap mb-4">
                     <h4 class="fs-20 font-weight-bold mb-3">About the Author</h4>
                     <div class="media media-card align-items-center p-3 bg-light rounded">
-                        <div class="media-img rounded-full mr-3" style="width: 80px; height: 80px;">
-                            <img src="{{ $author->photo ? asset('storage/upload/instructor_images/' . $author->photo) : asset('images/default-avatar.jpg') }}" alt="{{ $author->name ?? 'Unknown Author' }}" class="rounded-full w-100 h-100" style="object-fit: cover;">
+                        <div class="media-img mr-3">
+                            <img src="{{ $author->photo ? asset('upload/instructor_images/' . $author->photo) : asset('upload/no_image.jpg') }}" alt="{{ $author->name ?? 'Unknown Author' }}'s Profile" class="rounded-circle" style="width: 100px; height: 100px; object-fit: cover;">
                         </div>
                         <div class="media-body">
                             <h5 class="fs-16 font-weight-bold mb-1">{{ $author->name ?? 'Unknown Author' }}</h5>
@@ -61,8 +61,8 @@
                         @forelse($comments as $comment)
                             <div class="comment mb-4 border-bottom pb-3" id="comment-{{ $comment->id }}">
                                 <div class="media">
-                                    <div class="mr-3">
-                                        <img src="{{ $comment->user->photo ? asset('storage/upload/user_images/' . $comment->user->photo) : asset('images/default-avatar.jpg') }}" alt="{{ $comment->user->name }}" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+                                    <div class="media-img mr-3">
+                                        <img src="{{ $comment->user->photo ? Storage::url('upload/user_images/' . $comment->user->photo) : asset('upload/no_image.jpg') }}" alt="{{ $comment->user->name }}'s Profile" class="rounded-circle" style="width: 100px; height: 100px; object-fit: cover;">
                                     </div>
                                     <div class="media-body">
                                         <div class="d-flex justify-content-between align-items-center">
@@ -86,8 +86,8 @@
                                             @if($reply->approved)
                                                 <div class="reply mb-3">
                                                     <div class="media">
-                                                        <div class="mr-3">
-                                                            <img src="{{ $reply->user->photo ? asset('storage/upload/' . ($reply->user_type === 'App\\Models\\Instructor' ? 'instructor_images' : 'user_images') . '/' . $reply->user->photo) : asset('images/default-avatar.jpg') }}" alt="{{ $reply->user->name }}" class="rounded-circle" style="width: 30px; height: 30px; object-fit: cover;">
+                                                        <div class="media-img mr-3">
+                                                            <img src="{{ $reply->user->photo ? Storage::url('upload/user_images/' . $reply->user->photo) : asset('upload/no_image.jpg') }}" alt="{{ $reply->user->name }}'s Profile" class="rounded-circle" style="width: 100px; height: 100px; object-fit: cover;">
                                                         </div>
                                                         <div class="media-body">
                                                             <div class="d-flex justify-content-between align-items-center">
