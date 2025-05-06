@@ -1,264 +1,193 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Footer LMS - EasyLearning</title>
-    <style>
-        /* Police personnalisée (Google Fonts) */
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap');
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Footer LMS - EasyLearning</title>
+  <style>
+    /* Police personnalisée (Google Fonts) */
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap');
 
-        /* Style général du footer */
-        .footer-area {
-            font-family: 'Poppins', sans-serif; /* Police moderne et élégante */
-            background-color: #0e2552; /* Fond sombre pour contraste */
-            color: #ffffff; /* Texte blanc pour lisibilité */
-            padding-top: 100px;
-        }
+    /* Style général du footer */
+    .footer-area {
+      font-family: 'Poppins', sans-serif;
+      background-color: #1a1a1a;
+      color: #ffffff;
+      padding-top: 100px;
+      padding-bottom: 20px;
+      min-height: 350px;
+      max-height: 350px;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
 
-        .footer__logo {
-            max-width: 150px; /* Ajustez selon la taille de votre logo */
-        }
+    .footer__logo {
+      max-width: 150px;
+      max-height: 60px;
+      width: auto;
+      object-fit: contain;
+    }
 
-        .contact-list {
-            list-style: none;
-            padding-left: 0;
-        }
+    .contact-list {
+      list-style: none;
+      padding-left: 0;
+    }
 
-        .contact-list li {
-            margin-bottom: 10px;
-            font-size: 1rem;
-        }
+    .contact-list li {
+      margin-bottom: 10px;
+      font-size: 1rem;
+    }
 
-        .contact-list a {
-            color: #ffffff;
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
+    .contact-list a {
+      color: #ffffff;
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
 
-        .contact-list a:hover {
-            color: #d3442a; /* Couleur au survol */
-        }
+    .contact-list a:hover {
+      color: #EC5252;
+    }
 
-        .tagline {
-            text-align: center; /* Centrer la phrase */
-        }
+    .tagline {
+      text-align: center;
+    }
 
-        .highlight-text {
-            font-size: 2.5rem; /* Taille grande pour attirer l'attention */
-            font-weight: 700; /* Gras */
-            color: #d3442a; /* Couleur vive (cyan) */
-            text-transform: uppercase; /* Majuscules pour impact */
-            line-height: 1.2;
-            margin: 0;
-        }
+    .highlight-text {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #EC5252;
+      text-transform: uppercase;
+      line-height: 1.2;
+      margin: 0;
+    }
 
-        .section-block {
-            border-top: 1px solid soft blue; /* Séparateur subtil */
-            margin: 20px 0;
-        }
+    .section-block {
+      border-top: 1px solid #333333;
+      margin: 20px 0;
+    }
 
-        .copy-desc {
-            font-size: 0.9rem;
-            margin: 0;
-        }
+    .copy-desc {
+      font-size: 0.9rem;
+      margin: 0;
+    }
 
-        .copy-desc a {
-            color: #d3442a;
-            text-decoration: none;
-        }
+    .copy-desc a {
+      color: #EC5252;
+      text-decoration: none;
+    }
 
-        .footer-links {
-            list-style: none;
-            padding-left: 0;
-            margin: 0;
-            display: flex;
-            justify-content: flex-end;
-        }
+    .copy-desc a:hover {
+      color: #ffffff;
+    }
 
-        .footer-links li {
-            margin-left: 20px;
-            font-size: 0.9rem;
-        }
+    .footer-links {
+      list-style: none;
+      padding-left: 0;
+      margin: 0;
+      display: flex;
+      justify-content: flex-end;
+    }
 
-        .footer-links a {
-            color: #ffffff;
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
+    .footer-links li {
+      margin-left: 20px;
+      font-size: 0.9rem;
+    }
 
-        /* Responsive */
-        @media (max-width: 991px) {
-            .highlight-text {
-                font-size: 1.5rem; /* Réduire la taille sur petits écrans */
-            }
-            .footer-links {
-                justify-content: center !important; /* Centrer les liens en mobile */
-                flex-wrap: wrap;
-            }
-            .footer-links li {
-                margin: 5px 10px;
-            }
-        }
-    </style>
+    .footer-links a {
+      color: #ffffff;
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
 
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Footer LMS - EasyLearning</title>
-    <style>
-        /* Police personnalisée (Google Fonts) */
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap');
+    .footer-links a:hover {
+      color: #EC5252;
+    }
 
-        /* Style général du footer */
-        .footer-area {
-            font-family: 'Poppins', sans-serif;
-            /* Police moderne et élégante */
-            background-color: #1a1a1a;
-            /* Fond sombre pour contraste */
-            color: #ffffff;
-            /* Texte blanc pour lisibilité */
-            padding-top: 100px;
-        }
+    /* Responsive */
+    @media (max-width: 991px) {
+      .footer-area {
+        min-height: 400px;
+        max-height: 400px;
+      }
 
-        .footer__logo {
-            max-width: 150px;
-            /* Ajustez selon la taille de votre logo */
-        }
+      .highlight-text {
+        font-size: 1.5rem;
+      }
 
-        .contact-list {
-            list-style: none;
-            padding-left: 0;
-        }
+      .footer-links {
+        justify-content: center;
+        flex-wrap: wrap;
+      }
 
-        .contact-list li {
-            margin-bottom: 10px;
-            font-size: 1rem;
-        }
+      .footer-links li {
+        margin: 5px 10px;
+      }
 
-        .contact-list a {
-            color: #ffffff;
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
+      .responsive-column-half {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+    }
 
-        .contact-list a:hover {
-            color: #2d63a3;
-            /* Couleur au survol */
-        }
+    @media (max-width: 767px) {
+      .footer-area {
+        min-height: 450px;
+        max-height: 450px;
+        padding-top: 50px;
+      }
 
-        .tagline {
-            text-align: center;
-            /* Centrer la phrase */
-        }
-
-        .highlight-text {
-            font-size: 2rem;
-            /* Taille grande pour attirer l'attention */
-            font-weight: 700;
-            /* Gras */
-            color: #2d63a3;
-            /* Couleur vive (cyan) */
-            text-transform: uppercase;
-            /* Majuscules pour impact */
-            line-height: 1.2;
-            margin: 0;
-        }
-
-        .section-block {
-            border-top: 1px solid #333333;
-            /* Séparateur subtil */
-            margin: 20px 0;
-        }
-
-        .copy-desc {
-            font-size: 0.9rem;
-            margin: 0;
-        }
-
-        .copy-desc a {
-            color: #2d63a3;
-            text-decoration: none;
-        }
-
-        .footer-links {
-            list-style: none;
-            padding-left: 0;
-            margin: 0;
-            display: flex;
-            justify-content: flex-end;
-        }
-
-        .footer-links li {
-            margin-left: 20px;
-            font-size: 0.9rem;
-        }
-
-        .footer-links a {
-            color: #ffffff;
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
-
-        .footer-links a:hover {
-            color: #2d63a3;
-        }
-
-        /* Responsive */
-        @media (max-width: 991px) {
-            .highlight-text {
-                font-size: 1.5rem;
-                /* Réduire la taille sur petits écrans */
-            }
-
-            .footer-links {
-                justify-content: center !important;
-                /* Centrer les liens en mobile */
-                flex-wrap: wrap;
-            }
-
-            .footer-links li {
-                margin: 5px 10px;
-            }
-        }
-    </style>
+      .highlight-text {
+        font-size: 1.2rem;
+      }
+    }
+  </style>
 </head>
 
 <body>
-    <section class="footer-area">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-lg-4 responsive-column-half">
-                    <div class="footer-item">
-                            <a href="{{ url('/') }}" class="logo">
-                                <img src="{{ $siteSettings->logo ? Storage::url($siteSettings->logo) : asset('images/default-logo.png') }}" 
-                                     alt="logo" class="lazy logo-header" loading="lazy" 
-                                     onerror="this.src='{{ asset('images/no_image.jpg') }}'">
-                            </a>
-                        <h3 style="color: #EC5252;">CONTACT US </h3>
-                        <ul class="contact-list pt-4">
-                            <li><a href="tel:{{ preg_replace('/[^0-9+]/', '', $siteSettings->phone) }}">{{ $siteSettings->phone }}</a></li>
-                            <li><a href="mailto:{{ $siteSettings->email }}">{{ $siteSettings->email }}</a></li>
-                            <li>Tunis, Tunisie</li>
-                        </ul>
-                    </div><!-- end footer-item -->
-                </div><!-- end col-lg-4 -->
-                <div class="col-lg-8">
-                    <div class="footer-item tagline">
-                        <p class="highlight-text" style="color: #EC5252;">DÉCOUVREZ UNE EXPÉRIENCE D'APPRENTISSAGE EN LIGNE SIMPLE ET EFFICACE AVEC EASYLEARNING</p>
-                    </div><!-- end footer-item -->
-                </div><!-- end col-lg-8 -->
-            </div><!-- end row -->
-        </div><!-- end container -->
-        <div class="section-block"></div>
-        <div class="copyright-content py-4">
-            <div class="container">
-                <div class="row align-items-center">
-                    <div class="col-lg-6">
-                        <p class="copy-desc">{{ $siteSettings->copyright ?? '© 2025 EasyLearning. All Rights Reserved. by lmspfee' }}</p>
-                    </div><!-- end col-lg-6 -->
-                </div><!-- end row -->
-            </div><!-- end container -->
-        </div><!-- end copyright-content -->
-    </section><!-- end footer-area -->
+  <section class="footer-area">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-lg-4 responsive-column-half">
+          <div class="footer-item">
+            <a href="{{ url('/') }}" class="logo">
+              <img src="{{ $siteSettings->logo ? Storage::url($siteSettings->logo) : asset('images/default-logo.png') }}"
+                alt="Logo" class="lazy footer__logo" loading="lazy"
+                onerror="this.src='{{ asset('images/default-logo.png') }}'">
+            </a>
+            <h3 style="color: #EC5252;">CONTACT US</h3>
+            <ul class="contact-list pt-4">
+              <li><a href="tel:{{ preg_replace('/[^0-9+]/', '', $siteSettings->phone ?? '+1234567890') }}">{{ $siteSettings->phone ?? '+1234567890' }}</a></li>
+              <li><a href="mailto:{{ $siteSettings->email ?? 'contact@easylearning.com' }}">{{ $siteSettings->email ?? 'contact@easylearning.com' }}</a></li>
+              <li>Tunis, Tunisie</li>
+            </ul>
+          </div>
+        </div>
+        <div class="col-lg-8">
+          <div class="footer-item tagline">
+            <p class="highlight-text">DÉCOUVREZ UNE EXPÉRIENCE D'APPRENTISSAGE EN LIGNE SIMPLE ET EFFICACE AVEC EASYLEARNING</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="section-block"></div>
+    <div class="copyright-content py-4">
+      <div class="container">
+        <div class="row align-items-center">
+          <div class="col-lg-6">
+            <p class="copy-desc">{{ $siteSettings->copyright ?? '© 2025 EasyLearning. All Rights Reserved. by lmspfee' }}</p>
+          </div>
+          <div class="col-lg-6">
+            <ul class="footer-links">
+              <li><a href="">Politique de confidentialité</a></li>
+              <li><a href="">Conditions d'utilisation</a></li>
+              <li><a href="">Contact</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 </body>
+
 </html>
