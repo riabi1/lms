@@ -2,15 +2,23 @@
 
 namespace App\Notifications;
 
+use App\Models\Conversation;
+use App\Models\Message;
+use App\Models\User;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 class NewMessageNotification extends Notification
 {
-    protected $conversation;
-    protected $message;
-    protected $sender;
+    use Queueable;
 
-    public function __construct($conversation, $message, $sender)
+    public $conversation;
+    public $message;
+    public $sender;
+
+    public function __construct(Conversation $conversation, Message $message, User $sender)
     {
         $this->conversation = $conversation;
         $this->message = $message;
@@ -30,7 +38,7 @@ class NewMessageNotification extends Notification
             'message_id' => $this->message->id,
             'sender_id' => $this->sender->id,
             'sender_name' => $this->sender->name,
-            'message' => "New message from {$this->sender->name}: " . \Str::limit($this->message->message, 50),
+            'message' => $this->message->message,
         ];
     }
 }

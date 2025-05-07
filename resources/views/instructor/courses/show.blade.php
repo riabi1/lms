@@ -31,13 +31,9 @@
                         <p><strong>Subcategory:</strong> {{ $course->subcategory ? $course->subcategory->subcategory_name : 'No Subcategory' }}</p>
                         <p><strong>Price:</strong> {{ $course->selling_price ? number_format($course->selling_price, 2) . ' TND' : 'N/A' }}</p>
                         <p><strong>Discount Price:</strong> {{ $course->discount_price ? number_format($course->discount_price, 2) . ' TND' : 'N/A' }}</p>
-                        <p><strong>Duration:</strong> {{ $course->duration ?? 'N/A' }}</p>
                         <p><strong>Certificate:</strong> {{ $course->certificate ?? 'N/A' }}</p>
                         <p><strong>Label:</strong> {{ $course->label ?? 'N/A' }}</p>
                         <p><strong>Prerequisites:</strong> {{ $course->prerequisites ?? 'N/A' }}</p>
-                        <p><strong>Bestseller:</strong> {{ $course->bestseller ? 'Yes' : 'No' }}</p>
-                        <p><strong>Featured:</strong> {{ $course->featured ? 'Yes' : 'No' }}</p>
-                        <p><strong>Highest Rated:</strong> {{ $course->highestrated ? 'Yes' : 'No' }}</p>
                     </div>
                 </div>
 

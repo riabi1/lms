@@ -114,6 +114,8 @@ Route::name('')->group(function () {
         Route::get('/chat', [MessageController::class, 'index'])->name('chat');
         Route::get('/messages/{conversation}', [MessageController::class, 'show'])->name('messages.show');
         Route::post('/messages/{conversation}/send', [MessageController::class, 'send'])->name('messages.send');
+        Route::post('/messages/{conversation}/typing', [MessageController::class, 'typing'])->name('messages.typing');
+   
 
         // Report Routes
         Route::get('/report', [ReportController::class, 'create'])->name('report');
@@ -217,6 +219,8 @@ Route::prefix('instructor')->name('instructor.')->group(function () {
         Route::get('/chat', [MessageController::class, 'index'])->name('chat');
         Route::get('/messages/{conversation}', [MessageController::class, 'show'])->name('messages.show');
         Route::post('/messages/{conversation}/send', [MessageController::class, 'send'])->name('messages.send');
+        Route::post('/messages/{conversation}/typing', [MessageController::class, 'typing'])->name('messages.typing');
+       
         Route::get('/notifications/{notification}/mark-as-read', [MessageController::class, 'markNotificationAsRead'])->name('notifications.markAsRead');
 
         Route::get('/earnings', [InstructorEarningsController::class, 'index'])->name('earnings');
@@ -236,6 +240,7 @@ Route::get('/subcategory/{id}/{slug}', [IndexController::class, 'SubCategoryCour
 Route::get('/instructor/details/{id}', [IndexController::class, 'InstructorDetails'])->name('instructor.details');
 Route::get('/Allcourses', [IndexController::class, 'AllCourses'])->name('courses.all');
 Route::get('/courses', [IndexController::class, 'courses'])->name('course.list');
+
 
 // Invoice Routes
 Route::get('/checkout/success', [InvoiceController::class, 'success'])->name('checkout.success');
