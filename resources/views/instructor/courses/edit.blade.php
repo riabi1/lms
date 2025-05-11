@@ -194,13 +194,6 @@
                             @enderror
                         </div>
                         <div class="col-md-3">
-                            <label for="duration" class="form-label fw-bold">Duration</label>
-                            <input type="text" name="duration" class="form-control shadow-sm @error('duration') is-invalid @enderror" id="duration" value="{{ old('duration', $course->duration) }}" placeholder="e.g., 10 hours">
-                            @error('duration')
-                                <span class="invalid-feedback">{{ $message }}</span>
-                            @enderror
-                        </div>
-                        <div class="col-md-3">
                             <label for="resources" class="form-label fw-bold">Resources</label>
                             <input type="text" name="resources" class="form-control shadow-sm @error('resources') is-invalid @enderror" id="resources" value="{{ old('resources', $course->resources ?? '') }}">
                             @error('resources')
@@ -228,30 +221,7 @@
                             @enderror
                         </div>
                     </div>
-                    <hr>
-
-                    <!-- Section 6: Tags -->
-                    <h6 class="fw-bold mb-3">Tags</h6>
-                    <div class="row g-4 mb-4">
-                        <div class="col-md-4">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="bestseller" value="1" id="bestseller" {{ old('bestseller', $course->bestseller) ? 'checked' : '' }}>
-                                <label class="form-check-label" for="bestseller">Bestseller</label>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="featured" value="1" id="featured" {{ old('featured', $course->featured) ? 'checked' : '' }}>
-                                <label class="form-check-label" for="featured">Featured</label>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="highestrated" value="1" id="highestrated" {{ old('highestrated', $course->highestrated) ? 'checked' : '' }}>
-                                <label class="form-check-label" for="highestrated">Highest Rated</label>
-                            </div>
-                        </div>
-                    </div>
+                    <hr>             
 
                     <!-- Submit Button -->
                     <div class="col-md-12 text-center mt-4">

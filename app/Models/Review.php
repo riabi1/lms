@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Events\ReviewUpdated;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -23,6 +24,17 @@ class Review extends Model
     protected $casts = [
         'status' => 'boolean',
     ];
+
+    protected static function booted()
+    {
+        static::created(function ($review) {
+            ReviewUpdated::dispatch($review);
+        });
+
+        static::updated(function ($review) {
+            ReviewUpdated::dispatch($review);
+        });
+    }
 
     // Relation polymorphique avec l'entité évaluée (ex. Course)
     public function reviewable()

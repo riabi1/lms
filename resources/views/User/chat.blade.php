@@ -4,7 +4,6 @@
 
 @section('userdashboard')
     <div class="chat-wrapper compact">
-        <!-- Sidebar: Conversation List -->
         <div class="chat-sidebar">
             <div class="chat-sidebar-header">
                 <div class="d-flex align-items-center">
@@ -42,7 +41,7 @@
                                                 <img src="{{ $conversation->instructor?->photo && file_exists(public_path('upload/instructor_images/' . $conversation->instructor->photo)) ? asset('upload/instructor_images/' . $conversation->instructor->photo) : asset('upload/no_image.jpg') }}" 
                                                      width="36" height="36" class="rounded-circle user-avatar" alt="{{ $conversation->instructor?->name ?? 'Instructeur inconnu' }}" 
                                                      style="object-fit: cover;" loading="lazy" />
-                                                <span class="online-status {{ $conversation->instructor?->is_online === false ? 'offline' : 'online' }}"></span>
+                                                <span class="online-status {{ $conversation->instructor?->is_online ? 'online' : 'offline' }}"></span>
                                             </div>
                                             <div class="flex-grow-1 ms-2">
                                                 <h6 class="mb-0 chat-title" style="font-size: 13px;">{{ $conversation->instructor?->name ?? 'Instructeur inconnu' }}</h6>
@@ -63,8 +62,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- Main Chat Area -->
         @if($selectedConversation)
             <div class="chat-header d-flex align-items-center">
                 <div class="chat-toggle-btn"><i class='bx bx-menu-alt-left'></i></div>
@@ -74,7 +71,7 @@
                          style="object-fit: cover;" loading="lazy" />
                     <div class="ms-2">
                         <h4 class="mb-0 chat-user-name" style="font-size: 15px;">{{ $selectedConversation->instructor?->name ?? 'Instructeur inconnu' }}</h4>
-                        <small class="chat-status" style="font-size: 11px;">{{ $selectedConversation->instructor?->is_online === false ? 'Offline' : 'Active Now' }}</small>
+                        <small class="chat-status" style="font-size: 11px;">{{ $selectedConversation->instructor?->is_online ? 'Active Now' : 'Offline' }}</small>
                     </div>
                 </div>
             </div>
@@ -98,7 +95,7 @@
                     @else
                         <div class="chat-content-leftside">
                             <div class="d-flex">
-                                <img src="{{ $selectedConversation->instructor?->photo && file_exists(public_path('upload/instructor_images/' . $conversation->instructor->photo)) ? asset('upload/instructor_images/' . $conversation->instructor->photo) : asset('upload/no_image.jpg') }}" 
+                                <img src="{{ $selectedConversation->instructor?->photo && file_exists(public_path('upload/instructor_images/' . $selectedConversation->instructor->photo)) ? asset('upload/instructor_images/' . $selectedConversation->instructor->photo) : asset('upload/no_image.jpg') }}" 
                                      width="36" height="36" class="rounded-circle user-avatar" alt="{{ $selectedConversation->instructor?->name ?? 'Instructeur inconnu' }}" 
                                      style="object-fit: cover;" loading="lazy" />
                                 <div class="flex-grow-1 ms-2">
@@ -122,11 +119,13 @@
                             <input type="text" name="message" class="form-control message-input" placeholder="Type a message..." style="font-size: 13px;" required aria-label="Message input">
                             <button type="submit" class="input-group-text send-btn three-d" aria-label="Send message"><i class='bx bx-send'></i></button>
                         </div>
-                        @error('message')
-                            <span class="text-danger error-message" style="font-size: 11px;">{{ $message }}</span>
-                        @enderror
+                        <span class="text-danger error-message" style="font-size: 11px; display: none;"></span>
                     </form>
                 </div>
+            </div>
+        @else
+            <div class="chat-content">
+                <p class="p-2 text-center no-messages" style="font-size: 14px; color: #6B7280;">Select a conversation to start chatting.</p>
             </div>
         @endif
     </div>
@@ -150,115 +149,193 @@
             flex: 1;
             overflow-y: auto;
             padding: 15px;
-            max-height: calc(100vh - 240px); /* Adjust based on header and footer height */
+            max-height: calc(100vh - 240px);
         }
         .scroll-to-bottom {
             position: sticky;
             bottom: 10px;
             right: 10px;
             float: right;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
         }
         .chat-right-msg {
-            background: #6992f0; /* Soft blue for sender */
-            color: #000000; /* White text for contrast */
+            background: #6992f0;
+            color: #000000;
             padding: 10px 14px;
             border-radius: 12px;
+            max-width: 70%;
+            word-wrap: break-word;
         }
         .chat-left-msg {
-            background: #f06969; /* Vibrant coral for receiver */
-            color: #000000; /* White text for contrast */
+            background: #f06969;
+            color: #000000;
             padding: 10px 14px;
             border-radius: 12px;
-            border: none; /* Remove border for cleaner look */
+            max-width: 70%;
+            word-wrap: break-word;
+        }
+        .typing-indicator {
+            padding: 10px;
+            font-size: 12px;
+            color: #6B7280;
+        }
+        .typing-indicator .dot {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            margin: 0 2px;
+            background: #6B7280;
+            border-radius: 50%;
+            animation: dot-flashing 1s infinite alternate;
+        }
+        .typing-indicator .dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .typing-indicator .dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        @keyframes dot-flashing {
+            0% { opacity: 0.2; }
+            100% { opacity: 1; }
         }
     </style>
 @endpush
 
 @push('scripts')
     @if($selectedConversation)
+        <script src="{{ asset('js/echo.js') }}"></script>
         <script>
+            console.log('Initializing Echo for conversation {{ $selectedConversation->id }}');
             document.addEventListener('DOMContentLoaded', () => {
                 const chatContent = document.querySelector('.chat-content');
                 const scrollToBottomBtn = document.querySelector('.scroll-to-bottom');
+                const messageForm = document.querySelector('#message-form');
+                const messageInput = document.querySelector('.message-input');
+                const errorMessage = document.querySelector('.error-message');
+                let lastMessageId = {{ $selectedConversation->messages->max('id') ?? 0 }};
 
-                // Initial scroll to bottom
                 chatContent.scrollTo({ top: chatContent.scrollHeight, behavior: 'smooth' });
 
-                // Show/hide scroll-to-bottom button
                 chatContent.addEventListener('scroll', () => {
                     const isNearBottom = chatContent.scrollHeight - chatContent.scrollTop - chatContent.clientHeight < 100;
                     scrollToBottomBtn.style.display = isNearBottom ? 'none' : 'flex';
                 });
 
-                // Scroll to bottom on button click
                 scrollToBottomBtn.addEventListener('click', () => {
                     chatContent.scrollTo({ top: chatContent.scrollHeight, behavior: 'smooth' });
                 });
 
-                // Typing indicator
-                const messageInput = document.querySelector('.message-input');
-                let typingTimer;
-                messageInput.addEventListener('input', () => {
-                    clearTimeout(typingTimer);
-                    fetch('/messages/{{ $selectedConversation->id }}/typing', {
+                messageForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const message = messageInput.value.trim();
+                    if (!message) return;
+
+                    fetch('{{ route("messages.send", $selectedConversation->id) }}', {
                         method: 'POST',
                         headers: {
                             'X-CSRF-TOKEN': '{{ csrf_token() }}',
                             'Content-Type': 'application/json',
+                            'Accept': 'application/json',
                         },
+                        body: JSON.stringify({ message }),
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            messageInput.value = '';
+                            errorMessage.style.display = 'none';
+                            errorMessage.textContent = '';
+                        } else {
+                            errorMessage.textContent = data.error || 'Failed to send message';
+                            errorMessage.style.display = 'block';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error sending message:', error);
+                        errorMessage.textContent = 'An error occurred';
+                        errorMessage.style.display = 'block';
                     });
-                    typingTimer = setTimeout(() => {}, 1000);
                 });
-            });
 
-            Echo.private(`conversation.{{ $selectedConversation->id }}`)
-                .listen('MessageSent', (e) => {
-                    const chatContent = document.querySelector('.chat-content');
-                    const scrollToBottomBtn = document.querySelector('.scroll-to-bottom');
-                    const messageDiv = document.createElement('div');
-                    const isCurrentUser = e.sender_id === {{ Auth::id() }} && e.sender_type === 'App\\Models\\User';
-                    messageDiv.className = isCurrentUser ? 'chat-content-rightside' : 'chat-content-leftside';
-                    messageDiv.style.opacity = '0';
-                    messageDiv.innerHTML = isCurrentUser ?
-                        `<div class="d-flex">
-                            <div class="flex-grow-1 me-2">
-                                <p class="mb-0 chat-time text-end" style="font-size: 10px;">Just now</p>
-                                <p class="chat-right-msg three-d" data-message-id="${e.message_id}">${e.message}</p>
-                            </div>
-                            <img src="{{ Auth::user()?->photo && \Storage::disk('public')->exists('upload/user_images/' . Auth::user()->photo) ? asset('storage/upload/user_images/' . Auth::user()->photo) : asset('upload/no_image.jpg') }}" 
-                                 width="36" height="36" class="rounded-circle user-avatar" alt="{{ Auth::user()?->name ?? 'User' }}" 
-                                 style="object-fit: cover;" loading="lazy" />
-                        </div>` :
-                        `<div class="d-flex">
-                            <img src="{{ $selectedConversation->instructor?->photo && file_exists(public_path('upload/instructor_images/' . $selectedConversation->instructor->photo)) ? asset('upload/instructor_images/' . $selectedConversation->instructor->photo) : asset('upload/no_image.jpg') }}" 
-                                 width="36" height="36" class="rounded-circle user-avatar" alt="{{ $selectedConversation->instructor?->name ?? 'Instructeur inconnu' }}" 
-                                 style="object-fit: cover;" loading="lazy" />
-                            <div class="flex-grow-1 ms-2">
-                                <p class="mb-0 chat-time" style="font-size: 10px;">{{ $selectedConversation->instructor?->name ?? 'Instructeur inconnu' }}, Just now</p>
-                                <p class="chat-left-msg three-d" data-message-id="${e.message_id}">${e.message}</p>
-                            </div>
-                        </div>`;
-                    chatContent.appendChild(messageDiv);
-                    setTimeout(() => {
-                        messageDiv.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-                        messageDiv.style.opacity = '1';
-                        messageDiv.style.transform = 'translateY(0)';
-                    }, 10);
-
-                    // Auto-scroll only if near bottom
-                    const isNearBottom = chatContent.scrollHeight - chatContent.scrollTop - chatContent.clientHeight < 100;
-                    if (isNearBottom) {
-                        chatContent.scrollTo({ top: chatContent.scrollHeight, behavior: 'smooth' });
+                let typingTimer;
+                let isTyping = false;
+                messageInput.addEventListener('input', () => {
+                    if (!isTyping) {
+                        isTyping = true;
+                        fetch('/messages/{{ $selectedConversation->id }}/typing', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Content-Type': 'application/json',
+                            },
+                        }).catch(error => console.error('Typing request failed:', error));
                     }
-                })
-                .listen('Typing', (e) => {
-                    const typingIndicator = document.querySelector('.typing-indicator');
-                    typingIndicator.style.display = 'flex';
-                    typingIndicator.innerHTML = `<span class="dot"></span><span class="dot"></span><span class="dot"></span> ${e.user.name} is typing...`;
-                    setTimeout(() => {
-                        typingIndicator.style.display = 'none';
+                    clearTimeout(typingTimer);
+                    typingTimer = setTimeout(() => {
+                        isTyping = false;
                     }, 2000);
                 });
+
+                Echo.private(`conversation.{{ $selectedConversation->id }}`)
+                    .listen('.MessageSent', (e) => {
+                        console.log('MessageSent event received:', e);
+                        if (e.message_id <= lastMessageId) return;
+                        lastMessageId = e.message_id;
+
+                        const isCurrentUser = e.sender_id === {{ Auth::id() }} && e.sender_type === 'App\\Models\\User';
+                        const messageDiv = document.createElement('div');
+                        messageDiv.className = isCurrentUser ? 'chat-content-rightside' : 'chat-content-leftside';
+                        messageDiv.style.opacity = '0';
+                        messageDiv.innerHTML = isCurrentUser ?
+                            `<div class="d-flex">
+                                <div class="flex-grow-1 me-2">
+                                    <p class="mb-0 chat-time text-end" style="font-size: 10px;">Just now</p>
+                                    <p class="chat-right-msg three-d" data-message-id="${e.message_id}">${e.message}</p>
+                                </div>
+                                <img src="${e.sender_photo}" 
+                                     width="36" height="36" class="rounded-circle user-avatar" alt="${e.sender_name}" 
+                                     style="object-fit: cover;" loading="lazy" />
+                            </div>` :
+                            `<div class="d-flex">
+                                <img src="${e.sender_photo}" 
+                                     width="36" height="36" class="rounded-circle user-avatar" alt="${e.sender_name}" 
+                                     style="object-fit: cover;" loading="lazy" />
+                                <div class="flex-grow-1 ms-2">
+                                    <p class="mb-0 chat-time" style="font-size: 10px;">${e.sender_name}, Just now</p>
+                                    <p class="chat-left-msg three-d" data-message-id="${e.message_id}">${e.message}</p>
+                                </div>
+                            </div>`;
+                        chatContent.appendChild(messageDiv);
+                        setTimeout(() => {
+                            messageDiv.style.transition = 'opacity 0.3s ease';
+                            messageDiv.style.opacity = '1';
+                        }, 10);
+
+                        const isNearBottom = chatContent.scrollHeight - chatContent.scrollTop - chatContent.clientHeight < 100;
+                        if (isNearBottom) {
+                            chatContent.scrollTo({ top: chatContent.scrollHeight, behavior: 'smooth' });
+                        }
+                    })
+                    .listen('.Typing', (e) => {
+                        console.log('Typing event received:', e);
+                        if (e.user.id === {{ Auth::id() }}) return;
+                        const typingIndicator = document.querySelector('.typing-indicator');
+                        typingIndicator.style.display = 'flex';
+                        typingIndicator.innerHTML = `<span class="dot"></span><span class="dot"></span><span class="dot"></span> ${e.user.name} is typing...`;
+                        setTimeout(() => {
+                            typingIndicator.style.display = 'none';
+                        }, 3000);
+                    });
+            });
         </script>
     @endif
 @endpush

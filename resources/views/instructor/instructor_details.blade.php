@@ -5,32 +5,96 @@
 @endsection
 
 @section('home')
-<!-- ================================
-    START BREADCRUMB AREA
-================================= -->
-<section class="breadcrumb-area py-5 bg-white pattern-bg" style="background: linear-gradient(135deg, #f8f9fa, #e9ecef);">
+<style>
+    :root {
+        --primary: #4DB6AC; /* Soft Teal */
+        --secondary: #FF8A80; /* Light Coral */
+        --text-dark: #37474F; /* Dark Slate */
+        --text-muted: #78909C; /* Soft Gray */
+        --bg-light: #FFF8E1; /* Creamy White */
+        --bg-white: #FFFFFF; /* Pure White */
+        --success: #81C784; /* Soft Green */
+        --warning: #FFAB91; /* Soft Orange */
+        --info: #80DEEA; /* Soft Cyan */
+        --danger: #EF9A9A; /* Soft Red */
+    }
+    .bg-primary { background-color: var(--primary) !important; }
+    .text-primary { color: var(--primary) !important; }
+    .bg-success { background-color: var(--success) !important; }
+    .text-success { color: var(--success) !important; }
+    .bg-warning { background-color: var(--warning) !important; }
+    .text-warning { color: var(--warning) !important; }
+    .bg-info { background-color: var(--info) !important; }
+    .bg-danger { background-color: var(--danger) !important; }
+    .btn-outline-dark { border-color: var(--text-dark); color: var(--text-dark); }
+    .btn-outline-dark:hover { background-color: var(--secondary); border-color: var(--secondary); color: var(--bg-white); }
+    .card { border-radius: 15px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); }
+    .card-img-top { border-top-left-radius: 15px; border-top-right-radius: 15px; }
+    .media-img { border: 3px solid var(--bg-white); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); }
+    .online-status { background-color: var(--success); }
+    .section-padding { padding: 60px 0; }
+    .hover-scale:hover { transform: scale(1.05); transition: transform 0.3s ease; }
+    /* Course Card Styling */
+    .wishlist-btn i { transition: color 0.3s ease; }
+    .wishlist-btn.wishlisted i { color: var(--secondary); }
+    .cart-message {
+        position: absolute; top: 10px; right: 10px; z-index: 1000; padding: 10px; border-radius: 4px; max-width: 300px;
+        background-color: var(--bg-white); box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+    .alert-info { background-color: var(--info); color: var(--text-dark); }
+    .alert-success { background-color: var(--success); color: var(--text-dark); }
+    .alert-danger { background-color: var(--danger); color: var(--text-dark); }
+    .tooltipster-base { z-index: 9999 !important; pointer-events: auto !important; }
+    .tooltipster-content {
+        background-color: var(--bg-white); border: 1px solid #ddd; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); padding: 15px;
+        border-radius: 10px; max-width: 400px;
+    }
+    .card-content-wrapper { overflow: visible !important; }
+    .card.card-item.card-preview {
+        height: 380px; width: 100%; display: flex; flex-direction: column; overflow: hidden;
+    }
+    .card-image { height: 200px; overflow: hidden; }
+    .card-img-top { width: 100%; height: 100%; object-fit: cover; }
+    .card-body {
+        flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; padding: 15px;
+    }
+    .card-title {
+        font-size: 16px; line-height: 1.4; max-height: 44px; overflow: hidden; text-overflow: ellipsis;
+        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    }
+    .ribbon.ribbon-blue-bg {
+        font-size: 12px; max-width: 100%; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;
+        background-color: var(--primary); color: var(--bg-white);
+    }
+    .course-badge-labels { position: absolute; top: 10px; left: 10px; }
+    .course-badge { padding: 5px 10px; margin-bottom: 5px; border-radius: 5px; font-size: 12px; }
+    .responsive-column-half { display: flex; align-items: stretch; }
+</style>
+
+<!-- Breadcrumb Area -->
+<section class="breadcrumb-area py-5 bg-white pattern-bg" style="background: linear-gradient(135deg, var(--bg-light), #ECEFF1);">
     <div class="container">
         <div class="breadcrumb-content text-center">
             <div class="media media-card align-items-center pb-4 animate__animated animate__fadeInUp">
                 <div class="media-img media--img media-img-lg rounded-full position-relative overflow-hidden" style="width: 150px; height: 150px;">
-                    <img src="{{ $instructor->photo ? asset('storage/upload/instructor_images/' . $instructor->photo) : asset('upload/no_image.jpg') }}" 
+                    <img src="{{ $instructor->photo ? asset('upload/instructor_images/' . $instructor->photo) : asset('images/default-instructor.jpg') }}" 
                          alt="{{ $instructor->name ?? 'Instructor' }}'s Profile" 
-                         class="rounded-full shadow-lg" 
-                         style="width: 100%; height: 100%; object-fit: cover; object-position: center; border: 4px solid #fff;">
-                    <span class="online-status bg-success position-absolute bottom-0 end-0 rounded-circle" style="width: 20px; height: 20px; border: 2px solid #fff;"></span>
+                         class="rounded-full" 
+                         style="width: 100%; height: 100%; object-fit: cover; object-position: center;">
+                    <span class="online-status position-absolute bottom-0 end-0 rounded-circle" style="width: 20px; height: 20px; border: 2px solid var(--bg-white);"></span>
                 </div>
                 <div class="media-body mt-3">
-                    <h2 class="section__title fs-35 fw-bold text-dark animate__animated animate__fadeIn" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.1);">{{ $instructor->name ?? 'Unknown Instructor' }}</h2>
+                    <h2 class="section__title fs-35 fw-bold" style="color: var(--text-dark); text-shadow: 1px 1px 2px rgba(0,0,0,0.1);">{{ $instructor->name ?? 'Unknown Instructor' }}</h2>
                     <span class="d-block lh-18 pt-1 pb-2 text-muted fs-16"><i class="la la-calendar mr-1"></i> Joined {{ $instructor && $instructor->created_at ? \Carbon\Carbon::parse($instructor->created_at)->diffForHumans() : 'N/A' }}</span>
-                    <p class="lh-20 fs-16 text-gray-600"><i class="la la-envelope mr-1"></i> {{ $instructor->email ?? 'No email available' }}</p>
+                    <p class="lh-20 fs-16" style="color: var(--text-muted);"><i class="la la-envelope mr-1"></i> {{ $instructor->email ?? 'No email available' }}</p>
                     @if($instructor->location)
-                        <p class="lh-20 fs-16 text-gray-600"><i class="la la-map-marker mr-1"></i> {{ $instructor->location }}</p>
+                        <p class="lh-20 fs-16" style="color: var(--text-muted);"><i class="la la-map-marker mr-1"></i> {{ $instructor->location }}</p>
                     @endif
                     @if($instructor->website)
                         <p class="lh-20 fs-16"><a href="{{ $instructor->website }}" target="_blank" class="text-primary hover:underline"><i class="la la-globe mr-1"></i> Visit Website</a></p>
                     @endif
                 </div>
-            </div><!-- end media -->
+            </div>
             <ul class="social-icons social-icons-styled social--icons-styled d-flex justify-content-center gap-3 animate__animated animate__fadeInUp animate__delay-1s">
                 @foreach(['facebook' => 'la-facebook', 'twitter' => 'la-twitter', 'instagram' => 'la-instagram', 'linkedin' => 'la-linkedin', 'youtube' => 'la-youtube'] as $platform => $icon)
                     @if($instructor->$platform)
@@ -38,19 +102,14 @@
                     @endif
                 @endforeach
             </ul>
-        </div><!-- end breadcrumb-content -->
-    </div><!-- end container -->
-</section><!-- end breadcrumb-area -->
-<!-- ================================
-    END BREADCRUMB AREA
-================================= -->
+        </div>
+    </div>
+</section>
 
-<!-- ================================
-    START INSTRUCTOR DETAILS AREA
-================================= -->
-<section class="instructor-details-area pt-50px pb-70px bg-light">
+<!-- Instructor Details Area -->
+<section class="instructor-details-area section-padding bg-light">
     <div class="container">
-        <!-- Statistiques -->
+        <!-- Statistics -->
         <div class="student-details-wrap pb-40px">
             <div class="row justify-content-center g-4">
                 <div class="col-lg-4 col-md-6">
@@ -59,273 +118,257 @@
                             <i class="la la-users fs-24"></i>
                         </div>
                         <h4 class="counter__title text-primary fs-35 fw-bold" data-count="{{ $totalStudents ?? 0 }}">{{ $totalStudents ?? '0' }}</h4>
-                        <p class="counter__meta text-muted fs-16">Total Students</p>
+                        <p class="counter__meta text-muted fs-16" style="color: var(--text-muted);">Total Students</p>
                     </div>
-                </div><!-- end col-lg-4 -->
+                </div>
                 <div class="col-lg-4 col-md-6">
                     <div class="counter-item card shadow-sm text-center p-4 animate__animated animate__zoomIn" data-delay="0.2s">
                         <div class="counter__icon icon-element mb-3 bg-warning text-white mx-auto" style="width: 60px; height: 60px; line-height: 60px;">
                             <i class="la la-star fs-24"></i>
                         </div>
                         <h4 class="counter__title text-warning fs-35 fw-bold" data-count="{{ $totalReviews ?? 0 }}">{{ $totalReviews ?? '0' }}</h4>
-                        <p class="counter__meta text-muted fs-16">Reviews</p>
+                        <p class="counter__meta text-muted fs-16" style="color: var(--text-muted);">Reviews</p>
                     </div>
-                </div><!-- end col-lg-4 -->
+                </div>
                 <div class="col-lg-4 col-md-6">
                     <div class="counter-item card shadow-sm text-center p-4 animate__animated animate__zoomIn" data-delay="0.4s">
                         <div class="counter__icon icon-element mb-3 bg-success text-white mx-auto" style="width: 60px; height: 60px; line-height: 60px;">
                             <i class="la la-book fs-24"></i>
                         </div>
                         <h4 class="counter__title text-success fs-35 fw-bold" data-count="{{ count($courses) }}">{{ count($courses) }}</h4>
-                        <p class="counter__meta text-muted fs-16">Courses</p>
+                        <p class="counter__meta text-muted fs-16" style="color: var(--text-muted);">Courses</p>
                     </div>
-                </div><!-- end col-lg-4 -->
-            </div><!-- end row -->
-        </div><!-- end student-details-wrap -->
+                </div>
+            </div>
+        </div>
 
-        <!-- Toutes les Informations -->
+        <!-- Instructor Information -->
         <div class="row g-4">
-            <!-- Colonne Gauche -->
+            <!-- Left Column -->
             <div class="col-lg-6">
                 <div class="card card-item shadow-sm p-4 animate__animated animate__fadeInUp">
-                    <h4 class="fw-bold text-dark mb-3"><i class="la la-user mr-2 text-primary"></i> About Me</h4>
-                    <p class="text-gray-700 lh-24">{{ $instructor->bio ?? 'No biography available.' }}</p>
+                    <h4 class="fw-bold mb-3" style="color: var(--text-dark);"><i class="la la-user mr-2 text-primary"></i> About Me</h4>
+                    <p class="text-muted lh-24 mb-3" style="color: var(--text-muted);">A brief introduction to my background and teaching philosophy.</p>
+                    <p class="lh-24" style="color: var(--text-dark);">{{ $instructor->bio ?? 'No biography available.' }}</p>
                 </div>
                 <div class="card card-item shadow-sm p-4 mt-4 animate__animated animate__fadeInUp" style="animation-delay: 0.2s;">
-                    <h4 class="fw-bold text-dark mb-3"><i class="la la-briefcase mr-2 text-primary"></i> Experience</h4>
-                    <p class="text-gray-700 lh-24">{{ $instructor->experience ?? 'No experience details provided.' }}</p>
+                    <h4 class="fw-bold mb-3" style="color: var(--text-dark);"><i class="la la-briefcase mr-2 text-primary"></i> Professional Experience</h4>
+                    <p class="text-muted lh-24 mb-3" style="color: var(--text-muted);">Key roles and achievements in my career.</p>
+                    @if($instructor->experience)
+                        <ul class="list-unstyled ps-3">
+                            @foreach(explode("\n", $instructor->experience) as $exp)
+                                @if(trim($exp))
+                                    <li class="mb-2" style="color: var(--text-dark);"><i class="la la-circle fa-xs mr-2 text-primary"></i> {{ trim($exp) }}</li>
+                                @endif
+                            @endforeach
+                        </ul>
+                    @else
+                        <p class="lh-24" style="color: var(--text-dark);">No experience details provided.</p>
+                    @endif
                 </div>
-            </div><!-- end col-lg-6 -->
-
-            <!-- Colonne Droite -->
+            </div>
+            <!-- Right Column -->
             <div class="col-lg-6">
                 <div class="card card-item shadow-sm p-4 animate__animated animate__fadeInUp" style="animation-delay: 0.4s;">
-                    <h4 class="fw-bold text-dark mb-3"><i class="la la-star mr-2 text-warning"></i> Specialty</h4>
+                    <h4 class="fw-bold mb-3" style="color: var(--text-dark);"><i class="la la-star mr-2 text-warning"></i> Specialty</h4>
                     <p class="text-primary fw-medium fs-16 bg-white p-2 rounded shadow-sm">{{ $instructor->specialty ?? 'No specialty specified.' }}</p>
                 </div>
                 <div class="card card-item shadow-sm p-4 mt-4 animate__animated animate__fadeInUp" style="animation-delay: 0.6s;">
-                    <h4 class="fw-bold text-dark mb-3"><i class="la la-graduation-cap mr-2 text-primary"></i> Education</h4>
-                    <p class="text-gray-700 lh-24">{{ $instructor->education ?? 'No education details provided.' }}</p>
+                    <h4 class="fw-bold mb-3" style="color: var(--text-dark);"><i class="la la-graduation-cap mr-2 text-primary"></i> Education</h4>
+                    <p class="text-muted lh-24 mb-3" style="color: var(--text-muted);">My academic qualifications and certifications.</p>
+                    @if($instructor->education)
+                        <ul class="list-unstyled ps-3">
+                            @foreach(explode("\n", $instructor->education) as $edu)
+                                @if(trim($edu))
+                                    <li class="mb-2" style="color: var(--text-dark);"><i class="la la-circle fa-xs mr-2 text-primary"></i> {{ trim($edu) }}</li>
+                                @endif
+                            @endforeach
+                        </ul>
+                    @else
+                        <p class="lh-24" style="color: var(--text-dark);">No education details provided.</p>
+                    @endif
                 </div>
                 @auth
                     <div class="mt-4 text-center animate__animated animate__fadeInUp" style="animation-delay: 0.8s;">
-                        <!-- Placeholder for potential future functionality like messaging -->
+                        <!-- Placeholder for future messaging functionality -->
                     </div>
                 @else
                     <div class="mt-4 text-center animate__animated animate__fadeInUp" style="animation-delay: 0.8s;">
                         <a href="{{ route('login') }}" class="btn btn-outline-secondary px-4 py-2">Login to Message</a>
                     </div>
                 @endauth
-            </div><!-- end col-lg-6 -->
-        </div><!-- end row -->
-    </div><!-- end container -->
-</section><!-- end instructor-details-area -->
-<!-- ================================
-    END INSTRUCTOR DETAILS AREA
-================================= -->
+            </div>
+        </div>
+    </div>
+</section>
 
-<!--======================================
-    START COURSE AREA
-======================================-->
-<style>
-.wishlist-btn i {
-    transition: color 0.3s ease;
-}
-.wishlist-btn.wishlisted i {
-    color: #F16767;
-}
-.cart-message {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 10000;
-    padding: 10px;
-    border-radius: 4px;
-    max-width: 300px;
-    background-color: #fff;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-}
-.alert-info {
-    background-color: #d1ecf1;
-    color: #0c5460;
-}
-.alert-success {
-    background-color: #d4edda;
-    color: #155724;
-}
-.alert-danger {
-    background-color: #f8d7da;
-    color: #721c24;
-}
-</style>
-
+<!-- Course Area -->
 <section class="course-area section-padding bg-white">
     <div class="container">
         <div class="d-flex align-items-center justify-content-between pb-4">
-            <h3 class="fs-28 fw-bold text-dark"><i class="la la-book mr-2 text-primary"></i> My Courses</h3>
+            <h3 class="fs-28 fw-bold" style="color: var(--text-dark);"><i class="la la-book mr-2 text-primary"></i> My Courses</h3>
             <span class="ribbon ribbon-lg bg-primary text-white px-3 py-1 rounded">{{ count($courses) }}</span>
         </div>
         <div class="divider"><span class="bg-primary" style="height: 3px;"></span></div>
-        <div class="row pt-40px g-4">
-            @forelse($courses as $course)
-                @php
-                    $finalPrice = $course->discount_price !== null ? max(0, $course->selling_price - $course->discount_price) : $course->selling_price;
-                    $discountPercentage = ($course->selling_price > 0 && $course->discount_price !== null) ? round(($course->selling_price - $finalPrice) / $course->selling_price * 100) : 0;
-                    $rating = $course->reviews->avg('rating') ?? 0;
-                    $reviews_count = $course->reviews->count();
-                    $isWishlisted = auth()->check() && \App\Models\Wishlist::where('trackable_type', 'App\Models\User')
-                        ->where('trackable_id', auth()->id())
-                        ->where('course_id', $course->id)
-                        ->exists();
-                @endphp
-                <div class="col-lg-4 col-md-6">
-                    <div class="card card-item card-preview shadow-sm hover-scale animate__animated animate__fadeInUp" data-tooltip-content="#tooltip_content_{{ $course->id }}">
-                        <div class="card-image position-relative">
-                            <a href="{{ url('course/details/'.$course->id.'/'.$course->course_name_slug) }}" class="d-block">
-                                <img class="card-img-top lazy rounded-top" src="{{ asset('storage/upload/course_images/thumbnail/' . ($course->course_image ?? 'default-course.jpg')) }}" alt="{{ $course->course_name }}" style="height: 200px; object-fit: cover;" onerror="this.src='{{ asset('images/default-course.jpg') }}';">
-                            </a>
-                            <div class="course-badge-labels position-absolute top-10 start-10">
-                                @if($course->bestseller == 1)
-                                    <div class="course-badge bg-success text-white px-2 py-1 rounded">Bestseller</div>
-                                @endif
-                                @if($course->discount_price == null)
-                                    <div class="course-badge bg-info text-white px-2 py-1 rounded mt-1">New</div>
-                                @else
-                                    <div class="course-badge bg-danger text-white px-2 py-1 rounded mt-1">{{ $discountPercentage }}% OFF</div>
-                                @endif
-                            </div>
-                        </div><!-- end card-image -->
-                        <div class="card-body p-3">
-                            <h6 class="ribbon ribbon-blue-bg fs-14 mb-2">{{ $course->label ?? 'All Levels' }}</h6>
-                            <h5 class="card-title fs-18 fw-semibold"><a href="{{ url('course/details/'.$course->id.'/'.$course->course_name_slug) }}" class="text-dark hover:underline">{{ Str::limit($course->course_name, 40) }}</a></h5>
-                            <p class="card-text fs-14 text-muted"><a href="{{ route('instructor.details', $course->courseable->id) }}">{{ $course->courseable->name ?? 'Unknown Instructor' }}</a></p>
-                            <div class="rating-wrap d-flex align-items-center py-1">
-                                <div class="review-stars">
-                                    <span class="rating-number fw-bold text-warning">{{ number_format($rating, 1) }}</span>
-                                    @for ($i = 1; $i <= 5; $i++)
-                                        <span class="la la-star{{ $i <= floor($rating) ? ' text-warning' : '-o' }}"></span>
-                                    @endfor
-                                </div>
-                                <span class="rating-total pl-1 text-muted fs-14">({{ number_format($reviews_count) }})</span>
-                            </div><!-- end rating-wrap -->
-                            <div class="d-flex justify-content-between align-items-center mt-2">
-                                @if($finalPrice < $course->selling_price)
-                                    <p class="card-price text-dark fw-bold fs-16">{{ number_format($finalPrice, 2) }} TND <span class="before-price text-muted fs-14 text-decoration-line-through">{{ number_format($course->selling_price, 2) }} TND</span></p>
-                                @else
-                                    <p class="card-price text-dark fw-bold fs-16">{{ number_format($finalPrice, 2) }} TND</p>
-                                @endif
-                                @auth
-                                    <button class="wishlist-btn icon-element icon-element-sm shadow-sm cursor-pointer border-0 bg-transparent {{ $isWishlisted ? 'wishlisted' : '' }}"
-                                            data-course-id="{{ $course->id }}"
-                                            title="{{ $isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist' }}">
-                                        <i class="la {{ $isWishlisted ? 'la-heart' : 'la-heart-o' }} fs-18"></i>
-                                    </button>
-                                @else
-                                    <a href="{{ route('login') }}" class="icon-element icon-element-sm shadow-sm cursor-pointer text-primary" title="Login to add to Wishlist">
-                                        <i class="la la-heart-o fs-18"></i>
-                                    </a>
-                                @endauth
-                            </div>
-                        </div><!-- end card-body -->
-                    </div><!-- end card -->
-                </div><!-- end col-lg-4 -->
-            @empty
-                <div class="col-lg-12 text-center py-5">
-                    <p class="text-muted fs-18">This instructor has no courses yet.</p>
-                    <i class="la la-book-open fs-40 text-gray-400"></i>
-                </div>
-            @endforelse
-        </div><!-- end row -->
-    </div><!-- end container -->
-</section><!-- end course-area -->
-<!--======================================
-    END COURSE AREA
-======================================-->
-
-<!-- Tooltip Templates -->
-@foreach($courses as $course)
-    @php
-        $finalPrice = $course->discount_price !== null ? max(0, $course->selling_price - $course->discount_price) : $course->selling_price;
-        $rating = $course->reviews->avg('rating') ?? 0;
-        $reviews_count = $course->reviews->count();
-        $isWishlisted = auth()->check() && \App\Models\Wishlist::where('trackable_type', 'App\Models\User')
-            ->where('trackable_id', auth()->id())
-            ->where('course_id', $course->id)
-            ->exists();
-        $isInCart = \Darryldecode\Cart\Facades\CartFacade::get($course->id) !== null;
-        $hasPurchased = Auth::check() && App\Models\Order::where('user_id', Auth::id())
-            ->where('course_id', $course->id)
-            ->where('payment_status', 'paid')
-            ->exists();
-    @endphp
-    <div class="tooltip_templates" style="display: none;">
-        <div id="tooltip_content_{{ $course->id }}">
-            <div class="card card-item shadow-sm">
-                <div class="card-body p-3">
-                    <p class="card-text fs-14 text-muted pb-1">By <a href="{{ route('instructor.details', $course->courseable->id) }}" class="text-dark">{{ $course->courseable->name ?? 'Unknown Instructor' }}</a></p>
-                    <h5 class="card-title fs-18 fw-semibold pb-1"><a href="{{ url('course/details/'.$course->id.'/'.$course->course_name_slug) }}" class="text-dark">{{ $course->course_name }}</a></h5>
-                    <div class="d-flex align-items-center pb-1">
-                        @if($course->bestseller == 1)
-                            <h6 class="ribbon fs-14 bg-success text-white px-2 py-1 mr-2">Bestseller</h6>
-                        @endif
-                        <p class="text-success fs-14">Updated <span class="fw-bold pl-1">{{ $course->updated_at ? \Carbon\Carbon::parse($course->updated_at)->format('F Y') : 'N/A' }}</span></p>
-                    </div>
-                    <div class="rating-wrap d-flex align-items-center py-1">
-                        <div class="review-stars">
-                            <span class="rating-number fw-bold text-warning">{{ number_format($rating, 1) }}</span>
-                            @for ($i = 1; $i <= 5; $i++)
-                                <span class="la la-star{{ $i <= floor($rating) ? ' text-warning' : '-o' }}"></span>
-                            @endfor
-                        </div>
-                        <span class="rating-total pl-1 text-muted fs-14">({{ number_format($reviews_count) }})</span>
-                    </div>
-                    <ul class="generic-list-item generic-list-item-bullet fs-14 py-2">
-                        <li>{{ $course->duration ?? 'N/A' }}</li>
-                        <li>{{ $course->label ?? 'All Levels' }}</li>
-                    </ul>
-                    <p class="card-text fs-14 lh-22 text-gray-600">{{ Str::limit($course->description ?? 'No description available.', 100) }}</p>
+        <div class="card-content-wrapper pt-50px">
+            <div class="row">
+                @forelse($courses as $course)
                     @php
-                        $goals = App\Models\CourseGoal::where('goalable_type', 'App\\Models\\Course')
-                            ->where('goalable_id', $course->id)
-                            ->orderBy('id', 'DESC')
-                            ->get();
+                        $finalPrice = $course->discount_price !== null ? max(0, $course->selling_price - $course->discount_price) : $course->selling_price;
+                        $discountPercentage = ($course->selling_price > 0 && $course->discount_price !== null) 
+                            ? round(($course->selling_price - $finalPrice) / $course->selling_price * 100) 
+                            : 0;
+                        $rating = $course->reviews->avg('rating') ?? 0;
+                        $reviews_count = $course->reviews->count();
+                        $instructor = $course->courseable instanceof \App\Models\Instructor ? $course->courseable : null;
+                        $isWishlisted = auth()->check() && \App\Models\Wishlist::where('trackable_type', 'App\Models\User')
+                            ->where('trackable_id', auth()->id())
+                            ->where('course_id', $course->id)
+                            ->exists();
+                        $isInCart = \Darryldecode\Cart\Facades\CartFacade::get($course->id) !== null;
+                        $hasPurchased = auth()->check() && \App\Models\Order::where('user_id', auth()->id())
+                            ->where('course_id', $course->id)
+                            ->where('payment_status', 'paid')
+                            ->exists();
                     @endphp
-                    <ul class="generic-list-item fs-14 py-2">
-                        @forelse($goals as $goal)
-                            <li><i class="la la-check mr-1 text-success"></i> {{ $goal->goal_name }}</li>
-                        @empty
-                            <li><i class="la la-check mr-1 text-success"></i> Learn key skills for this course</li>
-                            <li><i class="la la-check mr-1 text-success"></i> Boost your knowledge</li>
-                        @endforelse
-                    </ul>
-                    <div class="d-flex justify-content-between align-items-center mt-2">
-                        @if($hasPurchased)
-                            <a href="{{ route('course.start', [$course->id, $course->course_name_slug]) }}" class="btn theme-btn btn-sm px-3">
-                                <i class="la la-play-circle mr-1 fs-18"></i> Start Learning
-                            </a>
-                        @else
-                            <button class="btn theme-btn btn-sm px-3 add-to-cart" data-course-id="{{ $course->id }}" {{ $isInCart ? 'data-in-cart="true"' : '' }}>
-                                <i class="la la-shopping-cart mr-1"></i> {{ $isInCart ? 'In Cart' : 'Add to Cart' }}
-                            </button>
-                        @endif
-                        @auth
-                            <button class="wishlist-btn icon-element icon-element-sm shadow-sm cursor-pointer border-0 bg-transparent {{ $isWishlisted ? 'wishlisted' : '' }}"
-                                    data-course-id="{{ $course->id }}"
-                                    title="{{ $isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist' }}">
-                                <i class="la {{ $isWishlisted ? 'la-heart' : 'la-heart-o' }} fs-18"></i>
-                            </button>
-                        @else
-                            <a href="{{ route('login') }}" class="icon-element icon-element-sm shadow-sm cursor-pointer text-primary" title="Login to add to Wishlist">
-                                <i class="la la-heart-o fs-18"></i>
-                            </a>
-                        @endauth
+                    <div class="col-lg-4 responsive-column-half">
+                        <div class="card card-item card-preview" data-tooltip-content="#tooltip_content_{{ $course->id }}">
+                            <div class="card-image">
+                                <a href="{{ route('course.details', ['id' => $course->id, 'slug' => $course->course_name_slug]) }}" class="d-block">
+                                    <img class="card-img-top lazy" 
+                                         src="{{ $course->course_image ? asset('upload/course_images/thumbnail/' . $course->course_image) : asset('images/default-course.jpg') }}" 
+                                         alt="Course image">
+                                </a>
+                                <div class="course-badge-labels">
+                                    @if($course->bestseller == 1)
+                                        <div class="course-badge bg-success text-white">Bestseller</div>
+                                    @endif
+                                    @if($course->highestrated == 1)
+                                        <div class="course-badge bg-primary text-white">Highest Rated</div>
+                                    @endif
+                                    @if($course->featured == 1)
+                                        <div class="course-badge bg-success text-white">Featured</div>
+                                    @endif
+                                    @if($course->discount_price == null)
+                                        <div class="course-badge bg-info text-white">New</div>
+                                    @else
+                                        <div class="course-badge bg-danger text-white">{{ $discountPercentage }}%</div>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <h6 class="ribbon ribbon-blue-bg fs-14 mb-3">{{ $course->label ?? 'All Levels' }}</h6>
+                                <h5 class="card-title">
+                                    <a href="{{ route('course.details', ['id' => $course->id, 'slug' => $course->course_name_slug]) }}" class="text-dark">
+                                        {{ Str::limit($course->course_name, 40) }}
+                                    </a>
+                                </h5>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    @if($finalPrice < $course->selling_price)
+                                        <p class="card-price text-black fw-bold fs-16">
+                                            {{ number_format($finalPrice, 2) }} TND
+                                            <span class="before-price text-muted fs-14">{{ number_format($course->selling_price, 2) }} TND</span>
+                                        </p>
+                                    @else
+                                        <p class="card-price text-black fw-bold fs-16">{{ number_format($finalPrice, 2) }} TND</p>
+                                    @endif
+                                    @auth
+                                        <button class="wishlist-btn icon-element icon-element-sm shadow-sm cursor-pointer border-0 bg-transparent {{ $isWishlisted ? 'wishlisted' : '' }}"
+                                                data-course-id="{{ $course->id }}"
+                                                title="{{ $isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist' }}">
+                                            <i class="la {{ $isWishlisted ? 'la-heart' : 'la-heart-o' }}"></i>
+                                        </button>
+                                    @else
+                                        <a href="{{ route('login') }}" class="icon-element icon-element-sm shadow-sm cursor-pointer" title="Login to add to Wishlist">
+                                            <i class="la la-heart-o"></i>
+                                        </a>
+                                    @endauth
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Tooltip Content -->
+                        <div class="tooltip_templates" style="display: none;">
+                            <div id="tooltip_content_{{ $course->id }}">
+                                <div class="card-body position-relative">
+                                    <p class="card-text pb-2" style="color: var(--text-muted);">
+                                        By 
+                                        @if($instructor)
+                                            <a href="{{ route('instructor.details', $instructor->id) }}" class="text-dark">{{ $instructor->name }}</a>
+                                        @else
+                                            Unknown Instructor
+                                        @endif
+                                    </p>
+                                    <h5 class="card-title pb-1">
+                                        <a href="{{ route('course.details', [$course->id, $course->course_name_slug]) }}" class="text-dark">{{ $course->course_name }}</a>
+                                    </h5>
+                                    <div class="d-flex align-items-center pb-1">
+                                        @if($course->bestseller == 1)
+                                            <h6 class="ribbon fs-14 bg-success text-white px-2 py-1 mr-2">Bestseller</h6>
+                                        @endif
+                                        <p class="text-success fs-14 fw-medium">Updated <span class="fw-bold pl-1">{{ $course->updated_at ? \Carbon\Carbon::parse($course->updated_at)->format('F Y') : 'N/A' }}</span></p>
+                                    </div>
+                                    <div class="rating-wrap d-flex align-items-center py-2">
+                                        <div class="review-stars">
+                                            <span class="rating-number fw-bold text-warning">{{ number_format($rating, 1) }}</span>
+                                            @for($i = 1; $i <= 5; $i++)
+                                                <span class="la la-star{{ $i <= floor($rating) ? '' : '-o' }}"></span>
+                                            @endfor
+                                        </div>
+                                        <span class="rating-total pl-1 text-muted fs-14">({{ number_format($reviews_count) }})</span>
+                                    </div>
+                                    <ul class="generic-list-item generic-list-item-bullet d-flex align-items-center fs-14">
+                                        <li>{{ $course->label ?? 'All Levels' }}</li>
+                                    </ul>
+                                    <p class="card-text pt-1 fs-14 lh-22" style="color: var(--text-muted);">{{ Str::limit(strip_tags($course->description ?? 'No description available.'), 100) }}</p>
+                                    <ul class="generic-list-item fs-14 py-3">
+                                        @forelse($course->goals->take(3) as $goal)
+                                            <li><i class="la la-check mr-1 text-success"></i> {{ $goal->goal_name }}</li>
+                                        @empty
+                                            <li><i class="la la-check mr-1 text-success"></i> Learn key skills for this course</li>
+                                            <li><i class="la la-check mr-1 text-success"></i> Boost your knowledge</li>
+                                            <li><i class="la la-check mr-1 text-success"></i> Practical exercises included</li>
+                                        @endforelse
+                                    </ul>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        @if($hasPurchased)
+                                            <a href="{{ route('course.start', [$course->id, \Str::slug($course->course_name)]) }}" class="btn theme-btn flex-grow-1 mr-3">
+                                                <i class="la la-play-circle fs-18 mr-1"></i> Start Learning
+                                            </a>
+                                        @else
+                                            <button class="btn theme-btn flex-grow-1 mr-3 add-to-cart" data-course-id="{{ $course->id }}" {{ $isInCart ? 'data-in-cart="true"' : '' }}>
+                                                <i class="la la-shopping-cart fs-18 mr-1"></i> {{ $isInCart ? 'In Cart' : 'Add to Cart' }}
+                                            </button>
+                                        @endif
+                                        @auth
+                                            <button class="wishlist-btn icon-element icon-element-sm shadow-sm cursor-pointer border-0 bg-transparent {{ $isWishlisted ? 'wishlisted' : '' }}"
+                                                    data-course-id="{{ $course->id }}"
+                                                    title="{{ $isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist' }}">
+                                                <i class="la {{ $isWishlisted ? 'la-heart' : 'la-heart-o' }}"></i>
+                                            </button>
+                                        @else
+                                            <a href="{{ route('login') }}" class="icon-element icon-element-sm shadow-sm cursor-pointer" title="Login to add to Wishlist">
+                                                <i class="la la-heart-o"></i>
+                                            </a>
+                                        @endauth
+                                    </div>
+                                    <div id="cart-message-{{ $course->id }}" class="cart-message"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div id="cart-message-{{ $course->id }}" class="cart-message"></div>
-                </div>
-            </div><!-- end card -->
+                @empty
+                    <div class="col-lg-12 text-center py-5">
+                        <p class="text-muted fs-18" style="color: var(--text-muted);">This instructor has no courses yet.</p>
+                        <i class="la la-book-open fs-40" style="color: var(--text-muted);"></i>
+                    </div>
+                @endforelse
+            </div>
+            <div class="mt-4">
+                {{ $courses->links() }}
+            </div>
         </div>
-    </div><!-- end tooltip_templates -->
-@endforeach
+    </div>
+</section>
 
 <!-- Scripts -->
 @push('scripts')
@@ -334,9 +377,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" integrity="sha512-c42qTSw/wPZ3/5LBzD+Bw5f7bSF2oxou6wEb+I/lqeaKV5FDIfMvvRp772y4jcJLKuGUOpbJMdg/BTl50fJYAw==" crossorigin="anonymous" referrerpolicy="no-referrer">
     <script>
         $(document).ready(function() {
-            console.log('jQuery loaded and document ready');
-
-            // Initialiser Tooltipster
+            // Initialize Tooltipster
             $('.card-preview').tooltipster({
                 theme: 'tooltipster-shadow',
                 interactive: true,
@@ -345,9 +386,8 @@
                 side: 'right',
                 distance: 10
             });
-            console.log('Tooltipster initialized');
 
-            // Animation des compteurs
+            // Counter Animation
             $('.counter__title').each(function() {
                 const $this = $(this);
                 const countTo = $this.attr('data-count');
@@ -365,16 +405,9 @@
                 });
             });
 
-            // Effet hover pour les cartes
-            $('.hover-scale').hover(
-                function() { $(this).css('transform', 'scale(1.05)'); },
-                function() { $(this).css('transform', 'scale(1)'); }
-            );
-
-            // Handle wishlist button clicks
+            // Wishlist Button Handler
             $('.wishlist-btn').off('click').on('click', function(e) {
                 e.preventDefault();
-                console.log('Wishlist button clicked');
                 var $button = $(this);
                 var courseId = $button.data('course-id');
                 var isWishlisted = $button.hasClass('wishlisted');
@@ -383,11 +416,8 @@
                 $.ajax({
                     url: url,
                     method: 'POST',
-                    data: {
-                        _token: $('meta[name="csrf-token"]').attr('content')
-                    },
+                    data: { _token: $('meta[name="csrf-token"]').attr('content') },
                     success: function(response) {
-                        console.log('Wishlist AJAX success:', response);
                         if (response.status === 'success') {
                             if (isWishlisted) {
                                 $button.removeClass('wishlisted');
@@ -398,61 +428,42 @@
                                 $button.find('i').removeClass('la-heart-o').addClass('la-heart');
                                 $button.attr('title', 'Remove from Wishlist');
                             }
-                            // Sync all wishlist buttons for this course (card and tooltip)
                             $('.wishlist-btn[data-course-id="' + courseId + '"]').each(function() {
                                 $(this).toggleClass('wishlisted', !isWishlisted);
                                 $(this).find('i').toggleClass('la-heart-o', isWishlisted).toggleClass('la-heart', !isWishlisted);
                                 $(this).attr('title', isWishlisted ? 'Add to Wishlist' : 'Remove from Wishlist');
                             });
-                            // Trigger wishlist count update (if applicable)
-                            $(document).trigger('wishlist-updated');
                         }
                     },
                     error: function(xhr) {
-                        console.error('Wishlist AJAX error:', xhr);
-                        var response = xhr.responseJSON;
-                        alert(response.message || 'An error occurred.');
+                        alert(xhr.responseJSON?.message || 'An error occurred.');
                     }
                 });
             });
 
-            // Handle Add/Remove from Cart button clicks
+            // Cart Button Handler
             $('.add-to-cart').off('click').on('click', function(e) {
                 e.preventDefault();
-                console.log('Cart button clicked');
                 var $button = $(this);
                 var courseId = $button.data('course-id');
                 var isInCart = $button.data('in-cart') === true;
-                var $message = $('#cart-message-' + courseId).length ? $('#cart-message-' + courseId) : $('<div class="cart-message"></div>').appendTo('body');
+                var $message = $('#cart-message-' + courseId);
                 var url = isInCart ? '{{ route("cart.remove", ":id") }}'.replace(':id', courseId) : '{{ route("cart.add", ":id") }}'.replace(':id', courseId);
                 var method = isInCart ? 'GET' : 'POST';
 
                 if (!courseId) {
-                    console.error('Course ID is undefined');
-                    $message.html('<div class="alert alert-danger">Error: Course ID is missing.</div>').css({
-                        position: 'fixed',
-                        top: '20px',
-                        right: '20px',
-                        zIndex: 10000
-                    });
-                    setTimeout(function() { $message.remove(); }, 3000);
+                    $message.html('<div class="alert alert-danger">Error: Course ID is missing.</div>');
+                    setTimeout(function() { $message.empty(); }, 3000);
                     return;
                 }
 
-                console.log('Sending AJAX request for course ID:', courseId, 'Action:', isInCart ? 'Remove' : 'Add');
                 $.ajax({
                     url: url,
                     method: method,
                     data: isInCart ? {} : { _token: $('meta[name="csrf-token"]').attr('content') },
                     dataType: 'json',
-                    beforeSend: function() {
-                        $button.prop('disabled', true).html('<i class="la la-shopping-cart mr-1"></i> ' + (isInCart ? 'Removing...' : 'Adding...'));
-                    },
                     success: function(response) {
-                        console.log('Cart AJAX success:', response);
-                        $button.prop('disabled', false);
                         if (response.redirect) {
-                            // Non-authenticated: Store course in localStorage
                             let tempCart = JSON.parse(localStorage.getItem('tempCart')) || [];
                             const itemIndex = tempCart.findIndex(item => item.courseId === response.course_id);
                             if (itemIndex > -1) {
@@ -461,76 +472,44 @@
                                 tempCart.push({ courseId: response.course_id, quantity: 1 });
                             }
                             localStorage.setItem('tempCart', JSON.stringify(tempCart));
-                            $message.html('<div class="alert alert-info">Please log in to add this course to your cart.</div>').css({
-                                position: 'fixed',
-                                top: '20px',
-                                right: '20px',
-                                zIndex: 10000
-                            });
-                            setTimeout(function() {
-                                console.log('Redirecting to:', response.redirect);
-                                window.location.href = response.redirect;
-                            }, 1500);
+                            $message.html('<div class="alert alert-info">Please log in to add this course to your cart.</div>');
+                            setTimeout(function() { window.location.href = response.redirect; }, 1500);
                         } else if (response.success) {
-                            $message.html('<div class="alert alert-success">' + response.message + '</div>').css({
-                                position: 'fixed',
-                                top: '20px',
-                                right: '20px',
-                                zIndex: 10000
-                            });
+                            $message.html('<div class="alert alert-success">' + response.message + '</div>');
                             if (isInCart) {
-                                // Remove from cart
                                 $button.data('in-cart', false).removeAttr('data-in-cart');
-                                $button.html('<i class="la la-shopping-cart mr-1"></i> Add to Cart');
+                                $button.prop('disabled', false).html('<i class="la la-shopping-cart fs-18 mr-1"></i> Add to Cart');
                             } else {
-                                // Add to cart
                                 $button.data('in-cart', true);
-                                $button.html('<i class="la la-shopping-cart mr-1"></i> In Cart');
+                                $button.prop('disabled', true).html('<i class="la la-shopping-cart fs-18 mr-1"></i> In Cart');
                             }
-                            // Update all buttons for this course
                             $('.add-to-cart[data-course-id="' + courseId + '"]').each(function() {
                                 $(this).data('in-cart', !isInCart).prop('disabled', !isInCart)
-                                    .html('<i class="la la-shopping-cart mr-1"></i> ' + (isInCart ? 'Add to Cart' : 'In Cart'));
+                                    .html('<i class="la la-shopping-cart fs-18 mr-1"></i> ' + (isInCart ? 'Add to Cart' : 'In Cart'));
                             });
-                            // Update cart count and subtotal
                             if ($('#cartQty').length) {
                                 $('#cartQty').text(response.cartCount);
                             }
                             if ($('#cartSubTotal').length) {
                                 $('#cartSubTotal').text('TND ' + response.cartSubTotal);
                             }
-                            // Update cart dropdown
-                            console.log('Updating cart dropdown');
                             $.ajax({
                                 url: '{{ route("cart") }}',
                                 method: 'GET',
                                 success: function(html) {
-                                    console.log('Cart dropdown HTML received');
                                     var $newCart = $(html).find('#cartDropdown').html();
                                     $('#cartDropdown').html($newCart);
-                                    // Rebind remove-from-cart handlers in dropdown
                                     bindCartDropdownHandlers();
-                                },
-                                error: function(xhr) {
-                                    console.error('Cart dropdown AJAX error:', xhr);
                                 }
                             });
                         } else {
-                            $message.html('<div class="alert alert-info">' + (response.info || response.message || 'Action completed.') + '</div>').css({
-                                position: 'fixed',
-                                top: '20px',
-                                right: '20px',
-                                zIndex: 10000
-                            });
+                            $message.html('<div class="alert alert-info">' + (response.info || response.message || 'Action completed.') + '</div>');
                         }
-                        setTimeout(function() { $message.remove(); }, 3000);
+                        setTimeout(function() { $message.empty(); }, 3000);
                     },
                     error: function(xhr) {
-                        console.error('Cart AJAX error:', xhr);
-                        $button.prop('disabled', false).html('<i class="la la-shopping-cart mr-1"></i> ' + (isInCart ? 'In Cart' : 'Add to Cart'));
                         var response = xhr.responseJSON || {};
                         if (xhr.status === 401 && response.redirect) {
-                            // Handle 401 Unauthorized for non-authenticated users
                             let tempCart = JSON.parse(localStorage.getItem('tempCart')) || [];
                             const itemIndex = tempCart.findIndex(item => item.courseId === response.course_id);
                             if (itemIndex > -1) {
@@ -539,34 +518,19 @@
                                 tempCart.push({ courseId: response.course_id, quantity: 1 });
                             }
                             localStorage.setItem('tempCart', JSON.stringify(tempCart));
-                            $message.html('<div class="alert alert-info">Please log in to add this course to your cart.</div>').css({
-                                position: 'fixed',
-                                top: '20px',
-                                right: '20px',
-                                zIndex: 10000
-                            });
-                            setTimeout(function() {
-                                console.log('Redirecting to:', response.redirect);
-                                window.location.href = response.redirect;
-                            }, 1500);
+                            $message.html('<div class="alert alert-info">Please log in to add this course to your cart.</div>');
+                            setTimeout(function() { window.location.href = response.redirect; }, 1500);
                         } else {
-                            $message.html('<div class="alert alert-danger">' + (response.error || response.message || 'An error occurred.') + '</div>').css({
-                                position: 'fixed',
-                                top: '20px',
-                                right: '20px',
-                                zIndex: 10000
-                            });
-                            setTimeout(function() { $message.remove(); }, 3000);
+                            $message.html('<div class="alert alert-danger">' + (response.error || response.message || 'An error occurred.') + '</div>');
+                            setTimeout(function() { $message.empty(); }, 3000);
                         }
                     }
                 });
             });
 
-            // Function to bind remove-from-cart handlers in cart dropdown
             function bindCartDropdownHandlers() {
                 $('#cartDropdown .remove-from-cart').off('click').on('click', function(e) {
                     e.preventDefault();
-                    console.log('Remove from cart button clicked in dropdown');
                     var courseId = $(this).data('id');
                     var $cartItem = $('#cart-item-' + courseId);
                     var $message = $('#cart-message-' + courseId).length ? $('#cart-message-' + courseId) : $('<div class="cart-message"></div>').appendTo('body');
@@ -576,25 +540,12 @@
                         method: 'GET',
                         dataType: 'json',
                         success: function(response) {
-                            console.log('Remove from cart AJAX success:', response);
                             if (response.redirect) {
-                                $message.html('<div class="alert alert-info">Please log in to remove this course from your cart.</div>').css({
-                                    position: 'fixed',
-                                    top: '20px',
-                                    right: '20px',
-                                    zIndex: 10000
-                                });
-                                setTimeout(function() {
-                                    window.location.href = response.redirect;
-                                }, 1500);
+                                $message.html('<div class="alert alert-info">Please log in to remove this course from your cart.</div>');
+                                setTimeout(function() { window.location.href = response.redirect; }, 1500);
                             } else if (response.success) {
                                 $cartItem.remove();
-                                $message.html('<div class="alert alert-success">' + response.message + '</div>').css({
-                                    position: 'fixed',
-                                    top: '20px',
-                                    right: '20px',
-                                    zIndex: 10000
-                                });
+                                $message.html('<div class="alert alert-success">' + response.message + '</div>');
                                 if ($('#cartQty').length) {
                                     $('#cartQty').text(response.cartCount);
                                 }
@@ -612,38 +563,25 @@
                                         '</li>'
                                     );
                                 }
-                                // Update course card button state
                                 $('.add-to-cart[data-course-id="' + courseId + '"]').each(function() {
                                     $(this).data('in-cart', false).removeAttr('data-in-cart')
                                         .prop('disabled', false)
-                                        .html('<i class="la la-shopping-cart mr-1"></i> Add to Cart');
+                                        .html('<i class="la la-shopping-cart fs-18 mr-1"></i> Add to Cart');
                                 });
                             } else {
-                                $message.html('<div class="alert alert-info">' + (response.message || 'Action completed.') + '</div>').css({
-                                    position: 'fixed',
-                                    top: '20px',
-                                    right: '20px',
-                                    zIndex: 10000
-                                });
+                                $message.html('<div class="alert alert-info">' + (response.message || 'Action completed.') + '</div>');
                             }
-                            setTimeout(function() { $message.remove(); }, 3000);
+                            setTimeout(function() { $message.empty(); }, 3000);
                         },
                         error: function(xhr) {
-                            console.error('Remove from cart AJAX error:', xhr);
                             var response = xhr.responseJSON || {};
-                            $message.html('<div class="alert alert-danger">' + (response.message || 'An error occurred.') + '</div>').css({
-                                position: 'fixed',
-                                top: '20px',
-                                right: '20px',
-                                zIndex: 10000
-                            });
-                            setTimeout(function() { $message.remove(); }, 3000);
+                            $message.html('<div class="alert alert-danger">' + (response.message || 'An error occurred.') + '</div>');
+                            setTimeout(function() { $message.empty(); }, 3000);
                         }
                     });
                 });
             }
 
-            // Initial binding for cart dropdown handlers
             bindCartDropdownHandlers();
         });
     </script>

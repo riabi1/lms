@@ -1,4 +1,3 @@
-
 @php
 $courses = App\Models\Course::with(['courseable', 'reviews', 'goals'])->where('status', 1)->orderBy('id', 'ASC')->limit(6)->get();
 $categories = App\Models\Category::orderBy('category_name', 'ASC')->get();
@@ -50,20 +49,20 @@ $categories = App\Models\Category::orderBy('category_name', 'ASC')->get();
 }
 /* Uniform Card Size */
 .card.card-item.card-preview {
-    height: 380px; /* Fixed height for all cards */
-    width: 100%; /* Ensure full width within column */
+    height: 380px;
+    width: 100%;
     display: flex;
     flex-direction: column;
     overflow: hidden;
 }
 .card-image {
-    height: 200px; /* Fixed image height */
+    height: 200px;
     overflow: hidden;
 }
 .card-img-top {
     width: 100%;
     height: 100%;
-    object-fit: cover; /* Ensure images fill space uniformly */
+    object-fit: cover;
 }
 .card-body {
     flex-grow: 1;
@@ -75,7 +74,7 @@ $categories = App\Models\Category::orderBy('category_name', 'ASC')->get();
 .card-title {
     font-size: 16px;
     line-height: 1.4;
-    max-height: 44px; /* Limit to ~2 lines */
+    max-height: 44px;
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
@@ -91,7 +90,7 @@ $categories = App\Models\Category::orderBy('category_name', 'ASC')->get();
 }
 .responsive-column-half {
     display: flex;
-    align-items: stretch; /* Ensure cards stretch to same height in row */
+    align-items: stretch;
 }
 </style>
 
@@ -158,7 +157,7 @@ $categories = App\Models\Category::orderBy('category_name', 'ASC')->get();
                                             <div class="course-badge blue">Highest Rated</div>
                                         @endif
                                         @if ($course->featured == 1)
-                                            <div class="course-badge green">featured</div>
+                                            <div class="course-badge green">Featured</div>
                                         @endif
                                         @if ($course->discount_price == null)
                                             <div class="course-badge blue">New</div>
@@ -214,7 +213,6 @@ $categories = App\Models\Category::orderBy('category_name', 'ASC')->get();
                                             <span class="rating-total pl-1">({{ number_format($reviews_count) }})</span>
                                         </div>
                                         <ul class="generic-list-item generic-list-item-bullet generic-list-item--bullet d-flex align-items-center fs-14">
-                                            <li>{{ $course->duration ?? 'N/A' }}</li>
                                             <li>{{ $course->label ?? 'All Levels' }}</li>
                                         </ul>
                                         <p class="card-text pt-1 fs-14 lh-22">{{ Str::limit(strip_tags($course->description), 100) ?? 'No description available.' }}</p>
@@ -312,7 +310,7 @@ $categories = App\Models\Category::orderBy('category_name', 'ASC')->get();
                                             <div class="course-badge blue">Highest Rated</div>
                                         @endif
                                         @if ($course->featured == 1)
-                                            <div class="course-badge green">featured</div>
+                                            <div class="course-badge green">Featured</div>
                                         @endif
                                         @if ($course->discount_price == null)
                                             <div class="course-badge blue">New</div>
@@ -368,7 +366,6 @@ $categories = App\Models\Category::orderBy('category_name', 'ASC')->get();
                                             <span class="rating-total pl-1">({{ number_format($reviews_count) }})</span>
                                         </div>
                                         <ul class="generic-list-item generic-list-item-bullet generic-list-item--bullet d-flex align-items-center fs-14">
-                                            <li>{{ $course->duration ?? 'N/A' }}</li>
                                             <li>{{ $course->label ?? 'All Levels' }}</li>
                                         </ul>
                                         <p class="card-text pt-1 fs-14 lh-22">{{ Str::limit(strip_tags($course->description), 100) ?? 'No description available.' }}</p>
@@ -506,7 +503,6 @@ $(document).ready(function() {
             success: function(response) {
                 console.log('Cart AJAX success:', response);
                 if (response.redirect) {
-                    // Non-authenticated: Store course in localStorage
                     let tempCart = JSON.parse(localStorage.getItem('tempCart')) || [];
                     const itemIndex = tempCart.findIndex(item => item.courseId === response.course_id);
                     if (itemIndex > -1) {
@@ -523,23 +519,18 @@ $(document).ready(function() {
                 } else if (response.success) {
                     $message.html('<div class="alert alert-success">' + response.message + '</div>');
                     if (isInCart) {
-                        // Remove from cart
                         $button.data('in-cart', false).removeAttr('data-in-cart');
                         $button.prop('disabled', false).html('<i class="la la-shopping-cart fs-18 mr-1"></i> Add to Cart');
                     } else {
-                        // Add to cart
                         $button.data('in-cart', true);
                         $button.prop('disabled', true).html('<i class="la la-shopping-cart fs-18 mr-1"></i> In Cart');
                     }
-                    // Update cart count and subtotal
                     if ($('#cartQty').length) {
                         $('#cartQty').text(response.cartCount);
                     }
                     if ($('#cartSubTotal').length) {
                         $('#cartSubTotal').text('TND ' + response.cartSubTotal);
                     }
-                    // Update cart dropdown
-                    console.log('Updating cart dropdown');
                     $.ajax({
                         url: '{{ route("cart") }}',
                         method: 'GET',
@@ -547,7 +538,6 @@ $(document).ready(function() {
                             console.log('Cart dropdown HTML received');
                             var $newCart = $(html).find('#cartDropdown').html();
                             $('#cartDropdown').html($newCart);
-                            // Rebind remove-from-cart handlers in dropdown
                             bindCartDropdownHandlers();
                         },
                         error: function(xhr) {
@@ -563,7 +553,6 @@ $(document).ready(function() {
                 console.error('Cart AJAX error:', xhr);
                 var response = xhr.responseJSON || {};
                 if (xhr.status === 401 && response.redirect) {
-                    // Handle 401 Unauthorized for non-authenticated users
                     let tempCart = JSON.parse(localStorage.getItem('tempCart')) || [];
                     const itemIndex = tempCart.findIndex(item => item.courseId === response.course_id);
                     if (itemIndex > -1) {
@@ -585,7 +574,6 @@ $(document).ready(function() {
         });
     });
 
-    // Function to bind remove-from-cart handlers in cart dropdown
     function bindCartDropdownHandlers() {
         $('#cartDropdown .remove-from-cart').off('click').on('click', function(e) {
             e.preventDefault();
@@ -625,7 +613,6 @@ $(document).ready(function() {
                                 '</li>'
                             );
                         }
-                        // Update course card button state
                         $('.add-to-cart[data-course-id="' + courseId + '"]').each(function() {
                             $(this).data('in-cart', false).removeAttr('data-in-cart')
                                 .prop('disabled', false)
@@ -646,7 +633,6 @@ $(document).ready(function() {
         });
     }
 
-    // Initial binding for cart dropdown handlers
     bindCartDropdownHandlers();
 });
 </script>

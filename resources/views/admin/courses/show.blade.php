@@ -75,10 +75,6 @@
                                     <td>{{ $course->label ?? 'N/A' }}</td>
                                 </tr>
                                 <tr>
-                                    <td><strong>Duration:</strong></td>
-                                    <td>{{ $course->duration ?? 'N/A' }}</td>
-                                </tr>
-                                <tr>
                                     <td><strong>Video:</strong></td>
                                     <td>
                                         @if ($course->video && file_exists(public_path('upload/course_images/video/' . $course->video)))

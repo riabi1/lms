@@ -8,12 +8,20 @@ use App\Models\Category;
 use App\Models\SubCategory;
 use App\Models\Course;
 use App\Models\CourseGoal;
+use App\Services\CourseTagService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 
 class CourseController extends Controller
 {
+    protected $courseTagService;
+
+    public function __construct(CourseTagService $courseTagService)
+    {
+        $this->courseTagService = $courseTagService;
+    }
+
     public function index()
     {
         $instructorId = Auth::guard('instructor')->id();
@@ -50,18 +58,13 @@ class CourseController extends Controller
                 'video' => 'nullable|mimes:mp4,avi,mov|max:102400',
                 'description' => 'nullable|string|max:4294967295',
                 'label' => 'nullable|in:Beginner,Intermediate,Advanced',
-                'duration' => 'nullable|string|max:255',
                 'resources' => 'nullable|string|max:255',
                 'certificate' => 'nullable|in:yes,no',
                 'selling_price' => 'nullable|integer|min:0',
                 'discount_price' => 'nullable|integer|min:0|lt:selling_price',
                 'prerequisites' => 'nullable|string|max:65535',
-                'bestseller' => 'nullable|in:0,1',
-                'featured' => 'nullable|in:0,1',
-                'highestrated' => 'nullable|in:0,1',
                 'CourseGoals.*' => 'nullable|string|max:255',
             ]);
-            \Log::info('Validated Data:', $validated);
 
             $instructorId = Auth::guard('instructor')->id();
             $courseImage = $this->uploadFile($request->file('image'), 'upload/course_images/thumbnail');
@@ -78,24 +81,19 @@ class CourseController extends Controller
                 'description' => $validated['description'] ?? null,
                 'video' => $courseVideo,
                 'label' => $validated['label'] ?? null,
-                'duration' => $validated['duration'] ?? null,
                 'resources' => $validated['resources'] ?? null,
                 'certificate' => $validated['certificate'] ?? null,
                 'selling_price' => $validated['selling_price'] ?? null,
                 'discount_price' => $validated['discount_price'] ?? null,
                 'prerequisites' => $validated['prerequisites'] ?? null,
-                'bestseller' => $validated['bestseller'] ?? '0',
-                'featured' => $validated['featured'] ?? '0',
-                'highestrated' => $validated['highestrated'] ?? '0',
                 'status' => 1,
                 'created_at' => Carbon::now(),
             ];
 
-            \Log::info('Course Data to Insert:', $courseData);
-
             $course = Course::create($courseData);
 
-            \Log::info('Course Created:', ['id' => $course->id, 'data' => $course->toArray()]);
+            // Assign tags immediately
+            $this->courseTagService->assignTags($course);
 
             if (!empty($validated['CourseGoals'])) {
                 $this->saveGoals($course->id, $validated['CourseGoals']);
@@ -143,15 +141,11 @@ class CourseController extends Controller
                 'video' => 'nullable|mimes:mp4,avi,mov|max:102400',
                 'description' => 'nullable|string|max:4294967295',
                 'label' => 'nullable|in:Beginner,Intermediate,Advanced',
-                'duration' => 'nullable|string|max:255',
                 'resources' => 'nullable|string|max:255',
                 'certificate' => 'nullable|in:yes,no',
                 'selling_price' => 'nullable|integer|min:0',
                 'discount_price' => 'nullable|integer|min:0|lt:selling_price',
                 'prerequisites' => 'nullable|string|max:65535',
-                'bestseller' => 'nullable|in:0,1',
-                'featured' => 'nullable|in:0,1',
-                'highestrated' => 'nullable|in:0,1',
                 'CourseGoals.*' => 'nullable|string|max:255',
             ]);
 
@@ -173,16 +167,15 @@ class CourseController extends Controller
                 'description' => $validated['description'] ?? null,
                 'video' => $course->video ?? null,
                 'label' => $validated['label'] ?? null,
-                'duration' => $validated['duration'] ?? null,
                 'resources' => $validated['resources'] ?? null,
                 'certificate' => $validated['certificate'] ?? null,
                 'selling_price' => $validated['selling_price'] ?? null,
                 'discount_price' => $validated['discount_price'] ?? null,
                 'prerequisites' => $validated['prerequisites'] ?? null,
-                'bestseller' => $validated['bestseller'] ?? '0',
-                'featured' => $validated['featured'] ?? '0',
-                'highestrated' => $validated['highestrated'] ?? '0',
             ]);
+
+            // Reassign tags immediately
+            $this->courseTagService->assignTags($course);
 
             if (!empty($validated['CourseGoals'])) {
                 $this->saveGoals($course->id, $validated['CourseGoals']);
@@ -210,7 +203,6 @@ class CourseController extends Controller
         return response()->json($subcategories);
     }
 
-    // Helper Methods
     private function authorizeCourse(Course $course)
     {
         if ($course->courseable_type !== 'App\Models\Instructor' || $course->courseable_id !== Auth::guard('instructor')->id()) {
@@ -224,23 +216,17 @@ class CourseController extends Controller
             return null;
         }
 
-        // Generate a unique filename
         $fileName = time() . '_' . $file->getClientOriginalName();
-
-        // Define the public path
         $publicPath = public_path($path);
 
-        // Ensure directory exists
         if (!file_exists($publicPath)) {
             mkdir($publicPath, 0755, true);
         }
 
-        // Save the file to public/upload
         $file->move($publicPath, $fileName);
-
         \Log::info('File uploaded:', ['path' => $publicPath . '/' . $fileName]);
 
-        return $fileName; // Return only the filename for DB storage
+        return $fileName;
     }
 
     private function deleteFile($filename, $path)
