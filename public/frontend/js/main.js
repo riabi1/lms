@@ -1,6 +1,6 @@
 /*---------------------------------------------
-Template name:  EasyLearning
-Description: EasyLearningFlow - Education HTML Template
+Template name:  EdaaLearning
+Description: EdaaLearningFlow - Education HTML Template
 Author:         TechyDevs
 Author Email:   contact@techydevs.com
 ----------------------------------------------*/

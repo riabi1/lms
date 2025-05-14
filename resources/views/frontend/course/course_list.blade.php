@@ -687,75 +687,102 @@ $(document).ready(function() {
     });
 
     // Handle Add/Remove from Cart button clicks
-    $('.add-to-cart').on('click', function(e) {
-        e.preventDefault();
-        console.log('Cart button clicked');
-        const $button = $(this);
-        const courseId = $button.data('course-id');
-        const isInCart = $button.data('in-cart') === true;
-        const $message = $(`#cart-message-${courseId}`);
-        const url = isInCart ? `{{ route('cart.remove', ':id') }}`.replace(':id', courseId) : `{{ route('cart.add', ':id') }}`.replace(':id', courseId);
-        const method = isInCart ? 'GET' : 'POST';
 
-        if (!courseId) {
-            console.error('Course ID is undefined');
-            $message.html('<div class="alert alert-danger">Error: Course ID is missing.</div>').fadeOut(3000);
-            return;
-        }
+      $('.add-to-cart').on('click', function(e) {
+          e.preventDefault();
+          console.log('Cart button clicked');
+          const $button = $(this);
+          const courseId = $button.data('course-id');
+          const isInCart = $button.data('in-cart') === true;
+          const $message = $(`#cart-message-${courseId}`);
+          const url = isInCart ? `{{ route('cart.remove', ':id') }}`.replace(':id', courseId) : `{{ route('cart.add', ':id') }}`.replace(':id', courseId);
+          const method = isInCart ? 'GET' : 'POST';
 
-        $.ajax({
-            url: url,
-            method: method,
-            data: isInCart ? {} : { _token: $('meta[name="csrf-token"]').attr('content') },
-            dataType: 'json',
-            success: function(response) {
-                console.log('Cart AJAX success:', response);
-                if (response.redirect) {
-                    let tempCart = JSON.parse(localStorage.getItem('tempCart')) || [];
-                    if (!isInCart) {
-                        const itemIndex = tempCart.findIndex(item => item.courseId === courseId);
-                        if (itemIndex > -1) {
-                            tempCart[itemIndex].quantity += 1;
-                        } else {
-                            tempCart.push({ courseId: courseId, quantity: 1 });
-                        }
-                        localStorage.setItem('tempCart', JSON.stringify(tempCart));
-                    }
-                    $message.html('<div class="alert alert-info">Please log in to manage your cart.</div>').fadeOut(3000);
-                    setTimeout(() => window.location.href = response.redirect, 1500);
-                } else if (response.success) {
-                    $message.html(`<div class="alert alert-success">${response.message}</div>`).fadeOut(3000);
-                    $button.data('in-cart', !isInCart).prop('disabled', !isInCart)
-                        .html(`<i class="la la-shopping-cart fs-18 mr-1"></i> ${isInCart ? 'Add to Cart' : 'In Cart'}`);
-                    if ($('#cartQty').length) $('#cartQty').text(response.cartCount);
-                    if ($('#cartSubTotal').length) $('#cartSubTotal').text(`TND ${response.cartSubTotal}`);
-                    updateCartDropdown();
-                } else {
-                    $message.html(`<div class="alert alert-info">${response.message || 'Action completed.'}</div>`).fadeOut(3000);
-                }
-            },
-            error: function(xhr) {
-                console.error('Cart AJAX error:', xhr);
-                const response = xhr.responseJSON || {};
-                if (xhr.status === 401 && response.redirect) {
-                    let tempCart = JSON.parse(localStorage.getItem('tempCart')) || [];
-                    if (!isInCart) {
-                        const itemIndex = tempCart.findIndex(item => item.courseId === courseId);
-                        if (itemIndex > -1) {
-                            tempCart[itemIndex].quantity += 1;
-                        } else {
-                            tempCart.push({ courseId: courseId, quantity: 1 });
-                        }
-                        localStorage.setItem('tempCart', JSON.stringify(tempCart));
-                    }
-                    $message.html('<div class="alert alert-info">Please log in to manage your cart.</div>').fadeOut(3000);
-                    setTimeout(() => window.location.href = response.redirect, 1500);
-                } else {
-                    $message.html(`<div class="alert alert-danger">${response.message || 'An error occurred.'}</div>`).fadeOut(3000);
-                }
-            }
-        });
-    });
+          if (!courseId) {
+              console.error('Course ID is undefined');
+              $message.html('<div class="alert alert-danger">Error: Course ID is missing.</div>').fadeOut(3000);
+              return;
+          }
+
+          $.ajax({
+              url: url,
+              method: method,
+              data: isInCart ? {} : { _token: $('meta[name="csrf-token"]').attr('content') },
+              dataType: 'json',
+              success: function(response) {
+                  console.log('Cart AJAX success:', response);
+                  if (response.redirect) {
+                      // Handle redirect for non-authenticated users
+                      let tempCart = JSON.parse(localStorage.getItem('tempCart') || getCookie('tempCart') || '[]');
+                      if (!isInCart) {
+                          const itemIndex = tempCart.findIndex(item => item.courseId === courseId);
+                          if (itemIndex > -1) {
+                              tempCart[itemIndex].quantity += 1;
+                          } else {
+                              tempCart.push({ courseId: courseId, quantity: 1 });
+                          }
+                          localStorage.setItem('tempCart', JSON.stringify(tempCart));
+                          setCookie('tempCart', JSON.stringify(tempCart), 43200);
+                      }
+                      $message.html('<div class="alert alert-info">Please log in to manage your cart.</div>').fadeOut(3000);
+                      setTimeout(() => window.location.href = response.redirect, 1500);
+                  } else if (response.success) {
+                      // Update local storage for authenticated users
+                      if (response.authenticated) {
+                          let tempCart = JSON.parse(localStorage.getItem('tempCart') || '[]');
+                          if (!isInCart) {
+                              const itemIndex = tempCart.findIndex(item => item.courseId === courseId);
+                              if (itemIndex > -1) {
+                                  tempCart[itemIndex].quantity += 1;
+                              } else {
+                                  tempCart.push({ 
+                                      courseId: courseId, 
+                                      quantity: response.quantity || 1,
+                                      price: response.price,
+                                      course_name: response.course_name,
+                                      image: response.image,
+                                      instructor_id: response.instructor_id,
+                                      instructor_name: response.instructor_name,
+                                      selling_price: response.selling_price,
+                                      discount_price: response.discount_price
+                                  });
+                              }
+                              localStorage.setItem('tempCart', JSON.stringify(tempCart));
+                          }
+                      }
+                      $message.html(`<div class="alert alert-success">${response.message}</div>`).fadeOut(3000);
+                      $button.data('in-cart', !isInCart).prop('disabled', !isInCart)
+                          .html(`<i class="la la-shopping-cart fs-18 mr-1"></i> ${isInCart ? 'Add to Cart' : 'In Cart'}`);
+                      if ($('#cartQty').length) $('#cartQty').text(response.cartCount);
+                      if ($('#cartSubTotal').length) $('#cartSubTotal').text(`TND ${response.cartSubTotal}`);
+                      updateCartDropdown();
+                  } else {
+                      $message.html(`<div class="alert alert-info">${response.message || 'Action completed.'}</div>`).fadeOut(3000);
+                  }
+              },
+              error: function(xhr) {
+                  console.error('Cart AJAX error:', xhr);
+                  const response = xhr.responseJSON || {};
+                  if (xhr.status === 401 && response.redirect) {
+                      let tempCart = JSON.parse(localStorage.getItem('tempCart') || getCookie('tempCart') || '[]');
+                      if (!isInCart) {
+                          const itemIndex = tempCart.findIndex(item => item.courseId === courseId);
+                          if (itemIndex > -1) {
+                              tempCart[itemIndex].quantity += 1;
+                          } else {
+                              tempCart.push({ courseId: courseId, quantity: 1 });
+                          }
+                          localStorage.setItem('tempCart', JSON.stringify(tempCart));
+                          setCookie('tempCart', JSON.stringify(tempCart), 43200);
+                      }
+                      $message.html('<div class="alert alert-info">Please log in to manage your cart.</div>').fadeOut(3000);
+                      setTimeout(() => window.location.href = response.redirect, 1500);
+                  } else {
+                      $message.html(`<div class="alert alert-danger">${response.message || 'An error occurred.'}</div>`).fadeOut(3000);
+                  }
+              }
+          });
+      });
 
     // Update cart dropdown
     function updateCartDropdown() {

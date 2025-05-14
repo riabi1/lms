@@ -74,7 +74,7 @@
             </a>
             <ul class="mm-collapse">
                 <li>
-                    <a href="{{ route('reports.index') }}" class="{{ request()->routeIs('user.reports.index') ? 'mm-active' : '' }}">
+                    <a href="{{ route('report.index') }}" class="{{ request()->routeIs('user.report.index') ? 'mm-active' : '' }}">
                         <i class='bx bx-radiogeons-circle'></i> My Reports
                     </a>
                 </li>

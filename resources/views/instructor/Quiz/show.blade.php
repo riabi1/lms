@@ -63,7 +63,7 @@
                             <tr>
                                 <td>{{ $index + 1 }}</td>
                                 <td>{{ $question->question_text }}</td>
-                                <td>{{ implode(', ', $question->options) }}</td>
+                                <td>{{ implode(', ', json_decode($question->options, true)) }}</td>
                                 <td><span class="badge bg-success">{{ $question->correct_answer }}</span></td>
                             </tr>
                         @empty

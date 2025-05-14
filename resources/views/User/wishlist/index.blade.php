@@ -5,9 +5,10 @@
 @endsection
 
 @section('userdashboard')
-    <!-- Dépendances spécifiques à DataTables -->
+    <!-- Dépendances spécifiques -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 
     <style>
         .wishlist-table {
@@ -136,6 +137,15 @@
                                 </tr>
                             </thead>
                             <tbody>
+                                @php
+                                    // Get cart items for authenticated users
+                                    $cartItems = Auth::check() ? App\Models\CartItem::where('user_id', Auth::id())
+                                        ->where('cartable_type', 'App\Models\Course')
+                                        ->pluck('cartable_id')->toArray() : [];
+                                    // For guests, check tempCart cookie
+                                    $tempCart = json_decode(request()->cookie('tempCart', '[]'), true);
+                                    $tempCartIds = array_column($tempCart, 'courseId');
+                                @endphp
                                 @foreach ($wishlistCourses as $key => $course)
                                     @php
                                         $finalPrice = $course->discount_price !== null
@@ -146,6 +156,7 @@
                                             : 0;
                                         $rating = $course->reviews->avg('rating') ?? 0;
                                         $reviewsCount = $course->reviews->count();
+                                        $isInCart = in_array($course->id, $cartItems) || in_array($course->id, $tempCartIds);
                                     @endphp
                                     <tr data-course-id="{{ $course->id }}" class="animate__animated animate__fadeIn">
                                         <td>{{ $key + 1 }}</td>
@@ -186,13 +197,21 @@
                                         </td>
                                         <td>
                                             <div class="d-flex gap-2">
-                                                <form action="{{ route('cart.add', $course->id) }}" method="POST">
-                                                    @csrf
-                                                    <button type="submit" class="btn btn-success action-btn" 
-                                                            title="Add to Cart">
-                                                        <i class="bx bx-cart"></i>
+                                                @if ($isInCart)
+                                                    <button class="remove-from-cart-btn btn btn-warning action-btn" 
+                                                            data-course-id="{{ $course->id }}" 
+                                                            title="Remove from Cart">
+                                                        <i class="bx bx-trash"></i>
                                                     </button>
-                                                </form>
+                                                @else
+                                                    <form class="add-to-cart-form" data-course-id="{{ $course->id }}">
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-success action-btn" 
+                                                                title="Add to Cart">
+                                                            <i class="bx bx-cart"></i>
+                                                        </button>
+                                                    </form>
+                                                @endif
                                                 <button class="wishlist-btn btn btn-danger action-btn wishlisted" 
                                                         data-course-id="{{ $course->id }}" 
                                                         title="Remove from Wishlist">
@@ -210,29 +229,40 @@
         </div>
     </div>
 
-    <!-- Scripts spécifiques à DataTables -->
+    <!-- Scripts -->
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script>
         $(document).ready(function() {
+            // Configure Toastr
+            toastr.options = {
+                closeButton: true,
+                progressBar: true,
+                positionClass: 'toast-top-right',
+                timeOut: 3000
+            };
+
+            // Initialize DataTable
             var table = $('#wishlistTable').DataTable({
-                "paging": true,
-                "searching": true,
-                "ordering": true,
-                "info": true,
-                "lengthMenu": [5, 10, 25, 50],
-                "pageLength": 10,
-                "language": {
-                    "search": "Search courses:",
-                    "lengthMenu": "Show _MENU_ courses",
-                    "info": "Showing _START_ to _END_ of _TOTAL_ courses",
-                    "paginate": {
-                        "previous": "Previous",
-                        "next": "Next"
+                paging: true,
+                searching: true,
+                ordering: true,
+                info: true,
+                lengthMenu: [5, 10, 25, 50],
+                pageLength: 10,
+                language: {
+                    search: 'Search courses:',
+                    lengthMenu: 'Show _MENU_ courses',
+                    info: 'Showing _START_ to _END_ of _TOTAL_ courses',
+                    paginate: {
+                        previous: 'Previous',
+                        next: 'Next'
                     }
                 }
             });
 
+            // Handle Remove from Wishlist
             $('.wishlist-btn').on('click', function(e) {
                 e.preventDefault();
                 var $button = $(this);
@@ -247,6 +277,7 @@
                     },
                     success: function(response) {
                         if (response.status === 'success') {
+                            toastr.success(response.message);
                             $button.removeClass('wishlisted');
                             var row = $button.closest('tr');
                             row.addClass('animate__animated animate__fadeOut');
@@ -264,6 +295,83 @@
                 });
             });
 
+            // Handle Add to Cart
+            $('.add-to-cart-form').on('submit', function(e) {
+                e.preventDefault();
+                var $form = $(this);
+                var courseId = $form.data('course-id');
+                var url = '{{ route("cart.add", ":id") }}'.replace(':id', courseId);
+
+                $.ajax({
+                    url: url,
+                    method: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            toastr.success(response.message);
+                            // Update button to Remove from Cart
+                            var $td = $form.closest('td');
+                            $form.replaceWith(`
+                                <button class="remove-from-cart-btn btn btn-warning action-btn" 
+                                        data-course-id="${courseId}" 
+                                        title="Remove from Cart">
+                                    <i class="bx bx-trash"></i>
+                                </button>
+                            `);
+                        } else if (response.info) {
+                            toastr.info(response.info);
+                        }
+                    },
+                    error: function(xhr) {
+                        toastr.error(xhr.responseJSON?.error || 'An error occurred while adding to cart.');
+                    }
+                });
+            });
+
+            // Handle Remove from Cart
+            $(document).on('click', '.remove-from-cart-btn', function(e) {
+                e.preventDefault();
+                var $button = $(this);
+                var courseId = $button.data('course-id');
+                var url = '{{ route("cart.remove", ":id") }}'.replace(':id', courseId);
+
+                $.ajax({
+                    url: url,
+                    method: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            toastr.success(response.message);
+                            // Update button to Add to Cart
+                            var $td = $button.closest('td');
+                            $button.replaceWith(`
+                                <form class="add-to-cart-form" data-course-id="${courseId}">
+                                    @csrf
+                                    <button type="submit" class="btn btn-success action-btn" title="Add to Cart">
+                                        <i class="bx bx-cart"></i>
+                                    </button>
+                                </form>
+                            `);
+                        }
+                    },
+                    error: function(xhr) {
+                        if (xhr.responseJSON.redirect) {
+                            toastr.error(xhr.responseJSON.message);
+                            setTimeout(() => {
+                                window.location.href = xhr.responseJSON.redirect;
+                            }, 2000);
+                        } else {
+                            toastr.error(xhr.responseJSON?.message || 'An error occurred while removing from cart.');
+                        }
+                    }
+                });
+            });
+
+            // Session-based success message
             @if (session('success'))
                 toastr.success("{{ session('success') }}");
             @endif

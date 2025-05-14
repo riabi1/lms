@@ -1,59 +1,10 @@
 @php
 use App\Models\Category;
 use App\Models\BlogCategory;
-use App\Models\CartItem;
-use App\Models\Course;
 
 // Fetch categories and blog categories
 $categories = Category::orderBy('category_name', 'ASC')->get();
 $blogCategories = BlogCategory::orderBy('name', 'ASC')->get();
-
-// Initialize cart variables
-$cartItems = collect([]);
-$cartQty = 0;
-$cartSubTotal = 0;
-
-if (auth()->check()) {
-// Fetch cart items for authenticated users with course details
-$cartItems = CartItem::with(['cartable' => function ($query) {
-$query->select('id', 'course_name', 'course_image', 'selling_price', 'discount_price');
-}])
-->where('user_id', auth()->id())
-->where('cartable_type', Course::class)
-->get();
-$cartQty = $cartItems->count();
-$cartSubTotal = $cartItems->sum(fn($item) => $item->price * $item->quantity);
-} else {
-// Use tempCart from localStorage for non-authenticated users
-$tempCart = json_decode(request()->cookie('tempCart', '[]'), true);
-$cartQty = count($tempCart);
-// Fetch course details for tempCart directly from database
-$tempCartItems = collect([]);
-if (!empty($tempCart)) {
-$courseIds = array_column($tempCart, 'courseId');
-$courses = Course::whereIn('id', $courseIds)
-->select('id', 'course_name', 'course_image', 'selling_price', 'discount_price')
-->get()
-->keyBy('id');
-$tempCartItems = collect($tempCart)->map(function ($cartItem) use ($courses) {
-$course = $courses->get($cartItem['courseId']);
-if (!$course) {
-return null;
-}
-$effectivePrice = $course->discount_price !== null && $course->discount_price > 0
-? max(0, $course->selling_price - $course->discount_price)
-: $course->selling_price;
-return [
-'courseId' => $course->id,
-'course_name' => $course->course_name,
-'image' => $course->course_image,
-'price' => $effectivePrice,
-'quantity' => $cartItem['quantity'] ?? 1,
-];
-})->filter()->values();
-$cartSubTotal = $tempCartItems->sum(fn($item) => $item['price'] * $item['quantity']);
-}
-}
 @endphp
 
 <header class="header-menu-area bg-white shadow-sm">
@@ -140,8 +91,8 @@ $cartSubTotal = $tempCartItems->sum(fn($item) => $item['price'] * $item['quantit
             <div class="logo-box d-flex align-items-center">
               <a href="{{ url('/') }}" class="logo">
                 <img src="{{ $siteSettings->logo ? Storage::url($siteSettings->logo) : asset('images/default-logo.png') }}"
-                  alt="Logo" class="lazy logo-header" loading="lazy"
-                  onerror="this.src='{{ asset('images/default-logo.png') }}'">
+                     alt="Logo" class="lazy logo-header" loading="lazy"
+                     onerror="this.src='{{ asset('images/no_image.jpg') }}'">
               </a>
               <div class="user-btn-action d-flex ml-4">
                 <div class="search-menu-toggle icon-element icon-element-sm shadow-sm mr-3" data-toggle="tooltip" data-placement="top" title="Search">
@@ -198,7 +149,7 @@ $cartSubTotal = $tempCartItems->sum(fn($item) => $item['price'] * $item['quantit
                     </div>
                   </div>
                 </form>
-                <div id="searchResults" class="search-results-dropdown position-absolute bg-white shadow-sm" style="display: none; z-index: 1000; max-height: 400px; overflow-y: auto;">
+                <div id="searchResults" class="search-results-dropdown position-absolute bg-white shadow-sm" style="display: none; max-height: 400px; overflow-y: auto;">
                   <ul class="list-unstyled mb-0"></ul>
                 </div>
               </div>
@@ -230,65 +181,14 @@ $cartSubTotal = $tempCartItems->sum(fn($item) => $item['price'] * $item['quantit
                   <li>
                     <p class="shop-cart-btn d-flex align-items-center">
                       <i class="la la-shopping-cart fs-20"></i>
-                      <span class="product-count ml-2" id="cartQty">{{ $cartQty }}</span>
+                      <span class="product-count ml-2" id="cartQty">0</span>
                     </p>
                     <ul class="cart-dropdown-menu p-3 shadow-sm" style="min-width: 300px;" id="cartDropdown">
-                      @if ($cartQty > 0)
-                      @if (auth()->check())
-                      @foreach ($cartItems as $item)
-                      <li class="media media-card border-bottom pb-2 mb-2" id="cart-item-{{ $item->cartable_id }}">
-                        <a href="{{ url('course/details/'.$item->cartable_id.'/'.Str::slug($item->cartable->course_name)) }}" class="media-img mr-3">
-                          <img src="{{ $item->cartable->course_image ? asset('upload/course_images/thumbnail/' . $item->cartable->course_image) : asset('images/default-course.jpg') }}"
-                            alt="{{ e($item->cartable->course_name) }}"
-                            class="lazy rounded"
-                            style="width: 60px; height: auto;"
-                            loading="lazy">
-                        </a>
-                        <div class="media-body">
-                          <h5 class="fs-14 font-weight-bold">
-                            <a href="{{ url('course/details/'.$item->cartable_id.'/'.Str::slug($item->cartable->course_name)) }}">{{ Str::limit(e($item->cartable->course_name), 25) }}</a>
-                          </h5>
-                          <div class="d-flex justify-content-between align-items-center">
-                            <span class="text-black font-weight-semi-bold fs-14">TND {{ number_format($item->price * $item->quantity, 2) }}</span>
-                            <button class="btn btn-danger btn-sm remove-from-cart" data-id="{{ $item->cartable_id }}">Remove</button>
-                          </div>
-                        </div>
-                      </li>
-                      @endforeach
-                      @else
-                      @foreach ($tempCartItems as $item)
-                      <li class="media media-card border-bottom pb-2 mb-2" id="cart-item-{{ $item['courseId'] }}">
-                        <a href="{{ url('course/details/'.$item['courseId'].'/'.Str::slug($item['course_name'])) }}" class="media-img mr-3">
-                          <img src="{{ $item['image'] ? asset('upload/course_images/thumbnail/' . $item['image']) : asset('images/default-course.jpg') }}"
-                            alt="{{ e($item['course_name']) }}"
-                            class="lazy rounded"
-                            style="width: 60px; height: auto;"
-                            loading="lazy">
-                        </a>
-                        <div class="media-body">
-                          <h5 class="fs-14 font-weight-bold">
-                            <a href="{{ url('course/details/'.$item['courseId'].'/'.Str::slug($item['course_name'])) }}">{{ Str::limit(e($item['course_name']), 25) }}</a>
-                          </h5>
-                          <div class="d-flex justify-content-between align-items-center">
-                            <span class="text-black font-weight-semi-bold fs-14">TND {{ number_format($item['price'] * $item['quantity'], 2) }}</span>
-                            <button class="btn btn-danger btn-sm remove-from-cart-temp" data-id="{{ $item['courseId'] }}">Remove</button>
-                          </div>
-                        </div>
-                      </li>
-                      @endforeach
-                      @endif
-                      <li class="media media-card border-top pt-2 mt-2">
-                        <div class="media-body fs-15">
-                          <p class="text-black font-weight-bold lh-18">Total: <span class="cart-total" id="cartSubTotal">TND {{ number_format($cartSubTotal, 2) }}</span></p>
-                        </div>
-                      </li>
-                      @else
                       <li class="media media-card">
                         <div class="media-body fs-15 text-center">
                           <p class="text-muted lh-18">Your cart is empty</p>
                         </div>
                       </li>
-                      @endif
                       <li class="mt-3">
                         <a href="{{ route('cart') }}" class="btn theme-btn w-100 py-2">Go to Cart <i class="la la-arrow-right icon ml-1"></i></a>
                       </li>
@@ -307,22 +207,21 @@ $cartSubTotal = $tempCartItems->sum(fn($item) => $item['price'] * $item['quantit
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- Off-Canvas Menus -->
-    <div class="off-canvas-menu custom-scrollbar-styled main-off-canvas-menu">
-      <div class="off-canvas-menu-close main-menu-close icon-element icon-element-sm shadow-sm" data-toggle="tooltip" data-placement="left" title="Close menu">
-        <i class="la la-times"></i>
-      </div>
+  <!-- Off-Canvas Menus -->
+  <div class="off-canvas-menu custom-scrollbar-styled main-off-canvas-menu">
+    <div class="off-canvas-menu-close main-menu-close icon-element icon-element-sm shadow-sm" data-toggle="tooltip" data-placement="left" title="Close menu">
+      <i class="la la-times"></i>
     </div>
-    <div class="off-canvas-menu custom-scrollbar-styled category-off-canvas-menu">
-      <div class="off-canvas-menu-close cat-menu-close icon-element icon-element-sm shadow-sm" data-toggle="tooltip" data-placement="left" title="Close menu">
-        <i class="la la-times"></i>
-      </div>
+  </div>
+  <div class="off-canvas-menu custom-scrollbar-styled category-off-canvas-menu">
+    <div class="off-canvas-menu-close cat-menu-close icon-element icon-element-sm shadow-sm" data-toggle="tooltip" data-placement="left" title="Close menu">
+      <i class="la la-times"></i>
     </div>
   </div>
 </header>
 
-<!-- Inline CSS -->
 <style>
   /* General Header Styles */
   .header-menu-area {
@@ -334,7 +233,6 @@ $cartSubTotal = $tempCartItems->sum(fn($item) => $item['price'] * $item['quantit
     background-color: #ffffff;
     min-height: 120px;
     max-height: 120px;
-    overflow: hidden;
     transition: transform 0.3s ease;
   }
 
@@ -390,6 +288,7 @@ $cartSubTotal = $tempCartItems->sum(fn($item) => $item['price'] * $item['quantit
     display: flex;
     align-items: center;
     flex-wrap: wrap;
+    position: relative; /* Ensure dropdowns are positioned relative to menu-wrapper */
   }
 
   .menu-category,
@@ -397,6 +296,7 @@ $cartSubTotal = $tempCartItems->sum(fn($item) => $item['price'] * $item['quantit
   .search-bar,
   .shop-cart {
     background-color: transparent;
+    position: relative; /* Ensure dropdowns are positioned correctly */
   }
 
   .search-bar {
@@ -466,7 +366,10 @@ $cartSubTotal = $tempCartItems->sum(fn($item) => $item['price'] * $item['quantit
     left: 0;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     background: #fff;
-    z-index: 1001;
+    z-index: 10000; /* High z-index to ensure visibility */
+    max-height: 400px;
+    overflow-y: auto;
+    position: absolute;
   }
 
   .search-results-dropdown ul li {
@@ -516,9 +419,108 @@ $cartSubTotal = $tempCartItems->sum(fn($item) => $item['price'] * $item['quantit
   .dropdown-menu-item,
   .cart-dropdown-menu {
     position: absolute;
-    z-index: 1000;
+    top: 100%;
+    left: 0;
+    z-index: 10000; /* High z-index to ensure visibility */
     background: #fff;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+    min-width: 200px;
+    padding: 10px 0;
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 0.2s, opacity 0.2s ease;
+  }
+
+  .menu-category li:hover > .cat-dropdown-menu,
+  .main-menu li:hover > .dropdown-menu-item,
+  .shop-cart li:hover > .cart-dropdown-menu {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  .cat-dropdown-menu li,
+  .dropdown-menu-item li,
+  .cart-dropdown-menu li {
+    position: relative;
+  }
+
+  .cat-dropdown-menu .sub-menu {
+    position: absolute;
+    top: 0;
+    left: 100%;
+    z-index: 10000; /* High z-index for nested dropdowns */
+    background: #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+    min-width: 200px;
+    padding: 10px 0 |important;
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 0.2s, opacity 0.2s ease;
+  }
+
+  .cat-dropdown-menu li:hover > .sub-menu {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  .cat-dropdown-menu li a,
+  .dropdown-menu-item li a {
+    display: block;
+    padding: 8px 20px;
+    color: #333;
+    text-decoration: none;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+  }
+
+  .cat-dropdown-menu li a:hover,
+  .dropdown-menu-item li a:hover {
+    background-color: #f8f9fa;
+  }
+
+  /* Cart Dropdown Specific Styles */
+  .cart-dropdown-menu {
+    min-width: 300px;
+    padding: 15px;
+  }
+
+  .cart-dropdown-menu .media-card {
+    margin-bottom: 10px;
+  }
+
+  .cart-dropdown-menu .media-body {
+    text-align: center;
+  }
+
+  .cart-dropdown-menu .theme-btn {
+    display: block;
+    text-align: center;
+  }
+
+  .shop-cart-btn {
+    cursor: pointer;
+    color: #333;
+    font-size: 14px;
+  }
+
+  .shop-cart-btn .product-count {
+    background: #dc3545;
+    color: #fff;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+    text-align: center;
+    font-size: 12px;
+  }
+
+  /* Ensure no overflow clipping */
+  .header-menu-area,
+  .header-menu-content,
+  .menu-wrapper {
+    overflow: visible !important;
   }
 
   /* Responsive Adjustments */
@@ -526,6 +528,7 @@ $cartSubTotal = $tempCartItems->sum(fn($item) => $item['price'] * $item['quantit
     .header-menu-area {
       min-height: 120px;
       max-height: 120px;
+      z-index: 1000; /* Ensure header stays above content */
     }
 
     .search-bar {
@@ -540,12 +543,26 @@ $cartSubTotal = $tempCartItems->sum(fn($item) => $item['price'] * $item['quantit
     .menu-wrapper {
       justify-content: space-between;
     }
+
+    .cat-dropdown-menu,
+    .dropdown-menu-item,
+    .cart-dropdown-menu {
+      width: 100%;
+      left: 0;
+      z-index: 10000; /* Maintain high z-index */
+    }
+
+    .cat-dropdown-menu .sub-menu {
+      left: 0;
+      top: 100%;
+    }
   }
 
   @media (max-width: 767px) {
     .header-menu-area {
       min-height: 120px;
       max-height: 120px;
+      z-index: 1000; /* Ensure header stays above content */
     }
 
     .search-bar {
@@ -556,6 +573,7 @@ $cartSubTotal = $tempCartItems->sum(fn($item) => $item['price'] * $item['quantit
 
     .search-results-dropdown {
       width: 100%;
+      z-index: 10000; /* High z-index for mobile */
     }
 
     .px-100px {
@@ -574,207 +592,154 @@ $cartSubTotal = $tempCartItems->sum(fn($item) => $item['price'] * $item['quantit
       margin-right: 0;
       margin-bottom: 10px;
     }
+
+    .cat-dropdown-menu,
+    .dropdown-menu-item,
+    .cart-dropdown-menu {
+      position: static;
+      width: 100%;
+      z-index: 10000; /* High z-index for mobile */
+      box-shadow: none;
+      border: 1px solid #e5e5e5;
+    }
+
+    .cat-dropdown-menu .sub-menu {
+      position: static;
+      width: 100%;
+      box-shadow: none;
+      border: none;
+      padding-left: 20px;
+    }
   }
 </style>
 
-<!-- JavaScript -->
 <script>
-  $(document).ready(function() {
-    // Hide header on scroll down, show on scroll up
-    let lastScrollTop = 0;
-    $(window).on('scroll', function() {
-      const scrollTop = $(this).scrollTop();
-      const header = $('.header-menu-area');
+$(document).ready(function() {
+  function showNotification(message, type) {
+    const $message = $('<div class="cart-message"></div>').html(`<div class="alert alert-${type}">${message}</div>`)
+      .css({position: 'fixed', top: '10px', right: '10px', 'z-index': 1000});
+    $('body').append($message);
+    setTimeout(() => $message.fadeOut(300, () => $message.remove()), 3000);
+  }
 
-      if (scrollTop > lastScrollTop && scrollTop > 100) {
-        header.addClass('sticky-hidden');
-      } else {
-        header.removeClass('sticky-hidden');
-      }
-      lastScrollTop = scrollTop;
-    });
+  function updateHeaderPadding() {
+    const header = $('.header-menu-area');
+    const headerHeight = header.outerHeight();
+    $('body').css('padding-top', headerHeight + 'px');
+  }
 
-    // Debounce function for search
-    function debounceSearch(func, wait) {
-      let timeout;
-      return function executedFunction(...args) {
-        const later = () => {
-          clearTimeout(timeout);
-          func(...args);
-        };
+  updateHeaderPadding();
+
+  function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
         clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
+        func(...args);
       };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  }
+
+  $(window).on('resize', debounce(updateHeaderPadding, 100));
+
+  // Hide header on scroll down, show on scroll up
+  let lastScrollTop = 0;
+  $(window).on('scroll', function() {
+    const scrollTop = $(this).scrollTop();
+    const header = $('.header-menu-area');
+
+    if (scrollTop > lastScrollTop && scrollTop > 100) {
+      header.addClass('sticky-hidden');
+    } else {
+      header.removeClass('sticky-hidden');
+    }
+    lastScrollTop = scrollTop;
+  });
+
+  function debounceSearch(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  }
+
+  const performSearch = debounceSearch(function(query) {
+    if (query.length < 2) {
+      $('#searchResults').hide().find('ul').empty();
+      return;
     }
 
-    // Perform search
-    const performSearch = debounceSearch(function(query) {
-      if (query.length < 2) {
-        $('#searchResults').hide().find('ul').empty();
-        return;
-      }
+    $.ajax({
+      url: '{{ route("search") }}',
+      method: 'GET',
+      data: { query: query },
+      dataType: 'json',
+      beforeSend: function() {
+        $('#searchResults ul').html('<li class="p-3 text-center"><i class="la la-spinner la-spin mr-2"></i>Loading...</li>');
+        $('#searchResults').show();
+      },
+      success: function(response) {
+        const $resultsList = $('#searchResults ul');
+        $resultsList.empty();
 
-      $.ajax({
-        url: '{{ route("search") }}',
-        method: 'GET',
-        data: {
-          query: query
-        },
-        dataType: 'json',
-        beforeSend: function() {
-          $('#searchResults ul').html('<li class="p-3 text-center"><i class="la la-spinner la-spin mr-2"></i>Loading...</li>');
-          $('#searchResults').show();
-        },
-        success: function(response) {
-          const $resultsList = $('#searchResults ul');
-          $resultsList.empty();
-
-          if (response.length === 0) {
-            $resultsList.append('<li class="p-3 text-muted text-center">No courses found</li>');
-          } else {
-            response.forEach(function(course) {
-              $resultsList.append(`
-                            <li>
-                                <a href="${course.url}" class="d-flex align-items-center">
-                                    <img src="${course.image}" alt="${course.title}" class="course-image">
-                                    <div>
-                                        <div class="course-title">${course.title}</div>
-                                        <div class="course-price">TND ${course.price}</div>
-                                    </div>
-                                </a>
-                            </li>
-                        `);
-            });
-          }
-          $('#searchResults').show();
-        },
-        error: function() {
-          $('#searchResults ul').empty().append('<li class="p-3 text-danger text-center">An error occurred. Please try again.</li>');
-          $('#searchResults').show();
-        }
-      });
-    }, 300);
-
-    // Search input handler
-    $('#searchInput').on('input', function() {
-      const query = $(this).val().trim();
-      performSearch(query);
-    });
-
-    // Hide results on click outside
-    $(document).on('click', function(e) {
-      if (!$(e.target).closest('.search-bar').length) {
-        $('#searchResults').hide().find('ul').empty();
-      }
-    });
-
-    // Prevent empty search submission
-    $('#searchForm').on('submit', function(e) {
-      if (!$('#searchInput').val().trim()) {
-        e.preventDefault();
-        $('#searchInput').addClass('is-invalid');
-        setTimeout(() => $('#searchInput').removeClass('is-invalid'), 2000);
-      }
-    });
-
-    // Remove invalid class on input
-    $('#searchInput').on('focus', function() {
-      $(this).removeClass('is-invalid');
-    });
-
-    // Remove from temp cart for non-authenticated users
-    $('#cartDropdown').on('click', '.remove-from-cart-temp', function(e) {
-      e.preventDefault();
-      const courseId = $(this).data('id');
-      let tempCart = JSON.parse(localStorage.getItem('tempCart') || '[]');
-      tempCart = tempCart.filter(item => item.courseId !== courseId);
-      localStorage.setItem('tempCart', JSON.stringify(tempCart));
-
-      // Update cart display
-      const $cartItem = $('#cart-item-' + courseId);
-      $cartItem.remove();
-      const newCartQty = tempCart.length;
-      $('#cartQty').text(newCartQty);
-
-      // Recalculate subtotal
-      let newSubTotal = 0;
-      tempCart.forEach(item => {
-        // Note: Price is not available in tempCart; this is a limitation
-        // You may need to fetch prices again or store them in tempCart
-      });
-
-      if (newCartQty === 0) {
-        $('#cartDropdown').html(`
-                <li class="media media完毕卡">
-                    <div class="media-body fs-15 text-center">
-                        <p class="text-muted lh-18">Your cart is empty</p>
-                    </div>
-                </li>
-                <li class="mt-3">
-                    <a href="{{ route('cart') }}" class="btn theme-btn w-100 py-2">Go to Cart <i class="la la-arrow-right icon ml-1"></i></a>
-                </li>
+        if (response.length === 0) {
+          $resultsList.append('<li class="p-3 text-muted text-center">No courses found</li>');
+        } else {
+          response.forEach(function(course) {
+            $resultsList.append(`
+              <li>
+                <a href="${course.url}" class="d-flex align-items-center">
+                  <img src="${course.image}" 
+                       alt="${course.title}" 
+                       class="course-image" 
+                       loading="lazy"
+                       onerror="this.src='{{ asset('upload/no_image.jpg') }}'">
+                  <div>
+                    <div class="course-title">${course.title}</div>
+                    <div class="course-price">TND ${course.price}</div>
+                  </div>
+                </a>
+              </li>
             `);
-        $('#cartSubTotal').text('TND 0.00');
-      } else {
-        // Subtotal update is incomplete here due to missing price data
-        // Consider storing price in tempCart when adding items
-      }
-
-      $('.add-to-cart[data-course-id="' + courseId + '"]').each(function() {
-        $(this).data('in-cart', false).removeAttr('data-in-cart')
-          .prop('disabled', false)
-          .html('<i class="la la-shopping-cart fs-18 mr-1"></i> Add to Cart');
-      });
-    });
-
-    // Remove from cart for authenticated users
-    $('#cartDropdown').on('click', '.remove-from-cart', function(e) {
-      e.preventDefault();
-      const courseId = $(this).data('id');
-      const $cartItem = $('#cart-item-' + courseId);
-      const $message = $('#cart-message-' + courseId).length ? $('#cart-message-' + courseId) : $('<div class="cart-message"></div>').appendTo('body');
-
-      $.ajax({
-        url: '{{ route("cart.remove", ":id") }}'.replace(':id', courseId),
-        method: 'GET',
-        dataType: 'json',
-        success: function(response) {
-          if (response.redirect) {
-            $message.html('<div class="alert alert-info">Please log in to remove this course from your cart.</div>');
-            setTimeout(() => window.location.href = response.redirect, 1500);
-          } else if (response.success) {
-            $cartItem.remove();
-            $message.html('<div class="alert alert-success">' + response.message + '</div>');
-            $('#cartQty').text(response.cartCount);
-            $('#cartSubTotal').text('TND ' + response.totalPrice);
-            if (response.cartCount === 0) {
-              $('#cartDropdown').html(`
-                            <li class="media media-card">
-                                <div class="media-body fs-15 text-center">
-                                    <p class="text-muted lh-18">Your cart is empty</p>
-                                </div>
-                            </li>
-                            <li class="mt-3">
-                                <a href="{{ route('cart') }}" class="btn theme-btn w-100 py-2">Go to Cart <i class="la la-arrow-right icon ml-1"></i></a>
-                            </li>
-                        `);
-            }
-            $('.add-to-cart[data-course-id="' + courseId + '"]').each(function() {
-              $(this).data('in-cart', false).removeAttr('data-in-cart')
-                .prop('disabled', false)
-                .html('<i class="la la-shopping-cart fs-18 mr-1"></i> Add to Cart');
-            });
-          } else {
-            $message.html('<div class="alert alert-info">' + (response.message || 'Action completed.') + '</div>');
-          }
-          setTimeout(() => $message.empty(), 3000);
-        },
-        error: function(xhr) {
-          const response = xhr.responseJSON || {};
-          $message.html('<div class="alert alert-danger">' + (response.message || 'An error occurred.') + '</div>');
-          setTimeout(() => $message.empty(), 3000);
+          });
         }
-      });
+        $('#searchResults').show();
+      },
+      error: function() {
+        $('#searchResults ul').empty().append('<li class="p-3 text-danger text-center">An error occurred. Please try again.</li>');
+        $('#searchResults').show();
+      }
     });
+  }, 300);
+
+  $('#searchInput').on('input', function() {
+    const query = $(this).val().trim();
+    performSearch(query);
   });
+
+  $(document).on('click', function(e) {
+    if (!$(e.target).closest('.search-bar').length) {
+      $('#searchResults').hide().find('ul').empty();
+    }
+  });
+
+  $('#searchForm').on('submit', function(e) {
+    if (!$('#searchInput').val().trim()) {
+      e.preventDefault();
+      $('#searchInput').addClass('is-invalid');
+      setTimeout(() => $('#searchInput').removeClass('is-invalid'), 2000);
+    }
+  });
+
+  $('#searchInput').on('focus', function() {
+    $(this).removeClass('is-invalid');
+  });
+});
 </script>

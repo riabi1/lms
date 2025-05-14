@@ -89,6 +89,43 @@ class IndexController extends Controller
 
         $average = $course->reviews()->where('status', 1)->avg('rating') ?? 0;
 
+        // Calculate final price for the course
+        $course->final_price = $course->discount_price !== null
+            ? max(0, $course->selling_price - $course->discount_price)
+            : $course->selling_price ?? 0;
+        $course->discount_percentage = ($course->selling_price > 0 && $course->discount_price !== null)
+            ? round(($course->selling_price - $course->final_price) / $course->selling_price * 100)
+            : 0;
+
+        // Add final price to instructor and related courses
+        $instructorCourses->transform(function ($course) {
+            $course->final_price = $course->discount_price !== null
+                ? max(0, $course->selling_price - $course->discount_price)
+                : $course->selling_price ?? 0;
+            $course->discount_percentage = ($course->selling_price > 0 && $course->discount_price !== null)
+                ? round(($course->selling_price - $course->final_price) / $course->selling_price * 100)
+                : 0;
+            $course->rating = $course->reviews->avg('rating') ?? 0;
+            $course->reviews_count = $course->reviews->count();
+            $course->course_image = $course->course_image ?? 'default-course.jpg';
+            $course->slug = $course->course_name_slug;
+            return $course;
+        });
+
+        $relatedCourses->transform(function ($course) {
+            $course->final_price = $course->discount_price !== null
+                ? max(0, $course->selling_price - $course->discount_price)
+                : $course->selling_price ?? 0;
+            $course->discount_percentage = ($course->selling_price > 0 && $course->discount_price !== null)
+                ? round(($course->selling_price - $course->final_price) / $course->selling_price * 100)
+                : 0;
+            $course->rating = $course->reviews->avg('rating') ?? 0;
+            $course->reviews_count = $course->reviews->count();
+            $course->course_image = $course->course_image ?? 'default-course.jpg';
+            $course->slug = $course->course_name_slug;
+            return $course;
+        });
+
         return view('frontend.course.course_details', compact(
             'course',
             'goals',
@@ -131,6 +168,22 @@ class IndexController extends Controller
         }
 
         $courses = $query->paginate(10);
+
+        // Add final price to courses
+        $courses->getCollection()->transform(function ($course) {
+            $course->final_price = $course->discount_price !== null
+                ? max(0, $course->selling_price - $course->discount_price)
+                : $course->selling_price ?? 0;
+            $course->discount_percentage = ($course->selling_price > 0 && $course->discount_price !== null)
+                ? round(($course->selling_price - $course->final_price) / $course->selling_price * 100)
+                : 0;
+            $course->rating = $course->reviews->avg('rating') ?? 0;
+            $course->reviews_count = $course->reviews->count();
+            $course->course_image = $course->course_image ?? 'default-course.jpg';
+            $course->slug = $course->course_name_slug;
+            return $course;
+        });
+
         $categories = Cache::remember('categories', 3600, fn() => Category::orderBy('category_name', 'ASC')->get());
 
         return view('frontend.category.category_all', compact('courses', 'category', 'categories'));
@@ -164,6 +217,22 @@ class IndexController extends Controller
         }
 
         $courses = $query->paginate(10);
+
+        // Add final price to courses
+        $courses->getCollection()->transform(function ($course) {
+            $course->final_price = $course->discount_price !== null
+                ? max(0, $course->selling_price - $course->discount_price)
+                : $course->selling_price ?? 0;
+            $course->discount_percentage = ($course->selling_price > 0 && $course->discount_price !== null)
+                ? round(($course->selling_price - $course->final_price) / $course->selling_price * 100)
+                : 0;
+            $course->rating = $course->reviews->avg('rating') ?? 0;
+            $course->reviews_count = $course->reviews->count();
+            $course->course_image = $course->course_image ?? 'default-course.jpg';
+            $course->slug = $course->course_name_slug;
+            return $course;
+        });
+
         $categories = Cache::remember('categories', 3600, fn() => Category::orderBy('category_name', 'ASC')->get());
 
         return view('frontend.category.subcategory_all', compact('courses', 'subcategory', 'categories'));
@@ -171,41 +240,33 @@ class IndexController extends Controller
 
     public function InstructorDetails($id)
     {
-        $instructor = Instructor::with([
-            'courses' => fn($query) => $query
-                ->where('status', 1)
-                ->select('id', 'courseable_id', 'courseable_type', 'course_name', 'course_image', 'selling_price', 'discount_price', 'course_name_slug')
-                ->with([
-                    'reviews' => fn($q) => $q->where('status', 1),
-                    'courseable',
-                    'goals'
-                ])
-        ])->find($id);
+        $instructor = Instructor::find($id);
     
         if (!$instructor) {
             return redirect()->route('home')->with('error', 'Instructor not found.');
         }
     
-        $courses = $instructor->courses()
-            ->with([
+        $courses = Course::with([
                 'reviews' => fn($q) => $q->where('status', 1),
                 'courseable',
                 'goals'
             ])
+            ->where('courseable_type', 'App\Models\Instructor')
+            ->where('courseable_id', $instructor->id)
             ->where('status', 1)
-            ->select('id', 'courseable_id', 'courseable_type', 'course_name', 'course_image', 'selling_price', 'discount_price', 'course_name_slug')
+            ->select('id', 'courseable_id', 'courseable_type', 'course_name', 'course_image', 'selling_price', 'discount_price', 'course_name_slug', 'updated_at', 'bestseller', 'highestrated', 'featured', 'label', 'description')
             ->paginate(6);
     
         $totalStudents = Order::whereIn('course_id', $instructor->courses()->where('status', 1)->pluck('id'))
             ->distinct('user_id')
             ->count();
     
-        $totalReviews = $instructor->courses()->where('status', 1)->withCount('reviews')->get()->sum('reviews_count');
+        $totalReviews = $courses->sum(fn($course) => $course->reviews->count());
     
         $courses->getCollection()->transform(function ($course) {
             $course->final_price = $course->discount_price !== null
                 ? max(0, $course->selling_price - $course->discount_price)
-                : $course->selling_price;
+                : $course->selling_price ?? 0;
             $course->discount_percentage = ($course->selling_price > 0 && $course->discount_price !== null)
                 ? round(($course->selling_price - $course->final_price) / $course->selling_price * 100)
                 : 0;
@@ -217,31 +278,6 @@ class IndexController extends Controller
         });
     
         return view('instructor.instructor_details', compact('instructor', 'courses', 'totalStudents', 'totalReviews'));
-    }
-    public function getCourseTooltip($id)
-    {
-        $course = Course::with([
-            'reviews' => fn($q) => $q->where('status', 1),
-            'courseable',
-            'goals'
-        ])->findOrFail($id);
-
-        $course->final_price = $course->discount_price !== null
-            ? max(0, $course->selling_price - $course->discount_price)
-            : $course->selling_price;
-        $course->rating = $course->reviews->avg('rating') ?? 0;
-        $course->reviews_count = $course->reviews->count();
-        $course->is_wishlisted = auth()->check() && \App\Models\Wishlist::where('trackable_type', 'App\Models\User')
-            ->where('trackable_id', auth()->id())
-            ->where('course_id', $course->id)
-            ->exists();
-        $course->is_in_cart = \Darryldecode\Cart\Facades\CartFacade::get($course->id) !== null;
-        $course->has_purchased = auth()->check() && Order::where('user_id', auth()->id())
-            ->where('course_id', $course->id)
-            ->where('payment_status', 'paid')
-            ->exists();
-
-        return view('instructor.partials.course_tooltip', compact('course'))->render();
     }
 
     public function courses(Request $request)
@@ -274,6 +310,22 @@ class IndexController extends Controller
         }
 
         $courses = $query->paginate(10);
+
+        // Add final price to courses
+        $courses->getCollection()->transform(function ($course) {
+            $course->final_price = $course->discount_price !== null
+                ? max(0, $course->selling_price - $course->discount_price)
+                : $course->selling_price ?? 0;
+            $course->discount_percentage = ($course->selling_price > 0 && $course->discount_price !== null)
+                ? round(($course->selling_price - $course->final_price) / $course->selling_price * 100)
+                : 0;
+            $course->rating = $course->reviews->avg('rating') ?? 0;
+            $course->reviews_count = $course->reviews->count();
+            $course->course_image = $course->course_image ?? 'default-course.jpg';
+            $course->slug = $course->course_name_slug;
+            return $course;
+        });
+
         $categories = Cache::remember('categories', 3600, fn() => Category::orderBy('category_name', 'ASC')->get());
 
         return view('frontend.course.course_list', compact('courses', 'categories'));

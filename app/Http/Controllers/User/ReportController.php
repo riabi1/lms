@@ -29,6 +29,10 @@ class ReportController extends Controller
 
     public function store(Request $request)
     {
+        if (!Auth::check()) {
+            return redirect()->back()->with('error', 'You must be logged in to submit a report.')->withInput();
+        }
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'type' => 'required|in:course_issue,technical,content_error,billing,other',
@@ -47,11 +51,17 @@ class ReportController extends Controller
                 'status' => 'pending',
             ]);
 
-            return redirect()->route('report.submit')
+            return redirect()->route('report.index')
                 ->with('success', 'Report submitted successfully. Our team will review it soon.');
         } catch (\Exception $e) {
+            \Log::error('Report submission failed: ' . $e->getMessage(), [
+                'user_id' => Auth::id(),
+                'validated_data' => $validated,
+                'trace' => $e->getTraceAsString(),
+            ]);
+
             return redirect()->back()
-                ->with('error', 'Failed to submit report. Please try again.')
+                ->with('error', 'Failed to submit report: ' . $e->getMessage())
                 ->withInput();
         }
     }

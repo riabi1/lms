@@ -104,12 +104,16 @@
                                             @endif
                                         </td>
                                         <td>
-                                            <a href="{{ route('user.reviews.edit', $review->id) }}" class="btn btn-sm btn-primary">Edit</a>
-                                            <form action="{{ route('user.reviews.destroy', $review->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this review?');">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                                            </form>
+                                            @if ($review->status == 0)
+                                                <a href="{{ route('user.reviews.edit', $review->id) }}" class="btn btn-sm btn-primary">Edit</a>
+                                                <form action="{{ route('user.reviews.destroy', $review->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this review?');">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                                </form>
+                                            @else
+                                                <span class="text-muted">No actions available</span>
+                                            @endif
                                         </td>
                                     </tr>
                                 @endforeach
