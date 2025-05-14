@@ -22,15 +22,24 @@ class QuizController extends Controller
         return view('instructor.quiz.index', compact('quizzes'));
     }
 
-    public function create(Course $course = null)
-    {
-        $instructor = Auth::guard('instructor')->user();
-        $courses = Course::where('courseable_type', get_class($instructor))
-                         ->where('courseable_id', $instructor->id)
-                         ->get();
-        return view('instructor.quiz.create', compact('courses', 'course'));
+  public function create(Request $request, Course $course = null)
+  {
+    $instructor = Auth::guard('instructor')->user();
+
+    // Check if course_id is provided in the query string
+    if (!$course && $request->has('course_id')) {
+      $course = Course::where('id', $request->input('course_id'))
+        ->where('courseable_type', get_class($instructor))
+        ->where('courseable_id', $instructor->id)
+        ->first();
     }
 
+    $courses = Course::where('courseable_type', get_class($instructor))
+      ->where('courseable_id', $instructor->id)
+      ->get();
+
+    return view('instructor.quiz.create', compact('courses', 'course'));
+  }
     public function store(Request $request)
     {
         $instructor = Auth::guard('instructor')->user();
