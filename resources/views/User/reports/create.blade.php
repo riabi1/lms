@@ -33,7 +33,6 @@
                         <option value="" {{ old('type') == '' ? 'selected' : '' }}>Select a Type</option>
                         <option value="course_issue" {{ old('type') == 'course_issue' ? 'selected' : '' }}>Course Issue</option>
                         <option value="technical" {{ old('type') == 'technical' ? 'selected' : '' }}>Technical Problem</option>
-                        <option value="technical" {{ old('type') == 'technical' ? 'selected' : '' }}>Technical Problem</option>
                         <option value="content_error" {{ old('type') == 'content_error' ? 'selected' : '' }}>Content Error</option>
                         <option value="billing" {{ old('type') == 'billing' ? 'selected' : '' }}>Billing Issue</option>
                         <option value="other" {{ old('type') == 'other' ? 'selected' : '' }}>Other</option>

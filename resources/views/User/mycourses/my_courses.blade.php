@@ -115,56 +115,57 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse ($orders as $key => $order)
-                                @if ($order->course)
-                                    <tr>
-                                        <td>{{ $key + 1 }}</td>
-                                        <td>
-                                            <img src="{{ $order->course->course_image ? Storage::url('upload/course_images/thumbnail/'.$order->course->course_image) : asset('images/no_image.jpg') }}" 
-                                                 alt="{{ $order->course->course_name }}" 
-                                                 style="width: 70px; height: 40px;" 
-                                                 onerror="this.src='{{ asset('images/no_image.jpg') }}'">
-                                        </td>
-                                        <td>{{ $order->course->course_name }}</td>
-                                        <td>{{ $order->instructor->name ?? 'N/A' }}</td>
-                                        <td>{{ $order->course->category->category_name ?? 'Uncategorized' }}</td>
-                                        <td>${{ number_format($order->price, 2) }}</td>
-                                        <td>
-                                            @php
-                                                $totalLectures = $order->course->sections->flatMap->lectures->count();
-                                                $completedLectures = array_filter($order->progress ?? [], fn($completed) => $completed == 1);
-                                                $progressPercentage = $totalLectures > 0 ? round((count($completedLectures) / $totalLectures) * 100) : 0;
-                                                $learnUrl = url('mycourses/learn/'.$order->course->id.'/'.Str::slug($order->course->course_name));
-                                            @endphp
-                                            @if ($progressPercentage == 0)
-                                                <a href="{{ $learnUrl }}" class="btn btn-success btn-sm">
-                                                    <i class="bx bx-play"></i> Start Learning
-                                                </a>
-                                            @elseif ($progressPercentage < 100)
-                                                <a href="{{ $learnUrl }}" class="btn btn-primary btn-sm">
-                                                    <i class="bx bx-play"></i> Continue Learning
-                                                </a>
-                                            @else
-                                                <a href="{{ $learnUrl }}" class="btn btn-info btn-sm">
-                                                    <i class="bx bx-check"></i> Course Completed
-                                                </a>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#notesModal{{ $order->course->id }}">
-                                                <i class="bx bx-note"></i> Notes ({{ $order->course->notes->count() }})
-                                            </button>
-                                        </td>
-                                    </tr>
-                                @endif
-                            @empty
-                                <tr>
-                                    <td colspan="8" class="text-center">You haven't purchased any courses yet. 
-                                        <a href="{{ route('course.list') }}" class="text-primary">Explore Courses</a>
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
+    @forelse ($orders as $key => $order)
+        @if ($order->course)
+            <tr>
+                <td>{{ $key + 1 }}</td>
+                <td>
+                    <img src="{{ $order->course->course_image ? asset('upload/course_images/thumbnail/' . $order->course->course_image) : asset('upload/no_image.jpg') }}" 
+                         alt="{{ $order->course->course_name }}" 
+                         style="width: 70px; height: 40px; object-fit: cover;" 
+                         class="img-fluid"
+                         onerror="this.src='{{ asset('upload/no_image.jpg') }}'">
+                </td>
+                <td>{{ $order->course->course_name }}</td>
+                <td>{{ $order->instructor->name ?? 'N/A' }}</td>
+                <td>{{ $order->course->category->category_name ?? 'Uncategorized' }}</td>
+                <td>${{ number_format($order->price, 2) }}</td>
+                <td>
+                    @php
+                        $totalLectures = $order->course->sections->flatMap->lectures->count();
+                        $completedLectures = array_filter($order->progress ?? [], fn($completed) => $completed == 1);
+                        $progressPercentage = $totalLectures > 0 ? round((count($completedLectures) / $totalLectures) * 100) : 0;
+                        $learnUrl = url('mycourses/learn/'.$order->course->id.'/'.Str::slug($order->course->course_name));
+                    @endphp
+                    @if ($progressPercentage == 0)
+                        <a href="{{ $learnUrl }}" class="btn btn-success btn-sm">
+                            <i class="bx bx-play"></i> Start Learning
+                        </a>
+                    @elseif ($progressPercentage < 100)
+                        <a href="{{ $learnUrl }}" class="btn btn-primary btn-sm">
+                            <i class="bx bx-play"></i> Continue Learning
+                        </a>
+                    @else
+                        <a href="{{ $learnUrl }}" class="btn btn-info btn-sm">
+                            <i class="bx bx-check"></i> Course Completed
+                        </a>
+                    @endif
+                </td>
+                <td>
+                    <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#notesModal{{ $order->course->id }}">
+                        <i class="bx bx-note"></i> Notes ({{ $order->course->notes->count() }})
+                    </button>
+                </td>
+            </tr>
+        @endif
+    @empty
+        <tr>
+            <td colspan="8" class="text-center">You haven't purchased any courses yet. 
+                <a href="{{ route('course.list') }}" class="text-primary">Explore Courses</a>
+            </td>
+        </tr>
+    @endforelse
+</tbody>
                     </table>
                 </div>
             </div>

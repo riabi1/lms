@@ -59,7 +59,7 @@ Route::name('')->group(function () {
     Route::middleware('auth:web')->group(function () {
         // Cart Routes
         Route::get('/cart', [CartController::class, 'MyCart'])->name('cart');
-        Route::get('/cart/remove/{id}', [CartController::class, 'CartRemove'])->name('cart.remove');
+        Route::post('/cart/remove/{id}', [CartController::class, 'CartRemove'])->name('cart.remove');
         Route::post('/coupon/apply', [CartController::class, 'CouponApply'])->name('coupon.apply');
         Route::get('/coupon/remove/{couponName}', [CartController::class, 'CouponRemove'])->name('coupon.remove');
         Route::get('/checkout', [CartController::class, 'CheckoutCreate'])->name('checkout.create');
@@ -118,9 +118,9 @@ Route::name('')->group(function () {
    
 
         // Report Routes
-        Route::get('/report', [ReportController::class, 'create'])->name('report');
+        Route::get('/reports', [ReportController::class, 'index'])->name('report.index');
+        Route::get('/report/create', [ReportController::class, 'create'])->name('report');
         Route::post('/report', [ReportController::class, 'store'])->name('report.submit');
-        Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     });
 });
 

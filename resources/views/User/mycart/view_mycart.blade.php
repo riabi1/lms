@@ -1,4 +1,3 @@
-
 @extends('frontend.master')
 
 @section('title')
@@ -42,11 +41,12 @@
                         @forelse ($cartItems as $item)
                             <tr id="cart-row-{{ $item->id }}">
                                 <td class="text-center align-middle">
-                                    <img src="{{ isset($item->attributes['image']) ? asset('upload/course_images/thumbnail/' . $item->attributes['image']) : asset('images/default-course.jpg') }}" 
+                                    <img src="{{ isset($item->attributes['image']) ? asset('upload/course_images/thumbnail/' . $item->attributes['image']) : asset('upload/no_image.jpg') }}" 
                                          alt="{{ e($item->name) }}" 
                                          class="rounded lazy" 
                                          style="width: 75px; height: auto;"
-                                         loading="lazy">
+                                         loading="lazy"
+                                         onerror="this.src='{{ asset('upload/no_image.jpg') }}'">
                                 </td>
                                 <td class="align-middle">
                                     <strong>{{ e($item->name) }}</strong><br>
@@ -56,10 +56,10 @@
                                 </td>
                                 <td class="text-right align-middle">
                                     @if (isset($item->attributes['selling_price']) && isset($item->attributes['discount_price']) && $item->attributes['discount_price'] > 0)
-                                        <del>{{ number_format($item->attributes['selling_price'], 2) }} USD</del><br>
-                                        {{ number_format($item->price, 2) }} USD
+                                        <del>{{ number_format($item->attributes['selling_price'] * $item->quantity, 2) }} TND</del><br>
+                                        <span class="effective-price">{{ number_format($item->price * $item->quantity, 2) }} TND</span>
                                     @else
-                                        {{ number_format($item->price, 2) }} USD
+                                        <span class="effective-price">{{ number_format($item->price * $item->quantity, 2) }} TND</span>
                                     @endif
                                 </td>
                                 <td class="text-center align-middle">
@@ -89,7 +89,7 @@
                             @if ($hasCoupons)
                                 <form action="{{ route('coupon.apply') }}" method="POST" id="coupon-form">
                                     @csrf
-                                    <div class="input-group">
+                                    <div class="input-group mb-3">
                                         <input class="form-control" type="text" name="code" placeholder="Enter coupon code" required>
                                         <button type="submit" class="btn theme-btn">Apply Coupon</button>
                                     </div>
@@ -104,8 +104,8 @@
                                     <ul class="list-unstyled">
                                         @foreach ($coupons as $coupon)
                                             <li class="d-flex justify-content-between align-items-center mb-2">
-                                                <span>{{ e($coupon['code']) }} (-{{ number_format($coupon['discount_amount'], 2) }} USD)</span>
-                                                <a href="{{ route('coupon.remove', $coupon['code']) }}" class="btn btn-warning btn-sm">Remove</a>
+                                                <span>{{ e($coupon['code']) }} (-{{ number_format($coupon['discount_amount'], 2) }} TND)</span>
+                                                <a href="{{ route('coupon.remove', $coupon['code']) }}" class="btn btn-warning btn-sm remove-coupon" data-code="{{ $coupon['code'] }}">Remove</a>
                                             </li>
                                         @endforeach
                                     </ul>
@@ -115,11 +115,11 @@
 
                         <div class="col-lg-4">
                             <div class="bg-gray p-4 mt-4" id="cart-summary">
-                                <p>Subtotal: <span id="subtotal">{{ number_format($subtotal, 2) }} USD</span></p>
+                                <p><strong>Subtotal:</strong> <span id="subtotal">{{ number_format($subtotal, 2) }} TND</span></p>
                                 @if ($couponDiscount > 0)
-                                    <p id="coupon-discount-container">Total Coupon Discount: <span id="coupon-discount">-{{ number_format($couponDiscount, 2) }} USD</span></p>
+                                    <p id="coupon-discount-container"><strong>Coupon Discount:</strong> <span id="coupon-discount">-{{ number_format($couponDiscount, 2) }} TND</span></p>
                                 @endif
-                                <h4>Total: <span id="total-price">{{ number_format($total, 2) }} USD</span></h4>
+                                <h4><strong>Total:</strong> <span id="total-price">{{ number_format($total, 2) }} TND</span></h4>
                                 <a href="{{ route('checkout.create') }}" class="btn theme-btn w-100 mt-3">Checkout <i class="la la-arrow-right"></i></a>
                             </div>
                         </div>
@@ -134,19 +134,28 @@
     @parent
     <script>
     $(document).ready(function() {
-        // Prevent double event binding
-        $('.remove-from-cart').off('click').on('click', function(e) {
+        // Show notification
+        function showNotification(message, type) {
+            const $message = $('<div class="cart-message"></div>').html(`<div class="alert alert-${type}">${message}</div>`)
+                .css({ position: 'fixed', top: '10px', right: '10px', 'z-index': 1000 });
+            $('body').append($message);
+            setTimeout(() => $message.fadeOut(300, () => $message.remove()), 3000);
+        }
+
+        // Remove from cart
+        $('.remove-from-cart').on('click', function(e) {
             e.preventDefault();
-            var courseId = $(this).data('id');
-            var row = $('#cart-row-' + courseId);
-            var cartItem = $('#cart-item-' + courseId); // Header dropdown item
+            const courseId = $(this).data('id');
+            const $row = $('#cart-row-' + courseId);
+            const $cartItem = $('#cart-item-' + courseId);
 
             $.ajax({
                 url: '{{ route("cart.remove", ":id") }}'.replace(':id', courseId),
-                type: 'GET',
+                method: 'POST',
+                data: { _token: $('meta[name="csrf-token"]').attr('content') },
                 dataType: 'json',
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                beforeSend: function() {
+                    $row.find('.remove-from-cart').prop('disabled', true).text('Removing...');
                 },
                 success: function(response) {
                     if (response.redirect) {
@@ -154,15 +163,24 @@
                         return;
                     }
                     if (response.success) {
-                        // Remove from cart page and header
-                        row.remove();
-                        if (cartItem.length) {
-                            cartItem.remove();
+                        $row.remove();
+                        if ($cartItem.length) {
+                            $cartItem.remove();
                         }
 
-                        // Update totals
-                        $('#subtotal').text(response.subtotal + ' USD');
-                        $('#total-price').text(response.totalPrice + ' USD');
+                        // Update subtotal, coupon discount, and total
+                        $('#subtotal').text(response.subtotal + ' TND');
+                        $('#total-price').text(response.totalPrice + ' TND');
+
+                        if (response.couponDiscount > 0) {
+                            if (!$('#coupon-discount-container').length) {
+                                $('#subtotal').after('<p id="coupon-discount-container"><strong>Coupon Discount:</strong> <span id="coupon-discount">-' + response.couponDiscount + ' TND</span></p>');
+                            } else {
+                                $('#coupon-discount').text('-' + response.couponDiscount + ' TND');
+                            }
+                        } else {
+                            $('#coupon-discount-container').remove();
+                        }
 
                         // Handle empty cart
                         if (response.cartCount === 0) {
@@ -170,42 +188,40 @@
                             $('#cart-summary').remove();
                             $('#coupon-list').remove();
                             if ($('#cartDropdown').length) {
-                                $('#cartDropdown').html(
-                                    '<li class="media media-card">' +
-                                    '<div class="media-body fs-15 text-center">' +
-                                    '<p class="text-muted lh-18">Your cart is empty</p>' +
-                                    '</div></li>' +
-                                    '<li class="mt-3">' +
-                                    '<a href="{{ route('cart') }}" class="btn theme-btn w-100 py-2">Go to Cart <i class="la la-arrow-right icon ml-1"></i></a>' +
-                                    '</li>'
-                                );
+                                $('#cartDropdown').html(`
+                                    <li class="media media-card">
+                                        <div class="media-body fs-15 text-center">
+                                            <p class="text-muted lh-18">Your cart is empty</p>
+                                        </div>
+                                    </li>
+                                    <li class="mt-3">
+                                        <a href="{{ route('cart') }}" class="btn theme-btn w-100 py-2">Go to Cart <i class="la la-arrow-right icon ml-1"></i></a>
+                                    </li>
+                                `);
                             }
-                        } else if (response.couponDiscount > 0) {
-                            if (!document.getElementById('coupon-discount')) {
-                                $('#subtotal').after('<p id="coupon-discount-container">Total Coupon Discount: <span id="coupon-discount">-' + response.couponDiscount + ' USD</span></p>');
-                            } else {
-                                $('#coupon-discount').text('-' + response.couponDiscount + ' USD');
-                            }
-                        } else {
-                            $('#coupon-list').remove();
-                            $('#coupon-discount-container').remove();
                         }
 
-                        // Update header cart count
+                        // Update header cart
                         if ($('#cartQty').length) {
                             $('#cartQty').text(response.cartCount);
                         }
                         if ($('#cartSubTotal').length) {
-                            $('#cartSubTotal').text('USD ' + response.subtotal);
+                            $('#cartSubTotal').text('TND ' + response.subtotal);
                         }
 
-                        // Refresh header cart dropdown if it exists
+                        $('.add-to-cart[data-course-id="' + courseId + '"]').each(function() {
+                            $(this).data('in-cart', false)
+                                .removeAttr('data-in-cart')
+                                .prop('disabled', false)
+                                .html('<i class="la la-shopping-cart fs-18 mr-1"></i> Add to Cart');
+                        });
+
                         if ($('#cartDropdown').length) {
                             $.ajax({
                                 url: '{{ route("cart") }}',
                                 method: 'GET',
                                 success: function(html) {
-                                    var $newCart = $(html).find('#cartDropdown').html();
+                                    const $newCart = $(html).find('#cartDropdown').html();
                                     $('#cartDropdown').html($newCart);
                                 },
                                 error: function(xhr) {
@@ -214,17 +230,138 @@
                             });
                         }
 
-                        alert(response.message);
+                        showNotification(response.message, 'success');
                     } else {
-                        alert(response.message);
+                        showNotification(response.message || 'Action completed.', 'info');
                     }
                 },
                 error: function(xhr) {
-                    alert('An error occurred while removing the item.');
-                    console.error(xhr);
+                    const response = xhr.responseJSON || {};
+                    showNotification(response.message || 'An error occurred while removing the item.', 'danger');
+                    $row.find('.remove-from-cart').prop('disabled', false).text('Remove');
                 }
             });
         });
+
+        // Apply coupon
+        $('#coupon-form').on('submit', function(e) {
+            e.preventDefault();
+            const $form = $(this);
+            const $button = $form.find('button[type="submit"]');
+
+            $.ajax({
+                url: $form.attr('action'),
+                method: 'POST',
+                data: $form.serialize(),
+                dataType: 'json',
+                beforeSend: function() {
+                    $button.prop('disabled', true).text('Applying...');
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // Update subtotal, coupon discount, and total
+                        $('#subtotal').text(response.subtotal + ' TND');
+                        $('#total-price').text(response.totalPrice + ' TND');
+
+                        // Update coupon list
+                        if (response.coupons && response.coupons.length > 0) {
+                            let couponHtml = '<h6>Applied Coupons:</h6><ul class="list-unstyled">';
+                            response.coupons.forEach(function(coupon) {
+                                couponHtml += `
+                                    <li class="d-flex justify-content-between align-items-center mb-2">
+                                        <span>${coupon.code} (-${parseFloat(coupon.discount_amount).toFixed(2)} TND)</span>
+                                        <a href="{{ route('coupon.remove', '') }}/${coupon.code}" class="btn btn-warning btn-sm remove-coupon" data-code="${coupon.code}">Remove</a>
+                                    </li>`;
+                            });
+                            couponHtml += '</ul>';
+                            if ($('#coupon-list').length) {
+                                $('#coupon-list').html(couponHtml);
+                            } else {
+                                $form.after('<div class="mt-3" id="coupon-list">' + couponHtml + '</div>');
+                            }
+                        } else {
+                            $('#coupon-list').remove();
+                        }
+
+                        // Update coupon discount display
+                        if (response.couponDiscount > 0) {
+                            if (!$('#coupon-discount-container').length) {
+                                $('#subtotal').after('<p id="coupon-discount-container"><strong>Coupon Discount:</strong> <span id="coupon-discount">-' + response.couponDiscount + ' TND</span></p>');
+                            } else {
+                                $('#coupon-discount').text('-' + response.couponDiscount + ' TND');
+                            }
+                        } else {
+                            $('#coupon-discount-container').remove();
+                        }
+
+                        // Rebind remove coupon events
+                        bindRemoveCouponEvents();
+
+                        showNotification(response.message, 'success');
+                    } else {
+                        showNotification(response.message || 'Invalid coupon code.', 'danger');
+                    }
+                    $button.prop('disabled', false).text('Apply Coupon');
+                },
+                error: function(xhr) {
+                    const response = xhr.responseJSON || {};
+                    showNotification(response.message || 'An error occurred while applying the coupon.', 'danger');
+                    $button.prop('disabled', false).text('Apply Coupon');
+                }
+            });
+        });
+
+        // Remove coupon
+        function bindRemoveCouponEvents() {
+            $('.remove-coupon').on('click', function(e) {
+                e.preventDefault();
+                const couponCode = $(this).data('code');
+                const $li = $(this).closest('li');
+
+                $.ajax({
+                    url: '{{ route("coupon.remove", ":code") }}'.replace(':code', couponCode),
+                    method: 'GET',
+                    dataType: 'json',
+                    beforeSend: function() {
+                        $li.find('.remove-coupon').prop('disabled', true).text('Removing...');
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            $li.remove();
+                            $('#subtotal').text(response.subtotal + ' TND');
+                            $('#total-price').text(response.totalPrice + ' TND');
+
+                            if (response.couponDiscount > 0) {
+                                if (!$('#coupon-discount-container').length) {
+                                    $('#subtotal').after('<p id="coupon-discount-container"><strong>Coupon Discount:</strong> <span id="coupon-discount">-' + response.couponDiscount + ' TND</span></p>');
+                                } else {
+                                    $('#coupon-discount').text('-' + response.couponDiscount + ' TND');
+                                }
+                            } else {
+                                $('#coupon-discount-container').remove();
+                            }
+
+                            if (response.coupons.length === 0) {
+                                $('#coupon-list').remove();
+                            }
+
+                            showNotification(response.message, 'success');
+                        } else {
+                            showNotification(response.message || 'Failed to remove coupon.', 'danger');
+                        }
+                        $li.find('.remove-coupon').prop('disabled', false).text('Remove');
+                    },
+                    error: function(xhr) {
+                        const response = xhr.responseJSON || {};
+                        showNotification(response.message || 'An error occurred while removing the coupon.', 'danger');
+                        $li.find('.remove-coupon').prop('disabled', false).text('Remove');
+                    }
+                });
+            });
+        }
+
+        // Initial binding for remove coupon events
+        bindRemoveCouponEvents();
     });
     </script>
 @endsection

@@ -1,7 +1,9 @@
 <?php
 namespace App\Http\Controllers;
+
 use App\Models\Course;
 use Illuminate\Http\Request;
+
 class SearchController extends Controller
 {
     public function search(Request $request)
@@ -10,6 +12,7 @@ class SearchController extends Controller
         if (empty($query)) {
             return response()->json([]);
         }
+
         $courses = Course::query()
             ->where('status', 1)
             ->where(function ($q) use ($query) {
@@ -26,11 +29,12 @@ class SearchController extends Controller
                     'title' => $course->course_title,
                     'name' => $course->course_name,
                     'slug' => $course->course_name_slug,
-                    'image' => $course->course_image ? asset('storage/upload/course_images/thumbnail/' . $course->course_image) : asset('images/no_image.jpg'),
+                    'image' => $course->course_image ? asset('upload/course_images/thumbnail/' . $course->course_image) : asset('upload/no_image.jpg'),
                     'price' => $course->discount_price ?? $course->selling_price,
                     'url' => route('course.details', ['id' => $course->id, 'slug' => $course->course_name_slug]),
                 ];
             });
+
         return response()->json($courses);
     }
 }

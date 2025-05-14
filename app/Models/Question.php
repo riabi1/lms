@@ -8,6 +8,9 @@ class Question extends Model
     protected $fillable = [
         'user_id', 'course_id', 'instructor_id', 'subject', 'question', 'answer_text', 'status',
     ];
+    protected $casts = [
+      'options' => 'array',
+  ];
 
    public function user()
     {

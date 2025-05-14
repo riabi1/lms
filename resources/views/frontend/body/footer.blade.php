@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Footer LMS - EasyLearning</title>
+    <title>Footer LMS - EdaaLearning</title>
     <style>
         /* Police personnalisée (Google Fonts) */
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap');
@@ -156,14 +156,14 @@
                         <h3 style="color: #EC5252;">CONTACT US</h3>
                         <ul class="contact-list pt-4">
                             <li><a href="tel:{{ preg_replace('/[^0-9+]/', '', $siteSettings->phone ?? '+1234567890') }}">{{ $siteSettings->phone ?? '+1234567890' }}</a></li>
-                            <li><a href="mailto:{{ $siteSettings->email ?? 'contact@easylearning.com' }}">{{ $siteSettings->email ?? 'contact@easylearning.com' }}</a></li>
+                            <li><a href="mailto:{{ $siteSettings->email ?? 'contact@EdaaLearning.com' }}">{{ $siteSettings->email ?? 'contact@EdaaLearning.com' }}</a></li>
                             <li>Tunis, Tunisie</li>
                         </ul>
                     </div>
                 </div>
                 <div class="col-lg-8">
                     <div class="footer-item tagline">
-                        <p class="highlight-text">DÉCOUVREZ UNE EXPÉRIENCE D'APPRENTISSAGE EN LIGNE SIMPLE ET EFFICACE AVEC EASYLEARNING</p>
+                        <p class="highlight-text">DÉCOUVREZ UNE EXPÉRIENCE D'APPRENTISSAGE EN LIGNE SIMPLE ET EFFICACE AVEC EdaaLearning</p>
                     </div>
                 </div>
             </div>
@@ -173,7 +173,7 @@
             <div class="container">
                 <div class="row align-items-center">
                     <div class="col-lg-6">
-                        <p class="copy-desc">{{ $siteSettings->copyright ?? '© 2025 EasyLearning. All Rights Reserved. by lmspfee' }}</p>
+                        <p class="copy-desc">{{ $siteSettings->copyright ?? '© 2025 EdaaLearning. All Rights Reserved. by lmspfee' }}</p>
                     </div>
                     <div class="col-lg-6">
                         <ul class="footer-links">

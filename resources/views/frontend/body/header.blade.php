@@ -1,59 +1,87 @@
 @php
-    use App\Models\Category;
-    use App\Models\BlogCategory;
-    use App\Models\CartItem;
-    use App\Models\Course;
+use App\Models\Category;
+use App\Models\BlogCategory;
+use App\Models\CartItem;
+use App\Models\Course;
+use Illuminate\Support\Str;
 
-    // Fetch categories and blog categories
-    $categories = Category::orderBy('category_name', 'ASC')->get();
-    $blogCategories = BlogCategory::orderBy('name', 'ASC')->get();
+// Fetch categories and blog categories
+$categories = Category::orderBy('category_name', 'ASC')->get();
+$blogCategories = BlogCategory::orderBy('name', 'ASC')->get();
 
-    // Initialize cart variables
-    $cartItems = collect([]);
-    $cartQty = 0;
-    $cartSubTotal = 0;
+// Initialize cart variables
+$cartItems = collect([]);
+$cartQty = 0;
+$cartSubTotal = 0;
 
-    if (auth()->check()) {
-        // Fetch cart items for authenticated users with course details
-        $cartItems = CartItem::with(['cartable' => function ($query) {
-            $query->select('id', 'course_name', 'course_image', 'selling_price', 'discount_price');
-        }])
-            ->where('user_id', auth()->id())
-            ->where('cartable_type', Course::class)
-            ->get();
-        $cartQty = $cartItems->count();
-        $cartSubTotal = $cartItems->sum(fn($item) => $item->price * $item->quantity);
-    } else {
-        // Use tempCart from localStorage for non-authenticated users
-        $tempCart = json_decode(request()->cookie('tempCart', '[]'), true);
-        $cartQty = count($tempCart);
-        // Fetch course details for tempCart directly from database
-        $tempCartItems = collect([]);
-        if (!empty($tempCart)) {
-            $courseIds = array_column($tempCart, 'courseId');
-            $courses = Course::whereIn('id', $courseIds)
-                ->select('id', 'course_name', 'course_image', 'selling_price', 'discount_price')
-                ->get()
-                ->keyBy('id');
-            $tempCartItems = collect($tempCart)->map(function ($cartItem) use ($courses) {
-                $course = $courses->get($cartItem['courseId']);
-                if (!$course) {
-                    return null;
-                }
-                $effectivePrice = $course->discount_price !== null && $course->discount_price > 0
-                    ? max(0, $course->selling_price - $course->discount_price)
-                    : $course->selling_price;
-                return [
-                    'courseId' => $course->id,
-                    'course_name' => $course->course_name,
-                    'image' => $course->course_image,
-                    'price' => $effectivePrice,
-                    'quantity' => $cartItem['quantity'] ?? 1,
-                ];
-            })->filter()->values();
-            $cartSubTotal = $tempCartItems->sum(fn($item) => $item['price'] * $item['quantity']);
+if (auth()->check()) {
+    $cartItems = CartItem::with(['cartable' => function ($query) {
+        $query->select('id', 'course_name', 'course_image', 'selling_price', 'discount_price');
+    }])
+        ->where('user_id', auth()->id())
+        ->where('cartable_type', Course::class)
+        ->get()
+        ->map(function ($item) {
+            if (!$item->cartable) {
+                return null;
+            }
+            $quantity = max(1, min($item->quantity ?? 1, 10)); // Ensure quantity is 1-10
+            return (object) [
+                'cartable_id' => $item->cartable_id,
+                'cartable' => $item->cartable,
+                'quantity' => $quantity,
+                'price' => $item->price,
+                'attributes' => [
+                    'selling_price' => $item->cartable->selling_price ?? ($item->options['selling_price'] ?? 0),
+                    'discount_price' => $item->cartable->discount_price ?? ($item->options['discount_price'] ?? 0),
+                ],
+            ];
+        })->filter()
+        ->keyBy('cartable_id') // Prevent duplicates by using cartable_id as key
+        ->values();
+
+    $cartQty = $cartItems->count();
+    $cartSubTotal = round($cartItems->sum(fn($item) => $item->price * $item->quantity), 2);
+} else {
+    $tempCart = json_decode(request()->cookie('tempCart', '[]'), true);
+    $tempCartItems = collect($tempCart)->filter(fn($item) => isset($item['courseId'], $item['quantity'], $item['price'], $item['selling_price'], $item['discount_price']));
+    
+    // Debug: Log tempCart for inspection
+    // \Log::info('tempCart:', $tempCart);
+
+    $cartItems = $tempCartItems->map(function ($cartItem) {
+        $course = Course::where('id', $cartItem['courseId'])
+            ->where('status', 1)
+            ->select('id', 'course_name', 'course_image', 'selling_price', 'discount_price')
+            ->first();
+        if (!$course) {
+            return null;
         }
-    }
+        $sellingPrice = $course->selling_price ?? $cartItem['selling_price'] ?? 0;
+        $discountPrice = $course->discount_price ?? $cartItem['discount_price'] ?? 0;
+        $effectivePrice = max(0, $sellingPrice - $discountPrice);
+        $quantity = max(1, min($cartItem['quantity'] ?? 1, 10)); // Ensure quantity is 1-10
+        return (object) [
+            'cartable_id' => $cartItem['courseId'],
+            'cartable' => (object) [
+                'id' => $cartItem['courseId'],
+                'course_name' => $cartItem['course_name'] ?? $course->course_name,
+                'course_image' => $cartItem['image'] ?? $course->course_image,
+            ],
+            'quantity' => $quantity,
+            'price' => $effectivePrice,
+            'attributes' => [
+                'selling_price' => $sellingPrice,
+                'discount_price' => $discountPrice,
+            ],
+        ];
+    })->filter()
+    ->keyBy('cartable_id') // Prevent duplicates by using cartable_id as key
+    ->values();
+
+    $cartQty = $cartItems->count();
+    $cartSubTotal = round($cartItems->sum(fn($item) => $item->price * $item->quantity), 2);
+}
 @endphp
 
 <header class="header-menu-area bg-white shadow-sm">
@@ -61,7 +89,6 @@
     <div class="header-top border-bottom py-2 px-100px">
         <div class="container-fluid">
             <div class="row align-items-center">
-                <!-- Contact Info -->
                 <div class="col-lg-6">
                     <div class="header-widget">
                         <ul class="generic-list-item d-flex flex-wrap align-items-center fs-14 header-top-list">
@@ -76,7 +103,6 @@
                         </ul>
                     </div>
                 </div>
-                <!-- Theme Picker & Auth Links -->
                 <div class="col-lg-6">
                     <div class="header-widget d-flex flex-wrap align-items-center justify-content-end">
                         <div class="theme-picker d-flex align-items-center mr-4">
@@ -129,16 +155,14 @@
         </div>
     </div>
 
-    <!-- Main Header Content -->
     <div class="header-menu-content py-2 px-100px">
         <div class="container-fluid">
             <div class="main-menu-content">
                 <a href="#" class="down-button"><i class="la la-angle-down"></i></a>
                 <div class="row align-items-center">
-                    <!-- Logo & Menu Toggles -->
                     <div class="col-lg-2">
                         <div class="logo-box d-flex align-items-center">
-                             <a href="{{ url('/') }}" class="logo">
+                            <a href="{{ url('/') }}" class="logo">
                                 <img src="{{ $siteSettings->logo ? Storage::url($siteSettings->logo) : asset('images/default-logo.png') }}"
                                      alt="Logo" class="lazy logo-header" loading="lazy"
                                      onerror="this.src='{{ asset('images/no_image.jpg') }}'">
@@ -156,10 +180,8 @@
                             </div>
                         </div>
                     </div>
-                    <!-- Menu, Search, Cart & Instructor Button -->
                     <div class="col-lg-10">
                         <div class="menu-wrapper d-flex align-items-center">
-                            <!-- Category Menu -->
                             <div class="menu-category mr-5">
                                 <ul>
                                     <li>
@@ -186,7 +208,6 @@
                                     </li>
                                 </ul>
                             </div>
-                            <!-- Search Bar -->
                             <div class="search-bar mr-5 position-relative">
                                 <form action="{{ route('course.list') }}" method="GET" class="search-form d-flex align-items-center" id="searchForm">
                                     <div class="input-group">
@@ -202,7 +223,6 @@
                                     <ul class="list-unstyled mb-0"></ul>
                                 </div>
                             </div>
-                            <!-- Main Navigation -->
                             <nav class="main-menu mr-5">
                                 <ul>
                                     <li>
@@ -224,7 +244,6 @@
                                     </li>
                                 </ul>
                             </nav>
-                            <!-- Shopping Cart -->
                             <div class="shop-cart mr-5">
                                 <ul>
                                     <li>
@@ -234,49 +253,29 @@
                                         </p>
                                         <ul class="cart-dropdown-menu p-3 shadow-sm" style="min-width: 300px;" id="cartDropdown">
                                             @if ($cartQty > 0)
-                                                @if (auth()->check())
-                                                    @foreach ($cartItems as $item)
-                                                        <li class="media media-card border-bottom pb-2 mb-2" id="cart-item-{{ $item->cartable_id }}">
-                                                            <a href="{{ url('course/details/'.$item->cartable_id.'/'.Str::slug($item->cartable->course_name)) }}" class="media-img mr-3">
-                                                                <img src="{{ $item->cartable->course_image ? asset('upload/course_images/thumbnail/' . $item->cartable->course_image) : asset('images/default-course.jpg') }}"
-                                                                     alt="{{ e($item->cartable->course_name) }}"
-                                                                     class="lazy rounded"
-                                                                     style="width: 60px; height: auto;"
-                                                                     loading="lazy">
-                                                            </a>
-                                                            <div class="media-body">
-                                                                <h5 class="fs-14 font-weight-bold">
-                                                                    <a href="{{ url('course/details/'.$item->cartable_id.'/'.Str::slug($item->cartable->course_name)) }}">{{ Str::limit(e($item->cartable->course_name), 25) }}</a>
-                                                                </h5>
-                                                                <div class="d-flex justify-content-between align-items-center">
-                                                                    <span class="text-black font-weight-semi-bold fs-14">TND {{ number_format($item->price * $item->quantity, 2) }}</span>
-                                                                    <button class="btn btn-danger btn-sm remove-from-cart" data-id="{{ $item->cartable_id }}">Remove</button>
-                                                                </div>
+                                                @foreach ($cartItems as $item)
+                                                    <li class="media media-card border-bottom pb-2 mb-2" id="cart-item-{{ $item->cartable_id }}">
+                                                        <a href="{{ url('course/details/'.$item->cartable_id.'/'.Str::slug($item->cartable->course_name)) }}" class="media-img mr-3">
+                                                            <img src="{{ $item->cartable->course_image ? asset('upload/course_images/thumbnail/' . $item->cartable->course_image) : asset('upload/no_image.jpg') }}"
+                                                                 alt="{{ e($item->cartable->course_name) }}"
+                                                                 class="lazy rounded"
+                                                                 style="width: 60px; height: auto;"
+                                                                 loading="lazy"
+                                                                 onerror="this.src='{{ asset('upload/no_image.jpg') }}'">
+                                                        </a>
+                                                        <div class="media-body">
+                                                            <h5 class="fs-14 font-weight-bold">
+                                                                <a href="{{ url('course/details/'.$item->cartable_id.'/'.Str::slug($item->cartable->course_name)) }}">{{ Str::limit(e($item->cartable->course_name), 25) }}</a>
+                                                            </h5>
+                                                            <div class="d-flex justify-content-between align-items-center">
+                                                                <span class="text-black font-weight-semi-bold fs-14">
+                                                                    TND {{ number_format($item->price, 2) }}
+                                                                </span>
+                                                                <button class="btn btn-danger btn-sm {{ auth()->check() ? 'remove-from-cart' : 'remove-from-cart-temp' }}" data-id="{{ $item->cartable_id }}">Remove</button>
                                                             </div>
-                                                        </li>
-                                                    @endforeach
-                                                @else
-                                                    @foreach ($tempCartItems as $item)
-                                                        <li class="media media-card border-bottom pb-2 mb-2" id="cart-item-{{ $item['courseId'] }}">
-                                                            <a href="{{ url('course/details/'.$item['courseId'].'/'.Str::slug($item['course_name'])) }}" class="media-img mr-3">
-                                                                <img src="{{ $item['image'] ? asset('upload/course_images/thumbnail/' . $item['image']) : asset('images/default-course.jpg') }}"
-                                                                     alt="{{ e($item['course_name']) }}"
-                                                                     class="lazy rounded"
-                                                                     style="width: 60px; height: auto;"
-                                                                     loading="lazy">
-                                                            </a>
-                                                            <div class="media-body">
-                                                                <h5 class="fs-14 font-weight-bold">
-                                                                    <a href="{{ url('course/details/'.$item['courseId'].'/'.Str::slug($item['course_name'])) }}">{{ Str::limit(e($item['course_name']), 25) }}</a>
-                                                                </h5>
-                                                                <div class="d-flex justify-content-between align-items-center">
-                                                                    <span class="text-black font-weight-semi-bold fs-14">TND {{ number_format($item['price'] * $item['quantity'], 2) }}</span>
-                                                                    <button class="btn btn-danger btn-sm remove-from-cart-temp" data-id="{{ $item['courseId'] }}">Remove</button>
-                                                                </div>
-                                                            </div>
-                                                        </li>
-                                                    @endforeach
-                                                @endif
+                                                        </div>
+                                                    </li>
+                                                @endforeach
                                                 <li class="media media-card border-top pt-2 mt-2">
                                                     <div class="media-body fs-15">
                                                         <p class="text-black font-weight-bold lh-18">Total: <span class="cart-total" id="cartSubTotal">TND {{ number_format($cartSubTotal, 2) }}</span></p>
@@ -296,7 +295,6 @@
                                     </li>
                                 </ul>
                             </div>
-                            <!-- Become an Instructor -->
                             <div class="nav-right-button">
                                 <a href="{{ route('instructor.register') }}" class="btn theme-btn d-none d-lg-inline-block">
                                     <i class="la la-user-plus mr-2"></i> Become an Instructor
@@ -307,8 +305,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- Off-Canvas Menus -->
         <div class="off-canvas-menu custom-scrollbar-styled main-off-canvas-menu">
             <div class="off-canvas-menu-close main-menu-close icon-element icon-element-sm shadow-sm" data-toggle="tooltip" data-placement="left" title="Close menu">
                 <i class="la la-times"></i>
@@ -322,9 +318,7 @@
     </div>
 </header>
 
-<!-- Inline CSS -->
 <style>
-    /* General Header Styles */
     .header-menu-area {
         position: fixed;
         top: 0;
@@ -363,8 +357,6 @@
     .theme-btn:hover {
         background: #c82333;
     }
-
-    /* Menu and Search Bar */
     .menu-wrapper {
         display: flex;
         align-items: center;
@@ -421,8 +413,6 @@
     .search-bar .theme-btn.search-btn i {
         font-size: 16px;
     }
-
-    /* Search Results Dropdown */
     .search-results-dropdown {
         width: 100%;
         border: 1px solid #e5e5e5;
@@ -451,8 +441,8 @@
         background-color: #f8f9fa;
     }
     .search-results-dropdown .course-image {
-        width: 50px;
-        height: auto;
+        width: 70px;
+        height: 40px;
         margin-right: 12px;
         border-radius: 4px;
         object-fit: cover;
@@ -468,8 +458,6 @@
         color: #dc3545;
         font-weight: 500;
     }
-
-    /* Responsive Adjustments */
     @media (max-width: 991px) {
         .search-bar {
             max-width: 300px;
@@ -506,20 +494,22 @@
     }
 </style>
 
-<!-- JavaScript -->
 <script>
 $(document).ready(function() {
-    // Sticky Header with Dynamic Padding
+    function showNotification(message, type) {
+        const $message = $('<div class="cart-message"></div>').html(`<div class="alert alert-${type}">${message}</div>`)
+            .css({position: 'fixed', top: '10px', right: '10px', 'z-index': 1000});
+        $('body').append($message);
+        setTimeout(() => $message.fadeOut(300, () => $message.remove()), 3000);
+    }
+
     function updateHeaderPadding() {
         const header = $('.header-menu-area');
         const headerHeight = header.outerHeight();
         $('body').css('padding-top', headerHeight + 'px');
     }
 
-    // Initial padding update
     updateHeaderPadding();
-
-    // Debounce function
     function debounce(func, wait) {
         let timeout;
         return function executedFunction(...args) {
@@ -531,16 +521,12 @@ $(document).ready(function() {
             timeout = setTimeout(later, wait);
         };
     }
-
-    // Update padding on window resize
     $(window).on('resize', debounce(updateHeaderPadding, 100));
 
-    // Hide header on scroll down, show on scroll up
     let lastScrollTop = 0;
     $(window).on('scroll', function() {
         const scrollTop = $(this).scrollTop();
         const header = $('.header-menu-area');
-
         if (scrollTop > lastScrollTop && scrollTop > 100) {
             header.addClass('sticky-hidden');
         } else {
@@ -549,7 +535,6 @@ $(document).ready(function() {
         lastScrollTop = scrollTop;
     });
 
-    // Debounce function for search
     function debounceSearch(func, wait) {
         let timeout;
         return function executedFunction(...args) {
@@ -562,13 +547,11 @@ $(document).ready(function() {
         };
     }
 
-    // Perform search
     const performSearch = debounceSearch(function(query) {
         if (query.length < 2) {
             $('#searchResults').hide().find('ul').empty();
             return;
         }
-
         $.ajax({
             url: '{{ route("search") }}',
             method: 'GET',
@@ -581,7 +564,6 @@ $(document).ready(function() {
             success: function(response) {
                 const $resultsList = $('#searchResults ul');
                 $resultsList.empty();
-
                 if (response.length === 0) {
                     $resultsList.append('<li class="p-3 text-muted text-center">No courses found</li>');
                 } else {
@@ -589,7 +571,11 @@ $(document).ready(function() {
                         $resultsList.append(`
                             <li>
                                 <a href="${course.url}" class="d-flex align-items-center">
-                                    <img src="${course.image}" alt="${course.title}" class="course-image">
+                                    <img src="${course.image}" 
+                                         alt="${course.title}" 
+                                         class="course-image" 
+                                         loading="lazy"
+                                         onerror="this.src='{{ asset('upload/no_image.jpg') }}'">
                                     <div>
                                         <div class="course-title">${course.title}</div>
                                         <div class="course-price">TND ${course.price}</div>
@@ -608,20 +594,17 @@ $(document).ready(function() {
         });
     }, 300);
 
-    // Search input handler
     $('#searchInput').on('input', function() {
         const query = $(this).val().trim();
         performSearch(query);
     });
 
-    // Hide results on click outside
     $(document).on('click', function(e) {
         if (!$(e.target).closest('.search-bar').length) {
             $('#searchResults').hide().find('ul').empty();
         }
     });
 
-    // Prevent empty search submission
     $('#searchForm').on('submit', function(e) {
         if (!$('#searchInput').val().trim()) {
             e.preventDefault();
@@ -630,32 +613,22 @@ $(document).ready(function() {
         }
     });
 
-    // Remove invalid class on input
     $('#searchInput').on('focus', function() {
         $(this).removeClass('is-invalid');
     });
 
-    // Remove from temp cart for non-authenticated users
     $('#cartDropdown').on('click', '.remove-from-cart-temp', function(e) {
         e.preventDefault();
         const courseId = $(this).data('id');
-        let tempCart = JSON.parse(localStorage.getItem('tempCart') || '[]');
+        let tempCart = JSON.parse(getCookie('tempCart') || '[]');
         tempCart = tempCart.filter(item => item.courseId !== courseId);
-        localStorage.setItem('tempCart', JSON.stringify(tempCart));
-        
-        // Update cart display
+        setCookie('tempCart', JSON.stringify(tempCart), 43200);
         const $cartItem = $('#cart-item-' + courseId);
         $cartItem.remove();
         const newCartQty = tempCart.length;
         $('#cartQty').text(newCartQty);
-        
-        // Recalculate subtotal
-        let newSubTotal = 0;
-        tempCart.forEach(item => {
-            // Note: Price is not available in tempCart; this is a limitation
-            // You may need to fetch prices again or store them in tempCart
-        });
-        
+        let newSubTotal = tempCart.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2);
+        $('#cartSubTotal').text('TND ' + newSubTotal);
         if (newCartQty === 0) {
             $('#cartDropdown').html(`
                 <li class="media media-card">
@@ -667,39 +640,29 @@ $(document).ready(function() {
                     <a href="{{ route('cart') }}" class="btn theme-btn w-100 py-2">Go to Cart <i class="la la-arrow-right icon ml-1"></i></a>
                 </li>
             `);
-            $('#cartSubTotal').text('TND 0.00');
-        } else {
-            // Subtotal update is incomplete here due to missing price data
-            // Consider storing price in tempCart when adding items
         }
-
         $('.add-to-cart[data-course-id="' + courseId + '"]').each(function() {
             $(this).data('in-cart', false).removeAttr('data-in-cart')
                 .prop('disabled', false)
                 .html('<i class="la la-shopping-cart fs-18 mr-1"></i> Add to Cart');
         });
+        showNotification('Removed from cart.', 'success');
     });
 
-    // Remove from cart for authenticated users
     $('#cartDropdown').on('click', '.remove-from-cart', function(e) {
         e.preventDefault();
         const courseId = $(this).data('id');
         const $cartItem = $('#cart-item-' + courseId);
-        const $message = $('#cart-message-' + courseId).length ? $('#cart-message-' + courseId) : $('<div class="cart-message"></div>').appendTo('body');
-
         $.ajax({
             url: '{{ route("cart.remove", ":id") }}'.replace(':id', courseId),
-            method: 'GET',
+            method: 'POST',
+            data: { _token: $('meta[name="csrf-token"]').attr('content') },
             dataType: 'json',
             success: function(response) {
-                if (response.redirect) {
-                    $message.html('<div class="alert alert-info">Please log in to remove this course from your cart.</div>');
-                    setTimeout(() => window.location.href = response.redirect, 1500);
-                } else if (response.success) {
+                if (response.success) {
                     $cartItem.remove();
-                    $message.html('<div class="alert alert-success">' + response.message + '</div>');
                     $('#cartQty').text(response.cartCount);
-                    $('#cartSubTotal').text('TND ' + response.totalPrice);
+                    $('#cartSubTotal').text('TND ' + response.subtotal);
                     if (response.cartCount === 0) {
                         $('#cartDropdown').html(`
                             <li class="media media-card">
@@ -717,15 +680,14 @@ $(document).ready(function() {
                             .prop('disabled', false)
                             .html('<i class="la la-shopping-cart fs-18 mr-1"></i> Add to Cart');
                     });
+                    showNotification(response.message, 'success');
                 } else {
-                    $message.html('<div class="alert alert-info">' + (response.message || 'Action completed.') + '</div>');
+                    showNotification(response.message || 'Action completed.', 'info');
                 }
-                setTimeout(() => $message.empty(), 3000);
             },
             error: function(xhr) {
                 const response = xhr.responseJSON || {};
-                $message.html('<div class="alert alert-danger">' + (response.message || 'An error occurred.') + '</div>');
-                setTimeout(() => $message.empty(), 3000);
+                showNotification(response.message || 'An error occurred.', 'danger');
             }
         });
     });
