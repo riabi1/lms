@@ -681,78 +681,78 @@ $(document).ready(function() {
 
   function loadCartItems() {
     $.ajax({
-      url: '{{ route("cart.items") }}',
-      method: 'GET',
-      dataType: 'json',
-      beforeSend: function() {
-        $('#cartDropdown').html(`
-          <li class="media media-card">
-            <div class="media-body fs-15 text-center">
-              <p class="text-muted lh-18"><i class="la la-spinner la-spin mr-2"></i>Loading cart...</p>
-            </div>
-          </li>
-        `);
-      },
-      success: function(response) {
-        const $cartDropdown = $('#cartDropdown');
-        $cartDropdown.empty();
-        updateCartCount(response.cartCount);
+        url: '{{ route("cart.items") }}',
+        method: 'GET',
+        dataType: 'json',
+        beforeSend: function() {
+            $('#cartDropdown').html(`
+                <li class="media media-card">
+                    <div class="media-body fs-15 text-center">
+                        <p class="text-muted lh-18"><i class="la la-spinner la-spin mr-2"></i>Loading cart...</p>
+                    </div>
+                </li>
+            `);
+        },
+        success: function(response) {
+            const $cartDropdown = $('#cartDropdown');
+            $cartDropdown.empty();
+            updateCartCount(response.cartCount);
 
-        if (response.cartItems.length === 0) {
-          $cartDropdown.html(`
-            <li class="media media-card">
-              <div class="media-body fs-15 text-center">
-                <p class="text-muted lh-18">Your cart is empty</p>
-              </div>
-            </li>
-            <li class="mt-3">
-              <a href="{{ route('cart') }}" class="btn theme-btn w-100 py-2">Go to Cart <i class="la la-arrow-right icon ml-1"></i></a>
-            </li>
-          `);
-        } else {
-          let cartItemsHtml = '';
-          response.cartItems.forEach(function(item) {
-            cartItemsHtml += `
-              <li class="media media-card">
-                <img src="${item.image}" alt="${item.name}" class="cart-item-image" onerror="this.src='{{ asset('images/default-course.jpg') }}'">
-                <div class="media-body">
-                  <h5 class="cart-item-title">${item.name}</h5>
-                  <p class="cart-item-price">TND ${item.price} x ${item.quantity} = TND ${item.total}</p>
-                </div>
-                <button class="cart-item-remove" data-id="${item.id}" title="Remove item">
-                  <i class="la la-trash"></i>
-                </button>
-              </li>
-            `;
-          });
-          $cartDropdown.html(`
-            ${cartItemsHtml}
-            <li class="cart-subtotal">
-              Subtotal: <span>TND ${response.cartSubTotal}</span>
-            </li>
-            <li class="mt-3">
-              <a href="{{ route('cart') }}" class="btn theme-btn w-100 py-2">Go to Cart <i class="la la-arrow-right icon ml-1"></i></a>
-            </li>
-            <li class="mt-2">
-              <a href="{{ route('checkout.create') }}" class="btn theme-btn w-100 py-2">Checkout <i class="la la-check icon ml-1"></i></a>
-            </li>
-          `);
+            if (response.cartItems.length === 0) {
+                $cartDropdown.html(`
+                    <li class="media media-card">
+                        <div class="media-body fs-15 text-center">
+                            <p class="text-muted lh-18">Your cart is empty</p>
+                        </div>
+                    </li>
+                    <li class="mt-3">
+                        <a href="{{ route('cart') }}" class="btn theme-btn w-100 py-2">Go to Cart <i class="la la-arrow-right icon ml-1"></i></a>
+                    </li>
+                `);
+            } else {
+                let cartItemsHtml = '';
+                response.cartItems.forEach(function(item) {
+                    cartItemsHtml += `
+                        <li class="media media-card">
+                            <img src="${item.image}" alt="${item.name}" class="cart-item-image" onerror="this.src='{{ asset('images/default-course.jpg') }}'">
+                            <div class="media-body">
+                                <h5 class="cart-item-title">${item.name}</h5>
+                                <p class="cart-item-price">TND ${item.price}</p>
+                            </div>
+                            <button class="cart-item-remove" data-id="${item.id}" title="Remove item">
+                                <i class="la la-trash"></i>
+                            </button>
+                        </li>
+                    `;
+                });
+                $cartDropdown.html(`
+                    ${cartItemsHtml}
+                    <li class="cart-subtotal">
+                        Subtotal: <span>TND ${response.cartSubTotal}</span>
+                    </li>
+                    <li class="mt-3">
+                        <a href="{{ route('cart') }}" class="btn theme-btn w-100 py-2">Go to Cart <i class="la la-arrow-right icon ml-1"></i></a>
+                    </li>
+                    <li class="mt-2">
+                        <a href="{{ route('checkout.create') }}" class="btn theme-btn w-100 py-2">Checkout <i class="la la-check icon ml-1"></i></a>
+                    </li>
+                `);
+            }
+        },
+        error: function() {
+            $('#cartDropdown').html(`
+                <li class="media media-card">
+                    <div class="media-body fs-15 text-center">
+                        <p class="text-danger lh-18">Error loading cart</p>
+                    </div>
+                </li>
+                <li class="mt-3">
+                    <a href="{{ route('cart') }}" class="btn theme-btn w-100 py-2">Go to Cart <i class="la la-arrow-right icon ml-1"></i></a>
+                </li>
+            `);
         }
-      },
-      error: function() {
-        $('#cartDropdown').html(`
-          <li class="media media-card">
-            <div class="media-body fs-15 text-center">
-              <p class="text-danger lh-18">Error loading cart</p>
-            </div>
-          </li>
-          <li class="mt-3">
-            <a href="{{ route('cart') }}" class="btn theme-btn w-100 py-2">Go to Cart <i class="la la-arrow-right icon ml-1"></i></a>
-          </li>
-        `);
-      }
     });
-  }
+}
 
   // Remove item from cart
   $(document).on('click', '.cart-item-remove', function() {
