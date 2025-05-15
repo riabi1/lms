@@ -30,7 +30,7 @@ $blogCategories = BlogCategory::orderBy('name', 'ASC')->get();
         <!-- Theme Picker & Auth Links -->
         <div class="col-lg-6">
           <div class="header-widget d-flex flex-wrap align-items-center justify-content-end">
-            <div class="theme-picker d-flex align-items-center mr-4">
+            <div class="theme-picker d-flex align-items-center mrpline-block">
               <button class="theme-picker-btn dark-mode-btn" title="Dark mode">
                 <svg id="moon" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
@@ -288,7 +288,7 @@ $blogCategories = BlogCategory::orderBy('name', 'ASC')->get();
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    position: relative; /* Ensure dropdowns are positioned relative to menu-wrapper */
+    position: relative;
   }
 
   .menu-category,
@@ -296,7 +296,7 @@ $blogCategories = BlogCategory::orderBy('name', 'ASC')->get();
   .search-bar,
   .shop-cart {
     background-color: transparent;
-    position: relative; /* Ensure dropdowns are positioned correctly */
+    position: relative;
   }
 
   .search-bar {
@@ -366,7 +366,7 @@ $blogCategories = BlogCategory::orderBy('name', 'ASC')->get();
     left: 0;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     background: #fff;
-    z-index: 10000; /* High z-index to ensure visibility */
+    z-index: 10000;
     max-height: 400px;
     overflow-y: auto;
     position: absolute;
@@ -421,7 +421,7 @@ $blogCategories = BlogCategory::orderBy('name', 'ASC')->get();
     position: absolute;
     top: 100%;
     left: 0;
-    z-index: 10000; /* High z-index to ensure visibility */
+    z-index: 10000;
     background: #fff;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     border-radius: 4px;
@@ -449,12 +449,12 @@ $blogCategories = BlogCategory::orderBy('name', 'ASC')->get();
     position: absolute;
     top: 0;
     left: 100%;
-    z-index: 10000; /* High z-index for nested dropdowns */
+    z-index: 10000;
     background: #fff;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     border-radius: 4px;
     min-width: 200px;
-    padding: 10px 0 |important;
+    padding: 10px 0;
     visibility: hidden;
     opacity: 0;
     transition: visibility 0.2s, opacity 0.2s ease;
@@ -488,10 +488,63 @@ $blogCategories = BlogCategory::orderBy('name', 'ASC')->get();
 
   .cart-dropdown-menu .media-card {
     margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #f1f1f1;
+  }
+
+  .cart-dropdown-menu .media-card:last-child {
+    border-bottom: none;
   }
 
   .cart-dropdown-menu .media-body {
-    text-align: center;
+    flex: 1;
+  }
+
+  .cart-dropdown-menu .cart-item-image {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    margin-right: 10px;
+    border-radius: 4px;
+  }
+
+  .cart-dropdown-menu .cart-item-title {
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 5px;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .cart-dropdown-menu .cart-item-price {
+    font-size: 13px;
+    color: #dc3545;
+    font-weight: 500;
+  }
+
+  .cart-dropdown-menu .cart-item-remove {
+    background: transparent;
+    border: none;
+    color: #dc3545;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 5px;
+    transition: color 0.2s ease;
+  }
+
+  .cart-dropdown-menu .cart-item-remove:hover {
+    color: #c82333;
+  }
+
+  .cart-dropdown-menu .cart-subtotal {
+    font-weight: bold;
+    margin: 10px 0;
+    text-align: right;
   }
 
   .cart-dropdown-menu .theme-btn {
@@ -528,7 +581,7 @@ $blogCategories = BlogCategory::orderBy('name', 'ASC')->get();
     .header-menu-area {
       min-height: 120px;
       max-height: 120px;
-      z-index: 1000; /* Ensure header stays above content */
+      z-index: 1000;
     }
 
     .search-bar {
@@ -549,7 +602,7 @@ $blogCategories = BlogCategory::orderBy('name', 'ASC')->get();
     .cart-dropdown-menu {
       width: 100%;
       left: 0;
-      z-index: 10000; /* Maintain high z-index */
+      z-index: 10000;
     }
 
     .cat-dropdown-menu .sub-menu {
@@ -562,7 +615,7 @@ $blogCategories = BlogCategory::orderBy('name', 'ASC')->get();
     .header-menu-area {
       min-height: 120px;
       max-height: 120px;
-      z-index: 1000; /* Ensure header stays above content */
+      z-index: 1000;
     }
 
     .search-bar {
@@ -573,7 +626,7 @@ $blogCategories = BlogCategory::orderBy('name', 'ASC')->get();
 
     .search-results-dropdown {
       width: 100%;
-      z-index: 10000; /* High z-index for mobile */
+      z-index: 10000;
     }
 
     .px-100px {
@@ -598,7 +651,7 @@ $blogCategories = BlogCategory::orderBy('name', 'ASC')->get();
     .cart-dropdown-menu {
       position: static;
       width: 100%;
-      z-index: 10000; /* High z-index for mobile */
+      z-index: 10000;
       box-shadow: none;
       border: 1px solid #e5e5e5;
     }
@@ -621,6 +674,121 @@ $(document).ready(function() {
     $('body').append($message);
     setTimeout(() => $message.fadeOut(300, () => $message.remove()), 3000);
   }
+
+  function updateCartCount(count) {
+    $('#cartQty').text(count);
+  }
+
+  function loadCartItems() {
+    $.ajax({
+        url: '{{ route("cart.items") }}',
+        method: 'GET',
+        dataType: 'json',
+        beforeSend: function() {
+            $('#cartDropdown').html(`
+                <li class="media media-card">
+                    <div class="media-body fs-15 text-center">
+                        <p class="text-muted lh-18"><i class="la la-spinner la-spin mr-2"></i>Loading cart...</p>
+                    </div>
+                </li>
+            `);
+        },
+        success: function(response) {
+            const $cartDropdown = $('#cartDropdown');
+            $cartDropdown.empty();
+            updateCartCount(response.cartCount);
+
+            if (response.cartItems.length === 0) {
+                $cartDropdown.html(`
+                    <li class="media media-card">
+                        <div class="media-body fs-15 text-center">
+                            <p class="text-muted lh-18">Your cart is empty</p>
+                        </div>
+                    </li>
+                    <li class="mt-3">
+                        <a href="{{ route('cart') }}" class="btn theme-btn w-100 py-2">Go to Cart <i class="la la-arrow-right icon ml-1"></i></a>
+                    </li>
+                `);
+            } else {
+                let cartItemsHtml = '';
+                response.cartItems.forEach(function(item) {
+                    cartItemsHtml += `
+                        <li class="media media-card">
+                            <img src="${item.image}" alt="${item.name}" class="cart-item-image" onerror="this.src='{{ asset('images/default-course.jpg') }}'">
+                            <div class="media-body">
+                                <h5 class="cart-item-title">${item.name}</h5>
+                                <p class="cart-item-price">TND ${item.price}</p>
+                            </div>
+                            <button class="cart-item-remove" data-id="${item.id}" title="Remove item">
+                                <i class="la la-trash"></i>
+                            </button>
+                        </li>
+                    `;
+                });
+                $cartDropdown.html(`
+                    ${cartItemsHtml}
+                    <li class="cart-subtotal">
+                        Subtotal: <span>TND ${response.cartSubTotal}</span>
+                    </li>
+                    <li class="mt-3">
+                        <a href="{{ route('cart') }}" class="btn theme-btn w-100 py-2">Go to Cart <i class="la la-arrow-right icon ml-1"></i></a>
+                    </li>
+                    <li class="mt-2">
+                        <a href="{{ route('checkout.create') }}" class="btn theme-btn w-100 py-2">Checkout <i class="la la-check icon ml-1"></i></a>
+                    </li>
+                `);
+            }
+        },
+        error: function() {
+            $('#cartDropdown').html(`
+                <li class="media media-card">
+                    <div class="media-body fs-15 text-center">
+                        <p class="text-danger lh-18">Error loading cart</p>
+                    </div>
+                </li>
+                <li class="mt-3">
+                    <a href="{{ route('cart') }}" class="btn theme-btn w-100 py-2">Go to Cart <i class="la la-arrow-right icon ml-1"></i></a>
+                </li>
+            `);
+        }
+    });
+}
+
+  // Remove item from cart
+  $(document).on('click', '.cart-item-remove', function() {
+    const itemId = $(this).data('id');
+    const $cartItem = $(this).closest('.media-card');
+
+    $.ajax({
+      url: '{{ route("cart.remove", ":id") }}'.replace(':id', itemId),
+      method: 'DELETE',
+      data: {
+        _token: '{{ csrf_token() }}'
+      },
+      beforeSend: function() {
+        $cartItem.find('.cart-item-remove').prop('disabled', true).html('<i class="la la-spinner la-spin"></i>');
+      },
+      success: function(response) {
+        showNotification(response.message, 'success');
+        updateCartCount(response.cartCount);
+        loadCartItems(); // Reload cart to update subtotal and items
+      },
+      error: function(xhr) {
+        const message = xhr.responseJSON?.message || 'Error removing item from cart';
+        showNotification(message, 'danger');
+        $cartItem.find('.cart-item-remove').prop('disabled', false).html('<i class="la la-trash"></i>');
+      }
+    });
+  });
+
+  // Load cart items on page load
+  loadCartItems();
+
+  // Update cart on add-to-cart success
+  $(document).on('cartUpdated', function(e, data) {
+    updateCartCount(data.cartCount);
+    loadCartItems();
+  });
 
   function updateHeaderPadding() {
     const header = $('.header-menu-area');
