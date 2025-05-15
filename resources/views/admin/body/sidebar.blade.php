@@ -31,7 +31,7 @@
         <li><a href="{{ route('admin.subcategories.index') }}"><i class='bx bx-radio-circle'></i>All SubCategory</a></li>
       </ul>
     </li>
-    
+
     <li>
       <a class="has-arrow" href="javascript:;">
         <div class="parent-icon"><i class='bx bx-user'></i></div>
@@ -62,7 +62,7 @@
         <li><a href="{{ route('admin.coupon.index') }}"><i class='bx bx-radio-circle'></i>All Coupon</a></li>
       </ul>
     </li>
-    
+
     <li>
       <a class="has-arrow" href="javascript:;">
         <div class="parent-icon"><i class='bx bx-cart-alt'></i></div>
@@ -76,7 +76,7 @@
         </li>
       </ul>
     </li>
-    
+
     <li>
       <a class="has-arrow" href="javascript:;">
         <div class="parent-icon"><i class='bx bx-star'></i></div>
@@ -101,12 +101,25 @@
         </li>
       </ul>
     </li>
-    
+
+
+
     <li>
-      <a href="{{ route('admin.reports.index') }}" class="{{ request()->routeIs('admin.reports.index') ? 'active' : '' }}">
-        <div class="parent-icon"><i class='bx bx-bar-chart-alt'></i></div>
-        <div class="menu-title">Reports</div>
+      <a class="has-arrow" href="javascript:;">
+        <div class="parent-icon"><i class='bx bx-category'></i></div>
+        <div class="menu-title">Manage Report Categories</div>
       </a>
+      <ul class="mm-collapse">
+        <li><a href="{{ route('admin.report-categories.index') }}"><i class='bx bx-radio-circle'></i>All Report Categories</a></li>
+      </ul>
+
+
+      <ul>
+        <a href="{{ route('admin.reports.index') }}" class="{{ request()->routeIs('admin.reports.index') ? 'active' : '' }}">
+          <div class="parent-icon"><i class='bx bx-bar-chart-alt'></i></div>
+          <div class="menu-title">Reports</div>
+        </a>
+      </ul>
     </li>
 
     <li>
