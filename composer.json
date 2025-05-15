@@ -7,6 +7,7 @@
     "require": {
         "php": "^8.1",
         "barryvdh/laravel-dompdf": "^3.1",
+        "binafy/laravel-cart": "^1.2",
         "consoletvs/charts": "^6.8",
         "darryldecode/cart": "^4.2",
         "guzzlehttp/guzzle": "^7.2",

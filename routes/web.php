@@ -58,14 +58,11 @@ Route::name('')->group(function () {
 
     Route::middleware('auth:web')->group(function () {
         // Cart Routes
-        Route::get('/cart', [CartController::class, 'MyCart'])->name('cart');
-        Route::post('/cart/remove/{id}', [CartController::class, 'CartRemove'])->name('cart.remove');
-        Route::post('/coupon/apply', [CartController::class, 'CouponApply'])->name('coupon.apply');
-        Route::get('/coupon/remove/{couponName}', [CartController::class, 'CouponRemove'])->name('coupon.remove');
-        Route::get('/checkout', [CartController::class, 'CheckoutCreate'])->name('checkout.create');
-        Route::get('/handle-pending-cart', [CartController::class, 'handlePendingCart'])->name('handle.pending.cart');
-        Route::post('/cart/sync', [CartController::class, 'syncTempCart'])->name('cart.sync');
-
+        Route::get('/cart', [CartController::class, 'myCart'])->name('cart');
+        Route::delete('/cart/remove/{id}', [CartController::class, 'cartRemove'])->name('cart.remove');
+        Route::post('/coupon/apply', [CartController::class, 'couponApply'])->name('coupon.apply');
+        Route::delete('/coupon/remove/{couponName}', [CartController::class, 'couponRemove'])->name('coupon.remove');
+        Route::get('/checkout', [CartController::class, 'checkoutCreate'])->name('checkout.create');
         // Stripe Payment Routes
         Route::post('/pay/stripe', [StripePaymentController::class, 'payWithStripe'])->name('pay.stripe');
 
@@ -116,7 +113,6 @@ Route::name('')->group(function () {
         Route::post('/messages/{conversation}/send', [MessageController::class, 'send'])->name('messages.send');
         Route::post('/messages/{conversation}/typing', [MessageController::class, 'typing'])->name('messages.typing');
    
-
         // Report Routes
         Route::get('/reports', [ReportController::class, 'index'])->name('report.index');
         Route::get('/report/create', [ReportController::class, 'create'])->name('report');
@@ -173,14 +169,14 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::patch('/reports/{report}', [AdminReportController::class, 'update'])->name('reports.update');
 
         // Excel Export Routes
-       Route::get('/excel', [ExcelReportController::class, 'index'])->name('excel.index');
-    Route::get('/excel/enrollments/export', [ExcelReportController::class, 'exportEnrollments'])->name('excel.enrollments.export');
-    Route::get('/excel/payments/export', [ExcelReportController::class, 'exportPayments'])->name('excel.payments.export');
-    Route::get('/excel/users/export', [ExcelReportController::class, 'exportUsers'])->name('excel.users.export');
-    Route::get('/excel/instructors/export', [ExcelReportController::class, 'exportInstructors'])->name('excel.instructors.export');
-    Route::get('/excel/orders/export', [ExcelReportController::class, 'exportOrders'])->name('excel.orders.export');
-    Route::get('/excel/courses/export', [ExcelReportController::class, 'exportCourses'])->name('excel.courses.export');
-    Route::get('/excel/all/export', [ExcelReportController::class, 'exportAll'])->name('excel.all.export');
+        Route::get('/excel', [ExcelReportController::class, 'index'])->name('excel.index');
+        Route::get('/excel/enrollments/export', [ExcelReportController::class, 'exportEnrollments'])->name('excel.enrollments.export');
+        Route::get('/excel/payments/export', [ExcelReportController::class, 'exportPayments'])->name('excel.payments.export');
+        Route::get('/excel/users/export', [ExcelReportController::class, 'exportUsers'])->name('excel.users.export');
+        Route::get('/excel/instructors/export', [ExcelReportController::class, 'exportInstructors'])->name('excel.instructors.export');
+        Route::get('/excel/orders/export', [ExcelReportController::class, 'exportOrders'])->name('excel.orders.export');
+        Route::get('/excel/courses/export', [ExcelReportController::class, 'exportCourses'])->name('excel.courses.export');
+        Route::get('/excel/all/export', [ExcelReportController::class, 'exportAll'])->name('excel.all.export');
     });
 });
 
@@ -234,13 +230,13 @@ Route::prefix('instructor')->name('instructor.')->group(function () {
 
 // Frontend Routes (Public)
 Route::get('/course/details/{id}/{slug}', [IndexController::class, 'CourseDetails'])->name('course.details');
-Route::post('/cart/add/{id}', [CartController::class, 'AddToCart'])->name('cart.add');
+Route::post('/cart/add/{id}', [CartController::class, 'addToCart'])->name('cart.add');
+Route::get('/cart/items', [CartController::class, 'getCartItems'])->name('cart.items');
 Route::get('/category/{id}/{slug}', [IndexController::class, 'CategoryCourse'])->name('category.course');
 Route::get('/subcategory/{id}/{slug}', [IndexController::class, 'SubCategoryCourse'])->name('subcategory.course');
 Route::get('/instructor/details/{id}', [IndexController::class, 'InstructorDetails'])->name('instructor.details');
 Route::get('/Allcourses', [IndexController::class, 'AllCourses'])->name('courses.all');
 Route::get('/courses', [IndexController::class, 'courses'])->name('course.list');
-
 
 // Invoice Routes
 Route::get('/checkout/success', [InvoiceController::class, 'success'])->name('checkout.success');
