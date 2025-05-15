@@ -13,6 +13,7 @@ class Report extends Model
         'reporter_id',
         'reporter_type',
         'course_id',
+        'report_category_id',
         'title',
         'type',
         'description',
@@ -29,4 +30,9 @@ class Report extends Model
     {
         return $this->belongsTo(Course::class);
     }
+
+  public function reportCategory()
+  {
+    return $this->belongsTo(ReportCategory::class);
+  }
 }

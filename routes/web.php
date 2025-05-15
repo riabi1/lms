@@ -33,6 +33,7 @@ use App\Http\Controllers\Frontend\BlogShowController;
 use App\Http\Controllers\Instructor\CouponController;
 use App\Http\Controllers\Instructor\CourseController;
 use App\Http\Controllers\Admin\BlogCategoriesController;
+use App\Http\Controllers\Admin\ReportCategoryController;
 use App\Http\Controllers\Frontend\BlogArticleController;
 use App\Http\Controllers\Frontend\PaypalPaymentController;
 use App\Http\Controllers\Frontend\StripePaymentController;
@@ -244,4 +245,17 @@ Route::get('/invoice/{invoice}/download', [InvoiceController::class, 'download']
 
 Route::get('/blog', [BlogArticleController::class, 'index'])->name('blog.list');
 Route::get('/blog/{slug}', [BlogArticleController::class, 'show'])->name('blog.detail');
+
 Route::get('/search', [SearchController::class, 'search'])->name('search');
+
+Route::get('/search', [SearchController::class, 'search'])->name('search');
+
+
+Route::prefix('admin')->middleware(['auth:admin', 'verified'])->group(function () {
+    Route::get('report-categories', [ReportCategoryController::class, 'index'])->name('admin.report-categories.index');
+    Route::get('report-categories/create', [ReportCategoryController::class, 'create'])->name('admin.report-categories.create');
+    Route::post('report-categories', [ReportCategoryController::class, 'store'])->name('admin.report-categories.store');
+    Route::get('report-categories/{reportCategory}/edit', [ReportCategoryController::class, 'edit'])->name('admin.report-categories.edit');
+    Route::put('report-categories/{reportCategory}', [ReportCategoryController::class, 'update'])->name('admin.report-categories.update');
+    Route::delete('report-categories/{reportCategory}', [ReportCategoryController::class, 'destroy'])->name('admin.report-categories.destroy');
+});
