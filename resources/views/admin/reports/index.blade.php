@@ -5,24 +5,23 @@
 @section('admin')
     <div class="page-content">
         <!-- Breadcrumb -->
-        <div class="page-breadcrumb d-none d-sm-flex align-items-center mb-4">
+        <div class="page-breadcrumb d-none d-sm-flex align-items-center mb-3">
             <div class="ps-3">
                 <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-0 p-0 bg-light rounded-3 shadow-sm">
+                    <ol class="breadcrumb mb-0 p-0">
                         <li class="breadcrumb-item">
-                            <a href="{{ route('admin.dashboard') }}" class="text-red"><i class="bx bx-home-alt"></i></a>
+                            <a href="{{ route('admin.dashboard') }}"><i class="bx bx-home-alt"></i></a>
                         </li>
-                        <li class="breadcrumb-item active text-dark" aria-current="page">Manage Reports</li>
+                        <li class="breadcrumb-item active" aria-current="page">All Reports</li>
                     </ol>
                 </nav>
             </div>
         </div>
 
-        <div class="card shadow-lg border-0 rounded-4">
-            <div class="card-header bg-gradient-red text-white py-3">
-                <h5 class="mb-0"><i class="bx bx-error me-2"></i>Manage Reports</h5>
-            </div>
-            <div class="card-body p-4">
+        <!-- Reports Card -->
+        <div class="card">
+            <div class="card-body">
+                <!-- Session Messages -->
                 @if (session('success'))
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
                         {{ session('success') }}
@@ -36,88 +35,121 @@
                     </div>
                 @endif
 
+                <!-- Reports Table -->
                 <div class="table-responsive">
-                    @if ($reports->isEmpty())
-                        <p class="text-muted text-center my-4">No reports found.</p>
-                    @else
-                        <table id="reportsTable" class="table table-striped table-bordered table-hover" style="width:100%">
-                            <thead class="bg-light">
+                    <table id="reportsTable" class="table table-striped table-bordered" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Title</th>
+                                <th>Type</th>
+                                <th>Reporter</th>
+                                <th>Course</th>
+                                <th>Description</th>
+                                <th>Status</th>
+                                <th>Resolution Notes</th>
+                                <th>Submitted At</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($reports as $key => $report)
                                 <tr>
-                                    <th>#</th>
-                                    <th>Title</th>
-                                    <th>Type</th>
-                                    <th>Reporter</th>
-                                    <th>Course</th>
-                                    <th>Description</th>
-                                    <th>Status</th>
-                                    <th>Submitted At</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($reports as $key => $report)
-                                    <tr>
-                                        <td>{{ $key + 1 }}</td>
-                                        <td>{{ $report->title }}</td>
-                                        <td>{{ ucfirst(str_replace('_', ' ', $report->type)) }}</td>
-                                        <td>
-                                            {{ $report->reporter_type == 'App\Models\User' ? $report->reporter->name : $report->reporter->instructor_name ?? 'N/A' }}
-                                            <small class="text-muted">({{ $report->reporter_type == 'App\Models\User' ? 'User' : 'Instructor' }})</small>
-                                        </td>
-                                        <td>{{ $report->course ? $report->course->course_title : 'N/A' }}</td>
-                                        <td>{{ \Illuminate\Support\Str::limit($report->description, 50) }}</td>
-                                        <td>
-                                            <span class="badge 
-                                                {{ $report->status == 'pending' ? 'bg-warning' : 
-                                                   ($report->status == 'fixed' ? 'bg-success' : 'bg-danger') }} 
-                                                px-3 py-2">
-                                                {{ $report->status == 'pending' ? 'Pending' : 
-                                                   ($report->status == 'fixed' ? 'Resolved' : 'Not Resolved') }}
-                                            </span>
-                                        </td>
-                                        <td>{{ $report->created_at->format('d M Y') }}</td>
-                                        <td>
-                                            <form action="{{ route('admin.reports.update', $report->id) }}" method="POST" style="display:inline;">
-                                                @csrf
-                                                @method('PATCH')
-                                                <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
-                                                    <option value="pending" {{ $report->status == 'pending' ? 'selected' : '' }}>Pending</option>
+                                    <td>{{ $key + 1 }}</td>
+                                    <td>{{ $report->title }}</td>
+                                    <td>{{ ucfirst(str_replace('_', ' ', $report->type)) }}</td>
+                                    <td>
+                                        {{ $report->reporter_type == 'App\Models\User' ? $report->reporter->name : $report->reporter->instructor_name ?? 'N/A' }}
+                                        <small class="text-muted">({{ $report->reporter_type == 'App\Models\User' ? 'User' : 'Instructor' }})</small>
+                                    </td>
+                                    <td>{{ $report->course ? $report->course->course_title : 'N/A' }}</td>
+                                    <td>
+                                        <span class="description-tooltip" data-description="{{ $report->description }}">
+                                            {{ \Illuminate\Support\Str::limit($report->description, 50) }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge 
+                                            {{ $report->status == 'pending' ? 'bg-warning' : 
+                                               ($report->status == 'fixed' ? 'bg-success' : 'bg-danger') }} 
+                                            px-3 py-2">
+                                            {{ $report->status == 'pending' ? 'Pending Review' : 
+                                               ($report->status == 'fixed' ? 'Resolved' : 'Not Resolved') }}
+                                        </span>
+                                    </td>
+                                    <td>{{ \Illuminate\Support\Str::limit($report->resolution_notes ?? 'N/A', 50) }}</td>
+                                    <td>{{ $report->created_at->format('d M Y') }}</td>
+                                    <td>
+                                        <form action="{{ route('admin.reports.update', $report->id) }}" method="POST" style="display:inline;">
+                                            @csrf
+                                            @method('PATCH')
+                                            <div class="mb-2">
+                                                <select name="status" class="form-select form-select-sm">
+                                                    <option value="pending" {{ $report->status == 'pending' ? 'selected' : '' }}>Pending Review</option>
                                                     <option value="fixed" {{ $report->status == 'fixed' ? 'selected' : '' }}>Resolved</option>
                                                     <option value="not_fixed" {{ $report->status == 'not_fixed' ? 'selected' : '' }}>Not Resolved</option>
                                                 </select>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    @endif
+                                            </div>
+                                            <div class="mb-2">
+                                                <textarea name="resolution_notes" class="form-control form-control-sm" rows="3" placeholder="Add resolution notes">{{ $report->resolution_notes }}</textarea>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary btn-sm px-4">Update</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
 
+    @push('styles')
+        <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+        <style>
+            .description-tooltip {
+                position: relative;
+                cursor: pointer;
+            }
+            .description-tooltip:hover::after {
+                content: attr(data-description);
+                position: absolute;
+                background: #333;
+                color: #fff;
+                padding: 5px 10px;
+                border-radius: 4px;
+                bottom: 100%;
+                left: 50%;
+                transform: translateX(-50%);
+                white-space: pre-wrap;
+                z-index: 1000;
+                width: 200px;
+            }
+        </style>
+    @endpush
+
     @push('scripts')
-        <!-- DataTables JS -->
-        <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-        <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+        <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+        <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+        <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
         <script>
-            $(document).ready(function() {
+            $(document).ready(function () {
                 $('#reportsTable').DataTable({
-                    "paging": true,
-                    "lengthChange": true,
-                    "searching": true,
-                    "ordering": true,
-                    "info": true,
-                    "autoWidth": false,
-                    "pageLength": 10,
-                    "language": {
-                        "search": "Search reports:",
-                        "lengthMenu": "Show _MENU_ entries",
-                        "info": "Showing _START_ to _END_ of _TOTAL_ reports",
-                        "paginate": {
-                            "previous": "Previous",
-                            "next": "Next"
+                    paging: true,
+                    lengthChange: true,
+                    searching: true,
+                    ordering: true,
+                    info: true,
+                    autoWidth: false,
+                    pageLength: 10,
+                    language: {
+                        search: "Search reports:",
+                        lengthMenu: "Show _MENU_ entries",
+                        info: "Showing _START_ to _END_ of _TOTAL_ reports",
+                        paginate: {
+                            previous: "Previous",
+                            next: "Next"
                         }
                     }
                 });

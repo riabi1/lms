@@ -2,23 +2,28 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Report extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
         'reporter_id',
         'reporter_type',
         'course_id',
         'report_category_id',
         'title',
-        'type',
         'description',
         'status',
         'resolution_notes',
+        'feedback',
+    ];
+
+    protected $casts = [
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'feedback' => 'string',
     ];
 
     public function reporter()
@@ -26,13 +31,18 @@ class Report extends Model
         return $this->morphTo();
     }
 
-    public function course()
+    public function course(): BelongsTo
     {
         return $this->belongsTo(Course::class);
     }
 
-  public function reportCategory()
-  {
-    return $this->belongsTo(ReportCategory::class);
-  }
+    public function reportCategory(): BelongsTo
+    {
+        return $this->belongsTo(ReportCategory::class);
+    }
+
+    public function statusHistories(): HasMany
+    {
+        return $this->hasMany(ReportStatusHistory::class);
+    }
 }
