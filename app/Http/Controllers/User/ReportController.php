@@ -25,7 +25,7 @@ class ReportController extends Controller
   public function create()
   {
     $courses = Course::where('status', 1)->get(['id', 'course_title']);
-    $reportCategories = ReportCategory::where('is_active', true)->get(['id', 'name']);
+    $reportCategories = ReportCategory::get(['id', 'name']);
     return view('User.reports.create', compact('courses', 'reportCategories'));
   }
 
@@ -41,6 +41,7 @@ class ReportController extends Controller
       'course_id' => 'nullable|exists:courses,id',
       'description' => 'required|string',
     ]);
+    
 
     try {
       Report::create([

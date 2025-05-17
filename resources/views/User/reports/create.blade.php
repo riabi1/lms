@@ -43,19 +43,19 @@ Submit a Report | Easy Learning
       </div>
 
       <div class="mb-3">
-        <label class="form-label">Related Course (Optional)</label>
-        <select class="form-control" name="course_id">
-          <option value="">Select a Course</option>
-          @foreach($courses as $course)
-          <option value="{{ $course->id }}" {{ old('course_id') == $course->id ? 'selected' : '' }}>
-            {{ $course->course_title }}
-          </option>
-          @endforeach
-        </select>
-        @error('course_id')
-        <div class="text-danger">{{ $message }}</div>
-        @enderror
-      </div>
+          <label for="course_id" class="form-label">Related Course (Optional)</label>
+          <select name="course_id" id="course_id" class="form-control">
+            <option value="">No Course</option>
+            @foreach ($courses as $course)
+            <option value="{{ $course->id }}" {{ old('course_id') == $course->id ? 'selected' : '' }}>
+              {{ $course->course_title }}
+            </option>
+            @endforeach
+          </select>
+          @error('course_id')
+          <small class="text-danger">{{ $message }}</small>
+          @enderror
+        </div>
 
       <div class="mb-3">
         <label class="form-label">Description</label>
