@@ -471,6 +471,20 @@ $(document).ready(function() {
     }
 
     let tempCart = JSON.parse(localStorage.getItem('tempCart')) || [];
+    let processing = false; // Flag to prevent multiple simultaneous requests
+
+    // Debounce function to limit rapid clicks
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
 
     $('.wishlist-btn').on('click', function(e) {
         e.preventDefault();
@@ -479,6 +493,9 @@ $(document).ready(function() {
         const courseId = $button.data('course-id');
         const isWishlisted = $button.hasClass('wishlisted');
         const url = isWishlisted ? '/wishlist/remove/' + courseId : '/wishlist/add/' + courseId;
+
+        if (processing) return; // Prevent multiple clicks
+        processing = true;
 
         $.ajax({
             url: url,
@@ -505,11 +522,14 @@ $(document).ready(function() {
             error: function(xhr) {
                 const response = xhr.responseJSON || {};
                 showNotification(response.message || 'Failed to update wishlist. Please try again.', 'danger');
+            },
+            complete: function() {
+                processing = false;
             }
         });
     });
 
-    $('.cart-btn').on('click', function(e) {
+    const handleCartClick = debounce(function(e) {
         e.preventDefault();
         const $button = $(this);
         const courseId = $button.data('course-id');
@@ -520,6 +540,9 @@ $(document).ready(function() {
             showNotification('Course ID not found.', 'danger');
             return;
         }
+
+        if (processing) return; // Prevent multiple clicks
+        processing = true;
 
         const isAuthenticated = {!! json_encode(auth()->check()) !!};
 
@@ -534,26 +557,18 @@ $(document).ready(function() {
             } else {
                 showNotification('Course already in temporary cart.', 'info');
             }
+            processing = false;
             return;
         }
 
         const url = action === 'add' ? '/cart/add/' + courseId : '/cart/remove/' + courseId;
+        const originalState = {
+            class: $button.hasClass('in-cart') ? 'in-cart' : 'add-to-cart',
+            action: action,
+            html: $button.html()
+        };
 
-        let originalState = null;
-        if (action === 'remove') {
-            originalState = {
-                class: 'in-cart',
-                action: 'remove',
-                html: '<i class="la la-shopping-cart fs-18 mr-1"></i> In Cart'
-            };
-            $button
-                .removeClass('in-cart')
-                .addClass('add-to-cart')
-                .data('action', 'add')
-                .html('<i class="la la-shopping-cart fs-18 mr-1"></i> Add to Cart');
-        } else {
-            $button.prop('disabled', true).html('<i class="la la-spinner la-spin mr-1"></i> Adding...');
-        }
+        $button.prop('disabled', true).html('<i class="la la-spinner la-spin mr-1"></i> Processing...');
 
         $.ajax({
             url: url,
@@ -564,11 +579,16 @@ $(document).ready(function() {
                 if (response.success) {
                     if (action === 'add') {
                         $button
-                            .prop('disabled', false)
                             .removeClass('add-to-cart')
                             .addClass('in-cart')
                             .data('action', 'remove')
                             .html('<i class="la la-shopping-cart fs-18 mr-1"></i> In Cart');
+                    } else {
+                        $button
+                            .removeClass('in-cart')
+                            .addClass('add-to-cart')
+                            .data('action', 'add')
+                            .html('<i class="la la-shopping-cart fs-18 mr-1"></i> Add to Cart');
                     }
                     showNotification(response.message, 'success');
                     $(document).trigger('cartUpdated', {
@@ -577,16 +597,12 @@ $(document).ready(function() {
                     });
                 } else if (response.info) {
                     showNotification(response.info, 'info');
-                    if (action === 'add') {
-                        $button.prop('disabled', false)
-                            .html('<i class="la la-shopping-cart fs-18 mr-1"></i> Add to Cart');
-                    } else if (originalState) {
-                        $button
-                            .removeClass('add-to-cart')
-                            .addClass(originalState.class)
-                            .data('action', originalState.action)
-                            .html(originalState.html);
-                    }
+                    $button
+                        .prop('disabled', false)
+                        .removeClass('in-cart add-to-cart')
+                        .addClass(originalState.class)
+                        .data('action', originalState.action)
+                        .html(originalState.html);
                 } else if (response.redirect) {
                     showNotification(response.message || 'Please log in to continue.', 'info');
                     setTimeout(() => {
@@ -598,24 +614,25 @@ $(document).ready(function() {
                 const response = xhr.responseJSON || {};
                 const message = response.message || 'An error occurred. Please try again.';
                 showNotification(message, 'danger');
-                if (action === 'add') {
-                    $button.prop('disabled', false)
-                        .html('<i class="la la-shopping-cart fs-18 mr-1"></i> Add to Cart');
-                } else if (originalState) {
-                    $button
-                        .removeClass('add-to-cart')
-                        .addClass(originalState.class)
-                        .data('action', originalState.action)
-                        .html(originalState.html);
-                }
+                $button
+                    .prop('disabled', false)
+                    .removeClass('in-cart add-to-cart')
+                    .addClass(originalState.class)
+                    .data('action', originalState.action)
+                    .html(originalState.html);
                 if (response.redirect) {
                     setTimeout(() => {
                         window.location.href = response.redirect;
                     }, 1500);
                 }
+            },
+            complete: function() {
+                processing = false;
             }
         });
-    });
+    }, 300);
+
+    $('.cart-btn').on('click', handleCartClick);
 
     @if (auth()->check())
         const urlParams = new URLSearchParams(window.location.search);
