@@ -136,7 +136,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('subcategories', SubCategoryController::class)->except(['show']);
         Route::resource('courses', AdminCourseController::class)->names('courses');
         Route::resource('instructors', InstructorManagementController::class)->names('instructors');
-
+        Route::resource('report-categories', ReportCategoryController::class)->names('report-categories');
         Route::post('/courses/update-status', [AdminCourseController::class, 'updateCourseStatus'])->name('courses.updateStatus');
         Route::post('/instructors/update-status', [InstructorManagementController::class, 'updateStatus'])->name('instructors.updateStatus');
         Route::get('/instructors/{id}/download-cv', [InstructorManagementController::class, 'downloadCv'])->name('instructors.downloadCv');
@@ -253,11 +253,3 @@ Route::get('/search', [SearchController::class, 'search'])->name('search');
 Route::get('/search', [SearchController::class, 'search'])->name('search');
 
 
-Route::prefix('admin')->middleware(['auth:admin', 'verified'])->group(function () {
-    Route::get('report-categories', [ReportCategoryController::class, 'index'])->name('admin.report-categories.index');
-    Route::get('report-categories/create', [ReportCategoryController::class, 'create'])->name('admin.report-categories.create');
-    Route::post('report-categories', [ReportCategoryController::class, 'store'])->name('admin.report-categories.store');
-    Route::get('report-categories/{reportCategory}/edit', [ReportCategoryController::class, 'edit'])->name('admin.report-categories.edit');
-    Route::put('report-categories/{reportCategory}', [ReportCategoryController::class, 'update'])->name('admin.report-categories.update');
-    Route::delete('report-categories/{reportCategory}', [ReportCategoryController::class, 'destroy'])->name('admin.report-categories.destroy');
-});

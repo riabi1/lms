@@ -22,43 +22,43 @@ class ReportController extends Controller
         return view('instructor.reports.index', compact('reports'));
     }
 
-  public function create()
-  {
-    $courses = Course::where('courseable_type', 'App\Models\Instructor')
-      ->where('courseable_id', Auth::guard('instructor')->id())
-      ->where('status', 1)
-      ->get(['id', 'course_title']);
-    $reportCategories = ReportCategory::where('is_active', true)->get(['id', 'name']);
+    public function create()
+    {
+        $courses = Course::where('courseable_type', 'App\Models\Instructor')
+            ->where('courseable_id', Auth::guard('instructor')->id())
+            ->where('status', 1)
+            ->get(['id', 'course_title']);
+        $reportCategories = ReportCategory::get(['id', 'name']);
 
-    return view('instructor.reports.create', compact('courses', 'reportCategories'));
-  }
-
-  public function store(Request $request)
-  {
-    $validated = $request->validate([
-      'title' => 'required|string|max:255',
-      'report_category_id' => 'required|exists:report_categories,id', // Updated from type
-      'course_id' => 'nullable|exists:courses,id',
-      'description' => 'required|string',
-    ]);
-
-    try {
-      Report::create([
-        'reporter_id' => Auth::guard('instructor')->id(),
-        'reporter_type' => 'App\Models\Instructor',
-        'course_id' => $validated['course_id'] ?? null,
-        'report_category_id' => $validated['report_category_id'],
-        'title' => $validated['title'],
-        'description' => $validated['description'],
-        'status' => 'pending',
-      ]);
-
-      return redirect()->route('instructor.reports.index')
-        ->with('success', 'Report submitted successfully. Our team will review it soon.');
-    } catch (\Exception $e) {
-      return redirect()->back()
-        ->with('error', 'Failed to submit report: ' . $e->getMessage())
-        ->withInput();
+        return view('instructor.reports.create', compact('courses', 'reportCategories'));
     }
-  }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'report_category_id' => 'required|exists:report_categories,id',
+            'course_id' => 'nullable|exists:courses,id',
+            'description' => 'required|string',
+        ]);
+
+        try {
+            Report::create([
+                'reporter_id' => Auth::guard('instructor')->id(),
+                'reporter_type' => 'App\Models\Instructor',
+                'course_id' => $validated['course_id'] ?? null,
+                'report_category_id' => $validated['report_category_id'],
+                'title' => $validated['title'],
+                'description' => $validated['description'],
+                'status' => 'pending',
+            ]);
+
+            return redirect()->route('instructor.reports.index')
+                ->with('success', 'Report submitted successfully. Our team will review it soon.');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Failed to submit report: ' . $e->getMessage())
+                ->withInput();
+        }
+    }
 }
