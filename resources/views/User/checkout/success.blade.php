@@ -15,10 +15,17 @@
                         {{ session('success') }}
                     </div>
                 @endif
-                @if (isset($invoice))
-                    <a href="{{ route('invoice.download', $invoice->id) }}" class="btn theme-btn mt-4">
-                        <i class="fas fa-download"></i> Download Invoice ({{ $invoice->invoice_number }})
+                @if (session('error'))
+                    <div class="alert alert-danger">
+                        {{ session('error') }}
+                    </div>
+                @endif
+                @if (session('invoice'))
+                    <a href="{{ route('invoice.download', session('invoice')->id) }}" class="btn theme-btn mt-4">
+                        <i class="fas fa-download"></i> Download Invoice ({{ session('invoice')->invoice_number }})
                     </a>
+                @else
+                    <p class="text-muted mt-4">Invoice not available. Please contact support if you need assistance.</p>
                 @endif
                 <a href="{{ route('home') }}" class="btn theme-btn mt-4">Return to Home</a>
             </div>
@@ -26,7 +33,6 @@
     </section>
 @endsection
 
-<!-- Optional: Include Font Awesome for the download icon -->
 @section('scripts')
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 @endsection

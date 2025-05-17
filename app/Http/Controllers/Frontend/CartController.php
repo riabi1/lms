@@ -1,567 +1,655 @@
 <?php
-
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
-use App\Models\CartItem;
+use Illuminate\Http\Request;
 use App\Models\Course;
 use App\Models\Coupon;
-use App\Models\Instructor;
-use App\Models\Invoice;
 use App\Models\Order;
-use App\Notifications\OrderPlacedNotification;
-use Carbon\Carbon;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
+use App\Models\Instructor;
+use App\Models\CartItem;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Session;
-use Illuminate\View\View;
+use App\Notifications\OrderPlacedNotification;
+use App\Models\Invoice;
+use Carbon\Carbon;
 
 class CartController extends Controller
 {
-    /**
-     * Add a course to the cart.
-     *
-     * @param Request $request
-     * @param int $id
-     * @return JsonResponse|RedirectResponse
-     */
-    public function addToCart(Request $request, int $id): JsonResponse|RedirectResponse
+  public function AddToCart(Request $request, $id)
+  {
+      $course = Course::with('courseable')->find($id);
+      if (!$course) {
+          return response()->json(['error' => 'Course not found'], 404);
+      }
+  
+      if (!Auth::check()) {
+          return response()->json([
+              'redirect' => route('login') . '?redirect=' . urlencode(route('cart')) . '&course_id=' . $course->id,
+              'message' => 'Please log in to add this course to your cart.'
+          ], 401);
+      }
+  
+      $existingOrder = Order::where('user_id', Auth::id())
+          ->where('course_id', $id)
+          ->where('payment_status', 'paid')
+          ->exists();
+  
+      if ($existingOrder) {
+          return response()->json(['info' => 'You have already purchased this course. Start learning now!'], 200);
+      }
+  
+      $existingCartItem = CartItem::where('user_id', Auth::id())
+          ->where('cartable_type', Course::class)
+          ->where('cartable_id', $course->id)
+          ->exists();
+  
+      if ($existingCartItem) {
+          return response()->json(['info' => 'Course is already in your cart.'], 200);
+      }
+  
+      $effectivePrice = $course->discount_price !== null && $course->discount_price > 0 
+          ? max(0, $course->selling_price - $course->discount_price) 
+          : $course->selling_price;
+  
+      $instructor = $course->courseable_type === 'App\Models\Instructor' && $course->courseable_id
+          ? Instructor::find($course->courseable_id)
+          : null;
+  
+      CartItem::create([
+          'cartable_type' => Course::class,
+          'cartable_id' => $course->id,
+          'user_id' => Auth::id(),
+          'price' => $effectivePrice,
+          'options' => [
+              'instructor_name' => $instructor ? $instructor->name : 'Unknown Instructor',
+              'selling_price' => $course->selling_price ?? 0,
+              'discount_price' => $course->discount_price ?? 0,
+              'image' => $course->course_image,
+              'instructor_id' => $instructor ? $instructor->id : null,
+          ],
+      ]);
+  
+      $cartItems = CartItem::where('user_id', Auth::id())->get();
+      $cartCount = $cartItems->count();
+      $cartSubTotal = $cartItems->sum('price');
+  
+      return response()->json([
+          'success' => true,
+          'message' => 'Course added to the cart successfully!',
+          'cartCount' => $cartCount,
+          'cartSubTotal' => number_format($cartSubTotal, 2),
+          'price' => $effectivePrice,
+          'course_name' => $course->course_name,
+          'image' => $course->course_image,
+          'instructor_id' => $instructor ? $instructor->id : null,
+          'instructor_name' => $instructor ? $instructor->name : 'Unknown Instructor',
+          'selling_price' => $course->selling_price ?? 0,
+          'discount_price' => $course->discount_price ?? 0,
+      ], 200);
+  }
+
+  public function syncTempCart(Request $request)
+  {
+      if (!Auth::check()) {
+          return response()->json(['error' => 'Unauthorized'], 401);
+      }
+  
+      $request->validate([
+          'tempCart' => 'array',
+          'tempCart.*.courseId' => 'required|integer|exists:courses,id',
+      ]);
+  
+      $tempCart = $request->input('tempCart', []);
+      $response = ['success' => true, 'added' => 0, 'skipped' => []];
+  
+      foreach ($tempCart as $item) {
+          $course = Course::with('courseable')->find($item['courseId']);
+          if (!$course) {
+              $response['skipped'][] = ['courseId' => $item['courseId'], 'reason' => 'Course not found'];
+              \Illuminate\Support\Facades\Log::warning("Course not found during cart sync: {$item['courseId']}");
+              continue;
+          }
+  
+          $existingOrder = Order::where('user_id', Auth::id())
+              ->where('course_id', $course->id)
+              ->where('payment_status', 'paid')
+              ->exists();
+          if ($existingOrder) {
+              $response['skipped'][] = ['courseId' => $item['courseId'], 'reason' => 'Already purchased'];
+              continue;
+          }
+  
+          $existingCartItem = CartItem::where('user_id', Auth::id())
+              ->where('cartable_type', Course::class)
+              ->where('cartable_id', $course->id)
+              ->exists();
+          if ($existingCartItem) {
+              $response['skipped'][] = ['courseId' => $item['courseId'], 'reason' => 'Already in cart'];
+              continue;
+          }
+  
+          $effectivePrice = $course->discount_price !== null && $course->discount_price > 0 
+              ? max(0, $course->selling_price - $course->discount_price) 
+              : $course->selling_price;
+  
+          $instructor = $course->courseable_type === 'App\Models\Instructor' && $course->courseable_id
+              ? Instructor::find($course->courseable_id)
+              : null;
+  
+          try {
+              CartItem::create([
+                  'cartable_type' => Course::class,
+                  'cartable_id' => $course->id,
+                  'user_id' => Auth::id(),
+                  'price' => $effectivePrice,
+                  'options' => [
+                      'instructor_name' => $instructor ? $instructor->name : 'Unknown Instructor',
+                      'selling_price' => $course->selling_price ?? 0,
+                      'discount_price' => $course->discount_price ?? 0,
+                      'image' => $course->course_image,
+                      'instructor_id' => $instructor ? $instructor->id : null,
+                  ],
+              ]);
+              $response['added']++;
+          } catch (\Exception $e) {
+              $response['skipped'][] = ['courseId' => $item['courseId'], 'reason' => 'Failed to add to cart'];
+              \Illuminate\Support\Facades\Log::error("Failed to add course to cart during sync: {$item['courseId']}, Error: {$e->getMessage()}");
+          }
+      }
+  
+      $cartItems = CartItem::where('user_id', Auth::id())->get();
+      $cartCount = $cartItems->count();
+      $cartSubTotal = $cartItems->sum('price');
+  
+      if ($response['added'] > 0) {
+          session()->flash('cart_added_message', $response['added'] . ' course(s) added to your cart successfully!');
+      }
+  
+      return response()->json([
+          'success' => true,
+          'message' => $response['added'] . ' course(s) added to cart' . (count($response['skipped']) > 0 ? ', some courses skipped' : ''),
+          'cartCount' => $cartCount,
+          'cartSubTotal' => number_format($cartSubTotal, 2),
+          'clearTempCart' => true,
+          'skipped' => $response['skipped']
+      ], 200);
+  }
+
+    public function MyCart()
     {
-        try {
-            $course = Course::with('courseable')->findOrFail($id);
-            $quantity = max(1, $request->input('quantity', 1));
-
-            if (!Auth::check()) {
-                return $this->handleGuestCart($request, $course, $quantity);
-            }
-
-            // Check if the user already purchased the course
-            if ($this->userHasPurchasedCourse($id)) {
-                return $this->respond($request, ['message' => 'You have already purchased this course. Start learning now!'], 400, 'info');
-            }
-
-            // Check if the course is already in the cart
-            if ($this->isCourseInCart($id)) {
-                return $this->respond($request, ['message' => 'Course already in cart'], 400, 'info');
-            }
-
-            $cartItem = $this->createCartItem($course, $quantity);
-            $subtotal = CartItem::where('user_id', Auth::id())->sum(DB::raw('price * quantity'));
-
-            return $this->respond($request, [
-                'message' => 'Course added to cart successfully!',
-                'cartCount' => CartItem::where('user_id', Auth::id())->count(),
-                'cartSubTotal' => number_format($subtotal, 2),
-            ], 200, 'success');
-        } catch (\Exception $e) {
-            return $this->respond($request, ['message' => 'An error occurred while adding to cart'], 500, 'error');
-        }
-    }
-
-    /**
-     * Display the user's cart.
-     *
-     * @return View|RedirectResponse
-     */
-    public function myCart(): View|RedirectResponse
-    {
-        $cartItems = collect();
-        $subtotal = 0;
-        $coupons = session('coupons', []);
-        $couponDiscount = array_sum(array_column($coupons, 'discount_amount'));
-        $total = 0;
-
         if (!Auth::check()) {
-            $cartItems = collect(Session::get('guest_cart', []))->map(function ($item, $key) {
-                return (object) [
-                    'id' => $key,
-                    'cartable_id' => $item['cartable_id'],
-                    'cartable_type' => $item['cartable_type'],
-                    'quantity' => $item['quantity'],
-                    'price' => $item['price'],
-                    'options' => $item['options'],
-                ];
-            });
-        } else {
-            $cartItems = CartItem::where('user_id', Auth::id())->get();
-        }
-
-        $subtotal = $cartItems->sum(fn($item) => $item->price * $item->quantity);
-        $total = max(0, $subtotal - $couponDiscount);
-
-        return view('User.mycart.view_mycart', compact('cartItems', 'subtotal', 'couponDiscount', 'total', 'coupons'));
-    }
-
-    /**
-     * Get cart items for authenticated or guest users.
-     *
-     * @return JsonResponse
-     */
-    public function getCartItems(): JsonResponse
-    {
-        $cartItems = [];
-        $cartCount = 0;
-        $cartSubTotal = 0;
-
-        if (Auth::check()) {
-            $cartItems = CartItem::where('user_id', Auth::id())
-                ->with(['cartable' => fn($query) => $query->select('id', 'course_name', 'course_image')])
-                ->get()
-                ->map(fn($item) => $this->formatCartItem($item))
-                ->toArray();
-        } else {
-            $guestCart = session('guest_cart', []);
-            $cartItems = collect($guestCart)->map(function ($item, $courseId) {
-                $course = Course::select('id', 'course_name', 'course_image')->find($courseId);
-                return $course ? $this->formatGuestCartItem($item, $course) : null;
-            })->filter()->toArray();
-        }
-
-        $cartCount = count($cartItems);
-        $cartSubTotal = array_sum(array_column($cartItems, 'total'));
-
-        return response()->json([
-            'cartItems' => $cartItems,
-            'cartCount' => $cartCount,
-            'cartSubTotal' => number_format($cartSubTotal, 2),
-        ]);
-    }
-
-    /**
-     * Remove a course from the cart.
-     *
-     * @param Request $request
-     * @param int $id
-     * @return JsonResponse
-     */
-    public function cartRemove(Request $request, int $id): JsonResponse
-    {
-        try {
-            if (!Auth::check()) {
-                $cartItems = Session::get('guest_cart', []);
-                if (!isset($cartItems[$id])) {
-                    return response()->json(['message' => 'Course not found in cart'], 404);
-                }
-
-                unset($cartItems[$id]);
-                Session::put('guest_cart', $cartItems);
-                $subtotal = collect($cartItems)->sum(fn($item) => $item['price'] * $item['quantity']);
-
-                return response()->json([
-                    'message' => 'Course removed from cart successfully!',
-                    'cartCount' => count($cartItems),
-                    'cartSubTotal' => number_format($subtotal, 2),
-                ]);
-            }
-
-            $cartItem = CartItem::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
-            $cartItem->delete();
-            $subtotal = CartItem::where('user_id', Auth::id())->sum(DB::raw('price * quantity'));
-
             return response()->json([
-                'message' => 'Course removed from cart successfully!',
-                'cartCount' => CartItem::where('user_id', Auth::id())->count(),
-                'cartSubTotal' => number_format($subtotal, 2),
-            ]);
-        } catch (\Exception $e) {
-            return response()->json(['message' => 'An error occurred while removing the course'], 500);
-        }
-    }
-
-    /**
-     * Apply a coupon to the cart.
-     *
-     * @param Request $request
-     * @return RedirectResponse
-     */
-    public function couponApply(Request $request): RedirectResponse
-    {
-        $request->validate(['coupon_name' => 'required|string|max:255']);
-
-        try {
-            $coupon = Coupon::where('coupon_name', $request->coupon_name)
-                ->where('coupon_validity', '>=', Carbon::now()->format('Y-m-d'))
-                ->where('status', 1)
-                ->first();
-
-            if (!$coupon) {
-                return redirect()->route('cart')->with('error', 'Invalid or expired coupon');
-            }
-
-            $cartItems = Auth::check()
-                ? CartItem::where('user_id', Auth::id())->get()
-                : collect(Session::get('guest_cart', []))->map(fn($item, $key) => (object) $item);
-
-            if ($cartItems->isEmpty()) {
-                return redirect()->route('cart')->with('error', 'Cart is empty');
-            }
-
-            $isApplicable = $cartItems->contains(fn($item) => $coupon->course_id == $item->cartable_id && $coupon->instructor_id == ($item->options['instructor_id'] ?? null));
-            if (!$isApplicable) {
-                return redirect()->route('cart')->with('error', 'Coupon not applicable to any course in cart');
-            }
-
-            $subtotal = $cartItems->sum(fn($item) => $item->price * $item->quantity);
-            $coupons = session('coupons', []);
-            if (isset($coupons[$coupon->coupon_name])) {
-                return redirect()->route('cart')->with('info', 'Coupon already applied');
-            }
-
-            $discount = round($subtotal * $coupon->coupon_discount / 100);
-            $coupons[$coupon->coupon_name] = [
-                'coupon_name' => $coupon->coupon_name,
-                'discount_amount' => $discount,
-            ];
-            session(['coupons' => $coupons]);
-
-            return redirect()->route('cart')->with('success', 'Coupon applied!');
-        } catch (\Exception $e) {
-            return redirect()->route('cart')->with('error', 'An error occurred while applying the coupon');
-        }
-    }
-
-    /**
-     * Remove a coupon from the cart.
-     *
-     * @param string $couponName
-     * @return RedirectResponse
-     */
-    public function couponRemove(string $couponName): RedirectResponse
-    {
-        $coupons = session('coupons', []);
-        if (isset($coupons[$couponName])) {
-            unset($coupons[$couponName]);
-            session(['coupons' => $coupons]);
-            return redirect()->route('cart')->with('success', 'Coupon removed!');
-        }
-
-        return redirect()->route('cart')->with('info', 'No such coupon was applied.');
-    }
-
-    /**
-     * Display the checkout page.
-     *
-     * @return View|RedirectResponse
-     */
-    public function checkoutCreate(): View|RedirectResponse
-    {
-        if (!Auth::check()) {
-            return redirect()->route('login', ['redirect' => route('checkout')])->with('error', 'Please log in to checkout.');
+                'success' => false,
+                'message' => 'Please log in to view your cart.',
+                'redirect' => route('login') . '?redirect=' . urlencode(route('cart'))
+            ], 401);
         }
     
-        $cartItems = CartItem::where('user_id', Auth::id())->get();
-        if ($cartItems->isEmpty()) {
-            return redirect('/')->with('error', 'Add at least one course');
-        }
-    
-        $subtotal = $cartItems->sum(fn($item) => $item->price * $item->quantity);
+        $cartItems = CartItem::where('user_id', Auth::id())->with('cartable')->get();
+        $subtotal = $cartItems->sum('price');
         $coupons = session('coupons', []);
         $couponDiscount = array_sum(array_column($coupons, 'discount_amount'));
         $total = max(0, $subtotal - $couponDiscount);
     
-        $adjustedPrices = $cartItems->mapWithKeys(function ($item) use ($couponDiscount, $subtotal) {
-            $proportion = $couponDiscount > 0 && $subtotal > 0 ? ($item->price * $item->quantity) / $subtotal : 0;
-            return [$item->cartable_id => max(0, ($item->price * $item->quantity) - ($couponDiscount * $proportion))];
-        })->toArray();
+        // Check for applicable coupons
+        $courseIds = $cartItems->pluck('cartable_id')->toArray();
+        $hasCoupons = Coupon::where('couponable_type', 'App\\Models\\Course')
+            ->whereIn('couponable_id', $courseIds)
+            ->where('coupon_validity', '>=', Carbon::today()->format('Y-m-d'))
+            ->where('status', 1)
+            ->exists();
     
-        return view('User.checkout.checkout', compact('cartItems', 'subtotal', 'couponDiscount', 'total', 'coupons', 'adjustedPrices'));
+        $cartItems = $cartItems->map(function ($item) {
+            return (object) [
+                'id' => $item->cartable_id,
+                'name' => $item->cartable->course_name,
+                'price' => $item->price,
+                'attributes' => $item->options,
+            ];
+        });
+    
+        return view('User.mycart.view_mycart', compact('cartItems', 'subtotal', 'couponDiscount', 'total', 'coupons', 'hasCoupons'));
     }
 
-    /**
-     * Process the order and create an invoice.
-     *
-     * @param string $transactionId
-     * @param string $paymentMethod
-     * @return int
-     * @throws \Exception
-     */
-    public function processOrder(string $transactionId, string $paymentMethod): int
+    public function CartRemove($id)
     {
-        return DB::transaction(function () use ($transactionId, $paymentMethod) {
-            $cartItems = CartItem::where('user_id', Auth::id())->get();
-            if ($cartItems->isEmpty()) {
-                throw new \Exception('Cart is empty');
-            }
+        if (!Auth::check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Please log in to manage your cart.',
+                'redirect' => route('login') . '?redirect=' . urlencode(route('cart'))
+            ], 401);
+        }
 
-            $subtotal = $cartItems->sum(fn($item) => $item->price * $item->quantity);
-            $coupons = session('coupons', []);
-            $couponDiscount = array_sum(array_column($coupons, 'discount_amount'));
-            $total = max(0, $subtotal - $couponDiscount);
+        $cartItem = CartItem::where('user_id', Auth::id())
+            ->where('cartable_type', Course::class)
+            ->where('cartable_id', $id)
+            ->first();
 
-            $orders = $cartItems->map(function ($item) use ($subtotal, $couponDiscount) {
-                $itemSubtotal = $item->price * $item->quantity;
-                $itemDiscount = $couponDiscount > 0 && $subtotal > 0 ? ($itemSubtotal / $subtotal) * $couponDiscount : 0;
+        if (!$cartItem) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Item not found in cart'
+            ], 404);
+        }
 
-                $order = Order::create([
-                    'user_id' => Auth::id(),
-                    'course_id' => $item->cartable_id,
-                    'instructor_id' => $item->options['instructor_id'],
-                    'course_title' => $item->options['name'],
-                    'price' => $itemSubtotal,
-                    'discount_amount' => round($itemDiscount, 2),
-                    'currency' => 'USD',
-                    'payment_status' => 'paid',
-                    'payment_id' => $transactionId,
-                    'payment_method' => $paymentMethod,
-                ]);
+        $cartItem->delete();
 
-                if ($item->options['instructor_id']) {
-                    Instructor::find($item->options['instructor_id'])?->notify(new OrderPlacedNotification($order));
-                }
+        $cartItems = CartItem::where('user_id', Auth::id())->get();
+        $subtotal = $cartItems->sum('price');
+        $coupons = session('coupons', []);
+        $couponDiscount = 0;
+        $updatedCoupons = [];
 
+        if (!empty($coupons) && $cartItems->isNotEmpty()) {
+            $cartArray = $cartItems->map(function ($item) {
                 return [
-                    'course_title' => $item->options['name'],
-                    'price' => $itemSubtotal,
-                    'discount' => round($itemDiscount, 2),
+                    'cartable_id' => $item->cartable_id,
+                    'options' => $item->options ?? [],
                 ];
             })->toArray();
 
-            $invoice = Invoice::create([
+            foreach ($coupons as $couponData) {
+                $coupon = Coupon::where('code', $couponData['code'])->first();
+                if ($coupon && $this->isCouponApplicable($coupon, $cartArray)) {
+                    $discount = $coupon->discount_type === 'percentage'
+                        ? round($subtotal * $coupon->coupon_discount / 100, 2)
+                        : min($subtotal, $coupon->coupon_discount);
+                    $updatedCoupons[$coupon->code] = [
+                        'code' => $coupon->code,
+                        'discount_amount' => $discount,
+                    ];
+                    $couponDiscount += $discount;
+                }
+            }
+            session(['coupons' => $updatedCoupons]);
+        } else {
+            session()->forget('coupons');
+        }
+
+        $totalPrice = max(0, $subtotal - $couponDiscount);
+
+        return response()->json([
+            'success' => true,
+            'subtotal' => number_format($subtotal, 2),
+            'totalPrice' => number_format($totalPrice, 2),
+            'couponDiscount' => number_format($couponDiscount, 2),
+            'cartCount' => $cartItems->count(),
+            'message' => 'Item removed from cart!'
+        ], 200);
+    }
+
+    private function isCouponApplicable($coupon, $cart)
+    {
+        foreach ($cart as $item) {
+            if ($coupon->couponable_type === 'App\\Models\\Course' &&
+                $coupon->couponable_id == $item['cartable_id']) {
+                $couponInstructorId = $coupon->instructor_id ?? null;
+                $cartInstructorId = $item['options']['instructor_id'] ?? null;
+                if ($couponInstructorId === null || $couponInstructorId == $cartInstructorId) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public function CouponApply(Request $request)
+    {
+        $request->validate([
+            'code' => 'required|string|max:255',
+        ]);
+
+        $couponCode = strtoupper($request->code);
+
+        $coupon = Coupon::where('code', $couponCode)
+            ->where('coupon_validity', '>=', Carbon::now()->format('Y-m-d'))
+            ->where('status', 1)
+            ->first();
+
+        if (!$coupon) {
+            return $request->ajax()
+                ? response()->json(['success' => false, 'message' => 'Invalid or expired coupon'], 400)
+                : redirect()->route('cart')->with('error', 'Invalid or expired coupon');
+        }
+
+        if ($coupon->max_uses !== null && $coupon->uses >= $coupon->max_uses) {
+            return $request->ajax()
+                ? response()->json(['success' => false, 'message' => 'Coupon has reached its usage limit'], 400)
+                : redirect()->route('cart')->with('error', 'Coupon has reached its usage limit');
+        }
+
+        $cartItems = CartItem::where('user_id', Auth::id())->get();
+        if ($cartItems->isEmpty()) {
+            return $request->ajax()
+                ? response()->json(['success' => false, 'message' => 'Cart is empty'], 400)
+                : redirect()->route('cart')->with('error', 'Cart is empty');
+        }
+
+        $cartArray = $cartItems->map(function ($item) {
+            return [
+                'cartable_id' => $item->cartable_id,
+                'options' => $item->options ?? [],
+            ];
+        })->toArray();
+
+        if (!$this->isCouponApplicable($coupon, $cartArray)) {
+            $course = Course::find($coupon->couponable_id);
+            $errorMessage = $course
+                ? "This coupon is only applicable to the course: {$course->course_name}. Please add it to your cart."
+                : 'Coupon not applicable to any course in cart';
+            return $request->ajax()
+                ? response()->json(['success' => false, 'message' => $errorMessage], 400)
+                : redirect()->route('cart')->with('error', $errorMessage);
+        }
+
+        $coupons = session('coupons', []);
+        if (isset($coupons[$coupon->code])) {
+            return $request->ajax()
+                ? response()->json(['success' => false, 'message' => 'Coupon already applied'], 400)
+                : redirect()->route('cart')->with('info', 'Coupon already applied');
+        }
+
+        $subtotal = $cartItems->sum('price');
+        $discount = $coupon->discount_type === 'percentage'
+            ? round($subtotal * $coupon->coupon_discount / 100, 2)
+            : min($subtotal, $coupon->coupon_discount);
+
+        $coupons[$coupon->code] = [
+            'code' => $coupon->code,
+            'discount_amount' => $discount,
+        ];
+        session(['coupons' => $coupons]);
+
+        $coupon->increment('uses');
+
+        $couponDiscount = array_sum(array_column($coupons, 'discount_amount'));
+        $total = max(0, $subtotal - $couponDiscount);
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Coupon applied successfully!',
+                'subtotal' => number_format($subtotal, 2),
+                'couponDiscount' => number_format($couponDiscount, 2),
+                'totalPrice' => number_format($total, 2),
+                'coupons' => array_values($coupons),
+            ], 200);
+        }
+
+        return redirect()->route('cart')->with('success', 'Coupon applied!');
+    }
+
+    public function CouponRemove($couponCode)
+    {
+        $coupons = session('coupons', []);
+        if (!isset($coupons[$couponCode])) {
+            if (request()->ajax()) {
+                return response()->json(['success' => false, 'message' => 'No such coupon was applied.'], 400);
+            }
+            return redirect()->route('cart')->with('info', 'No such coupon was applied.');
+        }
+    
+        unset($coupons[$couponCode]);
+        session(['coupons' => $coupons]);
+    
+        $cartItems = CartItem::where('user_id', Auth::id())->get();
+        $subtotal = $cartItems->sum('price');
+        $couponDiscount = array_sum(array_column($coupons, 'discount_amount'));
+        $total = max(0, $subtotal - $couponDiscount);
+    
+        if (request()->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Coupon removed successfully!',
+                'subtotal' => number_format($subtotal, 2),
+                'couponDiscount' => number_format($couponDiscount, 2),
+                'totalPrice' => number_format($total, 2),
+                'coupons' => array_values($coupons),
+            ], 200);
+        }
+    
+        return redirect()->route('cart')->with('success', 'Coupon removed!');
+    }
+
+    public function CheckoutCreate()
+    {
+        if (!Auth::check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Please log in to proceed to checkout.',
+                'redirect' => route('login') . '?redirect=' . urlencode(route('checkout'))
+            ], 401);
+        }
+
+        $cartItems = CartItem::where('user_id', Auth::id())->with(['cartable' => function ($query) {
+            $query->with(['courseable' => function ($q) {
+                $q->select('id', 'name');
+            }]);
+        }])->get();
+
+        if ($cartItems->isEmpty()) {
+            return redirect()->route('cart')->with('error', 'Your cart is empty. Add at least one course.');
+        }
+
+        $validCartItems = $cartItems->filter(function ($item) {
+            return $item->cartable &&
+                   $item->cartable->exists &&
+                   !empty($item->cartable->course_name) &&
+                   $item->cartable->courseable_type === 'App\Models\Instructor' &&
+                   $item->cartable->courseable_id &&
+                   Instructor::where('id', $item->cartable->courseable_id)->exists();
+        });
+
+        if ($validCartItems->isEmpty()) {
+            return redirect()->route('cart')->with('error', 'No valid courses in your cart. Please add valid courses with active instructors and valid titles.');
+        }
+
+        $subtotal = $validCartItems->sum('price');
+        $coupons = session('coupons', []);
+        $couponDiscount = array_sum(array_column($coupons, 'discount_amount'));
+        $total = max(0, $subtotal - $couponDiscount);
+
+        $adjustedPrices = [];
+        if ($couponDiscount > 0 && $subtotal > 0) {
+            foreach ($validCartItems as $item) {
+                $proportion = $item->price / $subtotal;
+                $discountForItem = $couponDiscount * $proportion;
+                $adjustedPrices[$item->cartable_id] = max(0, $item->price - $discountForItem);
+            }
+        } else {
+            foreach ($validCartItems as $item) {
+                $adjustedPrices[$item->cartable_id] = $item->price;
+            }
+        }
+
+        $cartSnapshot = $validCartItems->map(function ($item) {
+            return [
+                'cartable_id' => $item->cartable_id,
+                'course_name' => $item->cartable->course_name ?? 'Untitled Course',
+                'price' => $item->price,
+                'instructor_id' => $item->cartable->courseable_id,
+                'instructor_name' => $item->cartable->courseable ? $item->cartable->courseable->name : 'Unknown',
+                'image' => $item->options['image'] ?? $item->cartable->course_image ?? null,
+                'selling_price' => $item->options['selling_price'] ?? $item->cartable->selling_price ?? 0,
+                'discount_price' => $item->options['discount_price'] >> $item->cartable->discount_price ?? 0,
+            ];
+        })->keyBy('cartable_id')->toArray();
+
+        session(['checkout_cart_snapshot' => [
+            'items' => $cartSnapshot,
+            'subtotal' => $subtotal,
+            'couponDiscount' => $couponDiscount,
+            'total' => $total,
+            'coupons' => $coupons,
+            'created_at' => now()->timestamp,
+        ]]);
+
+        return view('User.checkout.checkout', compact('cartItems', 'subtotal', 'couponDiscount', 'total', 'coupons', 'adjustedPrices'));
+    }
+
+    public function processOrder($transactionId, $paymentMethod)
+    {
+        if (!Auth::check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Please log in to complete your purchase.',
+                'redirect' => route('login') . '?redirect=' . urlencode(route('checkout'))
+            ], 401);
+        }
+
+        $cartItems = CartItem::where('user_id', Auth::id())->with(['cartable' => function ($query) {
+            $query->with(['courseable' => function ($q) {
+                $q->select('id', 'name');
+            }]);
+        }])->get();
+
+        $cartSnapshot = session('checkout_cart_snapshot');
+
+        // Check snapshot validity
+        if (!$cartSnapshot || !isset($cartSnapshot['items']) || !isset($cartSnapshot['created_at']) || now()->timestamp - $cartSnapshot['created_at'] > 3600) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Checkout session expired or invalid. Please start a new checkout.',
+                'redirect' => route('cart')
+            ], 400);
+        }
+
+        // If cart is empty, restore from snapshot
+        if ($cartItems->isEmpty()) {
+            $cartItems = collect($cartSnapshot['items'])->map(function ($item) use ($transactionId) {
+                $course = Course::find($item['cartable_id']);
+                if (!$course) {
+                    return null;
+                }
+                $instructor = Instructor::find($item['instructor_id']);
+                if (!$instructor) {
+                    return null;
+                }
+                $courseName = $item['course_name'] ?? $course->course_name ?? 'Untitled Course';
+                if (empty($courseName)) {
+                    return null;
+                }
+                return (object) [
+                    'cartable_id' => $item['cartable_id'],
+                    'name' => $courseName,
+                    'price' => $item['price'],
+                    'attributes' => [
+                        'instructor_id' => $item['instructor_id'],
+                        'instructor_name' => $item['instructor_name'],
+                        'image' => $item['image'],
+                        'selling_price' => $item['selling_price'],
+                        'discount_price' => $item['discount_price'],
+                    ],
+                ];
+            })->filter()->values();
+        } else {
+            // Validate existing cart items
+            $cartItems = $cartItems->filter(function ($item) use ($transactionId) {
+                if (!$item->cartable || !$item->cartable->exists) {
+                    return false;
+                }
+                $instructorId = $item->options['instructor_id'] ?? $item->cartable->courseable_id;
+                if (!Instructor::where('id', $instructorId)->exists()) {
+                    return false;
+                }
+                if (empty($item->cartable->course_name)) {
+                    return false;
+                }
+                return true;
+            });
+        }
+
+        if ($cartItems->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No valid courses could be processed. Please verify that all courses and instructors are still available.',
+                'redirect' => route('cart')
+            ], 400);
+        }
+
+        $subtotal = $cartSnapshot['subtotal'] ?? $cartItems->sum('price');
+        $coupons = $cartSnapshot['coupons'] ?? session('coupons', []);
+        $couponDiscount = $cartSnapshot['couponDiscount'] ?? array_sum(array_column($coupons, 'discount_amount'));
+        $totalDiscount = $couponDiscount > 0 && $subtotal > 0 ? $couponDiscount : 0;
+        $total = max(0, $subtotal - $totalDiscount);
+
+        $orders = [];
+        foreach ($cartItems as $item) {
+            $course = Course::find($item->cartable_id);
+            if (!$course) {
+                continue;
+            }
+
+            $instructorId = $item->attributes['instructor_id'] ?? $course->courseable_id;
+            $instructor = Instructor::find($instructorId);
+            if (!$instructor) {
+                continue;
+            }
+
+            $courseTitle = $item->name ?? $course->course_name ?? 'Untitled Course';
+            if (empty($courseTitle)) {
+                continue;
+            }
+
+            // Check for existing order to prevent duplicates
+            $existingOrder = Order::where('user_id', Auth::id())
+                ->where('course_id', $item->cartable_id)
+                ->where('payment_id', $transactionId)
+                ->exists();
+            if ($existingOrder) {
+                continue; // Skip if this course is already ordered in this transaction
+            }
+
+            $itemDiscount = $totalDiscount > 0 && $subtotal > 0 ? ($item->price / $subtotal) * $totalDiscount : 0;
+            $order = Order::create([
                 'user_id' => Auth::id(),
-                'invoice_number' => 'INV-' . strtoupper(uniqid()),
-                'subtotal' => $subtotal,
-                'discount' => $couponDiscount,
-                'total' => $total,
-                'payment_method' => $paymentMethod,
+                'course_id' => $item->cartable_id,
+                'instructor_id' => $instructorId,
+                'course_title' => $courseTitle,
+                'price' => $item->price,
+                'discount_amount' => round($itemDiscount, 2),
+                'currency' => 'USD',
+                'payment_status' => 'paid',
                 'payment_id' => $transactionId,
-                'items' => json_encode($orders),
+                'payment_method' => $paymentMethod,
             ]);
 
-            CartItem::where('user_id', Auth::id())->delete();
-            session()->forget('coupons');
+            $instructor->notify(new OrderPlacedNotification($order));
 
-            return $invoice->id;
-        });
-    }
-
-    /**
-     * Merge guest cart with authenticated user's cart after login.
-     *
-     * @return void
-     */
-    public function mergeGuestCart(): void
-    {
-        if (!Auth::check() || !Session::has('guest_cart')) {
-            return;
+            $orders[] = [
+                'course_id' => $item->cartable_id,
+                'course_title' => $courseTitle,
+                'price' => $item->price,
+                'discount' => round($itemDiscount, 2),
+            ];
         }
 
-        $guestCart = Session::get('guest_cart', []);
-        foreach ($guestCart as $courseId => $item) {
-            if (!$this->isValidGuestCartItem($item)) {
-                continue;
-            }
-
-            // Check if user has already purchased the course
-            if ($this->userHasPurchasedCourse($item['cartable_id'])) {
-                continue;
-            }
-
-            // Check if course is already in the user's cart
-            $existingItem = CartItem::where('user_id', Auth::id())
-                ->where('cartable_id', $item['cartable_id'])
-                ->where('cartable_type', $item['cartable_type'])
-                ->first();
-
-            if (!$existingItem) {
-                CartItem::create([
-                    'cartable_id' => $item['cartable_id'],
-                    'cartable_type' => $item['cartable_type'],
-                    'user_id' => Auth::id(),
-                    'quantity' => $item['quantity'],
-                    'price' => $item['price'],
-                    'options' => $item['options'],
-                ]);
-            }
+        if (empty($orders)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No valid courses could be processed. Please verify that all courses and instructors are still available.',
+                'redirect' => route('cart')
+            ], 400);
         }
 
-        // Preserve guest coupons
-        $guestCoupons = Session::get('coupons', []);
-        if (!empty($guestCoupons)) {
-            Session::put('coupons', $guestCoupons);
-        }
-
-        Session::forget('guest_cart');
-    }
-
-    /**
-     * Handle guest cart addition.
-     *
-     * @param Request $request
-     * @param Course $course
-     * @param int $quantity
-     * @return JsonResponse|RedirectResponse
-     */
-    private function handleGuestCart(Request $request, Course $course, int $quantity): JsonResponse|RedirectResponse
-    {
-        $cartItems = Session::get('guest_cart', []);
-        if (isset($cartItems[$course->id])) {
-            return $this->respond($request, ['message' => 'Course already in cart'], 400, 'info');
-        }
-
-        $cartItems[$course->id] = $this->createCartItemArray($course, $quantity);
-        Session::put('guest_cart', $cartItems);
-        $subtotal = collect($cartItems)->sum(fn($item) => $item['price'] * $item['quantity']);
-
-        return $this->respond($request, [
-            'message' => 'Course added to cart. Please log in to proceed.',
-            'cartCount' => count($cartItems),
-            'cartSubTotal' => number_format($subtotal, 2),
-            'redirect' => route('login', ['redirect' => route('cart')]),
-        ], 200, 'success');
-    }
-
-    /**
-     * Check if the user has already purchased the course.
-     *
-     * @param int $courseId
-     * @return bool
-     */
-    private function userHasPurchasedCourse(int $courseId): bool
-    {
-        return Order::where('user_id', Auth::id())
-            ->where('course_id', $courseId)
-            ->where('payment_status', 'paid')
-            ->exists();
-    }
-
-    /**
-     * Check if the course is already in the cart.
-     *
-     * @param int $courseId
-     * @return bool
-     */
-    private function isCourseInCart(int $courseId): bool
-    {
-        return CartItem::where('user_id', Auth::id())
-            ->where('cartable_id', $courseId)
-            ->where('cartable_type', Course::class)
-            ->exists();
-    }
-
-    /**
-     * Create a cart item for the authenticated user.
-     *
-     * @param Course $course
-     * @param int $quantity
-     * @return CartItem
-     */
-    private function createCartItem(Course $course, int $quantity): CartItem
-    {
-        return CartItem::create($this->createCartItemArray($course, $quantity));
-    }
-
-    /**
-     * Create an array representation of a cart item.
-     *
-     * @param Course $course
-     * @param int $quantity
-     * @return array
-     */
-    private function createCartItemArray(Course $course, int $quantity): array
-    {
-        $effectivePrice = $course->discount_price && $course->discount_price > 0
-            ? max(0, $course->selling_price - $course->discount_price)
-            : $course->selling_price;
-
-        $instructor = $course->courseable_type === Instructor::class && $course->courseable_id
-            ? Instructor::find($course->courseable_id)
-            : null;
-
-        return [
-            'cartable_id' => $course->id,
-            'cartable_type' => Course::class,
+        $invoiceNumber = 'INV-' . strtoupper(uniqid());
+        $invoice = Invoice::create([
             'user_id' => Auth::id(),
-            'quantity' => $quantity,
-            'price' => $effectivePrice,
-            'options' => [
-                'name' => $course->course_name,
-                'instructor_name' => $instructor?->name ?? 'Unknown Instructor',
-                'instructor_id' => $instructor?->id,
-                'image' => $course->course_image,
-                'selling_price' => $course->selling_price ?? 0,
-                'discount_price' => $course->discount_price ?? 0,
-            ],
-        ];
-    }
+            'invoice_number' => $invoiceNumber,
+            'subtotal' => $subtotal,
+            'discount' => $totalDiscount,
+            'total' => $total,
+            'payment_method' => $paymentMethod,
+            'payment_id' => $transactionId,
+            'items' => json_encode($orders),
+            'issued_at' => now(),
+        ]);
 
-    /**
-     * Format a cart item for JSON response.
-     *
-     * @param CartItem $item
-     * @return array
-     */
-    private function formatCartItem(CartItem $item): array
-    {
-        return [
-            'id' => $item->id,
-            'course_id' => $item->cartable_id,
-            'name' => $item->options['name'] ?? $item->cartable->course_name,
-            'image' => $item->cartable->course_image
-                ? asset('upload/course_images/thumbnail/' . $item->cartable->course_image)
-                : asset('images/default-course.jpg'),
-            'price' => $item->price,
-            'quantity' => $item->quantity,
-            'total' => $item->price * $item->quantity,
-        ];
-    }
+        CartItem::where('user_id', Auth::id())->delete();
+        session()->forget(['coupons', 'checkout_cart_snapshot']);
 
-    /**
-     * Format a guest cart item for JSON response.
-     *
-     * @param array $item
-     * @param Course $course
-     * @return array
-     */
-    private function formatGuestCartItem(array $item, Course $course): array
-    {
-        return [
-            'id' => $course->id,
-            'course_id' => $course->id,
-            'name' => $item['options']['name'] ?? $course->course_name,
-            'image' => $course->course_image
-                ? asset('upload/course_images/thumbnail/' . $course->course_image)
-                : asset('images/default-course.jpg'),
-            'price' => $item['price'],
-            'quantity' => $item['quantity'],
-            'total' => $item['price'] * $item['quantity'],
-        ];
+        return $invoice->id;
     }
-
-    /**
-     * Validate guest cart item.
-     *
-     * @param array $item
-     * @return bool
-     */
-    private function isValidGuestCartItem(array $item): bool
-    {
-        return isset($item['cartable_id'], $item['cartable_type'], $item['quantity'], $item['price'], $item['options'])
-            && $item['cartable_type'] === Course::class
-            && is_numeric($item['quantity'])
-            && is_numeric($item['price']);
-    }
-
-    /**
-     * Helper method to handle AJAX and non-AJAX responses.
-     *
-     * @param Request $request
-     * @param array $data
-     * @param int $status
-     * @param string $messageType
-     * @param string|null $redirect
-     * @return JsonResponse|RedirectResponse
-     */
-    private function respond(Request $request, array $data, int $status, string $messageType, ?string $redirect = null): JsonResponse|RedirectResponse
-    {
-        if ($request->expectsJson()) {
-            return response()->json($data, $status);
-        }
-
-        return $redirect
-            ? redirect()->to($redirect)->with($messageType, $data['message'])
-            : redirect()->back()->with($messageType, $data['message']);
-    }
+    
 }

@@ -2,9 +2,17 @@
 use App\Models\Course;
 use App\Models\Category;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Cache;
 
 $courses = Course::with(['courseable', 'reviews', 'goals'])->where('status', 1)->orderBy('id', 'ASC')->limit(6)->get();
 $categories = Category::orderBy('category_name', 'ASC')->get();
+$cartSubtotal = auth()->check() ? App\Models\CartItem::where('user_id', auth()->id())->sum('price') : 0.00;
+$cartItems = auth()->check() ? Cache::remember('cart_items_' . auth()->id(), 60, function () {
+    return App\Models\CartItem::where('user_id', auth()->id())
+        ->where('cartable_type', 'App\\Models\\Course')
+        ->pluck('cartable_id')
+        ->toArray();
+}) : [];
 @endphp
 
 <style>
@@ -97,7 +105,33 @@ $categories = Category::orderBy('category_name', 'ASC')->get();
     display: flex;
     align-items: stretch;
 }
+.cart-info {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 15px;
+}
+.cart-info .cart-count {
+    background-color: #007bff;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    margin-left: 5px;
+}
+.cart-btn.in-cart {
+    background-color: #6c757d;
+    color: #fff;
+}
+.cart-btn.in-cart:hover {
+    background-color: #5a6268;
+}
 </style>
+
+
 
 <section class="course-area pb-120px">
     <div class="container">
@@ -141,6 +175,7 @@ $categories = Category::orderBy('category_name', 'ASC')->get();
                             ->where('course_id', $course->id)
                             ->where('payment_status', 'paid')
                             ->exists();
+                        $isInCart = in_array($course->id, $cartItems);
                         @endphp
                         <div class="col-lg-4 responsive-column-half">
                             <div class="card card-item card-preview" data-tooltip-content="#tooltip_content_{{ $course->id }}">
@@ -229,8 +264,10 @@ $categories = Category::orderBy('category_name', 'ASC')->get();
                                                     <i class="la la-play-circle fs-18 mr-1"></i> Start Learning
                                                 </a>
                                             @else
-                                                <button class="btn theme-btn flex-grow-1 mr-3 add-to-cart" data-course-id="{{ $course->id }}">
-                                                    <i class="la la-shopping-cart fs-18 mr-1"></i> Add to Cart
+                                                <button class="btn theme-btn flex-grow-1 mr-3 cart-btn {{ $isInCart ? 'in-cart' : 'add-to-cart' }}" 
+                                                        data-course-id="{{ $course->id }}"
+                                                        data-action="{{ $isInCart ? 'remove' : 'add' }}">
+                                                    <i class="la la-shopping-cart fs-18 mr-1"></i> {{ $isInCart ? 'In Cart' : 'Add to Cart' }}
                                                 </button>
                                             @endif
                                             @auth
@@ -286,6 +323,7 @@ $categories = Category::orderBy('category_name', 'ASC')->get();
                             ->where('course_id', $course->id)
                             ->where('payment_status', 'paid')
                             ->exists();
+                        $isInCart = in_array($course->id, $cartItems);
                         @endphp
                         <div class="col-lg-4 responsive-column-half">
                             <div class="card card-item card-preview" data-tooltip-content="#tooltip_content_{{ $course->id }}">
@@ -374,8 +412,10 @@ $categories = Category::orderBy('category_name', 'ASC')->get();
                                                     <i class="la la-play-circle fs-18 mr-1"></i> Start Learning
                                                 </a>
                                             @else
-                                                <button class="btn theme-btn flex-grow-1 mr-3 add-to-cart" data-course-id="{{ $course->id }}">
-                                                    <i class="la la-shopping-cart fs-18 mr-1"></i> Add to Cart
+                                                <button class="btn theme-btn flex-grow-1 mr-3 cart-btn {{ $isInCart ? 'in-cart' : 'add-to-cart' }}" 
+                                                        data-course-id="{{ $course->id }}"
+                                                        data-action="{{ $isInCart ? 'remove' : 'add' }}">
+                                                    <i class="la la-shopping-cart fs-18 mr-1"></i> {{ $isInCart ? 'In Cart' : 'Add to Cart' }}
                                                 </button>
                                             @endif
                                             @auth
@@ -414,7 +454,6 @@ $categories = Category::orderBy('category_name', 'ASC')->get();
 <script src="{{ asset('js/tooltipster.bundle.min.js') }}"></script>
 <script>
 $(document).ready(function() {
-    // Initialize Tooltipster
     $('.card-preview').tooltipster({
         theme: 'tooltipster-shadow',
         interactive: true,
@@ -424,7 +463,6 @@ $(document).ready(function() {
         distance: 10
     });
 
-    // Show notification
     function showNotification(message, type) {
         const $message = $('<div class="cart-message"></div>').html(`<div class="alert alert-${type}">${message}</div>`)
             .css({ position: 'fixed', top: '10px', right: '10px', 'z-index': 1000 });
@@ -432,7 +470,8 @@ $(document).ready(function() {
         setTimeout(() => $message.fadeOut(300, () => $message.remove()), 3000);
     }
 
-    // Wishlist functionality
+    let tempCart = JSON.parse(localStorage.getItem('tempCart')) || [];
+
     $('.wishlist-btn').on('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -460,21 +499,21 @@ $(document).ready(function() {
                         showNotification('Added to wishlist.', 'success');
                     }
                 } else {
-                    showNotification(response.message || 'An error occurred.', 'danger');
+                    showNotification(response.message || 'An error occurred while updating wishlist.', 'danger');
                 }
             },
             error: function(xhr) {
                 const response = xhr.responseJSON || {};
-                showNotification(response.message || 'An error occurred.', 'danger');
+                showNotification(response.message || 'Failed to update wishlist. Please try again.', 'danger');
             }
         });
     });
 
-    // Add to Cart functionality
-    $('.add-to-cart').on('click', function(e) {
+    $('.cart-btn').on('click', function(e) {
         e.preventDefault();
         const $button = $(this);
         const courseId = $button.data('course-id');
+        const action = $button.data('action');
 
         if (!courseId) {
             console.error('Course ID is undefined');
@@ -482,51 +521,158 @@ $(document).ready(function() {
             return;
         }
 
-        $.ajax({
-            url: '{{ url("cart/add") }}/' + courseId,
-            method: 'POST',
-            data: {
-                _token: $('meta[name="csrf-token"]').attr('content'),
-                quantity: 1
-            },
-            dataType: 'json',
-            beforeSend: function() {
-                $button.prop('disabled', true).html('<i class="la la-spinner la-spin mr-1"></i> Adding...');
-            },
-            success: function(response) {
-                $button.prop('disabled', false).html('<i class="la la-shopping-cart fs-18 mr-1"></i> Add to Cart');
-                showNotification(response.message, response.status === 200 ? 'success' : 'info');
+        const isAuthenticated = {!! json_encode(auth()->check()) !!};
 
-                if (response.status === 200) {
+        if (!isAuthenticated) {
+            if (!tempCart.some(item => item.courseId === courseId)) {
+                tempCart.push({ courseId: courseId });
+                localStorage.setItem('tempCart', JSON.stringify(tempCart));
+                showNotification('Course added to temporary cart. Please log in to proceed.', 'info');
+                setTimeout(() => {
+                    window.location.href = '{{ route('login') }}?redirect=' + encodeURIComponent('{{ route('cart') }}') + '&course_id=' + courseId;
+                }, 1500);
+            } else {
+                showNotification('Course already in temporary cart.', 'info');
+            }
+            return;
+        }
+
+        const url = action === 'add' ? '/cart/add/' + courseId : '/cart/remove/' + courseId;
+
+        let originalState = null;
+        if (action === 'remove') {
+            originalState = {
+                class: 'in-cart',
+                action: 'remove',
+                html: '<i class="la la-shopping-cart fs-18 mr-1"></i> In Cart'
+            };
+            $button
+                .removeClass('in-cart')
+                .addClass('add-to-cart')
+                .data('action', 'add')
+                .html('<i class="la la-shopping-cart fs-18 mr-1"></i> Add to Cart');
+        } else {
+            $button.prop('disabled', true).html('<i class="la la-spinner la-spin mr-1"></i> Adding...');
+        }
+
+        $.ajax({
+            url: url,
+            method: 'POST',
+            data: { _token: $('meta[name="csrf-token"]').attr('content') },
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    if (action === 'add') {
+                        $button
+                            .prop('disabled', false)
+                            .removeClass('add-to-cart')
+                            .addClass('in-cart')
+                            .data('action', 'remove')
+                            .html('<i class="la la-shopping-cart fs-18 mr-1"></i> In Cart');
+                    }
+                    showNotification(response.message, 'success');
                     $(document).trigger('cartUpdated', {
                         cartCount: response.cartCount,
                         cartSubTotal: response.cartSubTotal
                     });
+                } else if (response.info) {
+                    showNotification(response.info, 'info');
+                    if (action === 'add') {
+                        $button.prop('disabled', false)
+                            .html('<i class="la la-shopping-cart fs-18 mr-1"></i> Add to Cart');
+                    } else if (originalState) {
+                        $button
+                            .removeClass('add-to-cart')
+                            .addClass(originalState.class)
+                            .data('action', originalState.action)
+                            .html(originalState.html);
+                    }
                 } else if (response.redirect) {
-                    window.location.href = response.redirect;
+                    showNotification(response.message || 'Please log in to continue.', 'info');
+                    setTimeout(() => {
+                        window.location.href = response.redirect;
+                    }, 1500);
                 }
             },
             error: function(xhr) {
-                $button.prop('disabled', false).html('<i class="la la-shopping-cart fs-18 mr-1"></i> Add to Cart');
                 const response = xhr.responseJSON || {};
-                showNotification(response.message || 'An error occurred while adding to cart.', 'danger');
+                const message = response.message || 'An error occurred. Please try again.';
+                showNotification(message, 'danger');
+                if (action === 'add') {
+                    $button.prop('disabled', false)
+                        .html('<i class="la la-shopping-cart fs-18 mr-1"></i> Add to Cart');
+                } else if (originalState) {
+                    $button
+                        .removeClass('add-to-cart')
+                        .addClass(originalState.class)
+                        .data('action', originalState.action)
+                        .html(originalState.html);
+                }
+                if (response.redirect) {
+                    setTimeout(() => {
+                        window.location.href = response.redirect;
+                    }, 1500);
+                }
             }
         });
     });
 
-    // Handle cart update event
+    @if (auth()->check())
+        const urlParams = new URLSearchParams(window.location.search);
+        const courseIdFromRedirect = urlParams.get('course_id');
+        if (courseIdFromRedirect && !tempCart.some(item => item.courseId === parseInt(courseIdFromRedirect))) {
+            tempCart.push({ courseId: parseInt(courseIdFromRedirect) });
+            localStorage.setItem('tempCart', JSON.stringify(tempCart));
+        }
+
+        if (tempCart.length > 0) {
+            $.ajax({
+                url: '/cart/sync',
+                method: 'POST',
+                data: {
+                    _token: $('meta[name="csrf-token"]').attr('content'),
+                    tempCart: tempCart
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        showNotification(response.message, 'success');
+                        $(document).trigger('cartUpdated', {
+                            cartCount: response.cartCount,
+                            cartSubTotal: response.cartSubTotal
+                        });
+                        if (response.clearTempCart) {
+                            tempCart = [];
+                            localStorage.removeItem('tempCart');
+                        }
+                        tempCart.forEach(function(item) {
+                            const $button = $(`.cart-btn[data-course-id="${item.courseId}"]`);
+                            if ($button.length) {
+                                $button
+                                    .removeClass('add-to-cart')
+                                    .addClass('in-cart')
+                                    .data('action', 'remove')
+                                    .html('<i class="la la-shopping-cart fs-18 mr-1"></i> In Cart');
+                            }
+                        });
+                    } else {
+                        showNotification(response.message || 'Failed to sync cart.', 'danger');
+                    }
+                },
+                error: function(xhr) {
+                    const response = xhr.responseJSON || {};
+                    showNotification(response.message || 'An error occurred while syncing cart.', 'danger');
+                }
+            });
+        }
+        @if (session('cart_added_message'))
+            showNotification('{{ session('cart_added_message') }}', 'success');
+        @endif
+    @endif
+
     $(document).on('cartUpdated', function(event, data) {
         $('.cart-count').text(data.cartCount);
         $('.cart-subtotal').text('TND ' + data.cartSubTotal);
     });
-
-    // Check for post-login cart update
-    @if (session('cart_added_message'))
-        showNotification('{{ session('cart_added_message') }}', 'success');
-        $(document).trigger('cartUpdated', {
-            cartCount: {{ Auth::check() ? CartItem::where('user_id', Auth::id())->count() : count(Session::get('guest_cart', [])) }},
-            cartSubTotal: '{{ number_format(Auth::check() ? CartItem::where('user_id', Auth::id())->sum(DB::raw('price * quantity')) : collect(Session::get('guest_cart', []))->sum(fn($item) => $item['price'] * $item['quantity']), 2) }}'
-        });
-    @endif
 });
 </script>

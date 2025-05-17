@@ -59,10 +59,12 @@ Route::name('')->group(function () {
 
     Route::middleware('auth:web')->group(function () {
         // Cart Routes
-        Route::get('/cart', [CartController::class, 'myCart'])->name('cart');
-        Route::delete('/cart/remove/{id}', [CartController::class, 'cartRemove'])->name('cart.remove');
-        Route::post('/coupon/apply', [CartController::class, 'couponApply'])->name('coupon.apply');
-        Route::delete('/coupon/remove/{couponName}', [CartController::class, 'couponRemove'])->name('coupon.remove');
+        Route::post('/cart/sync', [CartController::class, 'syncTempCart'])->name('cart.sync');
+        Route::get('/cart', [CartController::class, 'MyCart'])->name('cart');
+        Route::get('/cart/dropdown', [CartController::class, 'cartDropdown'])->name('cart.dropdown');
+        Route::post('cart/remove/{id}', [App\Http\Controllers\Frontend\CartController::class, 'CartRemove'])->name('cart.remove');
+        Route::post('/coupon/apply', [CartController::class, 'CouponApply'])->name('coupon.apply');
+        Route::get('/coupon/remove/{couponName}', [CartController::class, 'CouponRemove'])->name('coupon.remove');
         Route::get('/checkout', [CartController::class, 'checkoutCreate'])->name('checkout.create');
         // Stripe Payment Routes
         Route::post('/pay/stripe', [StripePaymentController::class, 'payWithStripe'])->name('pay.stripe');

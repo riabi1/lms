@@ -21,7 +21,7 @@
     <section class="cart-area section-padding">
         <div class="container">
             @if (session('success') || session('error'))
-                <div class="alert {{ session('success') ? 'alert-success' : 'alert-danger' }}">
+                <div class="alert helped {{ session('success') ? 'alert-success' : 'alert-danger' }}">
                     {{ session('success') ?: session('error') }}
                 </div>
             @endif
@@ -44,18 +44,18 @@
                                     <tr>
                                         <td>
                                             <img 
-                                                src="{{ $item->cartable->course_image ? asset('storage/upload/course_images/thumbnail/' . $item->cartable->course_image) : ($item->attributes['image'] ? asset('storage/upload/course_images/thumbnail/' . $item->attributes['image']) : asset('images/no_image.jpg')) }}"
+                                                src="{{ isset($item->options['image']) && $item->options['image'] ? asset('upload/course_images/thumbnail/' . $item->options['image']) : asset('images/default-course.jpg') }}"
                                                 alt="{{ e($item->cartable->course_name ?? $item->name) }}"
                                                 class="lazy rounded"
                                                 style="width: 60px; height: auto;"
                                                 loading="lazy"
-                                                onerror="this.src='{{ asset('images/no_image.jpg') }}'"
+                                                onerror="this.src='{{ asset('images/default-course.jpg') }}'"
                                             >
                                         </td>
                                         <td>{{ e($item->cartable->course_name ?? $item->name) }}</td>
-                                        <td>{{ e($item->cartable->courseable->name ?? $item->attributes['instructor_name'] ?? 'Unknown') }}</td>
+                                        <td>{{ e($item->cartable->courseable->name ?? (isset($item->options['instructor_name']) ? $item->options['instructor_name'] : 'Unknown')) }}</td>
                                         <td class="text-right">
-                                            {{ number_format($adjustedPrices[$item->id] ?? ($item->price * $item->quantity), 2) }} USD
+                                            {{ number_format($adjustedPrices[$item->cartable_id] ?? $item->price, 2) }} USD
                                         </td>
                                     </tr>
                                 @endforeach

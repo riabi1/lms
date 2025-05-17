@@ -5,6 +5,19 @@
 @endsection
 
 @section('home')
+@php
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
+
+// Fetch cart items for authenticated users
+$cartItems = auth()->check() ? Cache::remember('cart_items_' . auth()->id(), 60, function () {
+    return App\Models\CartItem::where('user_id', auth()->id())
+        ->where('cartable_type', 'App\\Models\\Course')
+        ->pluck('cartable_id')
+        ->toArray();
+}) : [];
+@endphp
+
 <style>
 .wishlist-btn i {
     transition: color 0.3s ease;
@@ -23,17 +36,33 @@
     background-color: #fff;
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
+:where(.dark-mode) .cart-message {
+    background-color: #252525;
+    box-shadow: 0 2px 5px rgba(255,255,255,0.1);
+}
 .alert-info {
     background-color: #d1ecf1;
     color: #0c5460;
+}
+:where(.dark-mode) .alert-info {
+    background-color: #2c6b74;
+    color: #b0e0e6;
 }
 .alert-success {
     background-color: #d4edda;
     color: #155724;
 }
+:where(.dark-mode) .alert-success {
+    background-color: #2e5a38;
+    color: #c3e6cb;
+}
 .alert-danger {
     background-color: #f8d7da;
     color: #721c24;
+}
+:where(.dark-mode) .alert-danger {
+    background-color: #7a353b;
+    color: #f5c6cb;
 }
 .preview-course-video {
     position: relative;
@@ -85,6 +114,28 @@
     margin-top: 15px;
     text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
+:root {
+    --accent: #dc3545;
+    --accent-hover: #c82333;
+}
+.theme-btn {
+    background: var(--accent);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: background 0.3s ease;
+}
+.theme-btn:hover {
+    background: var(--accent-hover);
+}
+.cart-btn.in-cart {
+    background-color: #6c757d;
+    color: #fff;
+}
+.cart-btn.in-cart:hover {
+    background-color: #5a6268;
+}
 </style>
 
 <!-- BREADCRUMB AREA -->
@@ -94,12 +145,12 @@
             <div class="breadcrumb-content">
                 <ul class="generic-list-item generic-list-item-arrow d-flex flex-wrap align-items-center">
                     <li><a href="{{ url('/') }}">Home</a></li>
-                    <li><a href="{{ $course->subcategory && $course->subcategory->category ? url('category/'.$course->subcategory->category->id.'/'.$course->subcategory->category->category_slug) : '#' }}">{{ $course->subcategory && $course->subcategory->category ? $course->subcategory->category->category_name : 'Uncategorized' }}</a></li>
-                    <li><a href="{{ $course->subcategory ? url('subcategory/'.$course->subcategory->id.'/'.$course->subcategory->subcategory_slug) : '#' }}">{{ $course->subcategory ? $course->subcategory->subcategory_name : 'No Subcategory' }}</a></li>
+                    <li><a href="{{ $course->subcategory && $course->subcategory->category ? url('category/'.$course->subcategory->category->id.'/'.Str::slug($course->subcategory->category->category_name)) : '#' }}">{{ $course->subcategory && $course->subcategory->category ? $course->subcategory->category->category_name : 'Uncategorized' }}</a></li>
+                    <li><a href="{{ $course->subcategory ? url('subcategory/'.$course->subcategory->id.'/'.Str::slug($course->subcategory->subcategory_name)) : '#' }}">{{ $course->subcategory ? $course->subcategory->subcategory_name : 'No Subcategory' }}</a></li>
                 </ul>
                 <div class="section-heading">
                     <h2 class="section__title">{{ $course->course_name ?? 'Untitled Course' }}</h2>
-                    <p class="section__desc pt-2 lh-30">{{ $course->course_title ?? 'No title available' }}</p>
+                    <p class="section__desc pt-2 lh-30">{{ $course->course_name ?? 'No title available' }}</p>
                 </div>
                 <div class="d-flex flex-wrap align-items-center pt-3">
                     @if ($course->bestseller == 1)
@@ -166,341 +217,341 @@
                 </div>
             </div>
         </div>
-    </section>
+</section>
 
-    <!-- COURSE DETAILS AREA -->
-    <section class="course-details-area pb-20px">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-8 pb-5">
-                    <div class="course-details-content-wrap pt-90px">
-                        <div class="course-overview-card bg-gray p-4 rounded">
-                            <h3 class="fs-24 font-weight-semi-bold pb-3">What you'll learn</h3>
-                            <ul class="generic-list-item overview-list-item">
-                                @forelse ($goals as $goal)
-                                    <li><i class="la la-check mr-1 text-black"></i> {{ trim($goal->goal_name ?? $goal) }}</li>
-                                @empty
-                                    <li><i class="la la-check mr-1 text-black"></i> No goals specified for this course.</li>
-                                @endforelse
-                            </ul>
+<!-- COURSE DETAILS AREA -->
+<section class="course-details-area pb-20px">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 pb-5">
+                <div class="course-details-content-wrap pt-90px">
+                    <div class="course-overview-card bg-gray p-4 rounded">
+                        <h3 class="fs-24 font-weight-semi-bold pb-3">What you'll learn</h3>
+                        <ul class="generic-list-item overview-list-item">
+                            @forelse ($goals as $goal)
+                                <li><i class="la la-check mr-1 text-black"></i> {{ trim($goal->goal_name ?? $goal) }}</li>
+                            @empty
+                                <li><i class="la la-check mr-1 text-black"></i> No goals specified for this course.</li>
+                            @endforelse
+                        </ul>
+                    </div>
+
+                    <div class="course-overview-card">
+                        <h3 class="fs-24 font-weight-semi-bold pb-3">Requirements</h3>
+                        <ul class="generic-list-item generic-list-item-bullet fs-15">
+                            <li>{{ $course->prerequisites ?? 'No specific requirements.' }}</li>
+                        </ul>
+                    </div>
+
+                    <div class="course-overview-card">
+                        <h3 class="fs-24 font-weight-semi-bold pb-3">Description</h3>
+                        <p class="fs-15 pb-2">{!! $course->description ?? 'No description available.' !!}</p>
+                        <div class="collapse" id="collapseMore">
+                            <h4 class="fs-20 font-weight-semi-bold py-2">Who this course is for:</h4>
+                            <p class="fs-15 pb-2">{{ $course->prerequisites ?? 'Anyone interested in learning.' }}</p>
                         </div>
+                        <a class="collapse-btn collapse--btn fs-15" data-toggle="collapse" href="#collapseMore" role="button" aria-expanded="false" aria-controls="collapseMore">
+                            <span class="collapse-btn-hide">Show more<i class="la la-angle-down ml-1 fs-14"></i></span>
+                            <span class="collapse-btn-show">Show less<i class="la la-angle-up ml-1 fs-14"></i></span>
+                        </a>
+                    </div>
 
-                        <div class="course-overview-card">
-                            <h3 class="fs-24 font-weight-semi-bold pb-3">Requirements</h3>
-                            <ul class="generic-list-item generic-list-item-bullet fs-15">
-                                <li>{{ $course->prerequisites ?? 'No specific requirements.' }}</li>
-                            </ul>
-                        </div>
-
-                        <div class="course-overview-card">
-                            <h3 class="fs-24 font-weight-semi-bold pb-3">Description</h3>
-                            <p class="fs-15 pb-2">{!! $course->description ?? 'No description available.' !!}</p>
-                            <div class="collapse" id="collapseMore">
-                                <h4 class="fs-20 font-weight-semi-bold py-2">Who this course is for:</h4>
-                                <p class="fs-15 pb-2">{{ $course->prerequisites ?? 'Anyone interested in learning.' }}</p>
+                    <div class="course-overview-card">
+                        <div class="curriculum-header d-flex align-items-center justify-content-between pb-4">
+                            <h3 class="fs-24 font-weight-semi-bold">Course content</h3>
+                            <div class="curriculum-duration fs-15">
+                                <span class="curriculum-total__text mr-2"><strong class="text-black font-weight-semi-bold">Total:</strong> {{ $course->lectures->count() }} lectures</span>
+                                <span class="curriculum-total__hours"><strong class="text-black font-weight-semi-bold">Total hours:</strong> {{ $course->duration ?? 'N/A' }}</span>
                             </div>
-                            <a class="collapse-btn collapse--btn fs-15" data-toggle="collapse" href="#collapseMore" role="button" aria-expanded="false" aria-controls="collapseMore">
-                                <span class="collapse-btn-hide">Show more<i class="la la-angle-down ml-1 fs-14"></i></span>
-                                <span class="collapse-btn-show">Show less<i class="la la-angle-up ml-1 fs-14"></i></span>
-                            </a>
                         </div>
 
-                        <div class="course-overview-card">
-                            <div class="curriculum-header d-flex align-items-center justify-content-between pb-4">
-                                <h3 class="fs-24 font-weight-semi-bold">Course content</h3>
-                                <div class="curriculum-duration fs-15">
-                                    <span class="curriculum-total__text mr-2"><strong class="text-black font-weight-semi-bold">Total:</strong> {{ $course->lectures->count() }} lectures</span>
-                                    <span class="curriculum-total__hours"><strong class="text-black font-weight-semi-bold">Total hours:</strong> {{ $course->duration ?? 'N/A' }}</span>
-                                </div>
-                            </div>
-
-                            <div class="curriculum-content">
-                                <div id="accordion" class="generic-accordion">
-                                    @foreach ($course->sections ?? [] as $sec)
-                                        <div class="card">
-                                            <div class="card-header" id="heading{{ $sec->id }}">
-                                                <button class="btn btn-link d-flex align-items-center justify-content-between w-100 section-toggle">
-                                                    <span class="d-flex align-items-center">
-                                                        <i class="la la-plus mr-2"></i>
-                                                        <i class="la la-minus mr-2" style="display: none;"></i>
-                                                        {{ $sec->section_title ?? 'Untitled Section' }}
-                                                    </span>
-                                                    <span class="fs-15 text-gray font-weight-medium">
-                                                        {{ $sec->lectures->count() }} {{ $sec->lectures->count() === 1 ? 'lecture' : 'lectures' }}
-                                                    </span>
-                                                </button>
-                                            </div>
-                                            <div id="collapse{{ $sec->id }}" class="section-content" style="display: none;">
-                                                <div class="card-body">
-                                                    <ul class="generic-list-item">
-                                                        @foreach ($sec->lectures ?? [] as $lect)
-                                                            <li class="curriculum-content">
-                                                                <div class="d-flex align-items-center justify-content-between">
-                                                                    <span>
-                                                                        <i class="la la-play-circle mr-2"></i>
-                                                                        {{ $lect->lecture_title ?? 'Untitled Lecture' }}
-                                                                    </span>
-                                                                    <span class="text-muted">{{ $lect->duration ?? 'N/A' }}</span>
-                                                                </div>
-                                                            </li>
-                                                        @endforeach
-                                                    </ul>
-                                                </div>
-                                            </div>
+                        <div class="curriculum-content">
+                            <div id="accordion" class="generic-accordion">
+                                @foreach ($course->sections ?? [] as $sec)
+                                    <div class="card">
+                                        <div class="card-header" id="heading{{ $sec->id }}">
+                                            <button class="btn btn-link d-flex align-items-center justify-content-between w-100 section-toggle">
+                                                <span class="d-flex align-items-center">
+                                                    <i class="la la-plus mr-2"></i>
+                                                    <i class="la la-minus mr-2" style="display: none;"></i>
+                                                    {{ $sec->section_title ?? 'Untitled Section' }}
+                                                </span>
+                                                <span class="fs-15 text-gray font-weight-medium">
+                                                    {{ $sec->lectures->count() }} {{ $sec->lectures->count() === 1 ? 'lecture' : 'lectures' }}
+                                                </span>
+                                            </button>
                                         </div>
-                                    @endforeach
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="course-overview-card pt-4">
-                            <h3 class="fs-24 font-weight-semi-bold pb-4">About the instructor</h3>
-                            <div class="instructor-wrap">
-                                <div class="media media-card align-items-center">
-                                    <div class="media-img mr-4 rounded-full">
-                                        <img class="rounded-full lazy" 
-                                             src="{{ $instructor && $instructor->photo ? asset('upload/instructor_images/' . $instructor->photo) : asset('images/default-instructor.jpg') }}" 
-                                             alt="Instructor image" 
-                                             loading="lazy">
-                                    </div>
-                                    <div class="media-body">
-                                        <h5><a href="{{ $instructor ? route('instructor.details', $instructor->id) : '#' }}">{{ $instructor->name ?? 'Unknown Instructor' }}</a></h5>
-                                        <span class="d-block lh-18 pt-2 pb-3">Joined {{ $instructor && $instructor->created_at ? \Carbon\Carbon::parse($instructor->created_at)->diffForHumans() : 'N/A' }}</span>
-                                        <p class="text организаций
-
-black lh-18 pb-3">{{ $instructor->email ?? 'No email available' }}</p>
-                                        <ul class="generic-list-item pt-3">
-                                            <li><i class="la la-play-circle-o mr-2 text-color-3"></i> {{ $instructorCourses->count() ?? 0 }} Courses</li>
-                                            <li><a href="{{ $instructor ? route('instructor.details', $instructor->id) : '#' }}">View all Courses</a></li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="course-overview-card pt-4">
-                            <h3 class="fs-24 font-weight-semi-bold pb-40px">Student feedback</h3>
-                            <div class="feedback-wrap">
-                                <div class="media media-card align-items-center">
-                                    <div class="review-rating-summary">
-                                        <span class="stats-average__count">{{ round($average, 1) }}</span>
-                                        <div class="rating-wrap pt-1">
-                                            <div class="review-stars">
-                                                @for ($i = 1; $i <= 5; $i++)
-                                                    <span class="la la-star{{ $i <= floor($average) ? '' : '-o' }}"></span>
-                                                @endfor
-                                            </div>
-                                            <span class="rating-total d-block">({{ count($reviewcount) }})</span>
-                                            <span>Course Rating</span>
-                                        </div>
-                                    </div>
-                                    <div class="media-body">
-                                        @php
-                                            use Illuminate\Support\Facades\DB;
-                                            $reviewcount = $course->reviews()
-                                                ->where('status', 1)
-                                                ->select('rating', DB::raw('count(*) as count'))
-                                                ->groupBy('rating')
-                                                ->orderBy('rating', 'desc')
-                                                ->get();
-
-                                            $totalReviews = $reviewcount->sum('count');
-                                            $percentages = [];
-                                            for ($i = 5; $i >= 1; $i--) {
-                                                $ratingCount = $reviewcount->where('rating', $i)->first();
-                                                $count = $ratingCount ? $ratingCount->count : 0;
-                                                $percent = $totalReviews > 0 ? ($count / $totalReviews) * 100 : 0;
-                                                $percentages[] = [
-                                                    'rating' => $i,
-                                                    'percent' => $percent,
-                                                    'count' => $count,
-                                                ];
-                                            }
-                                        @endphp
-
-                                        @if (count($percentages) > 0)
-                                            @foreach ($percentages as $ratingInfo)
-                                                <div class="review-bars d-flex align-items-center mb-2">
-                                                    <div class="review-bars__text">{{ $ratingInfo['rating'] }} stars</div>
-                                                    <div class="review-bars__fill">
-                                                        <div class="skillbar-box">
-                                                            <div class="skillbar" data-percent="{{ $ratingInfo['percent'] }}%">
-                                                                <div class="skillbar-bar bg-3" style="width: {{ $ratingInfo['percent'] }}%;"></div>
+                                        <div id="collapse{{ $sec->id }}" class="section-content" style="display: none;">
+                                            <div class="card-body">
+                                                <ul class="generic-list-item">
+                                                    @foreach ($sec->lectures ?? [] as $lect)
+                                                        <li class="curriculum-content">
+                                                            <div class="d-flex align-items-center justify-content-between">
+                                                                <span>
+                                                                    <i class="la la-play-circle mr-2"></i>
+                                                                    {{ $lect->lecture_title ?? 'Untitled Lecture' }}
+                                                                </span>
+                                                                <span class="text-muted">{{ $lect->duration ?? 'N/A' }}</span>
                                                             </div>
+                                                        </li>
+                                                    @endforeach
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="course-overview-card pt-4">
+                        <h3 class="fs-24 font-weight-semi-bold pb-4">About the instructor</h3>
+                        <div class="instructor-wrap">
+                            <div class="media media-card align-items-center">
+                                <div class="media-img mr-4 rounded-full">
+                                    <img class="rounded-full lazy" 
+                                         src="{{ $instructor && $instructor->photo ? asset('upload/instructor_images/' . $instructor->photo) : asset('images/default-instructor.jpg') }}" 
+                                         alt="Instructor image" 
+                                         loading="lazy"
+                                         onerror="this.src='{{ asset('images/default-instructor.jpg') }}'">
+                                </div>
+                                <div class="media-body">
+                                    <h5><a href="{{ $instructor ? route('instructor.details', $instructor->id) : '#' }}">{{ $instructor->name ?? 'Unknown Instructor' }}</a></h5>
+                                    <span class="d-block lh-18 pt-2 pb-3">Joined {{ $instructor && $instructor->created_at ? \Carbon\Carbon::parse($instructor->created_at)->diffForHumans() : 'N/A' }}</span>
+                                    <p class="text-black lh-18 pb-3">{{ $instructor->email ?? 'No email available' }}</p>
+                                    <ul class="generic-list-item pt-3">
+                                        <li><i class="la la-play-circle-o mr-2 text-color-3"></i> {{ $instructorCourses->count() ?? 0 }} Courses</li>
+                                        <li><a href="{{ $instructor ? route('instructor.details', $instructor->id) : '#' }}">View all Courses</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="course-overview-card pt-4">
+                        <h3 class="fs-24 font-weight-semi-bold pb-40px">Student feedback</h3>
+                        <div class="feedback-wrap">
+                            <div class="media media-card align-items-center">
+                                <div class="review-rating-summary">
+                                    <span class="stats-average__count">{{ round($average, 1) }}</span>
+                                    <div class="rating-wrap pt-1">
+                                        <div class="review-stars">
+                                            @for ($i = 1; $i <= 5; $i++)
+                                                <span class="la la-star{{ $i <= floor($average) ? '' : '-o' }}"></span>
+                                            @endfor
+                                        </div>
+                                        <span class="rating-total d-block">({{ count($reviewcount) }})</span>
+                                        <span>Course Rating</span>
+                                    </div>
+                                </div>
+                                <div class="media-body">
+                                    @php
+                                        use Illuminate\Support\Facades\DB;
+                                        $reviewcount = $course->reviews()
+                                            ->where('status', 1)
+                                            ->select('rating', DB::raw('count(*) as count'))
+                                            ->groupBy('rating')
+                                            ->orderBy('rating', 'desc')
+                                            ->get();
+
+                                        $totalReviews = $reviewcount->sum('count');
+                                        $percentages = [];
+                                        for ($i = 5; $i >= 1; $i--) {
+                                            $ratingCount = $reviewcount->where('rating', $i)->first();
+                                            $count = $ratingCount ? $ratingCount->count : 0;
+                                            $percent = $totalReviews > 0 ? ($count / $totalReviews) * 100 : 0;
+                                            $percentages[] = [
+                                                'rating' => $i,
+                                                'percent' => $percent,
+                                                'count' => $count,
+                                            ];
+                                        }
+                                    @endphp
+
+                                    @if (count($percentages) > 0)
+                                        @foreach ($percentages as $ratingInfo)
+                                            <div class="review-bars d-flex align-items-center mb-2">
+                                                <div class="review-bars__text">{{ $ratingInfo['rating'] }} stars</div>
+                                                <div class="review-bars__fill">
+                                                    <div class="skillbar-box">
+                                                        <div class="skillbar" data-percent="{{ $ratingInfo['percent'] }}%">
+                                                            <div class="skillbar-bar bg-3" style="width: {{ $ratingInfo['percent'] }}%;"></div>
                                                         </div>
                                                     </div>
-                                                    <div class="review-bars__percent">{{ number_format($ratingInfo['percent'], 2) }}%</div>
                                                 </div>
-                                            @endforeach
-                                        @else
-                                            <p>No Reviews Available</p>
-                                        @endif
-                                    </div>
+                                                <div class="review-bars__percent">{{ number_format($ratingInfo['percent'], 2) }}%</div>
+                                            </div>
+                                        @endforeach
+                                    @else
+                                        <p>No Reviews Available</p>
+                                    @endif
                                 </div>
                             </div>
                         </div>
-
-                        <div class="course-overview-card pt-4">
-                            <h3 class="fs-24 font-weight-semi-bold pb-4">Reviews</h3>
-                            <div class="review-wrap">
-                                @php
-                                    $reviews = $course->reviews()
-                                        ->where('status', 1)
-                                        ->latest()
-                                        ->limit(5)
-                                        ->get();
-                                @endphp
-                                @forelse ($reviews as $item)
-                                    <div class="media media-card border-bottom border-bottom-gray pb-4 mb-4">
-                                        <div class="media-img mr-4">
-                                            <img class="rounded-circle" 
-                                                 src="{{ $item->user->photo ? Storage::url('upload/user_images/' . $item->user->photo) : asset('upload/no_image.jpg') }}" 
-                                                 alt="{{ $item->user->name ?? 'Anonymous' }}'s Profile" 
-                                                 style="width: 100px; height: 100px; object-fit: cover;">
-                                        </div>
-                                        <div class="media-body">
-                                            <div class="d-flex flex-wrap align-items-center justify-content-between pb-1">
-                                                <h5>{{ $item->user->name ?? 'Anonymous' }}</h5>
-                                                <div class="review-stars">
-                                                    @for ($i = 1; $i <= 5; $i++)
-                                                        <span class="la la-star{{ $i <= $item->rating ? '' : '-o' }}"></span>
-                                                    @endfor
-                                                </div>
-                                            </div>
-                                            <span class="d-block lh-18 pb-2">{{ $item->created_at ? \Carbon\Carbon::parse($item->created_at)->diffForHumans() : 'N/A' }}</span>
-                                            <p class="pb-2">{{ $item->comment ?? 'No comment provided' }}</p>
-                                        </div>
-                                    </div>
-                                @empty
-                                    <p>No reviews available yet.</p>
-                                @endforelse
-                            </div>
-                        </div>
-
-                        @guest
-                            <p><b>For Add Course Review. You need to login first <a href="{{ route('login') }}">Login Here</a></b></p>
-                        @else
-                            <div class="course-overview-card pt-4">
-                                <h3 class="fs-24 font-weight-semi-bold pb-4">Add a Review</h3>
-                                <form method="post" action="{{ route('store.review') }}" class="row">
-                                    @csrf
-                                    <div class="leave-rating-wrap pb-4">
-                                        <div class="leave-rating leave--rating">
-                                            <input type="radio" name="rate" id="star5" value="5" required />
-                                            <label for="star5"></label>
-                                            <input type="radio" name="rate" id="star4" value="4" />
-                                            <label for="star4"></label>
-                                            <input type="radio" name="rate" id="star3" value="3" />
-                                            <label for="star3"></label>
-                                            <input type="radio" name="rate" id="star2" value="2" />
-                                            <label for="star2"></label>
-                                            <input type="radio" name="rate" id="star1" value="1" />
-                                            <label for="star1"></label>
-                                        </div>
-                                    </div>
-                                    <input type="hidden" name="course_id" value="{{ $course->id }}">
-                                    <input type="hidden" name="instructor_id" value="{{ $instructor ? $instructor->id : null }}">
-                                    <div class="input-box col-lg-12">
-                                        <label class="label-text">Message</label>
-                                        <div class="form-group">
-                                            <textarea class="form-control form--control pl-3" name="comment" placeholder="Write Message" rows="5" required></textarea>
-                                        </div>
-                                    </div>
-                                    <div class="btn-box col-lg-12">
-                                        <button class="btn theme-btn" type="submit">Submit Review</button>
-                                    </div>
-                                </form>
-                            </div>
-                        @endguest
                     </div>
-                </div>
 
-                <div class="col-lg-4">
-                    <div class="sidebar sidebar-negative">
-                        <div class="card card-item">
-                            <div class="card-body">
-                                <div class="preview-course-video">
-                                    <a href="javascript:void(0)" data-toggle="modal" data-target="#previewModal">
-                                        <img src="{{ $course->course_image ? asset('upload/course_images/thumbnail/' . $course->course_image) : asset('images/default-course.jpg') }}" 
-                                             alt="course-img" 
-                                             class="w-100 rounded lazy" 
-                                             loading="lazy">
-                                        <div class="preview-course-video-content">
-                                            <div class="overlay"></div>
-                                            <div class="play-button">
-                                                <svg version="1.1" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="-307.4 338.8 91.8 91.8" xml:space="preserve">
-                                                    <g>
-                                                        <circle class="st0" cx="-261.5" cy="384.7" r="45.9" fill="rgba(0,0,0,0.7)"></circle>
-                                                        <path class="st1" d="M-272.9,363.2l35.8,20.7c0.7,0.4,0.7,1.3,0,1.7l-35.8,20.7c-0.7,0.4-1.5-0.1-1.5-0.9V364C-274.4,363.3-273.5,362.8-272.9,363.2z" fill="#fff"></path>
-                                                    </g>
-                                                </svg>
+                    <div class="course-overview-card pt-4">
+                        <h3 class="fs-24 font-weight-semi-bold pb-4">Reviews</h3>
+                        <div class="review-wrap">
+                            @php
+                                $reviews = $course->reviews()
+                                    ->where('status', 1)
+                                    ->latest()
+                                    ->limit(5)
+                                    ->get();
+                            @endphp
+                            @forelse ($reviews as $item)
+                                <div class="media media-card border-bottom border-bottom-gray pb-4 mb-4">
+                                    <div class="media-img mr-4">
+                                        <img class="rounded-circle" 
+                                             src="{{ $item->user->photo ? Storage::url('upload/user_images/' . $item->user->photo) : asset('upload/no_image.jpg') }}" 
+                                             alt="{{ $item->user->name ?? 'Anonymous' }}'s Profile" 
+                                             style="width: 100px; height: 100px; object-fit: cover;"
+                                             onerror="this.src='{{ asset('upload/no_image.jpg') }}'">
+                                    </div>
+                                    <div class="media-body">
+                                        <div class="d-flex flex-wrap align-items-center justify-content-between pb-1">
+                                            <h5>{{ $item->user->name ?? 'Anonymous' }}</h5>
+                                            <div class="review-stars">
+                                                @for ($i = 1; $i <= 5; $i++)
+                                                    <span class="la la-star{{ $i <= $item->rating ? '' : '-o' }}"></span>
+                                                @endfor
                                             </div>
-                                            <p class="fs-15 font-weight-bold text-white pt-3">Preview this course</p>
                                         </div>
-                                    </a>
+                                        <span class="d-block lh-18 pb-2">{{ $item->created_at ? \Carbon\Carbon::parse($item->created_at)->diffForHumans() : 'N/A' }}</span>
+                                        <p class="pb-2">{{ $item->comment ?? 'No comment provided' }}</p>
+                                    </div>
                                 </div>
+                            @empty
+                                <p>No reviews available yet.</p>
+                            @endforelse
+                        </div>
+                    </div>
 
-                                @php
-                                    $finalPrice = $course->discount_price !== null
-                                        ? max(0, $course->selling_price - $course->discount_price)
-                                        : $course->selling_price;
-                                    $discountPercentage = ($course->selling_price > 0 && $course->discount_price !== null)
-                                        ? round(($course->discount_price / $course->selling_price) * 100)
-                                        : 0;
-                                    $isInCart = \Darryldecode\Cart\Facades\CartFacade::get($course->id) !== null;
-                                @endphp
+                    @guest
+                        <p><b>For Add Course Review. You need to login first <a href="{{ route('login') }}">Login Here</a></b></p>
+                    @else
+                        <div class="course-overview-card pt-4">
+                            <h3 class="fs-24 font-weight-semi-bold pb-4">Add a Review</h3>
+                            <form method="post" action="{{ route('store.review') }}" class="row">
+                                @csrf
+                                <div class="leave-rating-wrap pb-4">
+                                    <div class="leave-rating leave--rating">
+                                        <input type="radio" name="rate" id="star5" value="5" required />
+                                        <label for="star5"></label>
+                                        <input type="radio" name="rate" id="star4" value="4" />
+                                        <label for="star4"></label>
+                                        <input type="radio" name="rate" id="star3" value="3" />
+                                        <label for="star3"></label>
+                                        <input type="radio" name="rate" id="star2" value="2" />
+                                        <label for="star2"></label>
+                                        <input type="radio" name="rate" id="star1" value="1" />
+                                        <label for="star1"></label>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="course_id" value="{{ $course->id }}">
+                                <input type="hidden" name="instructor_id" value="{{ $instructor ? $instructor->id : null }}">
+                                <div class="input-box col-lg-12">
+                                    <label class="label-text">Message</label>
+                                    <div class="form-group">
+                                        <textarea class="form-control form--control pl-3" name="comment" placeholder="Write Message" rows="5" required></textarea>
+                                    </div>
+                                </div>
+                                <div class="btn-box col-lg-12">
+                                    <button class="btn theme-btn" type="submit">Submit Review</button>
+                                </div>
+                            </form>
+                        </div>
+                    @endguest
+                </div>
+            </div>
 
-                                <div class="preview-course-feature-content pt-40px">
-                                    <p class="d-flex align-items-center pb-2">
-                                        @if ($finalPrice < $course->selling_price)
-                                            <span class="fs-35 font-weight-semi-bold text-black">{{ number_format($finalPrice, 2) }} TND</span>
-                                            <span class="before-price mx-1">{{ number_format($course->selling_price, 2) }} TND</span>
-                                        @else
-                                            <span class="fs-35 font-weight-semi-bold text-black">{{ number_format($finalPrice, 2) }} TND</span>
-                                        @endif
-                                        @if ($discountPercentage > 0)
-                                            <span class="price-discount">{{ $discountPercentage }}% off</span>
-                                        @endif
-                                    </p>
-                                    <p class="preview-price-discount-text pb-35px">
-                                        <span class="text-color-3">4 days</span> left at this price!
-                                    </p>
-                                    <div class="buy-course-btn-box">
-                                        @if ($hasPurchased)
-                                            <a href="{{ route('course.start', [$course->id, \Str::slug($course->course_name)]) }}" class="btn theme-btn flex-grow-1 mr-3">
-                                                <i class="la la-play-circle fs-18 mr-1"></i> Start Learning
-                                            </a>
-                                        @else
-                                            <button class="btn theme-btn flex-grow-1 mr-3 add-to-cart" data-course-id="{{ $course->id }}" {{ $isInCart ? 'data-in-cart="true"' : '' }}>
-                                                <i class="la la-shopping-cart fs-18 mr-1"></i> {{ $isInCart ? 'In Cart' : 'Add to Cart' }}
-                                            </button>
-                                        @endif
+            <div class="col-lg-4">
+                <div class="sidebar sidebar-negative">
+                    <div class="card card-item">
+                        <div class="card-body">
+                            <div class="preview-course-video">
+                                <a href="javascript:void(0)" data-toggle="modal" data-target="#previewModal">
+                                    <img src="{{ $course->course_image ? asset('upload/course_images/thumbnail/' . $course->course_image) : asset('images/default-course.jpg') }}" 
+                                         alt="course-img" 
+                                         class="w-100 rounded lazy" 
+                                         loading="lazy"
+                                         onerror="this.src='{{ asset('images/default-course.jpg') }}'">
+                                    <div class="preview-course-video-content">
+                                        <div class="overlay"></div>
+                                        <div class="play-button">
+                                            <svg version="1.1" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="-307.4 338.8 91.8 91.8" xml:space="preserve">
+                                                <g>
+                                                    <circle class="st0" cx="-261.5" cy="384.7" r="45.9" fill="rgba(0,0,0,0.7)"></circle>
+                                                    <path class="st1" d="M-272.9,363.2l35.8,20.7c0.7,0.4,0.7,1.3,0,1.7l-35.8,20.7c-0.7,0.4-1.5-0.1-1.5-0.9V364C-274.4,363.3-273.5,362.8-272.9,363.2z" fill="#fff"></path>
+                                                </g>
+                                            </svg>
+                                        </div>
+                                        <p class="fs-15 font-weight-bold text-white pt-3">Preview this course</p>
                                     </div>
-                                    <div class="preview-course-incentives">
-                                        <h3 class="card-title fs-18 pb-2">This course includes</h3>
-                                        <ul class="generic-list-item pb-3">
-                                            <li><i class="la la-play-circle-o mr-2 text-color"></i>{{ $course->duration ?? 'N/A' }} learning hours</li>
-                                            <li><i class="la la-file mr-2 text-color"></i>{{ $course->resources ?? 'N/A' }} resources</li>
-                                            <li><i class="la la-file mr-2 text-color"></i>Certificate: {{ $course->certificate ?? 'N/A' }}</li>
-                                            <li><i class="la la-key mr-2 text-color"></i>Full lifetime access</li>
-                                        </ul>
-                                    </div>
+                                </a>
+                            </div>
+
+                            @php
+                                $sellingPrice = $course->selling_price ?? 0;
+                                $discountPrice = $course->discount_price ?? 0;
+                                $finalPrice = max(0, $sellingPrice - $discountPrice);
+                                $discountPercentage = ($sellingPrice > 0 && $discountPrice > 0) ? round($discountPrice / $sellingPrice * 100) : 0;
+                                $isInCart = in_array($course->id, $cartItems);
+                            @endphp
+
+                            <div class="preview-course-feature-content pt-40px">
+                                <p class="d-flex align-items-center pb-2">
+                                    @if ($discountPercentage > 0)
+                                        <span class="fs-35 font-weight-semi-bold text-black">{{ number_format($finalPrice, 2) }} TND</span>
+                                        <span class="before-price mx-1">{{ number_format($sellingPrice, 2) }} TND</span>
+                                    @else
+                                        <span class="fs-35 font-weight-semi-bold text-black">{{ number_format($finalPrice, 2) }} TND</span>
+                                    @endif
+                                    @if ($discountPercentage > 0)
+                                        <span class="price-discount">{{ $discountPercentage }}% off</span>
+                                    @endif
+                                </p>
+                                <p class="preview-price-discount-text pb-35px">
+                                    <span class="text-color-3">4 days</span> left at this price!
+                                </p>
+                                <div class="buy-course-btn-box">
+                                    @if ($hasPurchased)
+                                        <a href="{{ route('course.start', [$course->id, Str::slug($course->course_name)]) }}" class="btn theme-btn flex-grow-1 mr-3">
+                                            <i class="la la-play-circle fs-18 mr-1"></i> Start Learning
+                                        </a>
+                                    @else
+                                        <button class="btn theme-btn flex-grow-1 mr-3 cart-btn {{ $isInCart ? 'in-cart' : 'add-to-cart' }}" 
+                                                data-course-id="{{ $course->id }}"
+                                                data-action="{{ $isInCart ? 'remove' : 'add' }}">
+                                            <i class="la la-shopping-cart fs-18 mr-1"></i> {{ $isInCart ? 'In Cart' : 'Add to Cart' }}
+                                        </button>
+                                    @endif
+                                </div>
+                                <div class="preview-course-incentives">
+                                    <h3 class="card-title fs-18 pb-2">This course includes</h3>
+                                    <ul class="generic-list-item pb-3">
+                                        <li><i class="la la-play-circle-o mr-2 text-color"></i>{{ $course->duration ?? 'N/A' }} learning hours</li>
+                                        <li><i class="la la-file mr-2 text-color"></i>{{ $course->resources ?? 'N/A' }} resources</li>
+                                        <li><i class="la la-file mr-2 text-color"></i>Certificate: {{ $course->certificate ?? 'N/A' }}</li>
+                                        <li><i class="la la-key mr-2 text-color"></i>Full lifetime access</li>
+                                    </ul>
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="card card-item">
-                            <div class="card-body">
-                                <h3 class="card-title fs-18 pb-2">Course Categories</h3>
-                                <div class="divider"><span></span></div>
-                                <ul class="generic-list-item">
-                                    @forelse ($categories ?? [] as $cat)
-                                        <li><a href="{{ url('category/'.$cat->id.'/'.$cat->category_slug) }}">{{ $cat->category_name }}</a></li>
-                                    @empty
-                                        <li>No categories available</li>
-                                    @endforelse
-                                </ul>
-                            </div>
+                    <div class="card card-item">
+                        <div class="card-body">
+                            <h3 class="card-title fs-18 pb-2">Course Categories</h3>
+                            <div class="divider"><span></span></div>
+                            <ul class="generic-list-item">
+                                @forelse ($categories ?? [] as $cat)
+                                    <li><a href="{{ url('category/'.$cat->id.'/'.Str::slug($cat->category_name)) }}">{{ $cat->category_name }}</a></li>
+                                @empty
+                                    <li>No categories available</li>
+                                @endforelse
+                            </ul>
                         </div>
                     </div>
                 </div>
@@ -522,34 +573,37 @@ black lh-18 pb-3">{{ $instructor->email ?? 'No email available' }}</p>
                 <div class="view-more-carousel-2 owl-action-styled">
                     @foreach ($instructorCourses ?? [] as $inscourse)
                         @php
-                            $insFinalPrice = $inscourse->discount_price !== null
-                                ? max(0, $inscourse->selling_price - $inscourse->discount_price)
-                                : $inscourse->selling_price;
-                            $insDiscountPercentage = ($inscourse->selling_price > 0 && $inscourse->discount_price !== null)
-                                ? round(($inscourse->discount_price / $inscourse->selling_price) * 100)
-                                : 0;
+                            $insSellingPrice = $inscourse->selling_price ?? 0;
+                            $insDiscountPrice = $inscourse->discount_price ?? 0;
+                            $insFinalPrice = max(0, $insSellingPrice - $insDiscountPrice);
+                            $insDiscountPercentage = ($insSellingPrice > 0 && $insDiscountPrice > 0) ? round($insDiscountPrice / $insSellingPrice * 100) : 0;
                             $insRating = $inscourse->reviews->avg('rating') ?? 0;
                             $insReviewsCount = $inscourse->reviews->count();
                             $insIsWishlisted = auth()->check() && \App\Models\Wishlist::where('trackable_type', 'App\Models\User')
                                 ->where('trackable_id', auth()->id())
                                 ->where('course_id', $inscourse->id)
                                 ->exists();
-                            $insIsInCart = \Darryldecode\Cart\Facades\CartFacade::get($inscourse->id) !== null;
+                            $insIsInCart = in_array($inscourse->id, $cartItems);
+                            $insHasPurchased = Auth::check() && App\Models\Order::where('user_id', Auth::id())
+                                ->where('course_id', $inscourse->id)
+                                ->where('payment_status', 'paid')
+                                ->exists();
                         @endphp
                         <div class="card card-item card-preview" data-tooltip-content="#tooltip_content_{{ $inscourse->id }}">
                             <div class="card-image">
-                                <a href="{{ url('course/details/'.$inscourse->id.'/'.$inscourse->course_name_slug) }}" class="d-block">
+                                <a href="{{ route('course.details', [$inscourse->id, Str::slug($inscourse->course_name)]) }}" class="d-block">
                                     <img class="card-img-top lazy" 
                                          src="{{ $inscourse->course_image ? asset('upload/course_images/thumbnail/' . $inscourse->course_image) : asset('images/default-course.jpg') }}" 
                                          alt="Card image cap" 
-                                         loading="lazy">
+                                         loading="lazy"
+                                         onerror="this.src='{{ asset('images/default-course.jpg') }}'">
                                 </a>
                                 <div class="course-badge-labels">
                                     @if ($inscourse->bestseller == 1)
                                         <div class="course-badge">Bestseller</div>
                                     @endif
                                     @if ($insDiscountPercentage > 0)
-                                        <div class="course-badge blue">{{ $insDiscountPercentage }}%</div>
+                                        <div class="course-badge blue">{{ $insDiscountPercentage }}% Off</div>
                                     @else
                                         <div class="course-badge blue">New</div>
                                     @endif
@@ -557,7 +611,7 @@ black lh-18 pb-3">{{ $instructor->email ?? 'No email available' }}</p>
                             </div>
                             <div class="card-body">
                                 <h6 class="ribbon ribbon-blue-bg fs-14 mb-3">{{ $inscourse->label ?? 'No Label' }}</h6>
-                                <h5 class="card-title"><a href="{{ url('course/details/'.$inscourse->id.'/'.$inscourse->course_name_slug) }}">{{ $inscourse->course_name }}</a></h5>
+                                <h5 class="card-title"><a href="{{ route('course.details', [$inscourse->id, Str::slug($inscourse->course_name)]) }}">{{ $inscourse->course_name }}</a></h5>
                                 <p class="card-text"><a href="{{ $instructor ? route('instructor.details', $instructor->id) : '#' }}">{{ $instructor->name ?? 'Unknown Instructor' }}</a></p>
                                 <div class="rating-wrap d-flex align-items-center py-2">
                                     <div class="review-stars">
@@ -569,8 +623,8 @@ black lh-18 pb-3">{{ $instructor->email ?? 'No email available' }}</p>
                                     <span class="rating-total pl-1">({{ number_format($insReviewsCount) }})</span>
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center">
-                                    @if ($insFinalPrice < $inscourse->selling_price)
-                                        <p class="card-price text-black font-weight-bold">{{ number_format($insFinalPrice, 2) }} TND <span class="before-price font-weight-medium">{{ number_format($inscourse->selling_price, 2) }} TND</span></p>
+                                    @if ($insDiscountPercentage > 0)
+                                        <p class="card-price text-black font-weight-bold">{{ number_format($insFinalPrice, 2) }} TND <span class="before-price font-weight-medium">{{ number_format($insSellingPrice, 2) }} TND</span></p>
                                     @else
                                         <p class="card-price text-black font-weight-bold">{{ number_format($insFinalPrice, 2) }} TND</p>
                                     @endif
@@ -597,9 +651,9 @@ black lh-18 pb-3">{{ $instructor->email ?? 'No email available' }}</p>
     <!-- Tooltip Templates -->
     @foreach ($instructorCourses ?? [] as $inscourse)
         @php
-            $insFinalPrice = $inscourse->discount_price !== null
-                ? max(0, $inscourse->selling_price - $inscourse->discount_price)
-                : $inscourse->selling_price;
+            $insSellingPrice = $inscourse->selling_price ?? 0;
+            $insDiscountPrice = $inscourse->discount_price ?? 0;
+            $insFinalPrice = max(0, $insSellingPrice - $insDiscountPrice);
             $insRating = $inscourse->reviews->avg('rating') ?? 0;
             $insReviewsCount = $inscourse->reviews->count();
             $goals = App\Models\CourseGoal::where('goalable_type', 'App\Models\Course')->where('goalable_id', $inscourse->id)->orderBy('id', 'DESC')->get();
@@ -611,14 +665,14 @@ black lh-18 pb-3">{{ $instructor->email ?? 'No email available' }}</p>
                 ->where('trackable_id', auth()->id())
                 ->where('course_id', $inscourse->id)
                 ->exists();
-            $insIsInCart = \Darryldecode\Cart\Facades\CartFacade::get($inscourse->id) !== null;
+            $insIsInCart = in_array($inscourse->id, $cartItems);
         @endphp
         <div class="tooltip_templates" style="display: none;">
             <div id="tooltip_content_{{ $inscourse->id }}">
                 <div class="card card-item">
                     <div class="card-body">
                         <p class="card-text pb-2">By <a href="{{ $instructor ? route('instructor.details', $instructor->id) : '#' }}">{{ $instructor->name ?? 'Unknown Instructor' }}</a></p>
-                        <h5 class="card-title pb-1"><a href="{{ url('course/details/'.$inscourse->id.'/'.$inscourse->course_name_slug) }}">{{ $inscourse->course_name }}</a></h5>
+                        <h5 class="card-title pb-1"><a href="{{ route('course.details', [$inscourse->id, Str::slug($inscourse->course_name)]) }}">{{ $inscourse->course_name }}</a></h5>
                         <div class="d-flex align-items-center pb-1">
                             @if ($inscourse->bestseller == 1)
                                 <h6 class="ribbon fs-14 mr-2">Bestseller</h6>
@@ -638,7 +692,7 @@ black lh-18 pb-3">{{ $instructor->email ?? 'No email available' }}</p>
                             <li>{{ $inscourse->duration ?? 'N/A' }}</li>
                             <li>{{ $inscourse->label ?? 'All Levels' }}</li>
                         </ul>
-                        <p class="card-text pt-1 fs-14 lh-22">{!! $inscourse->description ?? 'No description available.' !!}</p>
+                        <p class="card-text pt-1 fs-14 lh-22">{!! Str::limit(strip_tags($inscourse->description), 100, '...') ?? 'No description available.' !!}</p>
                         <ul class="generic-list-item fs-14 py-3">
                             @foreach ($goals->take(3) as $goal)
                                 <li><i class="la la-check mr-1 text-black"></i> {{ $goal->goal_name }}</li>
@@ -651,11 +705,13 @@ black lh-18 pb-3">{{ $instructor->email ?? 'No email available' }}</p>
                         </ul>
                         <div class="d-flex justify-content-between align-items-center">
                             @if ($insHasPurchased)
-                                <a href="{{ route('course.start', [$inscourse->id, $inscourse->course_name_slug]) }}" class="btn theme-btn flex-grow-1 mr-3">
+                                <a href="{{ route('course.start', [$inscourse->id, Str::slug($inscourse->course_name)]) }}" class="btn theme-btn flex-grow-1 mr-3">
                                     <i class="la la-play-circle mr-1 fs-18"></i> Start Learning
                                 </a>
                             @else
-                                <button class="btn theme-btn flex-grow-1 mr-3 add-to-cart" data-course-id="{{ $inscourse->id }}" {{ $insIsInCart ? 'data-in-cart="true"' : '' }}>
+                                <button class="btn theme-btn flex-grow-1 mr-3 cart-btn {{ $insIsInCart ? 'in-cart' : 'add-to-cart' }}" 
+                                        data-course-id="{{ $inscourse->id }}"
+                                        data-action="{{ $insIsInCart ? 'remove' : 'add' }}">
                                     <i class="la la-shopping-cart mr-1 fs-18"></i> {{ $insIsInCart ? 'In Cart' : 'Add to Cart' }}
                                 </button>
                             @endif
@@ -671,7 +727,6 @@ black lh-18 pb-3">{{ $instructor->email ?? 'No email available' }}</p>
                                 </a>
                             @endauth
                         </div>
-                        <div id="cart-message-{{ $inscourse->id }}" class="cart-message"></div>
                     </div>
                 </div>
             </div>
@@ -692,7 +747,7 @@ black lh-18 pb-3">{{ $instructor->email ?? 'No email available' }}</p>
                     <div class="copy-to-clipboard">
                         <span class="success-message">Copied!</span>
                         <div class="input-group">
-                            <input type="text" class="form-control form--control copy-input pl-3" value="{{ url('course/details/'.$course->id.'/'.$course->course_name_slug) }}">
+                            <input type="text" class="form-control form--control copy-input pl-3" value="{{ route('course.details', [$course->id, Str::slug($course->course_name)]) }}">
                             <div class="input-group-append">
                                 <button class="btn theme-btn theme-btn-sm copy-btn shadow-none"><i class="la la-copy mr-1"></i> Copy</button>
                             </div>
@@ -739,25 +794,15 @@ black lh-18 pb-3">{{ $instructor->email ?? 'No email available' }}</p>
     <script src="{{ asset('js/tooltipster.bundle.min.js') }}"></script>
     <script>
     $(document).ready(function() {
-        console.log('jQuery loaded and document ready');
-
-        // Section toggle for accordion
-        $('.section-toggle').off('click').on('click', function() {
+        $('.section-toggle').on('click', function() {
             const content = $(this).closest('.card').find('.section-content');
             const plusIcon = $(this).find('.la-plus');
             const minusIcon = $(this).find('.la-minus');
-            if (content.is(':visible')) {
-                content.hide();
-                plusIcon.show();
-                minusIcon.hide();
-            } else {
-                content.show();
-                plusIcon.hide();
-                minusIcon.show();
-            }
+            content.toggle();
+            plusIcon.toggle();
+            minusIcon.toggle();
         });
 
-        // Initialize Tooltipster
         $('.card-preview').tooltipster({
             theme: 'tooltipster-shadow',
             interactive: true,
@@ -766,276 +811,220 @@ black lh-18 pb-3">{{ $instructor->email ?? 'No email available' }}</p>
             side: 'right',
             distance: 10
         });
-        console.log('Tooltipster initialized');
 
-        // Handle wishlist button clicks
-        $('.wishlist-btn').off('click').on('click', function(e) {
+        function showNotification(message, type) {
+            const $message = $('<div class="cart-message"></div>').html(`<div class="alert alert-${type}">${message}</div>`)
+                .css({ position: 'fixed', top: '20px', right: '20px', 'z-index': 10000 });
+            $('body').append($message);
+            setTimeout(() => $message.fadeOut(300, () => $message.remove()), 3000);
+        }
+
+        let tempCart = JSON.parse(localStorage.getItem('tempCart')) || [];
+
+        $('.wishlist-btn').on('click', function(e) {
             e.preventDefault();
-            console.log('Wishlist button clicked');
-            var $button = $(this);
-            var courseId = $button.data('course-id');
-            var isWishlisted = $button.hasClass('wishlisted');
-            var url = isWishlisted ? '/wishlist/remove/' + courseId : '/wishlist/add/' + courseId;
+            e.stopPropagation();
+            const $button = $(this);
+            const courseId = $button.data('course-id');
+            const isWishlisted = $button.hasClass('wishlisted');
+            const url = isWishlisted ? '/wishlist/remove/' + courseId : '/wishlist/add/' + courseId;
 
             $.ajax({
                 url: url,
                 method: 'POST',
-                data: {
-                    _token: $('meta[name="csrf-token"]').attr('content')
-                },
+                data: { _token: $('meta[name="csrf-token"]').attr('content') },
+                dataType: 'json',
                 success: function(response) {
-                    console.log('Wishlist AJAX success:', response);
                     if (response.status === 'success') {
                         if (isWishlisted) {
-                            $button.removeClass('wishlisted');
-                            $button.find('i').removeClass('la-heart').addClass('la-heart-o');
-                            $button.attr('title', 'Add to Wishlist');
+                            $button.removeClass('wishlisted')
+                                .find('i').removeClass('la-heart').addClass('la-heart-o')
+                                .attr('title', 'Add to Wishlist');
                             $button.find('.swapping-btn').text($button.find('.swapping-btn').data('text-original'));
+                            showNotification('Removed from wishlist.', 'success');
                         } else {
-                            $button.addClass('wishlisted');
-                            $button.find('i').removeClass('la-heart-o').addClass('la-heart');
-                            $button.attr('title', 'Remove from Wishlist');
+                            $button.addClass('wishlisted')
+                                .find('i').removeClass('la-heart-o').addClass('la-heart')
+                                .attr('title', 'Remove from Wishlist');
                             $button.find('.swapping-btn').text($button.find('.swapping-btn').data('text-swap'));
+                            showNotification('Added to wishlist.', 'success');
                         }
+                    } else {
+                        showNotification(response.message || 'An error occurred while updating wishlist.', 'danger');
                     }
                 },
                 error: function(xhr) {
-                    console.error('Wishlist AJAX error:', xhr);
-                    var response = xhr.responseJSON;
-                    alert(response.message || 'An error occurred.');
+                    const response = xhr.responseJSON || {};
+                    showNotification(response.message || 'Failed to update wishlist. Please try again.', 'danger');
                 }
             });
         });
 
-        // Handle Add/Remove from Cart button clicks
-        $('.add-to-cart').off('click').on('click', function(e) {
+        $('.cart-btn').on('click', function(e) {
             e.preventDefault();
-            console.log('Cart button clicked');
-            var $button = $(this);
-            var courseId = $button.data('course-id');
-            var isInCart = $button.data('in-cart') === true;
-            var $message = $('#cart-message-' + courseId).length ? $('#cart-message-' + courseId) : $('<div class="cart-message"></div>').appendTo('body');
-            var url = isInCart ? '{{ route("cart.remove", ":id") }}'.replace(':id', courseId) : '{{ route("cart.add", ":id") }}'.replace(':id', courseId);
-            var method = isInCart ? 'GET' : 'POST';
+            const $button = $(this);
+            const courseId = $button.data('course-id');
+            const action = $button.data('action');
 
             if (!courseId) {
                 console.error('Course ID is undefined');
-                $message.html('<div class="alert alert-danger">Error: Course ID is missing.</div>').css({
-                    position: 'fixed',
-                    top: '20px',
-                    right: '20px',
-                    zIndex: 10000
-                });
-                setTimeout(function() { $message.remove(); }, 3000);
+                showNotification('Course ID not found.', 'danger');
                 return;
             }
 
-            console.log('Sending AJAX request for course ID:', courseId, 'Action:', isInCart ? 'Remove' : 'Add');
+            const isAuthenticated = {!! json_encode(auth()->check()) !!};
+
+            if (!isAuthenticated) {
+                if (!tempCart.some(item => item.courseId === courseId)) {
+                    tempCart.push({ courseId: courseId });
+                    localStorage.setItem('tempCart', JSON.stringify(tempCart));
+                    showNotification('Course added to temporary cart. Please log in to proceed.', 'info');
+                    setTimeout(() => {
+                        window.location.href = '{{ route('login') }}?redirect=' + encodeURIComponent('{{ route('cart') }}') + '&course_id=' + courseId;
+                    }, 1500);
+                } else {
+                    showNotification('Course already in temporary cart.', 'info');
+                }
+                return;
+            }
+
+            const url = action === 'add' ? '/cart/add/' + courseId : '/cart/remove/' + courseId;
+
+            let originalState = null;
+            if (action === 'remove') {
+                originalState = {
+                    class: 'in-cart',
+                    action: 'remove',
+                    html: '<i class="la la-shopping-cart fs-18 mr-1"></i> In Cart'
+                };
+                $button
+                    .removeClass('in-cart')
+                    .addClass('add-to-cart')
+                    .data('action', 'add')
+                    .html('<i class="la la-shopping-cart fs-18 mr-1"></i> Add to Cart');
+            } else {
+                $button.prop('disabled', true).html('<i class="la la-spinner la-spin mr-1"></i> Adding...');
+            }
+
             $.ajax({
                 url: url,
-                method: method,
-                data: isInCart ? {} : { _token: $('meta[name="csrf-token"]').attr('content') },
+                method: 'POST',
+                data: { _token: $('meta[name="csrf-token"]').attr('content') },
                 dataType: 'json',
-                beforeSend: function() {
-                    $button.prop('disabled', true).html('<i class="la la-shopping-cart fs-18 mr-1"></i> ' + (isInCart ? 'Removing...' : 'Adding...'));
-                },
                 success: function(response) {
-                    console.log('Cart AJAX success:', response);
-                    $button.prop('disabled', false);
-                    if (response.redirect) {
-                        // Non-authenticated: Store course in localStorage
-                        let tempCart = JSON.parse(localStorage.getItem('tempCart')) || [];
-                        const itemIndex = tempCart.findIndex(item => item.courseId === response.course_id);
-                        if (itemIndex > -1) {
-                            tempCart[itemIndex].quantity += 1;
-                        } else {
-                            tempCart.push({ courseId: response.course_id, quantity: 1 });
+                    if (response.success) {
+                        if (action === 'add') {
+                            $button
+                                .prop('disabled', false)
+                                .removeClass('add-to-cart')
+                                .addClass('in-cart')
+                                .data('action', 'remove')
+                                .html('<i class="la la-shopping-cart fs-18 mr-1"></i> In Cart');
                         }
-                        localStorage.setItem('tempCart', JSON.stringify(tempCart));
-                        $message.html('<div class="alert alert-info">Please log in to add this course to your cart.</div>').css({
-                            position: 'fixed',
-                            top: '20px',
-                            right: '20px',
-                            zIndex: 10000
+                        showNotification(response.message, 'success');
+                        $(document).trigger('cartUpdated', {
+                            cartCount: response.cartCount,
+                            cartSubTotal: response.cartSubTotal
                         });
-                        setTimeout(function() {
-                            console.log('Redirecting to:', response.redirect);
+                    } else if (response.info) {
+                        showNotification(response.info, 'info');
+                        if (action === 'add') {
+                            $button.prop('disabled', false)
+                                .html('<i class="la la-shopping-cart fs-18 mr-1"></i> Add to Cart');
+                        } else if (originalState) {
+                            $button
+                                .removeClass('add-to-cart')
+                                .addClass(originalState.class)
+                                .data('action', originalState.action)
+                                .html(originalState.html);
+                        }
+                    } else if (response.redirect) {
+                        showNotification(response.message || 'Please log in to continue.', 'info');
+                        setTimeout(() => {
                             window.location.href = response.redirect;
                         }, 1500);
-                    } else if (response.success) {
-                        $message.html('<div class="alert alert-success">' + response.message + '</div>').css({
-                            position: 'fixed',
-                            top: '20px',
-                            right: '20px',
-                            zIndex: 10000
-                        });
-                        if (isInCart) {
-                            // Remove from cart
-                            $button.data('in-cart', false).removeAttr('data-in-cart');
-                            $button.html('<i class="la la-shopping-cart fs-18 mr-1"></i> Add to Cart');
-                        } else {
-                            // Add to cart
-                            $button.data('in-cart', true);
-                            $button.html('<i class="la la-shopping-cart fs-18 mr-1"></i> In Cart');
-                        }
-                        // Update all buttons for this course
-                        $('.add-to-cart[data-course-id="' + courseId + '"]').each(function() {
-                            $(this).data('in-cart', !isInCart).prop('disabled', !isInCart)
-                                .html('<i class="la la-shopping-cart fs-18 mr-1"></i> ' + (isInCart ? 'Add to Cart' : 'In Cart'));
-                        });
-                        // Update cart count and subtotal
-                        if ($('#cartQty').length) {
-                            $('#cartQty').text(response.cartCount);
-                        }
-                        if ($('#cartSubTotal').length) {
-                            $('#cartSubTotal').text('TND ' + response.cartSubTotal);
-                        }
-                        // Update cart dropdown
-                        console.log('Updating cart dropdown');
-                        $.ajax({
-                            url: '{{ route("cart") }}',
-                            method: 'GET',
-                            success: function(html) {
-                                console.log('Cart dropdown HTML received');
-                                var $newCart = $(html).find('#cartDropdown').html();
-                                $('#cartDropdown').html($newCart);
-                                // Rebind remove-from-cart handlers in dropdown
-                                bindCartDropdownHandlers();
-                            },
-                            error: function(xhr) {
-                                console.error('Cart dropdown AJAX error:', xhr);
-                            }
-                        });
-                    } else {
-                        $message.html('<div class="alert alert-info">' + (response.info || response.message || 'Action completed.') + '</div>').css({
-                            position: 'fixed',
-                            top: '20px',
-                            right: '20px',
-                            zIndex: 10000
-                        });
                     }
-                    setTimeout(function() { $message.remove(); }, 3000);
                 },
                 error: function(xhr) {
-                    console.error('Cart AJAX error:', xhr);
-                    $button.prop('disabled', false).html('<i class="la la-shopping-cart fs-18 mr-1"></i> ' + (isInCart ? 'In Cart' : 'Add to Cart'));
-                    var response = xhr.responseJSON || {};
-                    if (xhr.status === 401 && response.redirect) {
-                        // Handle 401 Unauthorized for non-authenticated users
-                        let tempCart = JSON.parse(localStorage.getItem('tempCart')) || [];
-                        const itemIndex = tempCart.findIndex(item => item.courseId === response.course_id);
-                        if (itemIndex > -1) {
-                            tempCart[itemIndex].quantity += 1;
-                        } else {
-                            tempCart.push({ courseId: response.course_id, quantity: 1 });
-                        }
-                        localStorage.setItem('tempCart', JSON.stringify(tempCart));
-                        $message.html('<div class="alert alert-info">Please log in to add this course to your cart.</div>').css({
-                            position: 'fixed',
-                            top: '20px',
-                            right: '20px',
-                            zIndex: 10000
-                        });
-                        setTimeout(function() {
-                            console.log('Redirecting to:', response.redirect);
+                    const response = xhr.responseJSON || {};
+                    const message = response.message || 'An error occurred. Please try again.';
+                    showNotification(message, 'danger');
+                    if (action === 'add') {
+                        $button.prop('disabled', false)
+                            .html('<i class="la la-shopping-cart fs-18 mr-1"></i> Add to Cart');
+                    } else if (originalState) {
+                        $button
+                            .removeClass('add-to-cart')
+                            .addClass(originalState.class)
+                            .data('action', originalState.action)
+                            .html(originalState.html);
+                    }
+                    if (response.redirect) {
+                        setTimeout(() => {
                             window.location.href = response.redirect;
                         }, 1500);
-                    } else {
-                        $message.html('<div class="alert alert-danger">' + (response.error || response.message || 'An error occurred.') + '</div>').css({
-                            position: 'fixed',
-                            top: '20px',
-                            right: '20px',
-                            zIndex: 10000
-                        });
-                        setTimeout(function() { $message.remove(); }, 3000);
                     }
                 }
             });
         });
 
-        // Function to bind remove-from-cart handlers in cart dropdown
-        function bindCartDropdownHandlers() {
-            $('#cartDropdown .remove-from-cart').off('click').on('click', function(e) {
-                e.preventDefault();
-                console.log('Remove from cart button clicked in dropdown');
-                var courseId = $(this).data('id');
-                var $cartItem = $('#cart-item-' + courseId);
-                var $message = $('#cart-message-' + courseId).length ? $('#cart-message-' + courseId) : $('<div class="cart-message"></div>').appendTo('body');
+        @if (auth()->check())
+            const urlParams = new URLSearchParams(window.location.search);
+            const courseIdFromRedirect = urlParams.get('course_id');
+            if (courseIdFromRedirect && !tempCart.some(item => item.courseId === parseInt(courseIdFromRedirect))) {
+                tempCart.push({ courseId: parseInt(courseIdFromRedirect) });
+                localStorage.setItem('tempCart', JSON.stringify(tempCart));
+            }
 
+            if (tempCart.length > 0) {
                 $.ajax({
-                    url: '{{ route("cart.remove", ":id") }}'.replace(':id', courseId),
-                    method: 'GET',
+                    url: '/cart/sync',
+                    method: 'POST',
+                    data: {
+                        _token: $('meta[name="csrf-token"]').attr('content'),
+                        tempCart: tempCart
+                    },
                     dataType: 'json',
                     success: function(response) {
-                        console.log('Remove from cart AJAX success:', response);
-                        if (response.redirect) {
-                            $message.html('<div class="alert alert-info">Please log in to remove this course from your cart.</div>').css({
-                                position: 'fixed',
-                                top: '20px',
-                                right: '20px',
-                                zIndex: 10000
+                        if (response.success) {
+                            showNotification(response.message, 'success');
+                            $(document).trigger('cartUpdated', {
+                                cartCount: response.cartCount,
+                                cartSubTotal: response.cartSubTotal
                             });
-                            setTimeout(function() {
-                                window.location.href = response.redirect;
-                            }, 1500);
-                        } else if (response.success) {
-                            $cartItem.remove();
-                            $message.html('<div class="alert alert-success">' + response.message + '</div>').css({
-                                position: 'fixed',
-                                top: '20px',
-                                right: '20px',
-                                zIndex: 10000
-                            });
-                            if ($('#cartQty').length) {
-                                $('#cartQty').text(response.cartCount);
+                            if (response.clearTempCart) {
+                                tempCart = [];
+                                localStorage.removeItem('tempCart');
                             }
-                            if ($('#cartSubTotal').length) {
-                                $('#cartSubTotal').text('TND ' + response.cartSubTotal);
-                            }
-                            if (response.cartCount === 0) {
-                                $('#cartDropdown').html(
-                                    '<li class="media media-card">' +
-                                    '<div class="media-body fs-15 text-center">' +
-                                    '<p class="text-muted lh-18">Your cart is empty</p>' +
-                                    '</div></li>' +
-                                    '<li class="mt-3">' +
-                                    '<a href="{{ route('cart') }}" class="btn theme-btn w-100 py-2">Go to Cart <i class="la la-arrow-right icon ml-1"></i></a>' +
-                                    '</li>'
-                                );
-                            }
-                            // Update course card button state
-                            $('.add-to-cart[data-course-id="' + courseId + '"]').each(function() {
-                                $(this).data('in-cart', false).removeAttr('data-in-cart')
-                                    .prop('disabled', false)
-                                    .html('<i class="la la-shopping-cart fs-18 mr-1"></i> Add to Cart');
+                            tempCart.forEach(function(item) {
+                                const $button = $(`.cart-btn[data-course-id="${item.courseId}"]`);
+                                if ($button.length) {
+                                    $button
+                                        .removeClass('add-to-cart')
+                                        .addClass('in-cart')
+                                        .data('action', 'remove')
+                                        .html('<i class="la la-shopping-cart fs-18 mr-1"></i> In Cart');
+                                }
                             });
                         } else {
-                            $message.html('<div class="alert alert-info">' + (response.message || 'Action completed.') + '</div>').css({
-                                position: 'fixed',
-                                top: '20px',
-                                right: '20px',
-                                zIndex: 10000
-                            });
+                            showNotification(response.message || 'Failed to sync cart.', 'danger');
                         }
-                        setTimeout(function() { $message.remove(); }, 3000);
                     },
                     error: function(xhr) {
-                        console.error('Remove from cart AJAX error:', xhr);
-                        var response = xhr.responseJSON || {};
-                        $message.html('<div class="alert alert-danger">' + (response.message || 'An error occurred.') + '</div>').css({
-                            position: 'fixed',
-                            top: '20px',
-                            right: '20px',
-                            zIndex: 10000
-                        });
-                        setTimeout(function() { $message.remove(); }, 3000);
+                        const response = xhr.responseJSON || {};
+                        showNotification(response.message || 'An error occurred while syncing cart.', 'danger');
                     }
                 });
-            });
-        }
+            }
+            @if (session('cart_added_message'))
+                showNotification('{{ session('cart_added_message') }}', 'success');
+            @endif
+        @endif
 
-        // Initial binding for cart dropdown handlers
-        bindCartDropdownHandlers();
+        $(document).on('cartUpdated', function(event, data) {
+            $('.cart-count').text(data.cartCount);
+            $('.cart-subtotal').text('TND ' + data.cartSubTotal);
+        });
     });
     </script>
 @endsection
