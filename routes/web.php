@@ -215,6 +215,7 @@ Route::prefix('instructor')->name('instructor.')->group(function () {
         Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show');
 
         Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAllAsRead');
+        Route::get('/notifications/{id}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
         Route::get('/reviews/{review}', [InstructorReviewController::class, 'show'])->name('reviews.show');
 
         // Blog Routes 
