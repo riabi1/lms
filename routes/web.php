@@ -32,6 +32,8 @@ use App\Http\Controllers\Admin\SubCategoryController;
 use App\Http\Controllers\Frontend\BlogShowController;
 use App\Http\Controllers\Instructor\CouponController;
 use App\Http\Controllers\Instructor\CourseController;
+use App\Http\Controllers\User\UserDashboardController;
+use App\Http\Controllers\Instructor\InstructorDashboardController;
 use App\Http\Controllers\Admin\BlogCategoriesController;
 use App\Http\Controllers\Admin\ReportCategoryController;
 use App\Http\Controllers\Frontend\BlogArticleController;
@@ -53,11 +55,14 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::name('')->group(function () {
     require base_path('routes/auth/web.php');
 
-    Route::get('/dashboard', function () {
-        return view('User.index');
-    })->middleware(['auth:web', 'verified'])->name('dashboard');
+  Route::get('/dashboard', [UserDashboardController::class, 'index'])->middleware('verified')->name('dashboard');
+  // Data Endpoints for Charts
+  Route::get('/user/dashboard/completion-data', [UserDashboardController::class, 'getCompletionData'])->name('user.completiondata');
+  Route::get('/user/dashboard/quiz-performance', [UserDashboardController::class, 'getQuizPerformanceData'])->name('user.quizperformance');
+  Route::get('/user/dashboard/enrollment-trends', [UserDashboardController::class, 'getEnrollmentTrendsData'])->name('user.enrollmenttrends');
+  Route::get('/user/dashboard/wishlist-data', [UserDashboardController::class, 'getWishlistData'])->name('user.wishlistdata');
 
-    Route::middleware('auth:web')->group(function () {
+  Route::middleware('auth:web')->group(function () {
         // Cart Routes
         Route::post('/cart/sync', [CartController::class, 'syncTempCart'])->name('cart.sync');
         Route::get('/cart', [CartController::class, 'MyCart'])->name('cart');
@@ -187,11 +192,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
 Route::prefix('instructor')->name('instructor.')->group(function () {
     require base_path('routes/auth/instructor.php');
 
-    Route::get('/dashboard', function () {
-        return view('instructor.index');
-    })->middleware(['auth:instructor'])->name('dashboard');
+  Route::get('/dashboard', [InstructorDashboardController::class, 'index'])->name('dashboard');
 
-    Route::middleware(['auth:instructor', 'verified'])->group(function () {
+
+  Route::middleware(['auth:instructor', 'verified'])->group(function () {
         Route::resource('courses', CourseController::class)->names('courses');
         Route::get('/courses/subcategory/ajax/{category_id}', [CourseController::class, 'getSubCategory'])->name('subcategory.ajax');
         Route::resource('courses.sections', CourseSectionController::class)->names('course_sections');
