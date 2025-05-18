@@ -6,13 +6,15 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use App\Models\Category;
 
 class ProfileController extends Controller
 {
     public function edit()
     {
         $profileData = Auth::guard('web')->user();
-        return view('User.edit_profile', compact('profileData'));
+        $categories = Category::all();
+        return view('User.edit_profile', compact('profileData', 'categories'));
     }
 
     public function update(Request $request)
@@ -24,20 +26,23 @@ class ProfileController extends Controller
                 'phone' => 'nullable|string|max:20',
                 'address' => 'nullable|string|max:255',
                 'photo' => 'nullable|image|max:5120|mimes:jpg,png,jpeg',
-                'new_password' => 'nullable|string|min:8|confirmed', // Optionnel, avec confirmation
+                'new_password' => 'nullable|string|min:8|confirmed',
+                'preference' => 'nullable|array|max:3',
+                'preference.*' => 'exists:categories,id',
+                'grade_select' => 'required|string|max:255',
+                'grade_custom' => 'nullable|string|max:255|required_if:grade_select,Other',
             ]);
 
             $user = Auth::guard('web')->user();
 
-            // Mise à jour des informations de base
             $user->name = $request->name;
             $user->email = $request->email;
             $user->phone = $request->phone;
             $user->address = $request->address;
+            $user->preference = $request->preference ? json_encode($request->preference) : null;
+            $user->grade = $request->grade_select === 'Other' ? $request->grade_custom : $request->grade_select;
 
-            // Gestion de la photo
             if ($request->hasFile('photo')) {
-                // Supprimer l'ancienne photo si elle existe
                 if ($user->photo && Storage::disk('public')->exists('upload/user_images/' . $user->photo)) {
                     Storage::disk('public')->delete('upload/user_images/' . $user->photo);
                 }
@@ -48,7 +53,6 @@ class ProfileController extends Controller
                 $user->photo = $filename;
             }
 
-            // Gestion du mot de passe (optionnel)
             if ($request->filled('new_password')) {
                 $user->password = Hash::make($request->new_password);
             }
@@ -70,4 +74,4 @@ class ProfileController extends Controller
         $request->session()->regenerateToken();
         return redirect('/login');
     }
-}
+} 
