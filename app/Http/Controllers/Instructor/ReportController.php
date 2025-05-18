@@ -61,4 +61,31 @@ class ReportController extends Controller
                 ->withInput();
         }
     }
+
+    public function show(Report $report)
+    {
+        // Ensure the report belongs to the authenticated instructor
+        if ($report->reporter_type !== 'App\Models\Instructor' || $report->reporter_id !== auth('instructor')->id()) {
+            abort(403, 'Unauthorized access.');
+        }
+
+        // Mark related notifications as read
+        auth('instructor')->user()->notifications()
+            ->where('data->type', 'report_resolution')
+            ->where('data->report_id', $report->id)
+            ->update(['read_at' => now()]);
+
+        return view('instructor.reports.show', compact('report'));
+    }
+
+    public function storeFeedback(Request $request, Report $report)
+    {
+        // Ensure the report belongs to the authenticated instructor
+        if ($report->reporter_type !== 'App\Models\Instructor' || $report->reporter_id !== auth('instructor')->id()) {
+            abort(403, 'Unauthorized access.');
+        }
+
+        // Delegate to Admin\ReportController's storeFeedback method
+        return app(\App\Http\Controllers\Admin\ReportController::class)->storeFeedback($request, $report);
+    }
 }

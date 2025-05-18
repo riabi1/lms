@@ -13,7 +13,7 @@
         "guzzlehttp/guzzle": "^7.2",
         "intervention/image": "^3.11",
         "laravel/framework": "^10.0",
-        "laravel/reverb": "*",
+        "laravel/reverb": "^1.5",
         "laravel/sanctum": "^3.2",
         "laravel/socialite": "^5.18",
         "laravel/tinker": "^2.8",
@@ -21,6 +21,7 @@
         "maatwebsite/excel": "^3.1",
         "omnipay/paypal": "^3.0",
         "omnipay/stripe": "^3.2",
+        "pusher/pusher-php-server": "^7.2",
         "spatie/laravel-permission": "^6.16",
         "srmklive/paypal": "^3.0",
         "stripe/stripe-php": "^16.6"

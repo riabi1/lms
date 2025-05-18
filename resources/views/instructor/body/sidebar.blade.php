@@ -24,11 +24,11 @@
       </a>
     </li>
     @if ($status == 1)
-   <li class="menu-label">Management Tools</li>
+    <li class="menu-label">Management Tools</li>
     <li>
       <a href="javascript:;" class="has-arrow">
         <div class="parent-icon"><i class='bx bx-book-open'></i></div>
-        <div class="menu-title">Course Manage</div>
+        <div class="menu-title">My Courses</div>
       </a>
       <ul class="mm-collapse">
         <li><a href="{{ route('instructor.courses.index') }}"><i class='bx bx-radio-circle'></i>All Course</a></li>
@@ -36,7 +36,7 @@
     </li>
     <li>
       <a class="has-arrow" href="javascript:;">
-        <div class="parent-icon"><i class='bx bx-question-mark'></i></div>
+        <div class="parent-icon"><i class='bx bx-list-check'></i></div>
         <div class="menu-title">All Quizzes</div>
       </a>
       <ul class="mm-collapse">
@@ -75,7 +75,7 @@
     </li>
     <li>
       <a class="has-arrow" href="javascript:;">
-        <div class="parent-icon"><i class='bx bx-help-circle'></i></div>
+        <div class="parent-icon"><i class='bx bx-question-mark'></i></div>
         <div class="menu-title">All Question</div>
       </a>
       <ul class="mm-collapse">
@@ -94,7 +94,7 @@
     <li>
       <a class="has-arrow" href="javascript:;">
         <div class="parent-icon"><i class='bx bx-star'></i></div>
-        <div class="menu-title">Manage Review</div>
+        <div class="menu-title">Reviews</div>
       </a>
       <ul class="mm-collapse">
         <li><a href="{{ route('instructor.all.review') }}"><i class='bx bx-radio-circle'></i>All Review</a></li>

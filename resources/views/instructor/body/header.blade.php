@@ -12,36 +12,25 @@
                                 $unreadNotifications = $instructor ? $instructor->unreadNotifications()->latest()->take(10)->get() : collect();
                                 $unreadCount = $unreadNotifications->count();
                             @endphp
-                            @if ($unreadCount > 0)
-                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem; min-width: 18px; height: 18px; line-height: 1;">
-                                    {{ $unreadCount > 9 ? '9+' : $unreadCount }}
-                                    <span class="visually-hidden">notifications non lues</span>
-                                </span>
-                            @endif
+                            <span id="notificationCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem; min-width: 18px; height: 18px; line-height: 1; {{ $unreadCount > 0 ? '' : 'd-none' }}">
+                                {{ $unreadCount > 9 ? '9+' : $unreadCount }}
+                                <span class="visually-hidden">notifications non lues</span>
+                            </span>
                         </a>
                         <div class="dropdown-menu dropdown-menu-end shadow-sm" id="notificationDropdown" style="min-width: 350px;">
                             <div class="dropdown-header bg-light p-2 border-bottom">
-                                <h6 class="mb-0 fw-bold">Notifications ({{ $unreadCount }})</h6>
+                                <h6 class="mb-0 fw-bold">Notifications (<span id="notificationCountText">{{ $unreadCount }}</span>)</h6>
                             </div>
-                            <div class="dropdown-body" style="max-height: 300px; overflow-y: auto;">
+                            <div class="dropdown-body" id="notificationList" style="max-height: 300px; overflow-y: auto;">
                                 @if ($unreadCount > 0)
                                     @foreach ($unreadNotifications as $notification)
-                                        @php
-                                            $href = $notification->data['type'] === 'comment' 
-                                                ? route('instructor.blog.index', [
-                                                    'notification_id' => $notification->id,
-                                                    'post_id' => $notification->data['blog_post_id'] ?? null,
-                                                    'comment_id' => $notification->data['comment_id'] ?? null
-                                                  ])
-                                                : route('instructor.notifications.markAsRead', $notification->id);
-                                        @endphp
-                                        <a class="dropdown-item py-2 px-3 border-bottom" 
-                                           href="{{ $href }}"
+                                        <a class="dropdown-item py-2 px-3 border-bottom notification-item" 
+                                           href="{{ $notification->data['type'] === 'report_resolution' ? route('instructor.reports.show', $notification->data['report_id']) : route('instructor.notifications.markAsRead', $notification->id) }}"
                                            data-notification-id="{{ $notification->id }}">
                                             <div class="d-flex align-items-center gap-2">
-                                                <i class="bx bx-{{ $notification->data['type'] === 'comment' ? 'comment' : ($notification->data['type'] === 'question' ? 'question-mark' : ($notification->data['type'] === 'message' ? 'message' : 'book')) }} text-primary fs-5"></i>
+                                                <i class="bx bx-book text-primary fs-5"></i>
                                                 <div class="flex-grow-1">
-                                                    <p class="mb-0 text-dark">{{ Str::limit($notification->data['message'] ?? 'No message', 50) }}</p>
+                                                    <p class="mb-0 text-dark">{{ \Illuminate\Support\Str::limit($notification->data['message'] ?? 'No message', 50) }}</p>
                                                     <small class="text-muted">{{ $notification->created_at->diffForHumans() }}</small>
                                                 </div>
                                             </div>
@@ -91,4 +80,46 @@
             </div>
         </nav>
     </div>
+
+    @push('scripts')
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                window.Echo.private(`App.Models.Instructor.${{ Auth::guard('instructor')->id() }}`)
+                    .notification((notification) => {
+                        const notificationList = document.getElementById('notificationList');
+                        const notificationCount = document.getElementById('notificationCount');
+                        const notificationCountText = document.getElementById('notificationCountText');
+
+                        // Create new notification item
+                        const newItem = document.createElement('a');
+                        newItem.className = 'dropdown-item py-2 px-3 border-bottom notification-item';
+                        newItem.href = notification.type === 'report_resolution' 
+                            ? `/instructor/reports/${notification.report_id}`
+                            : `/instructor/notifications/${notification.id}/mark-as-read`;
+                        newItem.setAttribute('data-notification-id', notification.id);
+                        newItem.innerHTML = `
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bx bx-book text-primary fs-5"></i>
+                                <div class="flex-grow-1">
+                                    <p class="mb-0 text-dark">${notification.message.substring(0, 50)}${notification.message.length > 50 ? '...' : ''}</p>
+                                    <small class="text-muted">Just now</small>
+                                </div>
+                            </div>
+                        `;
+                        notificationList.prepend(newItem);
+
+                        // Update notification count
+                        let count = parseInt(notificationCountText.textContent) || 0;
+                        count++;
+                        notificationCountText.textContent = count;
+                        notificationCount.classList.remove('d-none');
+                        notificationCount.textContent = count > 9 ? '9+' : count;
+
+                        // Show notification dropdown
+                        const dropdown = new bootstrap.Dropdown(document.querySelector('.dropdown-toggle'));
+                        dropdown.show();
+                    });
+            });
+        </script>
+    @endpush
 </header>

@@ -43,6 +43,7 @@
                                 <th>Description</th>
                                 <th>Status</th>
                                 <th>Submitted At</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -62,6 +63,9 @@
                                     </span>
                                 </td>
                                 <td>{{ $report->created_at->format('d M Y') }}</td>
+                                <td>
+                                    <a href="{{ route('reports.show', $report->id) }}" class="btn btn-sm btn-primary">View</a>
+                                </td>
                             </tr>
                             @empty
                             <tr>

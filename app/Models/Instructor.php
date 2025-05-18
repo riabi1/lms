@@ -16,18 +16,6 @@ class Instructor extends Authenticatable implements MustVerifyEmail
 
     protected $guard = 'instructor';
 
-    /**
-     * The table associated with the model.
-     *
-     * @var string
-     */
-    protected $table = 'instructors';
-
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<string>
-     */
    protected $fillable = [
         'name',
         'email',
@@ -51,20 +39,7 @@ class Instructor extends Authenticatable implements MustVerifyEmail
         'updated_at',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<string>
-     */
-    protected $hidden = [
-        'password', 'remember_token',
-    ];
-
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
+  
     protected $casts = [
         'email_verified_at' => 'datetime',
         'status' => 'boolean', // Assuming status is 0 or 1

@@ -32,7 +32,9 @@
                             <th class="py-3">Phone</th>
                             <th class="py-3">Address</th>
                             <th class="py-3">Registration Date</th>
-                            <th class="py-3">Courses Purchased</th> <!-- New column -->
+                            <th class="py-3">Courses Purchased</th>
+                            <th class="py-3">Preferences</th>
+                            <th class="py-3">Grade</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -63,11 +65,27 @@
                                 <span class="badge bg-info-subtle text-info">
                                     {{ $user->orders_count }}
                                 </span>
-                            </td> <!-- Display orders count -->
+                            </td>
+                            <td>
+                                @php
+                                    $preferenceIds = json_decode($user->preference ?? '[]', true);
+                                    $preferenceNames = collect($preferenceIds)->map(function($id) use ($categories) {
+                                        return $categories[$id]->category_name ?? 'Unknown';
+                                    })->implode(', ');
+                                @endphp
+                                <span class="badge bg-warning-subtle text-warning">
+                                    {{ $preferenceNames ?: 'None' }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-primary-subtle text-primary">
+                                    {{ $user->grade ?? 'N/A' }}
+                                </span>
+                            </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="7" class="text-center text-muted py-4">
+                            <td colspan="9" class="text-center text-muted py-4">
                                 <i class="bx bx-info-circle me-2"></i>No users found.
                             </td>
                         </tr>

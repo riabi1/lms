@@ -5,6 +5,112 @@ Author: codervent
 Email: codervent@gmail.com
 File: app.css
 */
+/* Define root variables for light and dark themes */
+:root {
+  --bg-color: #ffffff;
+  --text-color: #333333;
+  --card-bg: #f8f9fa;
+  --sidebar-bg: #ffffff;
+  --header-bg: #ffffff;
+  --primary-color: #007bff;
+  --border-color: #dee2e6;
+}
+
+[data-theme="dark"] {
+  --bg-color: #1a1a1a;
+  --text-color: #ffffff;
+  --card-bg: #2c2c2c;
+  --sidebar-bg: #252526;
+  --header-bg: #252526;
+  --primary-color: #66b3ff;
+  --border-color: #444444;
+}
+
+/* Apply variables to elements */
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.sidebar-wrapper {
+  background-color: var(--sidebar-bg);
+  transition: background-color 0.3s ease;
+}
+
+.topbar {
+  background-color: var(--header-bg);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+}
+
+.page-content {
+  background-color: var(--bg-color);
+}
+
+a, .nav-link {
+  color: var(--text-color);
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+/* Dropdowns */
+.dropdown-menu {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+}
+
+.dropdown-item {
+  color: var(--text-color);
+}
+
+.dropdown-item:hover {
+  background-color: var(--border-color);
+}
+
+/* Notification badge */
+.badge.bg-danger {
+  background-color: #dc3545 !important;
+}
+
+/* Third-party component overrides */
+.table {
+  color: var(--text-color);
+  background-color: var(--card-bg);
+}
+
+.dataTable {
+  background-color: var(--card-bg);
+  color: var(--text-color);
+}
+
+.dataTable thead th {
+  background-color: var(--header-bg);
+  border-color: var(--border-color);
+}
+
+.tox-tinymce {
+  background-color: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+/* Ensure modals respect theme */
+.modal-content {
+  background-color: var(--card-bg);
+  color: var(--text-color);
+  border-color: var(--border-color);
+}
+
+.modal-header, .modal-footer {
+  border-color: var(--border-color);
+}
 
 body {
 	font-size: 14px;
