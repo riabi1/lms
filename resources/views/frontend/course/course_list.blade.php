@@ -713,11 +713,6 @@ $(document).ready(function() {
         const courseId = $button.data('course-id');
         const action = $button.data('action');
 
-        if (!courseId) {
-            console.error('Course ID is undefined');
-            showNotification('Course ID not found.', 'danger');
-            return;
-        }
 
         const isAuthenticated = {!! json_encode(auth()->check()) !!};
 

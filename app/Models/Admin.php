@@ -11,7 +11,7 @@ use Illuminate\Notifications\Messages\MailMessage;
 
 class Admin extends Authenticatable implements MustVerifyEmail
 {
-   use Notifiable;
+  use Notifiable;
 
     protected $guard = 'admin';
 

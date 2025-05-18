@@ -40,6 +40,7 @@ use App\Http\Controllers\Frontend\BlogArticleController;
 use App\Http\Controllers\Frontend\PaypalPaymentController;
 use App\Http\Controllers\Frontend\StripePaymentController;
 use App\Http\Controllers\Instructor\NotificationController;
+use App\Http\Controllers\User\NotificationController as UserNotificationController;
 use App\Http\Controllers\Instructor\CourseLectureController;
 use App\Http\Controllers\Instructor\CourseSectionController;
 use App\Http\Controllers\Admin\InstructorManagementController;
@@ -120,11 +121,17 @@ Route::name('')->group(function () {
         Route::get('/messages/{conversation}', [MessageController::class, 'show'])->name('messages.show');
         Route::post('/messages/{conversation}/send', [MessageController::class, 'send'])->name('messages.send');
         Route::post('/messages/{conversation}/typing', [MessageController::class, 'typing'])->name('messages.typing');
-   
+
         // Report Routes
         Route::get('/reports', [ReportController::class, 'index'])->name('report.index');
         Route::get('/report/create', [ReportController::class, 'create'])->name('report');
         Route::post('/report', [ReportController::class, 'store'])->name('report.submit');
+        Route::get('/reports/{report}', [ReportController::class, 'show'])->name('reports.show');
+        Route::post('/reports/{report}/feedback', [ReportController::class, 'storeFeedback'])->name('reports.feedback');
+        
+        Route::get('/notifications/{id}/mark-as-read', [UserNotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
+        Route::post('/notifications/mark-all-as-read', [UserNotificationController::class, 'markAllAsRead'])->name('notifications.markAllAsRead');
+        Route::get('/notifications/{notification}/read', [UserNotificationController::class, 'read'])->name('notifications.read');
     });
 });
 
@@ -223,8 +230,6 @@ Route::prefix('instructor')->name('instructor.')->group(function () {
         Route::get('/messages/{conversation}', [MessageController::class, 'show'])->name('messages.show');
         Route::post('/messages/{conversation}/send', [MessageController::class, 'send'])->name('messages.send');
         Route::post('/messages/{conversation}/typing', [MessageController::class, 'typing'])->name('messages.typing');
-       
-        Route::get('/notifications/{notification}/mark-as-read', [MessageController::class, 'markNotificationAsRead'])->name('notifications.markAsRead');
 
         Route::get('/earnings', [InstructorEarningsController::class, 'index'])->name('earnings');
 
@@ -232,6 +237,9 @@ Route::prefix('instructor')->name('instructor.')->group(function () {
         Route::get('/reports', [InstructorReportController::class, 'index'])->name('reports.index');
         Route::get('/reports/create', [InstructorReportController::class, 'create'])->name('reports.create');
         Route::post('/reports', [InstructorReportController::class, 'store'])->name('reports.store');
+        Route::get('/reports/{report}', [InstructorReportController::class, 'show'])->name('reports.show');
+        Route::post('/reports/{report}/feedback', [InstructorReportController::class, 'storeFeedback'])->name('reports.feedback');
+
     });
 });
 

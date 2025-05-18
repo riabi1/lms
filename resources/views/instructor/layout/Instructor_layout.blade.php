@@ -33,6 +33,89 @@
         .metismenu a.mm-active {
             text-decoration: none !important;
         }
+
+        /* Sidebar default state */
+        .sidebar-wrapper {
+            width: 250px;
+            transition: width 0.3s ease;
+            z-index: 1000;
+            position: fixed;
+            left: 0;
+            height: 100%;
+        }
+
+        /* Sidebar collapsed state */
+        .sidebar-wrapper.sidebar-collapsed {
+            width: 70px;
+        }
+
+        .sidebar-wrapper.sidebar-collapsed .menu-title,
+        .sidebar-wrapper.sidebar-collapsed .menu-label,
+        .sidebar-wrapper.sidebar-collapsed .logo-text {
+            display: none;
+        }
+
+        .sidebar-wrapper.sidebar-collapsed .parent-icon {
+            text-align: center;
+        }
+
+        .sidebar-wrapper.sidebar-collapsed .metismenu ul.mm-collapse {
+            display: none;
+        }
+
+        /* Adjust page content */
+        .page-wrapper {
+            margin-left: 250px;
+            transition: margin-left 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+        .page-wrapper.page-expanded {
+            margin-left: 70px;
+        }
+
+        /* Overlay for mobile */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 998;
+            display: none;
+            pointer-events: none;
+        }
+
+        .overlay.active {
+            display: block;
+            pointer-events: auto;
+        }
+
+        /* Mobile adjustments */
+        @media (max-width: 991px) {
+            .sidebar-wrapper {
+                width: 250px;
+                position: fixed;
+                left: 0;
+                height: 100%;
+                z-index: 1000;
+                transition: width 0.3s ease;
+            }
+
+            .sidebar-wrapper.sidebar-collapsed {
+                width: 70px;
+            }
+
+            .page-wrapper {
+                margin-left: 250px;
+            }
+
+            .page-wrapper.page-expanded {
+                margin-left: 70px;
+            }
+        }
     </style>
 
     @stack('styles')
@@ -90,7 +173,67 @@
     <script>
         $(document).ready(function() {
             $('#example').DataTable();
+
+            // Initialize MetisMenu
+            $('#menu').metisMenu({
+                toggle: false
+            });
+
+            // Sidebar toggle functionality
+            $('.toggle-icon').on('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation(); // Prevent event bubbling
+
+                const $sidebar = $('.sidebar-wrapper');
+                const $page = $('.page-wrapper');
+                const $icon = $('.toggle-icon i');
+                const $overlay = $('.overlay');
+
+                if ($sidebar.hasClass('sidebar-collapsed')) {
+                    // Expand sidebar
+                    $sidebar.removeClass('sidebar-collapsed');
+                    $page.removeClass('page-expanded');
+                    $icon.removeClass('bx-arrow-forward').addClass('bx-arrow-back');
+                    // Show overlay on mobile when expanded
+                    if (window.innerWidth <= 991) {
+                        $overlay.addClass('active');
+                    }
+                    console.log('Sidebar expanded');
+                } else {
+                    // Collapse sidebar
+                    $sidebar.addClass('sidebar-collapsed');
+                    $page.addClass('page-expanded');
+                    $icon.removeClass('bx-arrow-back').addClass('bx-arrow-forward');
+                    $overlay.removeClass('active');
+                    console.log('Sidebar collapsed');
+                }
+            });
+
+            // Close sidebar (collapse) when overlay is clicked (mobile only)
+            $('.overlay').on('click', function() {
+                if (window.innerWidth <= 991) {
+                    $('.sidebar-wrapper').addClass('sidebar-collapsed');
+                    $('.page-wrapper').addClass('page-expanded');
+                    $('.toggle-icon i').removeClass('bx-arrow-back').addClass('bx-arrow-forward');
+                    $(this).removeClass('active');
+                    console.log('Overlay clicked, sidebar collapsed');
+                }
+            });
+
+            // Ensure page content is clickable
+            $('.page-wrapper').on('click', function(e) {
+                if ($('.sidebar-wrapper').hasClass('sidebar-collapsed')) {
+                    console.log('Page content clicked while sidebar collapsed');
+                    // Allow default behavior, no sidebar toggle
+                }
+            });
+
+            console.log('MetisMenu and Sidebar Toggle initialized');
         });
+
+        if (!window.location.pathname.includes('messages')) {
+            new PerfectScrollbar('.page-content');
+        }
     </script>
     <script src="https://cdn.tiny.cloud/1/lcgx3yykwntdwuauyavfyoci610jl2hfqsy8ox4a8xv8nysz/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
     <script>
@@ -99,19 +242,6 @@
             plugins: 'powerpaste advcode table lists checklist',
             toolbar: 'undo redo | blocks| bold italic | bullist numlist checklist | code | table'
         });
-    </script>
-    <script>
-        $(document).ready(function() {
-            $('#menu').metisMenu({
-                toggle: false
-            });
-            console.log('MetisMenu initialized');
-        });
-    </script>
-    <script>
-        if (!window.location.pathname.includes('messages')) {
-            new PerfectScrollbar('.page-content');
-        }
     </script>
     @stack('scripts')
 </body>

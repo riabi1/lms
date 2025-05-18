@@ -19,7 +19,7 @@
             </a>
         </li>
 
-       <li class="menu-label">Management Tools</li>
+        <li class="menu-label">Management Tools</li>
 
         <li>
             <a href="{{ route('profile.edit') }}" class="{{ request()->routeIs('profile.edit') ? 'active' : '' }}">
@@ -37,7 +37,7 @@
 
         <li>
             <a href="{{ route('quizzes.index') }}">
-                <div class="parent-icon"><i class='bx bx-question-mark'></i></div>
+                <div class="parent-icon"><i class='bx bx-list-check'></i></div>
                 <div class="menu-title">Quiz Attempts</div>
             </a>
         </li>
@@ -75,7 +75,7 @@
             <ul class="mm-collapse">
                 <li>
                     <a href="{{ route('report.index') }}" class="{{ request()->routeIs('user.report.index') ? 'mm-active' : '' }}">
-                        <i class='bx bx-radiogeons-circle'></i> My Reports
+                        <i class='bx bx-radio-circle'></i> My Reports
                     </a>
                 </li>
                 <li>
