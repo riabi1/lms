@@ -24,6 +24,11 @@
 
     <div class="card">
         <div class="card-body">
+            <div class="mb-3">
+                <p class="text-muted">
+                    Note: Coupon codes are automatically generated using the first 4 letters of the course name, followed by a random string and the year (e.g., FRONT-ABCDEF-2025 for Front-end Development).
+                </p>
+            </div>
             <div class="table-responsive">
                 <table id="example" class="table table-striped table-bordered" style="width:100%">
                     <thead>
@@ -46,7 +51,7 @@
                                 <td>{{ $item->code }}</td>
                                 <td>
                                     {{ number_format($item->coupon_discount, 2) }}
-                                    {{ $item->discount_type == 'percentage' ? '%' : 'Fixed' }}
+                                    {{ $item->discount_type == 'percentage' ? '%' : 'USD' }}
                                 </td>
                                 <td>{{ $item->max_uses ?? 'Unlimited' }}</td>
                                 <td>{{ $item->uses }}</td>
@@ -67,6 +72,9 @@
                                 </td>
                                 <td>
                                     {{ $item->couponable ? $item->couponable->course_name : 'N/A' }}
+                                    @if ($item->couponable)
+                                        ({{ number_format($item->couponable->selling_price, 2) }} USD)
+                                    @endif
                                 </td>
                                 <td>
                                     <a href="{{ route('instructor.coupon.edit', $item->id) }}" class="btn btn-info px-3">Edit</a>

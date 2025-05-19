@@ -24,16 +24,6 @@
             <form id="myForm" action="{{ route('instructor.coupon.store') }}" method="POST" class="row g-3">
                 @csrf
 
-                <!-- Coupon Code -->
-                <div class="col-md-6">
-                    <label for="code" class="form-label">Coupon Code</label>
-                    <input type="text" name="code" class="form-control @error('code') is-invalid @enderror" 
-                           id="code" value="{{ old('code') }}" required>
-                    @error('code')
-                        <span class="invalid-feedback">{{ $message }}</span>
-                    @enderror
-                </div>
-
                 <!-- Coupon Discount -->
                 <div class="col-md-6">
                     <label for="coupon_discount" class="form-label">Coupon Discount</label>
@@ -56,6 +46,14 @@
                     @enderror
                 </div>
 
+                <!-- Price Preview -->
+                <div class="col-md-12">
+                    <div id="price-preview" class="alert alert-info" style="display: none;">
+                        <p>Original Price: <span id="original-price"></span></p>
+                        <p>Discounted Price: <span id="discounted-price"></span></p>
+                    </div>
+                </div>
+
                 <!-- Max Uses -->
                 <div class="col-md-6">
                     <label for="max_uses" class="form-label">Max Uses (Optional)</label>
@@ -72,8 +70,8 @@
                     <select name="course_id" class="form-select @error('course_id') is-invalid @enderror" id="course_id" required>
                         <option value="">Select a course</option>
                         @foreach ($courses as $course)
-                            <option value="{{ $course->id }}" {{ old('course_id') == $course->id ? 'selected' : '' }}>
-                                {{ $course->course_name }}
+                            <option value="{{ $course->id }}" {{ old('course_id') == $course->id ? 'selected' : '' }} data-price="{{ $course->selling_price }}">
+                                {{ $course->course_name }} ({{ number_format($course->selling_price, 2) }} USD)
                             </option>
                         @endforeach
                     </select>
@@ -119,23 +117,69 @@
 
 <script>
     $(document).ready(function() {
-        $('#coupon_discount').on('input', function() {
-            let value = parseFloat($(this).val());
+        function updatePricePreview() {
+            let coursePrice = parseFloat($('#course_id option:selected').data('price')) || 0;
+            let currency = 'USD'; // Hardcoded since courses table has no currency column
+            let discountValue = parseFloat($('#coupon_discount').val()) || 0;
             let discountType = $('#discount_type').val();
-            $(this).removeClass('is-invalid');
-            $(this).next('.invalid-feedback').remove();
+            let discountedPrice = coursePrice;
+
+            if (discountType === 'fixed') {
+                discountedPrice = coursePrice - discountValue;
+            } else if (discountType === 'percentage') {
+                discountedPrice = coursePrice * (1 - discountValue / 100);
+            }
+
+            // Round to 2 decimal places
+            discountedPrice = Math.max(0, Math.round(discountedPrice * 100) / 100);
+
+            if (coursePrice > 0 && !isNaN(discountValue)) {
+                $('#price-preview').show();
+                $('#original-price').text(`${coursePrice.toFixed(2)} ${currency}`);
+                $('#discounted-price').text(`${discountedPrice.toFixed(2)} ${currency}`);
+            } else {
+                $('#price-preview').hide();
+            }
+        }
+
+        function validateDiscount() {
+            let value = parseFloat($('#coupon_discount').val());
+            let discountType = $('#discount_type').val();
+            let coursePrice = parseFloat($('#course_id option:selected').data('price')) || 0;
+            $('#coupon_discount').removeClass('is-invalid');
+            $('#coupon_discount').next('.invalid-feedback').remove();
 
             if (value < 0) {
-                $(this).addClass('is-invalid');
-                $(this).after('<span class="invalid-feedback d-block">Discount must be at least 0.</span>');
-            } else if (discountType === 'percentage' && value > 100) {
-                $(this).addClass('is-invalid');
-                $(this).after('<span class="invalid-feedback d-block">Percentage discount cannot exceed 100.</span>');
+                $('#coupon_discount').addClass('is-invalid');
+                $('#coupon_discount').after('<span class="invalid-feedback d-block">Discount must be at least 0.</span>');
+                return false;
             }
+            if (discountType === 'percentage' && value > 100) {
+                $('#coupon_discount').addClass('is-invalid');
+                $('#coupon_discount').after('<span class="invalid-feedback d-block">Percentage discount cannot exceed 100%.</span>');
+                return false;
+            }
+            if (discountType === 'fixed' && value > coursePrice && coursePrice > 0) {
+                $('#coupon_discount').addClass('is-invalid');
+                $('#coupon_discount').after('<span class="invalid-feedback d-block">Fixed discount cannot exceed course price of ' + coursePrice + '.</span>');
+                return false;
+            }
+            return true;
+        }
+
+        // Update price preview and validate on input/change
+        $('#coupon_discount, #discount_type, #course_id').on('input change', function() {
+            validateDiscount();
+            updatePricePreview();
         });
 
-        $('#discount_type').on('change', function() {
-            $('#coupon_discount').trigger('input'); // Re-validate discount when type changes
+        // Initial update
+        updatePricePreview();
+
+        $('#myForm').on('submit', function(e) {
+            if (!validateDiscount()) {
+                e.preventDefault();
+            }
         });
     });
 </script>

@@ -8,6 +8,7 @@ use App\Models\Coupon;
 use App\Models\Course;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Illuminate\Support\Str;
 
 class CouponController extends Controller
 {
@@ -18,7 +19,7 @@ class CouponController extends Controller
             ->whereIn('couponable_id', Course::where('courseable_type', 'App\\Models\\Instructor')
                 ->where('courseable_id', $instructorId)
                 ->pluck('id'))
-            ->with('couponable') // Eager-load the couponable relationship
+            ->with('couponable')
             ->latest()
             ->get();
 
@@ -38,10 +39,22 @@ class CouponController extends Controller
     public function store(Request $request)
     {
         $instructorId = Auth::guard('instructor')->id();
+        $course = Course::findOrFail($request->course_id);
 
         $request->validate([
-            'code' => 'required|string|max:255|unique:coupons,code',
-            'coupon_discount' => 'required|numeric|min:0',
+            'coupon_discount' => [
+                'required',
+                'numeric',
+                'min:0',
+                function ($attribute, $value, $fail) use ($request, $course) {
+                    if ($request->discount_type === 'fixed' && $value > $course->selling_price) {
+                        $fail('Fixed discount cannot exceed course price of ' . $course->selling_price . '.');
+                    }
+                    if ($request->discount_type === 'percentage' && $value > 100) {
+                        $fail('Percentage discount cannot exceed 100%.');
+                    }
+                },
+            ],
             'discount_type' => 'required|in:fixed,percentage',
             'max_uses' => 'nullable|integer|min:1',
             'coupon_validity' => 'required|date|after_or_equal:today',
@@ -58,8 +71,11 @@ class CouponController extends Controller
             'status' => 'required|in:0,1',
         ]);
 
+        // Generate unique coupon code
+        $code = $this->generateCouponCode($course);
+
         Coupon::create([
-            'code' => strtoupper($request->code),
+            'code' => $code,
             'coupon_discount' => $request->coupon_discount,
             'discount_type' => $request->discount_type,
             'max_uses' => $request->max_uses,
@@ -90,10 +106,22 @@ class CouponController extends Controller
     {
         $this->authorizeInstructor($coupon);
         $instructorId = Auth::guard('instructor')->id();
+        $course = Course::findOrFail($request->course_id);
 
         $request->validate([
-            'code' => 'required|string|max:255|unique:coupons,code,' . $coupon->id,
-            'coupon_discount' => 'required|numeric|min:0',
+            'coupon_discount' => [
+                'required',
+                'numeric',
+                'min:0',
+                function ($attribute, $value, $fail) use ($request, $course) {
+                    if ($request->discount_type === 'fixed' && $value > $course->selling_price) {
+                        $fail('Fixed discount cannot exceed course price of ' . $course->selling_price . '.');
+                    }
+                    if ($request->discount_type === 'percentage' && $value > 100) {
+                        $fail('Percentage discount cannot exceed 100%.');
+                    }
+                },
+            ],
             'discount_type' => 'required|in:fixed,percentage',
             'max_uses' => 'nullable|integer|min:1',
             'coupon_validity' => 'required|date|after_or_equal:today',
@@ -111,7 +139,6 @@ class CouponController extends Controller
         ]);
 
         $coupon->update([
-            'code' => strtoupper($request->code),
             'coupon_discount' => $request->coupon_discount,
             'discount_type' => $request->discount_type,
             'max_uses' => $request->max_uses,
@@ -140,6 +167,20 @@ class CouponController extends Controller
         if (!$course || $course->courseable_type !== 'App\Models\Instructor' || $course->courseable_id !== $instructorId) {
             abort(403, 'Unauthorized action.');
         }
+    }
+
+    private function generateCouponCode($course)
+    {
+        // Generate a prefix from the course name (first 4 letters, uppercase, no spaces/dashes)
+        $prefix = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', substr($course->course_name, 0, 4)));
+
+        do {
+            $randomString = Str::random(6);
+            $year = Carbon::now()->format('Y');
+            $code = "{$prefix}-{$randomString}-{$year}";
+        } while (Coupon::where('code', $code)->exists());
+
+        return strtoupper($code);
     }
 
     public function toggleStatus(Coupon $coupon)

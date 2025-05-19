@@ -20,20 +20,10 @@
 
     <div class="card">
         <div class="card-body p-4">
-            <h5 class="mb-4">Edit Coupon</h5>
+            <h5 class="mb-4">Edit Coupon: {{ $coupon->code }}</h5>
             <form id="myForm" action="{{ route('instructor.coupon.update', $coupon->id) }}" method="POST" class="row g-3">
                 @csrf
                 @method('PUT')
-
-                <!-- Coupon Code -->
-                <div class="col-md-6">
-                    <label for="code" class="form-label">Coupon Code</label>
-                    <input type="text" name="code" class="form-control @error('code') is-invalid @enderror" 
-                           id="code" value="{{ old('code', $coupon->code) }}" required>
-                    @error('code')
-                        <span class="invalid-feedback">{{ $message }}</span>
-                    @enderror
-                </div>
 
                 <!-- Coupon Discount -->
                 <div class="col-md-6">
@@ -74,8 +64,8 @@
                     <select name="course_id" class="form-select @error('course_id') is-invalid @enderror" id="course_id" required>
                         <option value="">Select a course</option>
                         @foreach ($courses as $course)
-                            <option value="{{ $course->id }}" {{ old('course_id', $coupon->couponable_id) == $course->id ? 'selected' : '' }}>
-                                {{ $course->course_name }}
+                            <option value="{{ $course->id }}" {{ old('course_id', $coupon->couponable_id) == $course->id ? 'selected' : '' }} data-price="{{ $course->price }}">
+                                {{ $course->course_name }} ({{ $course->price }})
                             </option>
                         @endforeach
                     </select>
@@ -121,23 +111,37 @@
 
 <script>
     $(document).ready(function() {
-        $('#coupon_discount').on('input', function() {
-            let value = parseFloat($(this).val());
+        function validateDiscount() {
+            let value = parseFloat($('#coupon_discount').val());
             let discountType = $('#discount_type').val();
-            $(this).removeClass('is-invalid');
-            $(this).next('.invalid-feedback').remove();
+            let coursePrice = parseFloat($('#course_id option:selected').data('price')) || 0;
+            $('#coupon_discount').removeClass('is-invalid');
+            $('#coupon_discount').next('.invalid-feedback').remove();
 
             if (value < 0) {
-                $(this).addClass('is-invalid');
-                $(this).after('<span class="invalid-feedback d-block">Discount must be at least 0.</span>');
-            } else if (discountType === 'percentage' && value > 100) {
-                $(this).addClass('is-invalid');
-                $(this).after('<span class="invalid-feedback d-block">Percentage discount cannot exceed 100.</span>');
+                $('#coupon_discount').addClass('is-invalid');
+                $('#coupon_discount').after('<span class="invalid-feedback d-block">Discount must be at least 0.</span>');
+                return false;
             }
-        });
+            if (discountType === 'percentage' && value > 100) {
+                $('#coupon_discount').addClass('is-invalid');
+                $('#coupon_discount').after('<span class="invalid-feedback d-block">Percentage discount cannot exceed 100%.</span>');
+                return false;
+            }
+            if (discountType === 'fixed' && value > coursePrice && coursePrice > 0) {
+                $('#coupon_discount').addClass('is-invalid');
+                $('#coupon_discount').after('<span class="invalid-feedback d-block">Fixed discount cannot exceed course price of ' + coursePrice + '.</span>');
+                return false;
+            }
+            return true;
+        }
 
-        $('#discount_type').on('change', function() {
-            $('#coupon_discount').trigger('input'); // Re-validate discount when type changes
+        $('#coupon_discount, #discount_type, #course_id').on('input change', validateDiscount);
+
+        $('#myForm').on('submit', function(e) {
+            if (!validateDiscount()) {
+                e.preventDefault();
+            }
         });
     });
 </script>
