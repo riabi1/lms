@@ -17,6 +17,9 @@
         "vite": "^4.0.0"
     },
     "dependencies": {
+        "@amcharts/amcharts5": "^5.12.2",
+        "@amcharts/amcharts5-fonts": "^5.0.1",
+        "@amcharts/amcharts5-geodata": "^5.1.4",
         "apexcharts": "^4.7.0",
         "chart.js": "^4.4.9",
         "sweetalert2": "^11.17.2"

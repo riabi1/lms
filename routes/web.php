@@ -44,6 +44,7 @@ use App\Http\Controllers\User\NotificationController as UserNotificationControll
 use App\Http\Controllers\Instructor\CourseLectureController;
 use App\Http\Controllers\Instructor\CourseSectionController;
 use App\Http\Controllers\Admin\InstructorManagementController;
+use App\Http\Controllers\Admin\AdmindashboardController;
 use App\Http\Controllers\Instructor\InstructorEarningsController;
 use App\Http\Controllers\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\Instructor\ReportController as InstructorReportController;
@@ -64,7 +65,17 @@ Route::name('')->group(function () {
   Route::get('/user/dashboard/wishlist-data', [UserDashboardController::class, 'getWishlistData'])->name('user.wishlistdata');
 
   Route::middleware('auth:web')->group(function () {
-        // Cart Routes
+        
+    Route::get('/user/enrollmenttrends', [UserDashboardController::class, 'getEnrollmentTrendsData'])->name('enrollmenttrends');
+    Route::get('/completiondata', [UserDashboardController::class, 'getCompletionData'])->name('completiondata');
+Route::get('/user/quizperformance', [UserDashboardController::class, 'getQuizPerformanceData'])->name('quizperformance');
+Route::get('/user/wishlistdata', [UserDashboardController::class, 'getWishlistData'])->name('wishlistdata');
+Route::get('/user/categoryengagement', [UserDashboardController::class, 'getCategoryEngagementData'])->name('categoryengagement');
+    
+    
+    
+    
+    // Cart Routes
         Route::post('/cart/sync', [CartController::class, 'syncTempCart'])->name('cart.sync');
         Route::get('/cart', [CartController::class, 'MyCart'])->name('cart');
         Route::get('/cart/dropdown', [CartController::class, 'cartDropdown'])->name('cart.dropdown');
@@ -139,9 +150,8 @@ Route::name('')->group(function () {
 Route::prefix('admin')->name('admin.')->group(function () {
     require base_path('routes/auth/admin.php');
 
-    Route::get('/dashboard', function () {
-        return view('admin.index');
-    })->middleware(['auth:admin'])->name('dashboard');
+    Route::get('/dashboard', [AdmindashboardController::class, 'index'])
+    ->middleware(['auth:admin'])->name('dashboard');
 
     Route::middleware(['auth:admin', 'verified'])->group(function () {
         Route::resource('categories', CategoryController::class)->except(['show']);

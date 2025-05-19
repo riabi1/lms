@@ -168,4 +168,9 @@ class Course extends Model
     {
         return $this->morphMany(Coupon::class, 'couponable');
     }
+
+    public function orders()
+{
+    return $this->hasMany(Order::class, 'course_id');
+}
 }

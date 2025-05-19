@@ -12,8 +12,6 @@
     <link rel="icon" href="{{ asset('backend/assets/images/favicon-32x32.png') }}" type="image/png" />
 
     <!-- Plugins CSS -->
-    <link href="{{ asset('backend/assets/plugins/input-tags/css/tagsinput.css') }}" rel="stylesheet" />
-    <link href="{{ asset('backend/assets/plugins/vectormap/jquery-jvectormap-2.0.2.css') }}" rel="stylesheet" />
     <link href="{{ asset('backend/assets/plugins/simplebar/css/simplebar.css') }}" rel="stylesheet" />
     <link href="{{ asset('backend/assets/plugins/perfect-scrollbar/css/perfect-scrollbar.css') }}" rel="stylesheet" />
     <link href="{{ asset('backend/assets/plugins/metismenu/css/metisMenu.min.css') }}" rel="stylesheet" />
@@ -42,7 +40,7 @@
     <!-- Toastr CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 
-    <!-- Custom Sidebar Styles -->
+    <!-- Custom Styles -->
     <style>
         .metismenu a {
             text-decoration: none !important;
@@ -88,6 +86,7 @@
             transition: margin-left 0.3s ease;
             position: relative;
             z-index: 1;
+            min-height: 100vh; /* Ensure content area is visible */
         }
 
         .page-wrapper.page-expanded {
@@ -136,17 +135,9 @@
             }
         }
 
-        /* Chart-specific styles */
-        .chart-container {
-            padding: 15px;
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-        }
-        .chart-container canvas {
-            max-height: 350px !important;
-            width: 100% !important;
+        /* Dropdown fix */
+        .dropdown-menu {
+            z-index: 1050;
         }
     </style>
 
@@ -182,9 +173,6 @@
     <script src="{{ asset('backend/assets/plugins/simplebar/js/simplebar.min.js') }}"></script>
     <script src="{{ asset('backend/assets/plugins/metismenu/js/metisMenu.min.js') }}"></script>
     <script src="{{ asset('backend/assets/plugins/perfect-scrollbar/js/perfect-scrollbar.js') }}"></script>
-    <script src="{{ asset('backend/assets/plugins/vectormap/jquery-jvectormap-2.0.2.min.js') }}"></script>
-    <script src="{{ asset('backend/assets/plugins/vectormap/jquery-jvectormap-world-mill-en.js') }}"></script>
-    <script src="{{ asset('backend/assets/plugins/input-tags/js/tagsinput.js') }}"></script>
     <script src="{{ asset('backend/assets/plugins/datatable/js/jquery.dataTables.min.js') }}"></script>
     <script src="{{ asset('backend/assets/plugins/datatable/js/dataTables.bootstrap5.min.js') }}"></script>
 
@@ -229,17 +217,21 @@
     <!-- MetisMenu and Sidebar Toggle -->
     <script>
         $(document).ready(function() {
+            console.log('Initializing MetisMenu and Sidebar Toggle');
             // Initialize MetisMenu
             if ($('#menu').length) {
                 $('#menu').metisMenu({
                     toggle: false
                 });
+                console.log('MetisMenu initialized');
+            } else {
+                console.warn('MetisMenu menu element not found');
             }
 
             // Sidebar toggle functionality
             $('.toggle-icon').on('click', function(e) {
                 e.preventDefault();
-                e.stopPropagation(); // Prevent event bubbling
+                e.stopPropagation();
 
                 const $sidebar = $('.sidebar-wrapper');
                 const $page = $('.page-wrapper');
@@ -247,17 +239,14 @@
                 const $overlay = $('.overlay');
 
                 if ($sidebar.hasClass('sidebar-collapsed')) {
-                    // Expand sidebar
                     $sidebar.removeClass('sidebar-collapsed');
                     $page.removeClass('page-expanded');
                     $icon.removeClass('bx-arrow-forward').addClass('bx-arrow-back');
-                    // Show overlay on mobile when expanded
                     if (window.innerWidth <= 991) {
                         $overlay.addClass('active');
                     }
                     console.log('Sidebar expanded');
                 } else {
-                    // Collapse sidebar
                     $sidebar.addClass('sidebar-collapsed');
                     $page.addClass('page-expanded');
                     $icon.removeClass('bx-arrow-back').addClass('bx-arrow-forward');
@@ -266,7 +255,7 @@
                 }
             });
 
-            // Close sidebar (collapse) when overlay is clicked (mobile only)
+            // Close sidebar when overlay is clicked
             $('.overlay').on('click', function() {
                 if (window.innerWidth <= 991) {
                     $('.sidebar-wrapper').addClass('sidebar-collapsed');
@@ -276,23 +265,18 @@
                     console.log('Overlay clicked, sidebar collapsed');
                 }
             });
-
-            // Ensure page content is clickable
-            $('.page-wrapper').on('click', function(e) {
-                if ($('.sidebar-wrapper').hasClass('sidebar-collapsed')) {
-                    console.log('Page content clicked while sidebar collapsed');
-                    // Allow default behavior, no sidebar toggle
-                }
-            });
-
-            console.log('MetisMenu and Sidebar Toggle initialized');
         });
     </script>
 
     <!-- PerfectScrollbar Initialization -->
     <script>
         if (!window.location.pathname.includes('messages')) {
-            new PerfectScrollbar('.page-wrapper');
+            try {
+                new PerfectScrollbar('.page-wrapper');
+                console.log('PerfectScrollbar initialized');
+            } catch (e) {
+                console.error('PerfectScrollbar initialization failed:', e);
+            }
         }
     </script>
 
@@ -315,6 +299,35 @@
                     break;
             }
         @endif
+    </script>
+
+    <!-- Chart.js (CDN with local fallback) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <script>
+        // Fallback to local Chart.js if CDN fails
+        if (typeof Chart === 'undefined') {
+            console.warn('Chart.js CDN failed, attempting local fallback');
+            document.write('<script src="{{ asset('backend/assets/js/chart.min.js') }}"><\/script>');
+        }
+    </script>
+
+    <!-- Debug Script Loading -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM fully loaded');
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js not loaded (even after fallback)');
+            } else {
+                console.log('Chart.js loaded successfully');
+            }
+            // Check for canvas elements
+            if (!document.getElementById('enrollmentChart')) {
+                console.error('Enrollment chart canvas not found in DOM');
+            }
+            if (!document.getElementById('revenueChart')) {
+                console.error('Revenue chart canvas not found in DOM');
+            }
+        });
     </script>
 
     <!-- Page-specific scripts -->
