@@ -2,7 +2,6 @@
 @section('instructor')
 
 <div class="page-content">
-    <!-- Breadcrumb -->
     <div class="page-breadcrumb d-none d-sm-flex align-items-center mb-3">
         <div class="ps-3">
             <nav aria-label="breadcrumb">
@@ -20,9 +19,8 @@
             </div>
         </div>
     </div>
-    <!-- End Breadcrumb -->
 
-    <div class="card">
+    <div class="card shadow-sm">
         <div class="card-body">
             @if (session('success'))
                 <div class="alert alert-success">{{ session('success') }}</div>
@@ -49,14 +47,10 @@
                             <tr>
                                 <td>{{ $key + 1 }}</td>
                                 <td>
-                                    @if ($item->image)
-                                        <img src="{{ Storage::url($item->image) }}" alt="{{ $item->title }}" style="width: 70px; height: 40px;">
-                                    @else
-                                        <img src="{{ asset('upload/no_image.jpg') }}" alt="No Image" style="width: 70px; height: 40px;">
-                                    @endif
+                                    <img src="{{ $item->image ? asset('upload/blog-posts/' . $item->image) : asset('upload/no_image.jpg') }}" alt="{{ $item->title }}" class="img-fluid rounded" style="width: 100px; height: 60px; object-fit: cover;">
                                 </td>
                                 <td>{{ $item->title }}</td>
-                                <td>{{ Str::limit($item->content, 50) }}</td>
+                                <td>{!! Str::limit(strip_tags($item->content), 50) !!}</td>
                                 <td>
                                     @if ($item->category)
                                         {{ $item->category->name }}
@@ -97,7 +91,7 @@
                                             @if($item->comments->count() > 0)
                                                 @foreach($item->comments as $comment)
                                                     <div class="comment mb-3 border-bottom pb-3 {{ request()->query('comment_id') == $comment->id ? 'bg-light' : '' }}">
-                                                        <div class="media">
+                                                        <div class="media d-flex">
                                                             <div class="mr-3">
                                                                 <img src="{{ $comment->user->photo ? asset('storage/upload/user_images/' . $comment->user->photo) : asset('images/default-avatar.jpg') }}" alt="{{ $comment->user->name }}" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
                                                             </div>
@@ -105,7 +99,6 @@
                                                                 <h5 class="fs-15 font-weight-medium mb-1">{{ $comment->user->name }}</h5>
                                                                 <p class="fs-14 text-gray mb-2">{{ $comment->message }}</p>
                                                                 <span class="fs-12 text-muted">{{ \Carbon\Carbon::parse($comment->created_at)->diffForHumans() }}</span>
-                                                                <!-- Reply Form -->
                                                                 <form action="{{ route('instructor.comments.reply', $comment->id) }}" method="POST" class="mt-2">
                                                                     @csrf
                                                                     <div class="form-group mb-2">
@@ -116,13 +109,12 @@
                                                                     </div>
                                                                     <button type="submit" class="btn btn-sm btn-primary">Reply</button>
                                                                 </form>
-                                                                <!-- Display Existing Replies -->
                                                                 @if($comment->replies->count() > 0)
                                                                     <div class="replies mt-3">
                                                                         @foreach($comment->replies as $reply)
                                                                             @if($reply->approved)
                                                                                 <div class="reply mb-2">
-                                                                                    <div class="media">
+                                                                                    <div class="media d-flex">
                                                                                         <div class="mr-3">
                                                                                             <img src="{{ $reply->user->photo ? asset('storage/upload/' . ($reply->user_type === 'App\\Models\\Instructor' ? 'instructor_images' : 'user_images') . '/' . $reply->user->photo) : asset('images/default-avatar.jpg') }}" alt="{{ $reply->user->name }}" class="rounded-circle" style="width: 30px; height: 30px; object-fit: cover;">
                                                                                         </div>
@@ -171,7 +163,6 @@
             "pageLength": 10
         });
 
-        // Scroll to highlighted comment if present
         @if (request()->query('comment_id'))
             $('html, body').animate({
                 scrollTop: $('.bg-light').offset().top - 100

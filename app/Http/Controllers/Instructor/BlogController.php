@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use App\Models\BlogPost;
 use App\Models\Comment;
 use App\Models\CommentReply;
@@ -15,12 +14,10 @@ class BlogController extends Controller
 {
     public function index(Request $request)
     {
-        // Mark notification as read if provided
         if ($request->query('notification_id')) {
             $notification = Auth::guard('instructor')->user()
                 ->notifications()
                 ->find($request->query('notification_id'));
-            
             if ($notification) {
                 $notification->markAsRead();
             }
@@ -29,7 +26,7 @@ class BlogController extends Controller
         $posts = BlogPost::where('instructor_id', Auth::guard('instructor')->id())
             ->with([
                 'category' => function ($query) {
-                    $query->select('id', 'name'); // Optimize by selecting only needed columns
+                    $query->select('id', 'name');
                 },
                 'comments' => function ($query) {
                     $query->with(['user', 'replies' => function ($replyQuery) {
@@ -53,9 +50,10 @@ class BlogController extends Controller
     {
         $request->validate([
             'title' => 'required|string|max:255',
-            'content' => 'required|string|max:500',
+            'content' => 'required|string',
             'blog_category_id' => 'required|exists:blog_categories,id',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'video' => 'nullable|mimes:mp4,webm|max:10240',
         ]);
 
         $post = new BlogPost();
@@ -67,9 +65,11 @@ class BlogController extends Controller
         $post->status = 'active';
 
         if ($request->hasFile('image')) {
-            $fileName = time() . '.' . $request->image->extension();
-            $path = $request->image->storeAs('upload/blog-posts', $fileName, 'public');
-            $post->image = $path;
+            $post->image = $this->uploadFile($request->file('image'), 'upload/blog-posts');
+        }
+
+        if ($request->hasFile('video')) {
+            $post->video = $this->uploadFile($request->file('video'), 'upload/blog-posts');
         }
 
         $post->save();
@@ -91,9 +91,10 @@ class BlogController extends Controller
 
         $request->validate([
             'title' => 'required|string|max:255',
-            'content' => 'required|string|max:500',
+            'content' => 'required|string',
             'blog_category_id' => 'required|exists:blog_categories,id',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'video' => 'nullable|mimes:mp4,webm|max:10240',
         ]);
 
         $post->title = $request->title;
@@ -102,12 +103,17 @@ class BlogController extends Controller
         $post->blog_category_id = $request->blog_category_id;
 
         if ($request->hasFile('image')) {
-            if ($post->image && Storage::disk('public')->exists($post->image)) {
-                Storage::disk('public')->delete($post->image);
+            if ($post->image) {
+                $this->deleteFile($post->image, 'upload/blog-posts');
             }
-            $fileName = time() . '.' . $request->image->extension();
-            $path = $request->image->storeAs('upload/blog-posts', $fileName, 'public');
-            $post->image = $path;
+            $post->image = $this->uploadFile($request->file('image'), 'upload/blog-posts');
+        }
+
+        if ($request->hasFile('video')) {
+            if ($post->video) {
+                $this->deleteFile($post->video, 'upload/blog-posts');
+            }
+            $post->video = $this->uploadFile($request->file('video'), 'upload/blog-posts');
         }
 
         $post->save();
@@ -119,8 +125,11 @@ class BlogController extends Controller
     public function destroy($id)
     {
         $post = BlogPost::where('instructor_id', Auth::guard('instructor')->id())->findOrFail($id);
-        if ($post->image && Storage::disk('public')->exists($post->image)) {
-            Storage::disk('public')->delete($post->image);
+        if ($post->image) {
+            $this->deleteFile($post->image, 'upload/blog-posts');
+        }
+        if ($post->video) {
+            $this->deleteFile($post->video, 'upload/blog-posts');
         }
         $post->delete();
 
@@ -154,5 +163,34 @@ class BlogController extends Controller
 
         return redirect()->route('instructor.blog.index')
             ->with('success', 'Your reply has been posted.');
+    }
+
+    private function uploadFile($file, $path)
+    {
+        if (!$file) {
+            return null;
+        }
+
+        $fileName = time() . '_' . $file->getClientOriginalName();
+        $publicPath = public_path($path);
+
+        if (!file_exists($publicPath)) {
+            mkdir($publicPath, 0755, true);
+        }
+
+        $file->move($publicPath, $fileName);
+
+        return $fileName;
+    }
+
+    private function deleteFile($filename, $path)
+    {
+        if ($filename) {
+            $publicFile = public_path($path . '/' . $filename);
+
+            if (file_exists($publicFile)) {
+                unlink($publicFile);
+            }
+        }
     }
 }

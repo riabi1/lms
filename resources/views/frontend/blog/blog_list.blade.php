@@ -51,7 +51,7 @@
                     <div class="card card-item shadow-sm">
                         <div class="card-image">
                             <a href="{{ route('blog.detail', $post->slug) }}" class="d-block">
-                                <img class="card-img-top" src="{{ asset('storage/' . $post->image) }}" alt="{{ $post->title }}" style="height: 200px; object-fit: cover;">
+                                <img class="card-img-top" src="{{ $post->image ? asset('upload/blog-posts/' . $post->image) : asset('upload/no_image.jpg') }}" alt="{{ $post->title }}" style="height: 200px; object-fit: cover;">
                             </a>
                             <div class="course-badge-labels">
                                 <div class="course-badge">{{ \Carbon\Carbon::parse($post->created_at)->format('M d, Y') }}</div>
@@ -121,7 +121,7 @@
                                         <div class="card card-item shadow-sm">
                                             <div class="card-image">
                                                 <a href="${post.slug ? '{{ route('blog.detail', '') }}/' + post.slug : '#'}" class="d-block">
-                                                    <img class="card-img-top" src="{{ asset('storage') }}/${post.image}" alt="${post.title}" style="height: 200px; object-fit: cover;">
+                                                    <img class="card-img-top" src="${post.image ? '{{ asset('upload/blog-posts') }}/' + post.image : '{{ asset('upload/no_image.jpg') }}'}" alt="${post.title}" style="height: 200px; object-fit: cover;">
                                                 </a>
                                                 <div class="course-badge-labels">
                                                     <div class="course-badge">${new Date(post.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
@@ -176,7 +176,7 @@
                                     <div class="card card-item shadow-sm">
                                         <div class="card-image">
                                             <a href="${post.slug ? '{{ route('blog.detail', '') }}/' + post.slug : '#'}" class="d-block">
-                                                <img class="card-img-top" src="{{ asset('storage') }}/${post.image}" alt="${post.title}" style="height: 200px; object-fit: cover;">
+                                                <img class="card-img-top" src="${post.image ? '{{ asset('upload/blog-posts') }}/' + post.image : '{{ asset('upload/no_image.jpg') }}'}" alt="${post.title}" style="height: 200px; object-fit: cover;">
                                             </a>
                                             <div class="course-badge-labels">
                                                 <div class="course-badge">${new Date(post.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
