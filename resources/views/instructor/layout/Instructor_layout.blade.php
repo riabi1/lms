@@ -25,98 +25,140 @@
 
     <!-- Custom Sidebar Styles -->
     <style>
-        .metismenu a {
-            text-decoration: none !important;
-        }
-        .metismenu a:hover,
-        .metismenu a:focus,
-        .metismenu a.mm-active {
-            text-decoration: none !important;
-        }
+    /* Sidebar default state */
+    .sidebar-wrapper {
+        width: 250px;
+        transition: width 0.3s ease;
+        z-index: 1000;
+        position: fixed;
+        left: 0;
+        top: 0;
+        height: 100%;
+        box-sizing: border-box;
+    }
 
-        /* Sidebar default state */
+    /* Sidebar collapsed state */
+    .sidebar-wrapper.sidebar-collapsed {
+        width: 70px;
+    }
+
+    .sidebar-wrapper.sidebar-collapsed .menu-title,
+    .sidebar-wrapper.sidebar-collapsed .menu-label,
+    .sidebar-wrapper.sidebar-collapsed .logo-text {
+        display: none;
+    }
+
+    .sidebar-wrapper.sidebar-collapsed .parent-icon {
+        text-align: center;
+    }
+
+    .sidebar-wrapper.sidebar-collapsed .metismenu ul.mm-collapse {
+        display: none;
+    }
+
+    /* Adjust page content */
+    .page-wrapper {
+        margin-left: 250px;
+        transition: margin-left 0.3s ease;
+        position: relative;
+        z-index: 10;
+        min-height: 100vh;
+        box-sizing: border-box;
+    }
+
+    .page-wrapper.page-expanded {
+        margin-left: 70px;
+    }
+
+    /* Ensure page content has padding */
+    .page-content {
+        padding: 20px;
+        min-height: calc(100vh - 60px);
+        box-sizing: border-box;
+        width: 100%;
+    }
+
+    /* Overlay for mobile */
+    .overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 998;
+        display: none;
+        pointer-events: none;
+    }
+
+    .overlay.active {
+        display: block;
+        pointer-events: auto;
+    }
+
+    /* Mobile adjustments */
+    @media (max-width: 991px) {
         .sidebar-wrapper {
             width: 250px;
-            transition: width 0.3s ease;
-            z-index: 1000;
             position: fixed;
             left: 0;
+            top: 0;
             height: 100%;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+            transform: translateX(0);
         }
 
-        /* Sidebar collapsed state */
         .sidebar-wrapper.sidebar-collapsed {
-            width: 70px;
+            transform: translateX(-100%);
         }
 
-        .sidebar-wrapper.sidebar-collapsed .menu-title,
-        .sidebar-wrapper.sidebar-collapsed .menu-label,
-        .sidebar-wrapper.sidebar-collapsed .logo-text {
-            display: none;
-        }
-
-        .sidebar-wrapper.sidebar-collapsed .parent-icon {
-            text-align: center;
-        }
-
-        .sidebar-wrapper.sidebar-collapsed .metismenu ul.mm-collapse {
-            display: none;
-        }
-
-        /* Adjust page content */
         .page-wrapper {
-            margin-left: 250px;
-            transition: margin-left 0.3s ease;
-            position: relative;
-            z-index: 1;
+            margin-left: 0;
+            transition: none;
         }
 
         .page-wrapper.page-expanded {
-            margin-left: 70px;
+            margin-left: 0;
         }
 
-        /* Overlay for mobile */
-        .overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
+        .page-content {
+            padding: 15px;
             width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 998;
-            display: none;
-            pointer-events: none;
         }
+    }
 
-        .overlay.active {
-            display: block;
-            pointer-events: auto;
-        }
+    /* Prevent content overflow */
+    body {
+        padding: 0;
+        margin: 0;
+        overflow-x: hidden;
+    }
 
-        /* Mobile adjustments */
-        @media (max-width: 991px) {
-            .sidebar-wrapper {
-                width: 250px;
-                position: fixed;
-                left: 0;
-                height: 100%;
-                z-index: 1000;
-                transition: width 0.3s ease;
-            }
+    /* Fix for accordion and tables */
+    .accordion,
+    .table-responsive {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: auto;
+    }
 
-            .sidebar-wrapper.sidebar-collapsed {
-                width: 70px;
-            }
+    /* Inline answer and edit section styling */
+    .answer-section {
+        background: #f8f9fa;
+    }
 
-            .page-wrapper {
-                margin-left: 250px;
-            }
+    .answer-form-section,
+    .edit-answer-form {
+        max-width: 600px;
+    }
 
-            .page-wrapper.page-expanded {
-                margin-left: 70px;
-            }
-        }
-    </style>
+    /* Button spacing */
+    .edit-answer,
+    .delete-answer {
+        margin-right: 5px;
+    }
+</style>
 
     @stack('styles')
     <title>@yield('title', 'Instructor Dashboard')</title>

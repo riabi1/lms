@@ -11,7 +11,8 @@ use App\Models\Course;
 use App\Models\Review;
 use App\Models\QuizAttempt;
 use App\Models\Quiz;
-use App\Models\Question;
+use App\Models\CourseQuestion;
+use App\Models\Answer;
 use App\Notifications\NewQuestionNotification;
 use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -135,12 +136,13 @@ class MyCourseController extends Controller
 
     public function startLearning($courseId, $slug)
 {
-    $course = Course::with([
-        'sections.lectures',
-        'quizzes.questions',
-        'courseable',
-        'questions.user'
-    ])->findOrFail($courseId);
+  $course = Course::with([
+    'sections.lectures',
+    'quizzes.questions',
+    'courseable',
+    'questions.user',
+    'questions.answers.instructor',
+])->findOrFail($courseId);
 
     // Debug: Check if instructor_id exists
     if (!$course->instructor_id) {
@@ -323,7 +325,153 @@ class MyCourseController extends Controller
         $pdf = Pdf::loadView('User.mycourses.certificate', $data)->setPaper('a4', 'portrait');
         return $pdf->download("certificate_{$courseId}_{$user->id}.pdf");
     }
+    public function submitQuestion(Request $request, $courseId)
+    {
+        $request->validate([
+            'question_text' => 'required|string|max:1000',
+        ]);
 
+        $user = Auth::user();
+        $course = Course::findOrFail($courseId);
+
+        // Check if user has purchased the course
+        $hasPurchased = Order::where('user_id', $user->id)
+            ->where('course_id', $courseId)
+            ->where('payment_status', 'paid')
+            ->exists();
+
+        if (!$hasPurchased) {
+            return response()->json(['success' => false, 'message' => 'You must purchase this course to ask a question.'], 403);
+        }
+
+        // Create the question
+        $question = CourseQuestion::create([
+            'course_id' => $courseId,
+            'user_id' => $user->id,
+            'question_text' => $request->question_text,
+            'status' => 'pending',
+        ]);
+
+        // Notify the instructor
+        $instructor = $course->courseable;
+        if ($instructor) {
+            $instructor->notify(new NewQuestionNotification($question, $course, $user));
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Question submitted successfully.',
+            'question' => [
+                'id' => $question->id,
+                'question_text' => $question->question_text,
+                'user_name' => $user->name,
+                'created_at' => $question->created_at->format('F j, Y, H:i'),
+                'answers' => [],
+            ],
+        ]);
+    }
+
+
+    public function updateQuestion(Request $request, $courseId)
+    {
+        $request->validate([
+            'question_id' => 'required|exists:course_questions,id',
+            'question_text' => 'required|string|max:1000',
+        ]);
+
+        $user = Auth::user();
+        $question = CourseQuestion::findOrFail($request->question_id);
+
+        // Verify user owns the question
+        if ($question->user_id !== $user->id) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized action.'], 403);
+        }
+
+        // Check if the question belongs to the course
+        if ($question->course_id !== (int)$courseId) {
+            return response()->json(['success' => false, 'message' => 'Invalid course.'], 403);
+        }
+
+        // Check if user has purchased the course
+        $hasPurchased = Order::where('user_id', $user->id)
+            ->where('course_id', $courseId)
+            ->where('payment_status', 'paid')
+            ->exists();
+
+        if (!$hasPurchased) {
+            return response()->json(['success' => false, 'message' => 'You must purchase this course to modify a question.'], 403);
+        }
+
+        // Prevent editing if already answered
+        if ($question->status === 'answered') {
+            return response()->json(['success' => false, 'message' => 'Cannot edit a question that has been answered.'], 403);
+        }
+
+        // Update question
+        $question->update([
+            'question_text' => $request->question_text,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Question updated successfully.',
+            'question' => [
+                'id' => $question->id,
+                'question_text' => $question->question_text,
+                'user_name' => $user->name,
+                'created_at' => $question->created_at->format('F j, Y, H:i'),
+                'answers' => $question->answers->map(function ($answer) {
+                    return [
+                        'answer_text' => $answer->answer_text,
+                        'instructor_name' => $answer->instructor->name,
+                        'created_at' => $answer->created_at->format('F j, Y, H:i'),
+                    ];
+                })->toArray(),
+            ],
+        ]);
+    }
+    public function destroyQuestion(Request $request, $courseId)
+    {
+        $request->validate([
+            'question_id' => 'required|exists:course_questions,id',
+        ]);
+
+        $user = Auth::user();
+        $question = CourseQuestion::findOrFail($request->question_id);
+
+        // Verify user owns the question
+        if ($question->user_id !== $user->id) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized action.'], 403);
+        }
+
+        // Check if the question belongs to the course
+        if ($question->course_id !== (int)$courseId) {
+            return response()->json(['success' => false, 'message' => 'Invalid course.'], 403);
+        }
+
+        // Check if user has purchased the course
+        $hasPurchased = Order::where('user_id', $user->id)
+            ->where('course_id', $courseId)
+            ->where('payment_status', 'paid')
+            ->exists();
+
+        if (!$hasPurchased) {
+            return response()->json(['success' => false, 'message' => 'You must purchase this course to delete a question.'], 403);
+        }
+
+        // Prevent deletion if already answered
+        if ($question->status === 'answered') {
+            return response()->json(['success' => false, 'message' => 'Cannot delete a question that has been answered.'], 403);
+        }
+
+        // Delete the question
+        $question->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Question deleted successfully.',
+        ]);
+    }
 
 
   }

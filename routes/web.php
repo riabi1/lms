@@ -33,22 +33,23 @@ use App\Http\Controllers\Frontend\BlogShowController;
 use App\Http\Controllers\Instructor\CouponController;
 use App\Http\Controllers\Instructor\CourseController;
 use App\Http\Controllers\User\UserDashboardController;
-use App\Http\Controllers\Instructor\InstructorDashboardController;
+use App\Http\Controllers\Instructor\QuestionController;
+use App\Http\Controllers\Admin\AdmindashboardController;
 use App\Http\Controllers\Admin\BlogCategoriesController;
 use App\Http\Controllers\Admin\ReportCategoryController;
 use App\Http\Controllers\Frontend\BlogArticleController;
 use App\Http\Controllers\Frontend\PaypalPaymentController;
 use App\Http\Controllers\Frontend\StripePaymentController;
 use App\Http\Controllers\Instructor\NotificationController;
-use App\Http\Controllers\User\NotificationController as UserNotificationController;
 use App\Http\Controllers\Instructor\CourseLectureController;
 use App\Http\Controllers\Instructor\CourseSectionController;
 use App\Http\Controllers\Admin\InstructorManagementController;
-use App\Http\Controllers\Admin\AdmindashboardController;
 use App\Http\Controllers\Instructor\InstructorEarningsController;
+use App\Http\Controllers\Instructor\InstructorDashboardController;
 use App\Http\Controllers\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\Instructor\ReportController as InstructorReportController;
 use App\Http\Controllers\Instructor\ReviewController as InstructorReviewController;
+use App\Http\Controllers\User\NotificationController as UserNotificationController;
 
 // Home Page Route
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -113,10 +114,16 @@ Route::get('/user/categoryengagement', [UserDashboardController::class, 'getCate
         
         // Notes Routes
         Route::get('/mycourses', [NotesController::class, 'index'])->name('mycourses.index');
-        Route::post('/mycourses/{courseId}/notes', [NotesController::class, 'store'])->name('mycourses.notes.store');
-        Route::put('/mycourses/notes/{id}', [NotesController::class, 'update'])->name('mycourses.notes.update');
-        Route::delete('/mycourses/notes/{id}', [NotesController::class, 'destroy'])->name('mycourses.notes.destroy');
-        
+        Route::get('/mycourses/favorite-notes', [NotesController::class, 'favorites'])->name('mycourses.favorites');
+        Route::post('/mycourses/notes/store/{courseId}', [NotesController::class, 'store'])->name('mycourses.notes.store');
+        Route::put('/mycourses/notes/update/{id}', [NotesController::class, 'update'])->name('mycourses.notes.update');
+        Route::post('/mycourses/notes/toggle-favorite/{id}', [NotesController::class, 'toggleFavorite'])->name('mycourses.notes.toggle-favorite');
+        Route::delete('/mycourses/notes/destroy/{id}', [NotesController::class, 'destroy'])->name('mycourses.notes.destroy');
+        Route::post('/course/{courseId}/question/submit', [MyCourseController::class, 'submitQuestion'])->name('course.question.submit');
+        Route::put('{courseId}/question/update', [MyCourseController::class, 'updateQuestion'])->name('course.question.update');
+        Route::delete('{courseId}/question/destroy', [MyCourseController::class, 'destroyQuestion'])->name('course.question.destroy');
+
+
         // User Wishlist Routes
         Route::get('/quizzes', [QuizzesController::class, 'index'])->name('quizzes.index');
         Route::post('/wishlist/add/{course_id}', [WishlistController::class, 'add'])->name('wishlist.add');
@@ -250,7 +257,11 @@ Route::prefix('instructor')->name('instructor.')->group(function () {
         Route::post('/reports', [InstructorReportController::class, 'store'])->name('reports.store');
         Route::get('/reports/{report}', [InstructorReportController::class, 'show'])->name('reports.show');
         Route::post('/reports/{report}/feedback', [InstructorReportController::class, 'storeFeedback'])->name('reports.feedback');
-
+        //question routes
+        Route::get('/questions', [QuestionController::class, 'index'])->name('question.index');
+        Route::post('/question/answer/store', [QuestionController::class, 'storeAnswer'])->name('question.answer.store');
+        Route::put('/question/answer/update', [QuestionController::class, 'updateAnswer'])->name('question.answer.update');
+        Route::delete('/question/answer/destroy', [QuestionController::class, 'destroyAnswer'])->name('question.answer.destroy');
     });
 });
 

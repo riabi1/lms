@@ -5,7 +5,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class CourseNote extends Model
 {
-    protected $fillable = ['user_id', 'course_id', 'title', 'content', 'due_date', 'favorite', 'color'];
+    protected $fillable = ['user_id', 'course_id', 'title', 'content', 'due_date', 'favorite', 'color','tags','screenshot'];
 
     protected $casts = [
         'favorite' => 'boolean',

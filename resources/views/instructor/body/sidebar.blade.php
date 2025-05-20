@@ -79,7 +79,7 @@
         <div class="menu-title">All Question</div>
       </a>
       <ul class="mm-collapse">
-        <li><a href="#"><i class='bx bx-radio-circle'></i>All Question</a></li>
+        <li><a href="{{ route('instructor.question.index') }}"><i class='bx bx-radio-circle'></i>All Question</a></li>
       </ul>
     </li>
     <li>
