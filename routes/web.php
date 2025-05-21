@@ -6,6 +6,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\WishlistController;
+use App\Http\Controllers\User\ChatController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\User\NotesController;
 use App\Http\Controllers\User\ReportController;
@@ -22,7 +23,6 @@ use App\Http\Controllers\Admin\AllOrdersController;
 use App\Http\Controllers\Admin\BlogPostsController;
 use App\Http\Controllers\Instructor\BlogController;
 use App\Http\Controllers\Instructor\QuizController;
-use App\Http\Controllers\User\PurchaseHistoryController;
 use App\Http\Controllers\Admin\CouponViewController;
 use App\Http\Controllers\Frontend\InvoiceController;
 use App\Http\Controllers\Instructor\OrderController;
@@ -39,11 +39,13 @@ use App\Http\Controllers\Admin\AdmindashboardController;
 use App\Http\Controllers\Admin\BlogCategoriesController;
 use App\Http\Controllers\Admin\ReportCategoryController;
 use App\Http\Controllers\Frontend\BlogArticleController;
+use App\Http\Controllers\User\PurchaseHistoryController;
 use App\Http\Controllers\Frontend\PaypalPaymentController;
 use App\Http\Controllers\Frontend\StripePaymentController;
 use App\Http\Controllers\Instructor\NotificationController;
 use App\Http\Controllers\Instructor\CourseLectureController;
 use App\Http\Controllers\Instructor\CourseSectionController;
+use App\Http\Controllers\Instructor\InstructorChatController;
 use App\Http\Controllers\Admin\InstructorManagementController;
 use App\Http\Controllers\Instructor\InstructorEarningsController;
 use App\Http\Controllers\Instructor\InstructorDashboardController;
@@ -73,6 +75,7 @@ Route::name('')->group(function () {
 Route::get('/user/quizperformance', [UserDashboardController::class, 'getQuizPerformanceData'])->name('quizperformance');
 Route::get('/user/wishlistdata', [UserDashboardController::class, 'getWishlistData'])->name('wishlistdata');
 Route::get('/user/categoryengagement', [UserDashboardController::class, 'getCategoryEngagementData'])->name('categoryengagement');
+Route::post('/chat', [ChatController::class, 'handleChat'])->name('user.chat');
     
     
     
@@ -152,6 +155,7 @@ Route::get('/user/categoryengagement', [UserDashboardController::class, 'getCate
         Route::get('/notifications/{id}/mark-as-read', [UserNotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
         Route::post('/notifications/mark-all-as-read', [UserNotificationController::class, 'markAllAsRead'])->name('notifications.markAllAsRead');
         Route::get('/notifications/{notification}/read', [UserNotificationController::class, 'read'])->name('notifications.read');
+
     });
 });
 
@@ -219,9 +223,10 @@ Route::prefix('instructor')->name('instructor.')->group(function () {
     require base_path('routes/auth/instructor.php');
 
   Route::get('/dashboard', [InstructorDashboardController::class, 'index'])->name('dashboard');
-
+  
 
   Route::middleware(['auth:instructor', 'verified'])->group(function () {
+    Route::post('/instructor/chat', [InstructorChatController::class, 'handleChat'])->name('chat.handle');
         Route::resource('courses', CourseController::class)->names('courses');
         Route::get('/courses/subcategory/ajax/{category_id}', [CourseController::class, 'getSubCategory'])->name('subcategory.ajax');
         Route::resource('courses.sections', CourseSectionController::class)->names('course_sections');
@@ -264,6 +269,7 @@ Route::prefix('instructor')->name('instructor.')->group(function () {
         Route::post('/question/answer/store', [QuestionController::class, 'storeAnswer'])->name('question.answer.store');
         Route::put('/question/answer/update', [QuestionController::class, 'updateAnswer'])->name('question.answer.update');
         Route::delete('/question/answer/destroy', [QuestionController::class, 'destroyAnswer'])->name('question.answer.destroy');
+        
     });
 });
 

@@ -1,3 +1,4 @@
+```blade
 @extends('User.layout.user_layout')
 
 @section('title')
@@ -48,6 +49,94 @@ User Dashboard | Easy Learning
         color: #1e1b4b;
         font-weight: 500;
     }
+    /* Chat Widget Styles */
+    .chat-button {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background-color: #4f46e5;
+        color: white;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        cursor: pointer;
+        z-index: 1000;
+    }
+    .chat-button:hover {
+        background-color: #4338ca;
+    }
+    .chat-window {
+        position: fixed;
+        bottom: 100px;
+        right: 20px;
+        width: 350px;
+        height: 400px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        display: none;
+        flex-direction: column;
+        z-index: 1000;
+    }
+    .chat-header {
+        background: linear-gradient(135deg, #4f46e5, #818cf8);
+        color: white;
+        padding: 10px;
+        border-top-left-radius: 8px;
+        border-top-right-radius: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .chat-body {
+        flex: 1;
+        padding: 10px;
+        overflow-y: auto;
+        background: #f9fafb;
+    }
+    .chat-message {
+        margin: 5px 0;
+        padding: 8px 12px;
+        border-radius: 8px;
+        max-width: 80%;
+    }
+    .chat-message.user {
+        background: #4f46e5;
+        color: white;
+        margin-left: auto;
+    }
+    .chat-message.bot {
+        background: #e5e7eb;
+        color: #1f2937;
+    }
+    .chat-input {
+        padding: 10px;
+        border-top: 1px solid #e5e7eb;
+        display: flex;
+        gap: 10px;
+    }
+    .chat-input input {
+        flex: 1;
+        padding: 8px;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        outline: none;
+    }
+    .chat-input button {
+        background: #4f46e5;
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    .chat-input button:hover {
+        background: #4338ca;
+    }
 </style>
 
 <div class="container py-4">
@@ -82,8 +171,6 @@ User Dashboard | Easy Learning
         <div class="alert alert-danger mt-3">{{ session('error') }}</div>
         @endif
     </div>
-
-
 
     <!-- Stats Overview -->
     <div class="row mt-5">
@@ -197,6 +284,26 @@ User Dashboard | Easy Learning
             </div>
         </div>
     </div>
+
+    <!-- Chat Widget -->
+    <div class="chat-button" id="chatButton">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
+        </svg>
+    </div>
+    <div class="chat-window" id="chatWindow">
+        <div class="chat-header">
+            <span>Learning Assistant</span>
+            <button class="close-chat" id="closeChat">✖</button>
+        </div>
+        <div class="chat-body" id="chatBody">
+            <div class="chat-message bot">Hello! I'm here to help with your learning. Ask about courses, progress, or study tips! 😊</div>
+        </div>
+        <div class="chat-input">
+            <input type="text" id="chatInput" placeholder="Type your question...">
+            <button id="sendMessage">Send</button>
+        </div>
+    </div>
 </div>
 @endsection
 
@@ -205,7 +312,7 @@ User Dashboard | Easy Learning
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <!-- DataTables (jQuery already included in layout) -->
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables considere1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         // Initialize DataTable for Enrolled Courses
@@ -277,6 +384,67 @@ User Dashboard | Easy Learning
                     tooltip: { theme: 'light' }
                 }).render();
             });
+
+        // Chat Widget Functionality
+        const chatButton = document.getElementById('chatButton');
+        const chatWindow = document.getElementById('chatWindow');
+        const closeChat = document.getElementById('closeChat');
+        const chatInput = document.getElementById('chatInput');
+        const sendMessage = document.getElementById('sendMessage');
+        const chatBody = document.getElementById('chatBody');
+
+        chatButton.addEventListener('click', () => {
+            chatWindow.style.display = chatWindow.style.display === 'none' ? 'flex' : 'none';
+        });
+
+        closeChat.addEventListener('click', () => {
+            chatWindow.style.display = 'none';
+        });
+
+        sendMessage.addEventListener('click', sendChatMessage);
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendChatMessage();
+        });
+
+        function sendChatMessage() {
+            const message = chatInput.value.trim();
+            if (!message) return;
+
+            // Add user message to chat
+            const userMessage = document.createElement('div');
+            userMessage.className = 'chat-message user';
+            userMessage.textContent = message;
+            chatBody.appendChild(userMessage);
+
+            // Send message to backend
+            fetch('{{ route('user.chat') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ message })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Add bot response
+                const botMessage = document.createElement('div');
+                botMessage.className = 'chat-message bot';
+                botMessage.textContent = data.response;
+                chatBody.appendChild(botMessage);
+                chatBody.scrollTop = chatBody.scrollHeight;
+            })
+            .catch(error => {
+                const errorMessage = document.createElement('div');
+                errorMessage.className = 'chat-message bot';
+                errorMessage.textContent = 'Sorry, something went wrong. Please try again.';
+                chatBody.appendChild(errorMessage);
+            });
+
+            chatInput.value = '';
+            chatBody.scrollTop = chatBody.scrollHeight;
+        }
     });
 </script>
 @endpush
+```
