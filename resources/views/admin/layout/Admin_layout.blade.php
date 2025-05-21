@@ -301,22 +301,15 @@
         @endif
     </script>
 
-    <!-- Chart.js (CDN with local fallback) -->
+    <!-- Chart.js (CDN only) -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-    <script>
-        // Fallback to local Chart.js if CDN fails
-        if (typeof Chart === 'undefined') {
-            console.warn('Chart.js CDN failed, attempting local fallback');
-            document.write('<script src="{{ asset('backend/assets/js/chart.min.js') }}"><\/script>');
-        }
-    </script>
 
     <!-- Debug Script Loading -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             console.log('DOM fully loaded');
             if (typeof Chart === 'undefined') {
-                console.error('Chart.js not loaded (even after fallback)');
+                console.error('Chart.js failed to load from CDN');
             } else {
                 console.log('Chart.js loaded successfully');
             }
@@ -331,7 +324,7 @@
     </script>
 
     <!-- Page-specific scripts -->
-    @yield('scripts')
+    @stack('scripts')
 </body>
 
 </html>

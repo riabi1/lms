@@ -11,6 +11,7 @@ use App\Models\Report;
 use App\Models\BlogPost;
 use App\Models\Comment;
 use App\Models\QuizAttempt;
+use App\Models\Coupon;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -51,6 +52,21 @@ class AdmindashboardController extends Controller
             ->value('completion_rate') ?? 0;
         $averageCourseRating = Review::where('reviewable_type', 'App\\Models\\Course')
             ->avg('rating') ?? 0;
+
+        // Course Completion Rates by Course
+        $courseCompletionRates = Course::select(
+            'courses.id',
+            'courses.course_title',
+            DB::raw('AVG(CASE WHEN user_course_progress.completed = 1 THEN 100 ELSE 0 END) as completion_rate')
+        )
+            ->leftJoin('user_course_progress', 'courses.id', '=', 'user_course_progress.course_id')
+            ->groupBy('courses.id', 'courses.course_title')
+            ->get();
+
+        // Coupon Metrics
+        $totalCoupons = Coupon::count();
+        $usedCoupons = Coupon::where('uses', '>', 0)->count();
+        $couponUsageRate = $totalCoupons > 0 ? ($usedCoupons / $totalCoupons) * 100 : 0;
 
         // Revenue Metrics
         $totalRevenue = Order::where('payment_status', 'paid')
@@ -107,13 +123,16 @@ class AdmindashboardController extends Controller
             $currentDate->addMonth();
         }
 
-        // Log trends for debugging
-        Log::info('Enrollment Trend', $enrollmentTrend->toArray());
-        Log::info('Revenue Trend', $revenueTrend->toArray());
-        Log::info('Enrollment Labels', $enrollmentLabels);
-        Log::info('Enrollment Data', $enrollmentData);
-        Log::info('Revenue Labels', $revenueLabels);
-        Log::info('Revenue Data', $revenueData);
+        // Blog Engagement by Post
+        $blogEngagementByPost = BlogPost::select(
+            'blog_posts.id',
+            'blog_posts.title',
+            DB::raw('COUNT(comments.id) as comment_count')
+        )
+            ->leftJoin('comments', 'blog_posts.id', '=', 'comments.blog_post_id')
+            ->groupBy('blog_posts.id', 'blog_posts.title')
+            ->orderByDesc('comment_count')
+            ->get();
 
         // Platform Health
         $pendingReports = Report::where('status', 'pending')->count();
@@ -147,22 +166,37 @@ class AdmindashboardController extends Controller
             ->take(5)
             ->get();
 
-        // Log top courses for debugging
+        // Log data for debugging
         Log::debug('Top Courses', $topCourses->toArray());
+        Log::debug('Course Completion Rates', $courseCompletionRates->toArray());
+        Log::debug('Blog Engagement by Post', $blogEngagementByPost->toArray());
+        Log::debug('Coupon Metrics', [
+            'totalCoupons' => $totalCoupons,
+            'usedCoupons' => $usedCoupons,
+            'couponUsageRate' => $couponUsageRate,
+        ]);
+        Log::info('Enrollment Trend', $enrollmentTrend->toArray());
+        Log::info('Revenue Trend', $revenueTrend->toArray());
 
         // Actionable Recommendations
         $recommendations = [];
         if ($averageCompletionRate < 50) {
             $recommendations[] = 'Low course completion rates detected. Consider adding more interactive elements like quizzes or live sessions.';
         }
-        if ($pendingReports > 5) {
-            $recommendations[] = 'High number of pending reports. Prioritize resolving course-related issues to improve user satisfaction.';
+        if ($pendingReports > 0) {
+            $recommendations[] = 'Pending reports detected (e.g., Course 10 issue). Prioritize resolving to improve user satisfaction.';
         }
-        if ($blogEngagement < 10) {
-            $recommendations[] = 'Blog engagement is low. Promote blog posts on social media to increase comments and interaction.';
+        if ($blogEngagement < 5) {
+            $recommendations[] = 'Blog engagement is low (e.g., no comments on AI post). Promote Programming and Design posts on social media.';
         }
         if ($totalCourses > 0 && $totalEnrollments == 0) {
             $recommendations[] = 'No enrollments yet. Offer discounts or free trials to attract students.';
+        }
+        if ($couponUsageRate < 10) {
+            $recommendations[] = 'Coupon usage is low (0% usage). Promote coupons via email campaigns or homepage banners.';
+        }
+        if ($courseCompletionRates->contains('course_title', 'Blockchain') && $courseCompletionRates->firstWhere('course_title', 'Blockchain')->completion_rate < 50) {
+            $recommendations[] = 'Blockchain course has low completion (33%). Simplify content or add interactive elements.';
         }
 
         // Pass all variables to the view
@@ -186,8 +220,12 @@ class AdmindashboardController extends Controller
             'blogEngagement',
             'quizParticipation',
             'topCourses',
+            'courseCompletionRates',
+            'blogEngagementByPost',
+            'totalCoupons',
+            'usedCoupons',
+            'couponUsageRate',
             'recommendations'
         ));
     }
 }
-
