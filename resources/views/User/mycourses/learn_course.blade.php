@@ -291,6 +291,9 @@
             <div class="container-fluid">
                 <div class="main-menu-content d-flex align-items-center">
                     <div class="course-dashboard-header-title pl-4">
+                    <a href="{{ route('home') }}" class="logo">
+                      <img src="{{ asset('frontend/images/logo2.png') }}" alt="Logo" class="img-fluid" style="max-height: 70px; filter: brightness(110%);">
+                    </a>
                         <a href="{{ url('course/details/' . ($course->id ?? '') . '/' . ($course->course_name_slug ?? '')) }}">{{ $course->course_name ?? 'My Courses' }}</a>
                     </div>
                     <div class="menu-wrapper ml-auto">

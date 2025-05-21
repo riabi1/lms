@@ -27,7 +27,10 @@ class Order extends Model
         'payment_id',
         'payment_method',
     ];
-
+    protected $casts = [
+      'created_at' => 'datetime',
+      'updated_at' => 'datetime',
+  ];
 
     protected static function booted()
     {

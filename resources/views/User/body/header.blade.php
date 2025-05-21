@@ -72,7 +72,7 @@
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                     <li>
-                        <a class="dropdown-item d-flex align-items-center" href="">
+                        <a class="dropdown-item d-flex align-items-center" href="{{route('purchase.history')}}">
                             <i class="bx bx-history fs-5 me-2 text-success"></i>
                             <span>Purchase History</span>
                         </a>

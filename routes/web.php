@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\AllOrdersController;
 use App\Http\Controllers\Admin\BlogPostsController;
 use App\Http\Controllers\Instructor\BlogController;
 use App\Http\Controllers\Instructor\QuizController;
+use App\Http\Controllers\User\PurchaseHistoryController;
 use App\Http\Controllers\Admin\CouponViewController;
 use App\Http\Controllers\Frontend\InvoiceController;
 use App\Http\Controllers\Instructor\OrderController;
@@ -122,6 +123,7 @@ Route::get('/user/categoryengagement', [UserDashboardController::class, 'getCate
         Route::post('/course/{courseId}/question/submit', [MyCourseController::class, 'submitQuestion'])->name('course.question.submit');
         Route::put('{courseId}/question/update', [MyCourseController::class, 'updateQuestion'])->name('course.question.update');
         Route::delete('{courseId}/question/destroy', [MyCourseController::class, 'destroyQuestion'])->name('course.question.destroy');
+        Route::get('/purchase-history', [PurchaseHistoryController::class, 'index'])->name('purchase.history');
 
 
         // User Wishlist Routes
