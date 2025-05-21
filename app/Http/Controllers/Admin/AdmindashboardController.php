@@ -57,11 +57,32 @@ class AdmindashboardController extends Controller
         $courseCompletionRates = Course::select(
             'courses.id',
             'courses.course_title',
-            DB::raw('AVG(CASE WHEN user_course_progress.completed = 1 THEN 100 ELSE 0 END) as completion_rate')
+            DB::raw('
+                COALESCE(
+                    (
+                        SELECT AVG(user_completion.completion_percentage)
+                        FROM (
+                            SELECT 
+                                ucp.trackable_id,
+                                ucp.course_id,
+                                COALESCE(
+                                    100.0 * SUM(CASE WHEN ucp.completed = 1 THEN 1 ELSE 0 END) / NULLIF(
+                                        (SELECT COUNT(*) FROM course_lectures cl WHERE cl.course_id = ucp.course_id),
+                                        0
+                                    ),
+                                    0
+                                ) as completion_percentage
+                            FROM user_course_progress ucp
+                            GROUP BY ucp.trackable_id, ucp.course_id
+                        ) user_completion
+                        WHERE user_completion.course_id = courses.id
+                    ),
+                    0
+                ) as completion_rate'
+            )
         )
-            ->leftJoin('user_course_progress', 'courses.id', '=', 'user_course_progress.course_id')
-            ->groupBy('courses.id', 'courses.course_title')
-            ->get();
+        ->groupBy('courses.id', 'courses.course_title')
+        ->get();
 
         // Coupon Metrics
         $totalCoupons = Coupon::count();
@@ -154,7 +175,7 @@ class AdmindashboardController extends Controller
             'courses.course_title',
             DB::raw('COUNT(orders.id) as enrollments'),
             DB::raw('AVG(reviews.rating) as average_rating'),
-            DB::raw('SUM(CASE WHEN orders.payment_status = "paid" AND orders.currency = "USD" THEN orders.price - COALESCE(orders.discount_amount, 0) ELSE 0 END) as revenue')
+            DB::raw('SUM(CASE WHEN orders.payment_status = "paid" AND orders.currency = "USD" THEN orders.price - COALESCE(discount_amount, 0) ELSE 0 END) as revenue')
         )
             ->leftJoin('orders', 'courses.id', '=', 'orders.course_id')
             ->leftJoin('reviews', function ($join) {
@@ -196,7 +217,7 @@ class AdmindashboardController extends Controller
             $recommendations[] = 'Coupon usage is low (0% usage). Promote coupons via email campaigns or homepage banners.';
         }
         if ($courseCompletionRates->contains('course_title', 'Blockchain') && $courseCompletionRates->firstWhere('course_title', 'Blockchain')->completion_rate < 50) {
-            $recommendations[] = 'Blockchain course has low completion (33%). Simplify content or add interactive elements.';
+            $recommendations[] = 'Blockchain course has low completion (25%). Simplify content or add interactive elements.';
         }
 
         // Pass all variables to the view
