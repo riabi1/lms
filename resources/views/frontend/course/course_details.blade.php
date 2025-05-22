@@ -149,11 +149,13 @@ $cartItems = auth()->check() ? Cache::remember('cart_items_' . auth()->id(), 60,
 :where(.dark-mode) .lecture-description {
     color: #ddd;
 }
+video.rounded {
+    border-radius: 6px;
+}
 </style>
 
 <!-- BREADCRUMB AREA -->
-<section class="breadcrumb-area pt-50px pb-50px bg-white pattern-bg">
-    <div class="container">
+<section class="breadcrumb-area pt-50px pb-50px bg-white pattern-bg" style="background-image: url('{{ asset('frontend/images/background.jpeg') }}'); background-size: cover; background-position: center;">    <div class="container">
         <div class="col-lg-8 mr-auto">
             <div class="breadcrumb-content">
                 <ul class="generic-list-item generic-list-item-arrow d-flex flex-wrap align-items-center">
@@ -271,7 +273,7 @@ $cartItems = auth()->check() ? Cache::remember('cart_items_' . auth()->id(), 60,
 
                     <div class="course-overview-card">
                         <div class="curriculum-header d-flex align-items-center justify-content-between pb-4">
-                            <h3 class="fs-24 font-weight-semi-bold">Course content</h3>
+                            <h3 class="fs-24 font-weight-semi-bold">Course Content</h3>
                             <div class="curriculum-duration fs-15">
                                 <span class="curriculum-total__text mr-2"><strong class="text-black font-weight-semi-bold">Total:</strong> {{ $course->lectures->count() }} lectures</span>
                             </div>
@@ -280,6 +282,9 @@ $cartItems = auth()->check() ? Cache::remember('cart_items_' . auth()->id(), 60,
                         <div class="curriculum-content">
                             <div id="accordion" class="generic-accordion">
                                 @foreach ($course->sections ?? [] as $sec)
+                                    @php
+                                        $isFirstSection = $loop->first;
+                                    @endphp
                                     <div class="card">
                                         <div class="card-header" id="heading{{ $sec->id }}">
                                             <button class="btn btn-link d-flex align-items-center justify-content-between w-100 section-toggle">
@@ -297,63 +302,44 @@ $cartItems = auth()->check() ? Cache::remember('cart_items_' . auth()->id(), 60,
                                             <div class="card-body">
                                                 <ul class="generic-list-item">
                                                     @foreach ($sec->lectures ?? [] as $index => $lect)
+                                                        @php
+                                                            $isFirstLecture = $index === 0;
+                                                            $showPreview = !$hasPurchased && $isFirstSection && $isFirstLecture;
+                                                        @endphp
                                                         <li class="curriculum-content">
                                                             <div class="d-flex align-items-center justify-content-between">
                                                                 <span>
                                                                     <i class="la la-play-circle mr-2"></i>
                                                                     {{ $lect->lecture_title ?? 'Untitled Lecture' }}
-                                                                    @if ($loop->parent->first && $index === 0 && !$hasPurchased)
-                                                                        <span class="ribbon ml-2 fs-13">Preview</span>
-                                                                    @endif
                                                                 </span>
-                                                                @if ($loop->parent->first && $index === 0 && !$hasPurchased)
+                                                                @if ($showPreview)
                                                                     <a href="javascript:void(0)" 
                                                                        class="preview-lecture" 
                                                                        data-toggle="modal" 
                                                                        data-target="#previewLectureModal"
                                                                        data-lecture-id="{{ $lect->id }}"
                                                                        data-lecture-title="{{ $lect->lecture_title ?? 'Untitled Lecture' }}"
-                                                                       data-lecture-video="{{ $lect->video ? asset('upload/lecture_videos/' . $lect->video) : '' }}"
+                                                                       data-lecture-video="{{ $lect->video ? asset('upload/lectures/videos/' . $lect->video) : '' }}"
                                                                        data-lecture-description="{{ $lect->content ?? 'No description available' }}"
-                                                                       data-lecture-file="{{ $lect->file_path ? asset('upload/lecture_files/' . $lect->file_path) : '' }}"
-                                                                       data-lecture-external-link="{{ $lect->external_link ?? '' }}"
-                                                                       data-lecture-resources-description="{{ $lect->resources_description ?? '' }}">
-                                                                        <i class="la la-eye mr-1"></i> Watch Preview
-                                                                    </a>
-                                                                @elseif ($hasPurchased)
-                                                                    <a href="javascript:void(0)" 
-                                                                       class="preview-lecture" 
-                                                                       data-toggle="modal" 
-                                                                       data-target="#previewLectureModal"
-                                                                       data-lecture-id="{{ $lect->id }}"
-                                                                       data-lecture-title="{{ $lect->lecture_title ?? 'Untitled Lecture' }}"
-                                                                       data-lecture-video="{{ $lect->video ? asset('upload/lecture_videos/' . $lect->video) : '' }}"
-                                                                       data-lecture-description="{{ $lect->content ?? 'No description available' }}"
-                                                                       data-lecture-file="{{ $lect->file_path ? asset('upload/lecture_files/' . $lect->file_path) : '' }}"
+                                                                       data-lecture-file="{{ $lect->file_path ? asset('upload/lectures/files/' . $lect->file_path) : '' }}"
                                                                        data-lecture-external-link="{{ $lect->external_link ?? '' }}"
                                                                        data-lecture-resources-description="{{ $lect->resources_description ?? '' }}">
                                                                         <i class="la la-eye mr-1"></i> View Lecture
                                                                     </a>
-                                                                @else
-                                                                    <span class="text-muted">
-                                                                        <i class="la la-lock mr-1"></i> Locked
-                                                                    </span>
                                                                 @endif
                                                             </div>
-                                                            @if ($loop->parent->first && $index === 0 && !$hasPurchased)
-                                                                <div class="lecture-preview-content mt-2">
-                                                                    <p class="lecture-description fs-15">{{ $lect->content ?? 'No description available' }}</p>
+                                                            @if ($showPreview)
+                                                                <div class="lecture-content mt-2">
                                                                     @if ($lect->video)
-                                                                        <video controls crossorigin playsinline 
-                                                                               poster="{{ $course->course_image ? asset('upload/course_images/thumbnail/' . $course->course_image) : asset('images/default-course.jpg') }}" 
-                                                                               style="width: 100%; max-height: 200px;">
-                                                                            <source src="{{ asset('upload/lecture_videos/' . $lect->video) }}" type="video/mp4" />
-                                                                            <p>Your browser doesn't support HTML5 video.</p>
+                                                                        <video width="100%" height="200" controls preload="metadata" class="rounded">
+                                                                            <source src="{{ asset('upload/lectures/videos/' . $lect->video) }}" type="video/mp4" />
+                                                                            Your browser does not support the video tag.
                                                                         </video>
                                                                     @endif
+                                                                    <p class="lecture-description fs-15 mt-2">{{ $lect->content ?? 'No description available' }}</p>
                                                                     @if ($lect->file_path)
                                                                         <p class="fs-15 mt-2">
-                                                                            <a href="{{ asset('upload/lecture_files/' . $lect->file_path) }}" target="_blank" class="text-color">
+                                                                            <a href="{{ asset('upload/lectures/files/' . $lect->file_path) }}" target="_blank" class="text-color">
                                                                                 <i class="la la-file mr-1"></i> Download Resource
                                                                             </a>
                                                                         </p>
@@ -469,7 +455,7 @@ $cartItems = auth()->check() ? Cache::remember('cart_items_' . auth()->id(), 60,
 
                     <div class="course-overview-card pt-4">
                         <h3 class="fs-24 font-weight-semi-bold pb-4">Reviews</h3>
-                        <div class="review-wrap">
+                        <div class="review⊂-wrap">
                             @php
                                 $reviews = $course->reviews()
                                     ->where('status', 1)
@@ -549,8 +535,8 @@ $cartItems = auth()->check() ? Cache::remember('cart_items_' . auth()->id(), 60,
                         <div class="card-body">
                             <div class="preview-course-video">
                                 <a href="javascript:void(0)" data-toggle="modal" data-target="#previewModal">
-                                    <img src="{{ $course->course_image ? asset('upload/course_images/thumbnail/' . $course->course_image) : asset('images/default-course.jpg') }}" 
-                                         alt="course-img" 
+                                <img src="{{ $course->course_image ? asset('upload/course_images/thumbnail/' . $course->course_image) : asset('images/default-course.jpg') }}" 
+                                        alt="course-img" 
                                          class="w-100 rounded lazy" 
                                          loading="lazy"
                                          onerror="this.src='{{ asset('images/default-course.jpg') }}'">
@@ -594,7 +580,7 @@ $cartItems = auth()->check() ? Cache::remember('cart_items_' . auth()->id(), 60,
                                 </p>
                                 <div class="buy-course-btn-box">
                                     @if ($hasPurchased)
-                                        <a href="{{ route('course.start', [$course->id, Str::slug($course->course_name)]) }}" class="btn theme-btn flex-grow-1 mr-3">
+                                        <a href="{{ route('course.start', [$course->id, Str::slug($course->course_name)]) }}" class="btn theme-btn flex-grow-1">
                                             <i class="la la-play-circle fs-18 mr-1"></i> Start Learning
                                         </a>
                                     @else
@@ -848,16 +834,12 @@ $cartItems = auth()->check() ? Cache::remember('cart_items_' . auth()->id(), 60,
                     </button>
                 </div>
                 <div class="modal-body">
-                    @if ($course->promo_video)
-                        <video controls crossorigin playsinline 
-                               poster="{{ $course->course_image ? asset('upload/course_images/thumbnail/' . $course->course_image) : asset('images/default-course.jpg') }}" 
-                               id="preview-player" style="width: 100%;">
-                            <source src="{{ asset('upload/promo_videos/' . $course->promo_video) }}" type="video/mp4" />
-                            <p>Your browser doesn't support HTML5 video. Here is a <a href="{{ asset('upload/promo_videos/' . $course->promo_video) }}">link to the video</a> instead.</p>
-                        </video>
-                    @else
-                        <p>No preview video available for this course.</p>
-                    @endif
+                <video controls crossorigin playsinline 
+                           poster="{{ $course->course_image ? asset('upload/course_images/thumbnail/' . $course->course_image) : asset('images/default-course.jpg') }}" 
+                           id="player">
+                        <source src="{{ $course->video ? asset('upload/course_images/video/' . $course->video) : '' }}" type="video/mp4" />
+                        <p>Your browser doesn't support HTML5 video. Here is a <a href="{{ $course->video ? asset('upload/course_images/video/' . $course->video) : '#' }}">link to the video</a> instead.</p>
+                    </video>
                 </div>
                 <div class="modal-footer justify-content-center border-top-gray">
                     @if (!$hasPurchased)
@@ -873,7 +855,7 @@ $cartItems = auth()->check() ? Cache::remember('cart_items_' . auth()->id(), 60,
             <div class="modal-content">
                 <div class="modal-header border-bottom-gray">
                     <div class="pr-2">
-                        <p class="pb-2 font-weight-semi-bold">{{ $hasPurchased ? 'Lecture Content' : 'Lecture Preview' }}</p>
+                        <p class="pb-2 font-weight-semi-bold">Lecture Preview</p>
                         <h5 class="modal-title fs-19 font-weight-semi-bold lh-24" id="previewLectureModalTitle">Lecture Title</h5>
                     </div>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -882,11 +864,9 @@ $cartItems = auth()->check() ? Cache::remember('cart_items_' . auth()->id(), 60,
                 </div>
                 <div class="modal-body">
                     <div id="lecture-preview-content">
-                        <video controls crossorigin playsinline 
-                               poster="{{ $course->course_image ? asset('upload/course_images/thumbnail/' . $course->course_image) : asset('images/default-course.jpg') }}" 
-                               id="lecture-player" style="width: 100%; display: none;">
+                        <video width="100%" height="200" controls preload="metadata" id="lecture-player" class="rounded" style="display: none;">
                             <source src="" type="video/mp4" />
-                            <p>Your browser doesn't support HTML5 video.</p>
+                            Your browser does not support the video tag.
                         </video>
                         <p class="lecture-description mt-3 fs-15"></p>
                         <div class="lecture-resources mt-3">
@@ -908,7 +888,11 @@ $cartItems = auth()->check() ? Cache::remember('cart_items_' . auth()->id(), 60,
                 </div>
                 <div class="modal-footer justify-content-center border-top-gray">
                     @if (!$hasPurchased)
-                        <a href="{{ route('cart') }}" class="btn theme-btn">Enroll Now to Unlock Full Course</a>
+                    <button class="btn theme-btn flex-grow-1 mr-3 cart-btn {{ $isInCart ? 'in-cart' : 'add-to-cart' }}" 
+                                                data-course-id="{{ $course->id }}"
+                                                data-action="{{ $isInCart ? 'remove' : 'add' }}">
+                                            <i class="la la-shopping-cart fs-18 mr-1"></i> {{ $isInCart ? 'In Cart' : 'Add to Cart' }}
+                                        </button>
                     @endif
                 </div>
             </div>
@@ -1213,3 +1197,4 @@ $cartItems = auth()->check() ? Cache::remember('cart_items_' . auth()->id(), 60,
     });
     </script>
 @endsection
+
