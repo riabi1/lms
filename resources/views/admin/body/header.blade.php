@@ -30,6 +30,12 @@
                             <span>Earnings</span>
                         </a>
                     </li>
+                    <li>
+                        <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="{{ route('admin.excel.index') }}">
+                            <i class="bx bx-file fs-5 text-info"></i>
+                            <span>Excel Reports</span>
+                        </a>
+                    </li>
                     <li><hr class="dropdown-divider mb-0"></li>
                     <li>
                         <form method="POST" action="{{ route('admin.logout') }}" class="d-inline w-100">

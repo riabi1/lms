@@ -8,8 +8,6 @@
 @php
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
-
-// Fetch cart items for authenticated users
 $cartItems = auth()->check() ? Cache::remember('cart_items_' . auth()->id(), 60, function () {
     return App\Models\CartItem::where('user_id', auth()->id())
         ->where('cartable_type', 'App\\Models\\Course')
@@ -136,6 +134,21 @@ $cartItems = auth()->check() ? Cache::remember('cart_items_' . auth()->id(), 60,
 .cart-btn.in-cart:hover {
     background-color: #5a6268;
 }
+.preview-lecture {
+    color: var(--accent);
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+.preview-lecture:hover {
+    color: var(--accent-hover);
+    text-decoration: none;
+}
+.lecture-description {
+    color: #333;
+}
+:where(.dark-mode) .lecture-description {
+    color: #ddd;
+}
 </style>
 
 <!-- BREADCRUMB AREA -->
@@ -261,7 +274,6 @@ $cartItems = auth()->check() ? Cache::remember('cart_items_' . auth()->id(), 60,
                             <h3 class="fs-24 font-weight-semi-bold">Course content</h3>
                             <div class="curriculum-duration fs-15">
                                 <span class="curriculum-total__text mr-2"><strong class="text-black font-weight-semi-bold">Total:</strong> {{ $course->lectures->count() }} lectures</span>
-                                <span class="curriculum-total__hours"><strong class="text-black font-weight-semi-bold">Total hours:</strong> {{ $course->duration ?? 'N/A' }}</span>
                             </div>
                         </div>
 
@@ -284,15 +296,80 @@ $cartItems = auth()->check() ? Cache::remember('cart_items_' . auth()->id(), 60,
                                         <div id="collapse{{ $sec->id }}" class="section-content" style="display: none;">
                                             <div class="card-body">
                                                 <ul class="generic-list-item">
-                                                    @foreach ($sec->lectures ?? [] as $lect)
+                                                    @foreach ($sec->lectures ?? [] as $index => $lect)
                                                         <li class="curriculum-content">
                                                             <div class="d-flex align-items-center justify-content-between">
                                                                 <span>
                                                                     <i class="la la-play-circle mr-2"></i>
                                                                     {{ $lect->lecture_title ?? 'Untitled Lecture' }}
+                                                                    @if ($loop->parent->first && $index === 0 && !$hasPurchased)
+                                                                        <span class="ribbon ml-2 fs-13">Preview</span>
+                                                                    @endif
                                                                 </span>
-                                                                <span class="text-muted">{{ $lect->duration ?? 'N/A' }}</span>
+                                                                @if ($loop->parent->first && $index === 0 && !$hasPurchased)
+                                                                    <a href="javascript:void(0)" 
+                                                                       class="preview-lecture" 
+                                                                       data-toggle="modal" 
+                                                                       data-target="#previewLectureModal"
+                                                                       data-lecture-id="{{ $lect->id }}"
+                                                                       data-lecture-title="{{ $lect->lecture_title ?? 'Untitled Lecture' }}"
+                                                                       data-lecture-video="{{ $lect->video ? asset('upload/lecture_videos/' . $lect->video) : '' }}"
+                                                                       data-lecture-description="{{ $lect->content ?? 'No description available' }}"
+                                                                       data-lecture-file="{{ $lect->file_path ? asset('upload/lecture_files/' . $lect->file_path) : '' }}"
+                                                                       data-lecture-external-link="{{ $lect->external_link ?? '' }}"
+                                                                       data-lecture-resources-description="{{ $lect->resources_description ?? '' }}">
+                                                                        <i class="la la-eye mr-1"></i> Watch Preview
+                                                                    </a>
+                                                                @elseif ($hasPurchased)
+                                                                    <a href="javascript:void(0)" 
+                                                                       class="preview-lecture" 
+                                                                       data-toggle="modal" 
+                                                                       data-target="#previewLectureModal"
+                                                                       data-lecture-id="{{ $lect->id }}"
+                                                                       data-lecture-title="{{ $lect->lecture_title ?? 'Untitled Lecture' }}"
+                                                                       data-lecture-video="{{ $lect->video ? asset('upload/lecture_videos/' . $lect->video) : '' }}"
+                                                                       data-lecture-description="{{ $lect->content ?? 'No description available' }}"
+                                                                       data-lecture-file="{{ $lect->file_path ? asset('upload/lecture_files/' . $lect->file_path) : '' }}"
+                                                                       data-lecture-external-link="{{ $lect->external_link ?? '' }}"
+                                                                       data-lecture-resources-description="{{ $lect->resources_description ?? '' }}">
+                                                                        <i class="la la-eye mr-1"></i> View Lecture
+                                                                    </a>
+                                                                @else
+                                                                    <span class="text-muted">
+                                                                        <i class="la la-lock mr-1"></i> Locked
+                                                                    </span>
+                                                                @endif
                                                             </div>
+                                                            @if ($loop->parent->first && $index === 0 && !$hasPurchased)
+                                                                <div class="lecture-preview-content mt-2">
+                                                                    <p class="lecture-description fs-15">{{ $lect->content ?? 'No description available' }}</p>
+                                                                    @if ($lect->video)
+                                                                        <video controls crossorigin playsinline 
+                                                                               poster="{{ $course->course_image ? asset('upload/course_images/thumbnail/' . $course->course_image) : asset('images/default-course.jpg') }}" 
+                                                                               style="width: 100%; max-height: 200px;">
+                                                                            <source src="{{ asset('upload/lecture_videos/' . $lect->video) }}" type="video/mp4" />
+                                                                            <p>Your browser doesn't support HTML5 video.</p>
+                                                                        </video>
+                                                                    @endif
+                                                                    @if ($lect->file_path)
+                                                                        <p class="fs-15 mt-2">
+                                                                            <a href="{{ asset('upload/lecture_files/' . $lect->file_path) }}" target="_blank" class="text-color">
+                                                                                <i class="la la-file mr-1"></i> Download Resource
+                                                                            </a>
+                                                                        </p>
+                                                                    @endif
+                                                                    @if ($lect->external_link)
+                                                                        <p class="fs-15 mt-2">
+                                                                            <a href="{{ $lect->external_link }}" target="_blank" class="text-color">
+                                                                                <i class="la la-link mr-1"></i> External Resource
+                                                                            </a>
+                                                                        </p>
+                                                                    @endif
+                                                                    @if ($lect->resources_description)
+                                                                        <p class="fs-15 mt-2"><strong>Resources Description:</strong> {{ $lect->resources_description }}</p>
+                                                                    @endif
+                                                                </div>
+                                                            @endif
                                                         </li>
                                                     @endforeach
                                                 </ul>
@@ -531,7 +608,6 @@ $cartItems = auth()->check() ? Cache::remember('cart_items_' . auth()->id(), 60,
                                 <div class="preview-course-incentives">
                                     <h3 class="card-title fs-18 pb-2">This course includes</h3>
                                     <ul class="generic-list-item pb-3">
-                                        <li><i class="la la-play-circle-o mr-2 text-color"></i>{{ $course->duration ?? 'N/A' }} learning hours</li>
                                         <li><i class="la la-file mr-2 text-color"></i>{{ $course->resources ?? 'N/A' }} resources</li>
                                         <li><i class="la la-file mr-2 text-color"></i>Certificate: {{ $course->certificate ?? 'N/A' }}</li>
                                         <li><i class="la la-key mr-2 text-color"></i>Full lifetime access</li>
@@ -745,62 +821,177 @@ $cartItems = auth()->check() ? Cache::remember('cart_items_' . auth()->id(), 60,
                 </div>
                 <div class="modal-body">
                     <div class="copy-to-clipboard">
-                        <span class="success-message">Copied!</span>
-                        <div class="input-group">
-                            <input type="text" class="form-control form--control copy-input pl-3" value="{{ route('course.details', [$course->id, Str::slug($course->course_name)]) }}">
-                            <div class="input-group-append">
-                                <button class="btn theme-btn theme-btn-sm copy-btn shadow-none"><i class="la la-copy mr-1"></i> Copy</button>
-                            </div>
-                        </div>
+                        <span class="success-message text-success"></span>
+                        <input type="text" class="form-control copy-input" value="{{ route('course.details', [$course->id, Str::slug($course->course_name)]) }}" readonly>
+                        <button class="btn copy-btn theme-btn theme-btn-sm"><i class="la la-copy mr-1"></i> Copy Link</button>
                     </div>
-                </div>
-                <div class="modal-footer justify-content-center border-top-gray">
-                    <ul class="social-icons social-icons-styled">
-                        <li><a href="#" class="facebook-bg"><i class="la la-facebook"></i></a></li>
-                        <li><a href="#" class="twitter-bg"><i class="la la-twitter"></i></a></li>
-                        <li><a href="#" class="instagram-bg"><i class="la la-instagram"></i></a></li>
-                    </ul>
+                    <div class="social-media pt-4">
+                        <h6 class="fs-15 font-weight-medium pb-2">Share On</h6>
+                        <ul class="social-profile">
+                            <li><a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode(route('course.details', [$course->id, Str::slug($course->course_name)])) }}" target="_blank"><i class="lab la-facebook-f"></i></a></li>
+                            <li><a href="https://twitter.com/intent/tweet?url={{ urlencode(route('course.details', [$course->id, Str::slug($course->course_name)])) }}&text=Check out this course!" target="_blank"><i class="lab la-twitter"></i></a></li>
+                            <li><a href="https://www.linkedin.com/shareArticle?mini=true&url={{ urlencode(route('course.details', [$course->id, Str::slug($course->course_name)])) }}" target="_blank"><i class="lab la-linkedin-in"></i></a></li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="modal fade modal-container" id="previewModal" tabindex="-1" role="dialog" aria-labelledby="previewModalTitle" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header border-bottom-gray">
+                    <h5 class="modal-title fs-19 font-weight-semi-bold" id="previewModalTitle">{{ $course->course_name ?? 'Course Preview' }}</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true" class="la la-times"></span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    @if ($course->promo_video)
+                        <video controls crossorigin playsinline 
+                               poster="{{ $course->course_image ? asset('upload/course_images/thumbnail/' . $course->course_image) : asset('images/default-course.jpg') }}" 
+                               id="preview-player" style="width: 100%;">
+                            <source src="{{ asset('upload/promo_videos/' . $course->promo_video) }}" type="video/mp4" />
+                            <p>Your browser doesn't support HTML5 video. Here is a <a href="{{ asset('upload/promo_videos/' . $course->promo_video) }}">link to the video</a> instead.</p>
+                        </video>
+                    @else
+                        <p>No preview video available for this course.</p>
+                    @endif
+                </div>
+                <div class="modal-footer justify-content-center border-top-gray">
+                    @if (!$hasPurchased)
+                        <a href="{{ route('cart') }}" class="btn theme-btn">Enroll Now</a>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade modal-container" id="previewLectureModal" tabindex="-1" role="dialog" aria-labelledby="previewLectureModalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header border-bottom-gray">
                     <div class="pr-2">
-                        <p class="pb-2 font-weight-semi-bold">Course Preview</p>
-                        <h5 class="modal-title fs-19 font-weight-semi-bold lh-24" id="previewModalTitle">{{ $course->course_name }}</h5>
+                        <p class="pb-2 font-weight-semi-bold">{{ $hasPurchased ? 'Lecture Content' : 'Lecture Preview' }}</p>
+                        <h5 class="modal-title fs-19 font-weight-semi-bold lh-24" id="previewLectureModalTitle">Lecture Title</h5>
                     </div>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true" class="la la-times"></span>
                     </button>
                 </div>
                 <div class="modal-body">
-                    <video controls crossorigin playsinline 
-                           poster="{{ $course->course_image ? asset('upload/course_images/thumbnail/' . $course->course_image) : asset('images/default-course.jpg') }}" 
-                           id="player">
-                        <source src="{{ $course->video ? asset('upload/course_images/video/' . $course->video) : '' }}" type="video/mp4" />
-                        <p>Your browser doesn't support HTML5 video. Here is a <a href="{{ $course->video ? asset('upload/course_images/video/' . $course->video) : '#' }}">link to the video</a> instead.</p>
-                    </video>
+                    <div id="lecture-preview-content">
+                        <video controls crossorigin playsinline 
+                               poster="{{ $course->course_image ? asset('upload/course_images/thumbnail/' . $course->course_image) : asset('images/default-course.jpg') }}" 
+                               id="lecture-player" style="width: 100%; display: none;">
+                            <source src="" type="video/mp4" />
+                            <p>Your browser doesn't support HTML5 video.</p>
+                        </video>
+                        <p class="lecture-description mt-3 fs-15"></p>
+                        <div class="lecture-resources mt-3">
+                            <p class="lecture-file fs-15" style="display: none;">
+                                <a href="#" target="_blank" class="text-color">
+                                    <i class="la la-file mr-1"></i> Download Resource
+                                </a>
+                            </p>
+                            <p class="lecture-external-link fs-15" style="display: none;">
+                                <a href="#" target="_blank" class="text-color">
+                                    <i class="la la-link mr-1"></i> External Resource
+                                </a>
+                            </p>
+                            <p class="lecture-resources-description fs-15" style="display: none;">
+                                <strong>Resources Description:</strong> <span></span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-center border-top-gray">
+                    @if (!$hasPurchased)
+                        <a href="{{ route('cart') }}" class="btn theme-btn">Enroll Now to Unlock Full Course</a>
+                    @endif
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Scripts -->
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <script src="{{ asset('js/tooltipster.bundle.min.js') }}"></script>
     <script>
     $(document).ready(function() {
         $('.section-toggle').on('click', function() {
-            const content = $(this).closest('.card').find('.section-content');
-            const plusIcon = $(this).find('.la-plus');
-            const minusIcon = $(this).find('.la-minus');
-            content.toggle();
-            plusIcon.toggle();
-            minusIcon.toggle();
+            const $this = $(this);
+            const $card = $this.closest('.card');
+            const $content = $card.find('.section-content');
+            const $plusIcon = $this.find('.la-plus');
+            const $minusIcon = $this.find('.la-minus');
+            
+            $('.section-content').not($content).slideUp();
+            $('.section-toggle').not($this).find('.la-plus').show();
+            $('.section-toggle').not($this).find('.la-minus').hide();
+            
+            $content.slideToggle(function() {
+                $plusIcon.toggle($content.is(':hidden'));
+                $minusIcon.toggle($content.is(':visible'));
+            });
+        });
+
+        $('.preview-lecture').on('click', function() {
+            const lectureTitle = $(this).data('lecture-title');
+            const lectureVideo = $(this).data('lecture-video');
+            const lectureDescription = $(this).data('lecture-description');
+            const lectureFile = $(this).data('lecture-file');
+            const lectureExternalLink = $(this).data('lecture-external-link');
+            const lectureResourcesDescription = $(this).data('lecture-resources-description');
+
+            $('#previewLectureModalTitle').text(lectureTitle);
+            
+            const videoPlayer = $('#lecture-player');
+            const videoSource = videoPlayer.find('source');
+            if (lectureVideo) {
+                videoSource.attr('src', lectureVideo);
+                videoPlayer[0].load();
+                videoPlayer.show();
+            } else {
+                videoPlayer.hide();
+            }
+            
+            $('.lecture-description').text(lectureDescription);
+            
+            const fileLink = $('.lecture-file');
+            if (lectureFile) {
+                fileLink.find('a').attr('href', lectureFile);
+                fileLink.show();
+            } else {
+                fileLink.hide();
+            }
+            
+            const externalLink = $('.lecture-external-link');
+            if (lectureExternalLink) {
+                externalLink.find('a').attr('href', lectureExternalLink);
+                externalLink.show();
+            } else {
+                externalLink.hide();
+            }
+            
+            const resourcesDescription = $('.lecture-resources-description');
+            if (lectureResourcesDescription) {
+                resourcesDescription.find('span').text(lectureResourcesDescription);
+                resourcesDescription.show();
+            } else {
+                resourcesDescription.hide();
+            }
+        });
+
+        $('#previewLectureModal').on('hidden.bs.modal', function() {
+            const videoPlayer = $('#lecture-player');
+            const videoSource = videoPlayer.find('source');
+            videoSource.attr('src', '');
+            videoPlayer[0].load();
+            videoPlayer.hide();
+            $('.lecture-description').text('');
+            $('.lecture-file').hide().find('a').attr('href', '#');
+            $('.lecture-external-link').hide().find('a').attr('href', '#');
+            $('.lecture-resources-description').hide().find('span').text('');
+            $('#previewLectureModalTitle').text('Lecture Title');
         });
 
         $('.card-preview').tooltipster({
@@ -865,8 +1056,6 @@ $cartItems = auth()->check() ? Cache::remember('cart_items_' . auth()->id(), 60,
             const $button = $(this);
             const courseId = $button.data('course-id');
             const action = $button.data('action');
-
-
 
             const isAuthenticated = {!! json_encode(auth()->check()) !!};
 

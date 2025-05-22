@@ -207,14 +207,17 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::patch('/reports/{report}', [AdminReportController::class, 'update'])->name('reports.update');
 
         // Excel Export Routes
-        Route::get('/excel', [ExcelReportController::class, 'index'])->name('excel.index');
-        Route::get('/excel/enrollments/export', [ExcelReportController::class, 'exportEnrollments'])->name('excel.enrollments.export');
-        Route::get('/excel/payments/export', [ExcelReportController::class, 'exportPayments'])->name('excel.payments.export');
-        Route::get('/excel/users/export', [ExcelReportController::class, 'exportUsers'])->name('excel.users.export');
-        Route::get('/excel/instructors/export', [ExcelReportController::class, 'exportInstructors'])->name('excel.instructors.export');
-        Route::get('/excel/orders/export', [ExcelReportController::class, 'exportOrders'])->name('excel.orders.export');
-        Route::get('/excel/courses/export', [ExcelReportController::class, 'exportCourses'])->name('excel.courses.export');
-        Route::get('/excel/all/export', [ExcelReportController::class, 'exportAll'])->name('excel.all.export');
+        Route::get('/admin/excel', [ExcelReportController::class, 'index'])->name('excel.index');
+        Route::get('/admin/excel/export/enrollments', [ExcelReportController::class, 'exportEnrollments'])->name('excel.enrollments');
+        Route::get('/admin/excel/export/payments', [ExcelReportController::class, 'exportPayments'])->name('excel.payments');
+        Route::get('/admin/excel/export/users', [ExcelReportController::class, 'exportUsers'])->name('excel.users');
+        Route::get('/admin/excel/export/instructors', [ExcelReportController::class, 'exportInstructors'])->name('excel.instructors');
+        Route::get('/admin/excel/export/orders', [ExcelReportController::class, 'exportOrders'])->name('excel.orders');
+        Route::get('/admin/excel/export/courses', [ExcelReportController::class, 'exportCourses'])->name('excel.courses');
+        Route::get('/admin/excel/export/admins', [ExcelReportController::class, 'exportAdmins'])->name('excel.admins');
+        Route::get('/admin/excel/export/blog-posts', [ExcelReportController::class, 'exportBlogPosts'])->name('excel.blog_posts');
+        Route::get('/admin/excel/export/blog-categories', [ExcelReportController::class, 'exportBlogCategories'])->name('excel.blog_categories');
+        Route::get('/admin/excel/export/coupons', [ExcelReportController::class, 'exportCoupons'])->name('excel.coupons');
     });
 });
 

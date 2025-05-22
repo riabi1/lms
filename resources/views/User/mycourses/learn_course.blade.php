@@ -17,252 +17,253 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
     <style>
-    /* Global Styles */
-    body {
-        font-family: 'Inter', sans-serif;
-        background: #EEEEEE;
-        color: #2A4759;
-        margin: 0;
-        padding: 0;
-    }
-    .container-fluid {
-        max-width: 1400px;
-        margin: 0 auto;
-    }
-    .preloader {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(255, 255, 255, 0.9);
-        z-index: 9999;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-    .header-menu-area {
-        background: linear-gradient(90deg, #EAD196, #BF3131);
-        padding: 20px 0;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-    .header-menu-content {
-        padding: 0 20px;
-    }
-    .course-dashboard-header-title a {
-        font-size: 1.6rem;
-        font-weight: 800;
-        color: #FFFFFF;
-        text-decoration: none;
-        transition: color 0.3s ease;
-    }
-    .course-dashboard-header-title a:hover {
-        color: #F79B72;
-    }
-    .nav-right-button .btn {
-        background: #F79B72;
-        color: #FFFFFF;
-        font-weight: 600;
-        padding: 10px 24px;
-        border-radius: 24px;
-        letter-spacing: 0.5px;
-        transition: all 0.3s ease;
-    }
-    .nav-right-button .btn:hover {
-        background: #E07A4F;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    }
-    .certificate-btn {
-        background: linear-gradient(90deg, #F79B72, #F7BFA3);
-        color: #FFFFFF;
-    }
-    .course-dashboard-wrap {
-        background: #FFFFFF;
-        border: 1px solid #DDDDDD;
-        border-radius: 16px;
-        margin: 32px auto;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-    }
-    .progress {
-        height: 28px;
-        border-radius: 14px;
-        background: #DDDDDD;
-        overflow: hidden;
-    }
-    .progress-bar {
-        background: #A4B465;
-        font-weight: 600;
-        font-size: 1rem;
-        transition: width 0.5s ease;
-    }
-    #mediaContainer iframe, #mediaContainer video {
-        border-radius: 12px;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-    }
-    .nav-tabs .nav-link {
-        padding: 16px 32px;
-        font-weight: 600;
-        color: #007074;
-        border: none;
-        transition: all 0.3s ease;
-    }
-    .nav-tabs .nav-link:hover, .nav-tabs .nav-link.active {
-        color: #F79B72;
-        background: #DDDDDD;
-        border-radius: 8px;
-    }
-    .lecture-overview-wrap {
-        padding: 32px;
-    }
-    .lecture-overview-item h3 {
-        font-size: 1.6rem;
-        font-weight: 800;
-        color: #007074;
-        margin-bottom: 16px;
-    }
-    .note-card {
-        padding: 24px;
-        margin-bottom: 24px;
-        border-radius: 12px;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-        transition: all 0.3s ease;
-    }
-    .note-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-    }
-    .note-card.favorite {
-        border: 3px solid #F79B72;
-    }
-    .note-card.bg-light-gray {
-        background: #E5E5E5;
-    }
-    .note-card.bg-light-teal {
-        background: #D9E3E5;
-    }
-    .note-card.bg-light-coral {
-        background: #FBE8E1;
-    }
-    .note-card.bg-light-white {
-        background: #F5F5F5;
-    }
-    .btn-add-note {
-        background: #F79B72;
-        color: #FFFFFF;
-        padding: 12px 28px;
-        border-radius: 24px;
-        font-weight: 600;
-        letter-spacing: 0.5px;
-        transition: all 0.3s ease;
-        animation: pulse 2s infinite;
-    }
-    .btn-add-note:hover {
-        background: #E07A4F;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        animation: none;
-    }
-    @keyframes pulse {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.05); }
-        100% { transform: scale(1); }
-    }
-    .modal-header {
-        background: #007074;
-        color: #FFFFFF;
-        border-radius: 16px 16px 0 0;
-        padding: 24px;
-    }
-    .modal-body {
-        padding: 28px;
-        background: #EEEEEE;
-    }
-    .note-form-container {
-        display: none;
-    }
-    .filter-buttons {
-        margin-bottom: 16px;
-        display: flex;
-        gap: 12px;
-        flex-wrap: wrap;
-    }
-    .btn-filter {
-        background: #007074;
-        color: #FFFFFF;
-        padding: 10px 24px;
-        border-radius: 24px;
-        font-weight: 600;
-        letter-spacing: 0.5px;
-        transition: all 0.3s ease;
-    }
-    .btn-filter:hover {
-        background: #007074;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    }
-    .btn-filter.active {
-        background: #007074;
-        transform: scale(1.05);
-    }
-    .btn-favorite-filter {
-        background: #F79B72;
-        color: #FFFFFF;
-    }
-    .btn-favorite-filter:hover {
-        background: #E07A4F;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    }
-    .tags-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-        margin-top: 12px;
-    }
-    .tag {
-        background: #F79B72;
-        color: #FFFFFF;
-        padding: 4px 10px;
-        border-radius: 14px;
-        font-size: 0.9rem;
-    }
-    .favorite-star {
-        cursor: pointer;
-        font-size: 1.3rem;
-        color: #F79B72;
-        transition: transform 0.2s ease;
-    }
-    .favorite-star:hover {
-        transform: scale(1.2);
-    }
-    .sort-container, .tag-filter-container {
-        margin-bottom: 16px;
-    }
-    .tag-filter {
-        padding: 8px 14px;
-        border-radius: 14px;
-        font-size: 0.95rem;
-        border: 1px solid #DDDDDD;
-    }
-    .is-invalid {
-        border-color: #D32F2F !important;
-    }
-    .invalid-feedback {
-        color: #D32F2F;
-        font-size: 0.9rem;
-    }
-    .text-muted {
-        color: #666666 !important;
-    }
-    /* Question Edit Form */
-    .edit-question-form {
-        display: none;
-        margin-top: 15px;
-    }
-    .question-actions .btn {
-        margin-right: 5px;
-    }
+        /* Global Styles (unchanged from original) */
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #EEEEEE;
+            color: #2A4759;
+            margin: 0;
+            padding: 0;
+        }
+        .container-fluid {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .header-menu-area {
+            background: linear-gradient(90deg, #EAD196, #BF3131);
+            padding: 20px 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        .header-menu-content {
+            padding: 0 20px;
+        }
+        .course-dashboard-header-title a {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #FFFFFF;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        .course-dashboard-header-title a:hover {
+            color: #F79B72;
+        }
+        .nav-right-button .btn {
+            background: #F79B72;
+            color: #FFFFFF;
+            font-weight: 600;
+            padding: 10px 24px;
+            border-radius: 24px;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+        }
+        .nav-right-button .btn:hover {
+            background: #E07A4F;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        .certificate-btn {
+            background: linear-gradient(90deg, #F79B72, #F7BFA3);
+            color: #FFFFFF;
+        }
+        .course-dashboard-wrap {
+            background: #FFFFFF;
+            border: 1px solid #DDDDDD;
+            border-radius: 16px;
+            margin: 32px auto;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        }
+        .progress {
+            height: 28px;
+            border-radius: 14px;
+            background: #DDDDDD;
+            overflow: hidden;
+        }
+        .progress-bar {
+            background: #A4B465;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: width 0.5s ease;
+        }
+        #mediaContainer iframe, #mediaContainer video {
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            height: 500px;
+        }
+        .nav-tabs .nav-link {
+            padding: 16px 32px;
+            font-weight: 600;
+            color: #007074;
+            border: none;
+            transition: all 0.3s ease;
+        }
+        .nav-tabs .nav-link:hover, .nav-tabs .nav-link.active {
+            color: #F79B72;
+            background: #DDDDDD;
+            border-radius: 8px;
+        }
+        .lecture-overview-wrap {
+            padding: 32px;
+        }
+        .lecture-overview-item h3 {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #007074;
+            margin-bottom: 16px;
+        }
+        .note-card {
+            padding: 24px;
+            margin-bottom: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        .note-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+        .note-card.favorite {
+            border: 3px solid #F79B72;
+        }
+        .note-card.bg-light-gray {
+            background: #E5E5E5;
+        }
+        .note-card.bg-light-teal {
+            background: #D9E3E5;
+        }
+        .note-card.bg-light-coral {
+            background: #FBE8E1;
+        }
+        .note-card.bg-light-white {
+            background: #F5F5F5;
+        }
+        .btn-add-note {
+            background: #F79B72;
+            color: #FFFFFF;
+            padding: 12px 28px;
+            border-radius: 24px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            animation: pulse 2s infinite;
+        }
+        .btn-add-note:hover {
+            background: #E07A4F;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            animation: none;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .modal-header {
+            background: #007074;
+            color: #FFFFFF;
+            border-radius: 16px 16px 0 0;
+            padding: 24px;
+        }
+        .modal-body {
+            padding: 28px;
+            background: #EEEEEE;
+        }
+        .note-form-container {
+            display: none;
+        }
+        .filter-buttons {
+            margin-bottom: 16px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .btn-filter {
+            background: #007074;
+            color: #FFFFFF;
+            padding: 10px 24px;
+            border-radius: 24px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+        }
+        .btn-filter:hover {
+            background: #007074;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        .btn-filter.active {
+            background: #007074;
+            transform: scale(1.05);
+        }
+        .btn-favorite-filter {
+            background: #F79B72;
+            color: #FFFFFF;
+        }
+        .btn-favorite-filter:hover {
+            background: #E07A4F;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 12px;
+        }
+        .tag {
+            background: #F79B72;
+            color: #FFFFFF;
+            padding: 4px 10px;
+            border-radius: 14px;
+            font-size: 0.9rem;
+        }
+        .favorite-star {
+            cursor: pointer;
+            font-size: 1.3rem;
+            color: #F79B72;
+            transition: transform 0.2s ease;
+        }
+        .favorite-star:hover {
+            transform: scale(1.2);
+        }
+        .sort-container, .tag-filter-container {
+            margin-bottom: 16px;
+        }
+        .tag-filter {
+            padding: 8px 14px;
+            border-radius: 14px;
+            font-size: 0.95rem;
+            border: 1px solid #DDDDDD;
+        }
+        .is-invalid {
+            border-color: #D32F2F !important;
+        }
+        .invalid-feedback {
+            color: #D32F2F;
+            font-size: 0.9rem;
+        }
+        .text-muted {
+            color: #666666 !important;
+        }
+        .edit-question-form {
+            display: none;
+            margin-top: 15px;
+        }
+        .question-actions .btn {
+            margin-right: 5px;
+        }
     </style>
 </head>
 <body>
@@ -291,9 +292,9 @@
             <div class="container-fluid">
                 <div class="main-menu-content d-flex align-items-center">
                     <div class="course-dashboard-header-title pl-4">
-                    <a href="{{ route('home') }}" class="logo">
-                      <img src="{{ asset('frontend/images/logo2.png') }}" alt="Logo" class="img-fluid" style="max-height: 70px; filter: brightness(110%);">
-                    </a>
+                        <a href="{{ route('home') }}" class="logo">
+                            <img src="{{ asset('frontend/images/logo2.png') }}" alt="Logo" class="img-fluid" style="max-height: 70px; filter: brightness(110%);">
+                        </a>
                         <a href="{{ url('course/details/' . ($course->id ?? '') . '/' . ($course->course_name_slug ?? '')) }}">{{ $course->course_name ?? 'My Courses' }}</a>
                     </div>
                     <div class="menu-wrapper ml-auto">
@@ -328,10 +329,13 @@
                         <div class="lecture-video-item">
                             <div id="mediaContainer">
                                 <iframe width="100%" height="500" id="videoIframe" class="d-none" src="" title="Course Lecture Video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-                                <video width="100%" height="500" id="videoPlayer" class="d-none" controls>
+                                <video width="100%" height="500" id="videoPlayer" class="d-none rounded" controls preload="metadata">
                                     <source src="" type="video/mp4">
                                     Your browser does not support the video tag.
                                 </video>
+                                <div id="mediaError" class="alert alert-warning d-none mt-3" role="alert">
+                                    Unable to load video content. Please try another lecture or contact support.
+                                </div>
                             </div>
                             <div id="lectureContent" class="mt-4" style="font-size: 14px; text-align: left; padding: 0 40px;"></div>
                         </div>
@@ -665,12 +669,12 @@
                                                                     </div>
                                                                     <div class="course-item-content">
                                                                         <h4 class="fs-15 lecture-title" 
-                                                                            data-video-local="{{ $lecture->video ? Storage::url($lecture->video) : '' }}" 
-                                                                            data-video-url="{{ $lecture->url }}" 
-                                                                            data-content="{!! $lecture->content !!}">
+                                                                            data-video-local="{{ $lecture->video ? asset('upload/lectures/videos/' . $lecture->video) : '' }}" 
+                                                                            data-video-url="{{ $lecture->url ?? '' }}" 
+                                                                            data-content="{!! nl2br(e($lecture->content)) !!}">
                                                                             {{ $lecture->lecture_title }}
                                                                         </h4>
-                                                                        @if ($lecture->resources_description)
+                                                                        @if ($lecture->resources_description || $lecture->file_path || $lecture->additional_external_link)
                                                                             <p class="course-item-meta">
                                                                                 <a href="#" class="text-primary" data-toggle="modal" data-target="#resourcesModal{{ $lecture->id }}">
                                                                                     <i class="bx bx-download"></i> Resources
@@ -719,32 +723,42 @@
                                         $hasPassed = isset($quizAttempts) && $quizAttempts->where('quiz_id', $quiz->id)->where('passed', true)->isNotEmpty();
                                     @endphp
                                     @if (!$hasPassed && $attemptCount < 3)
-                                        <form action="{{ route('course.quiz.submit', ['courseId' => $course->id ?? '', 'quizId' => $quiz->id]) }}" method="POST">
-                                            @csrf
-                                            @foreach ($quiz->questions as $question)
-                                                <div class="mb-3">
-                                                    <label class="form-label">{{ $question->question_text }}</label>
-                                                    @php
-                                                        $options = is_string($question->options) ? json_decode($question->options, true) : $question->options;
-                                                        $options = is_array($options) ? $options : [];
-                                                    @endphp
-                                                    @foreach ($options as $key => $option)
-                                                        <div class="form-check">
-                                                            <input type="radio" name="answers[{{ $question->id }}]" value="{{ $key }}" class="form-check-input" required>
-                                                            <label class="form-check-label">{{ $option }}</label>
-                                                        </div>
-                                                    @endforeach
-                                                </div>
-                                            @endforeach
-                                            <p><strong>Attempts Remaining:</strong> {{ 3 - $attemptCount }}</p>
-                                            <button type="submit" class="btn theme-btn">Submit Quiz</button>
-                                        </form>
-                                    @elseif ($hasPassed)
-                                        <p class="text-success"><strong>Quiz Passed!</strong> You have successfully completed this quiz.</p>
-                                    @else
-                                        <p class="text-danger"><strong>Attempts Exhausted!</strong> Please wait until 
-                                            {{ $lastAttempt ? $lastAttempt->completed_at->addMinute()->toTimeString() : 'later' }} to try again.</p>
-                                    @endif
+    <form action="{{ route('course.quiz.submit', ['courseId' => $course->id ?? '', 'quizId' => $quiz->id]) }}" method="POST">
+        @csrf
+        @foreach ($quiz->questions as $question)
+            <div class="mb-3">
+                <label class="form-label">{{ $question->question_text }}</label>
+                @php
+                    $options = is_string($question->options) ? json_decode($question->options, true) : $question->options;
+                    $options = is_array($options) ? $options : [];
+                @endphp
+                @foreach ($options as $key => $option)
+                    <div class="form-check">
+                        <input type="radio" name="answers[{{ $question->id }}]" value="{{ $key }}" class="form-check-input" required>
+                        <label class="form-check-label">{{ $option }}</label>
+                    </div>
+                @endforeach
+            </div>
+        @endforeach
+        <p><strong>Attempts Remaining:</strong> {{ 3 - $attemptCount }}</p>
+        <button type="submit" class="btn theme-btn">Submit Quiz</button>
+    </form>
+@elseif ($hasPassed)
+    <p class="text-success"><strong>Quiz Passed!</strong> You have successfully completed this quiz.</p>
+@else
+    @php
+        $retryTime = $lastAttempt && $lastAttempt->completed_at 
+            ? \Carbon\Carbon::parse($lastAttempt->completed_at)->addMinute()->setTimezone('Africa/Lagos')->toDateTimeString() 
+            : 'later';
+        \Log::info('Blade Retry Time Display', [
+            'user_id' => Auth::id(),
+            'quiz_id' => $quiz->id,
+            'last_attempt_completed_at' => $lastAttempt ? $lastAttempt->completed_at->toDateTimeString() : null,
+            'retry_time' => $retryTime
+        ]);
+    @endphp
+    <p class="text-danger"><strong>Attempts Exhausted!</strong> Please wait until {{ $retryTime }} to try again.</p>
+@endif
                                 </div>
                             </div>
                         @endforeach
@@ -795,7 +809,7 @@
     @if (isset($course->sections) && !$course->sections->isEmpty())
         @foreach ($course->sections as $section)
             @foreach ($section->lectures as $lecture)
-                @if ($lecture->resources_description || $lecture->video)
+                @if ($lecture->resources_description || $lecture->video || $lecture->file_path || $lecture->additional_external_link)
                     <div class="modal fade modal-container" id="resourcesModal{{ $lecture->id }}" tabindex="-1" role="dialog">
                         <div class="modal-dialog modal-dialog-centered" role="document">
                             <div class="modal-content">
@@ -809,15 +823,29 @@
                                     @if ($lecture->resources_description)
                                         <p class="text-muted mb-3">{{ $lecture->resources_description }}</p>
                                     @endif
-                                    @if ($lecture->video)
-                                        <ul class="list-unstyled">
+                                    <ul class="list-unstyled">
+                                        @if ($lecture->video)
                                             <li class="mb-2">
                                                 <i class="bx bx-video"></i> 
-                                                <a href="{{ Storage::url($lecture->video) }}" target="_blank" class="text-primary">Download Video</a>
+                                                <a href="{{ asset('upload/lectures/videos/' . $lecture->video) }}" target="_blank" class="text-primary">Download Video</a>
                                                 <small>(Click to view/download)</small>
                                             </li>
-                                        </ul>
-                                    @endif
+                                        @endif
+                                        @if ($lecture->file_path)
+                                            <li class="mb-2">
+                                                <i class="bx bx-file"></i> 
+                                                <a href="{{ asset('upload/lectures/files/' . $lecture->file_path) }}" target="_blank" class="text-primary">Download Resource File</a>
+                                                <small>(Click to view/download)</small>
+                                            </li>
+                                        @endif
+                                        @if ($lecture->additional_external_link)
+                                            <li class="mb-2">
+                                                <i class="bx bx-link"></i> 
+                                                <a href="{{ $lecture->additional_external_link }}" target="_blank" class="text-primary">Additional Resource Link</a>
+                                                <small>(Click to visit)</small>
+                                            </li>
+                                        @endif
+                                    </ul>
                                 </div>
                                 <div class="modal-footer justify-content-center border-top-gray">
                                     <button type="button" class="btn theme-btn" data-dismiss="modal">Close</button>
@@ -836,18 +864,26 @@
             const firstLecture = document.querySelector('.lecture-title');
             if (firstLecture) {
                 firstLecture.click();
+            } else {
+                console.warn('No lectures found to open.');
+                document.getElementById('lectureContent').innerHTML = '<p>No lectures available for this course.</p>';
             }
         }
 
         function convertToEmbedUrl(url) {
-            if (url && url.includes('youtube.com/watch?v=')) {
-                const videoId = url.split('v=')[1]?.split('&')[0];
-                return videoId ? `https://www.youtube.com/embed/${videoId}` : url;
-            } else if (url && url.includes('youtu.be/')) {
-                const videoId = url.split('youtu.be/')[1]?.split('?')[0];
-                return videoId ? `https://www.youtube.com/embed/${videoId}` : url;
+            try {
+                if (url && url.includes('youtube.com/watch?v=')) {
+                    const videoId = url.split('v=')[1]?.split('&')[0];
+                    return videoId ? `https://www.youtube.com/embed/${videoId}` : url;
+                } else if (url && url.includes('youtu.be/')) {
+                    const videoId = url.split('youtu.be/')[1]?.split('?')[0];
+                    return videoId ? `https://www.youtube.com/embed/${videoId}` : url;
+                }
+                return url;
+            } catch (error) {
+                console.error('Error converting URL to embed:', error, { url });
+                return url;
             }
-            return url;
         }
 
         function viewLesson(videoLocal, videoUrl, textContent) {
@@ -855,23 +891,73 @@
             const videoPlayer = document.getElementById("videoPlayer");
             const videoSource = videoPlayer.querySelector("source");
             const contentDiv = document.getElementById("lectureContent");
+            const mediaError = document.getElementById("mediaError");
 
+            // Reset display
             iframe.classList.add("d-none");
             videoPlayer.classList.add("d-none");
+            mediaError.classList.add("d-none");
             iframe.setAttribute("src", "");
             videoSource.setAttribute("src", "");
             contentDiv.innerHTML = "";
 
+            console.log('viewLesson called:', { videoLocal, videoUrl, textContent });
+
+            // Prioritize local video if available and valid
             if (videoLocal && videoLocal.trim() !== "") {
-                videoPlayer.classList.remove("d-none");
-                videoSource.setAttribute("src", videoLocal);
-                videoPlayer.load();
+                try {
+                    // Determine MIME type based on file extension
+                    const extension = videoLocal.split('.').pop().toLowerCase();
+                    const mimeType = extension === 'webm' ? 'video/webm' : 'video/mp4';
+                    
+                    videoPlayer.classList.remove("d-none");
+                    videoSource.setAttribute("src", videoLocal);
+                    videoSource.setAttribute("type", mimeType);
+                    videoPlayer.load();
+
+                    // Handle video load error
+                    videoPlayer.onerror = () => {
+                        console.error('Video failed to load:', videoLocal);
+                        mediaError.classList.remove("d-none");
+                        videoPlayer.classList.add("d-none");
+                        // Fallback to external link if available
+                        if (videoUrl && videoUrl.trim() !== "") {
+                            const embedUrl = convertToEmbedUrl(videoUrl);
+                            iframe.classList.remove("d-none");
+                            iframe.setAttribute("src", embedUrl);
+                        }
+                    };
+                } catch (error) {
+                    console.error('Error loading local video:', error, { videoLocal });
+                    mediaError.classList.remove("d-none");
+                    // Fallback to external link
+                    if (videoUrl && videoUrl.trim() !== "") {
+                        const embedUrl = convertToEmbedUrl(videoUrl);
+                        iframe.classList.remove("d-none");
+                        iframe.setAttribute("src", embedUrl);
+                    }
+                }
             } else if (videoUrl && videoUrl.trim() !== "") {
-                const embedUrl = convertToEmbedUrl(videoUrl);
-                iframe.classList.remove("d-none");
-                iframe.setAttribute("src", embedUrl);
+                try {
+                    const embedUrl = convertToEmbedUrl(videoUrl);
+                    iframe.classList.remove("d-none");
+                    iframe.setAttribute("src", embedUrl);
+
+                    // Handle iframe load error
+                    iframe.onerror = () => {
+                        console.error('Iframe failed to load:', embedUrl);
+                        mediaError.classList.remove("d-none");
+                        iframe.classList.add("d-none");
+                    };
+                } catch (error) {
+                    console.error('Error loading external link:', error, { videoUrl });
+                    mediaError.classList.remove("d-none");
+                }
+            } else {
+                mediaError.classList.remove("d-none");
             }
 
+            // Display lecture content
             contentDiv.innerHTML = textContent && textContent.trim() !== "" 
                 ? textContent 
                 : "<p>No additional content available for this lecture.</p>";
@@ -879,9 +965,15 @@
 
         document.querySelectorAll('.lecture-title').forEach((lectureTitle) => {
             lectureTitle.addEventListener('click', () => {
+                // Remove active class from all lecture items
+                document.querySelectorAll('.course-item-link').forEach(item => item.classList.remove('active'));
+                // Add active class to the parent course-item-link
+                lectureTitle.closest('.course-item-link').classList.add('active');
+                
                 const videoLocal = lectureTitle.getAttribute('data-video-local');
                 const videoUrl = lectureTitle.getAttribute('data-video-url');
                 const textContent = lectureTitle.getAttribute('data-content');
+                console.log('Lecture clicked:', { videoLocal, videoUrl, textContent });
                 viewLesson(videoLocal, videoUrl, textContent);
             });
         });

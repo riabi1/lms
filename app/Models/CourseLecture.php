@@ -8,22 +8,23 @@ use Illuminate\Database\Eloquent\Model;
 class CourseLecture extends Model
 {
     use HasFactory;
+    protected $fillable = [
+      'course_id',
+      'section_id',
+      'lecture_title',
+      'video',
+      'content',
+      'file_path',
+      'external_link',
+      'resources_description',
+  ];
 
-    /**
-     * The attributes that are not mass assignable.
-     *
-     * @var array
-     */
-    protected $guarded = [];
-
-   
-   public function course()
+    public function course()
     {
         return $this->belongsTo(Course::class);
     }
 
-  
-  public function section()
+    public function section()
     {
         return $this->belongsTo(CourseSection::class, 'section_id');
     }

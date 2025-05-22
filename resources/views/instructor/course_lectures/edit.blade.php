@@ -5,7 +5,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
 
 <div class="page-content">
-    <!-- Breadcrumb -->
     <div class="page-breadcrumb d-none d-sm-flex align-items-center mb-3">
         <div class="ps-3">
             <nav aria-label="breadcrumb">
@@ -37,7 +36,6 @@
                 @csrf
                 @method('PUT')
 
-                <!-- Section Selection -->
                 <div class="col-md-12">
                     <h6 class="mb-3">Lecture Section</h6>
                     <div class="form-group">
@@ -55,7 +53,6 @@
                     </div>
                 </div>
 
-                <!-- Main Lecture Content -->
                 <div class="col-md-12">
                     <h6 class="mb-3">Main Lecture Content (Visible on Platform)</h6>
                     <div class="border p-3 mb-3 bg-light rounded">
@@ -69,10 +66,10 @@
                         </div>
 
                         <div class="form-group mt-3">
-                            <label for="url" class="form-label">Video URL</label>
-                            <input type="url" name="url" class="form-control @error('url') is-invalid @enderror" 
-                                   id="url" value="{{ old('url', $lecture->url) }}" placeholder="https://example.com/video">
-                            @error('url')
+                            <label for="external_link" class="form-label">Main External Video URL</label>
+                            <input type="url" name="external_link" class="form-control @error('external_link') is-invalid @enderror" 
+                                   id="external_link" value="{{ old('external_link', $lecture->external_link) }}" placeholder="https://youtube.com/watch?v=example">
+                            @error('external_link')
                                 <span class="invalid-feedback">{{ $message }}</span>
                             @enderror
                         </div>
@@ -82,7 +79,7 @@
                             <input type="file" name="video" class="form-control @error('video') is-invalid @enderror" 
                                    id="video" accept="video/mp4,video/webm">
                             @if ($lecture->video)
-                                <p class="mt-2">Current video: <a href="{{ asset('upload/lectures/videos/' . $lecture->video) }}" target="_blank">View</a></p>
+                                <p class="mt-2">Current video: <a href="{{ Storage::url($lecture->video) }}" target="_blank">View</a></p>
                             @endif
                             @error('video')
                                 <span class="invalid-feedback">{{ $message }}</span>
@@ -100,28 +97,15 @@
                     </div>
                 </div>
 
-                <!-- Additional Resources -->
                 <div class="col-md-12">
                     <h6 class="mb-3">Additional Resources (Downloadable by Students)</h6>
                     <div class="border p-3 bg-light rounded">
-                        <div class="form-group">
-                            <label for="additional_video" class="form-label">Upload Additional Video (MP4/WebM, max 100MB)</label>
-                            <input type="file" name="additional_video" class="form-control @error('additional_video') is-invalid @enderror" 
-                                   id="additional_video" accept="video/mp4,video/webm">
-                            @if ($lecture->additional_video)
-                                <p class="mt-2">Current additional video: <a href="{{ asset('upload/lectures/videos/' . $lecture->additional_video) }}" target="_blank">View</a></p>
-                            @endif
-                            @error('additional_video')
-                                <span class="invalid-feedback">{{ $message }}</span>
-                            @enderror
-                        </div>
-
                         <div class="form-group mt-3">
                             <label for="file_path" class="form-label">Upload Resource File (PDF/DOC/JPG/PNG, max 20MB)</label>
                             <input type="file" name="file_path" class="form-control @error('file_path') is-invalid @enderror" 
                                    id="file_path" accept=".pdf,.doc,.docx,image/jpeg,image/png">
                             @if ($lecture->file_path)
-                                <p class="mt-2">Current file: <a href="{{ asset('upload/lectures/files/' . $lecture->file_path) }}" target="_blank">Download</a></p>
+                                <p class="mt-2">Current file: <a href="{{ Storage::url($lecture->file_path) }}" target="_blank">Download</a></p>
                             @endif
                             @error('file_path')
                                 <span class="invalid-feedback">{{ $message }}</span>
@@ -129,10 +113,10 @@
                         </div>
 
                         <div class="form-group mt-3">
-                            <label for="external_link" class="form-label">External Resource Link</label>
-                            <input type="url" name="external_link" class="form-control @error('external_link') is-invalid @enderror" 
-                                   id="external_link" value="{{ old('external_link', $lecture->external_link) }}" placeholder="https://example.com/resource">
-                            @error('external_link')
+                            <label for="additional_external_link" class="form-label">Additional Resource Link</label>
+                            <input type="url" name="additional_external_link" class="form-control @error('additional_external_link') is-invalid @enderror" 
+                                   id="additional_external_link" value="{{ old('additional_external_link', $lecture->additional_external_link ?? '') }}" placeholder="https://example.com/resource">
+                            @error('additional_external_link')
                                 <span class="invalid-feedback">{{ $message }}</span>
                             @enderror
                         </div>
@@ -148,7 +132,6 @@
                     </div>
                 </div>
 
-                <!-- Form Actions -->
                 <div class="col-md-12 mt-4">
                     <div class="d-flex gap-3">
                         <button type="submit" class="btn btn-primary px-4">Save Changes</button>
@@ -161,44 +144,42 @@
 </div>
 
 <script type="text/javascript">
-    $(document).ready(function() {
-        $('#lectureForm').validate({
-            rules: {
-                section_id: { required: true },
-                lecture_title: { required: true, maxlength: 255 },
-                url: { url: true },
-                video: { accept: "video/mp4,video/webm", filesize: 104857600 },
-                additional_video: { accept: "video/mp4,video/webm", filesize: 104857600 },
-                file_path: { accept: ".pdf,.doc,.docx,image/jpeg,image/png", filesize: 20971520 },
-                external_link: { url: true },
-                resources_description: { maxlength: 1000 }
-            },
-            messages: {
-                section_id: { required: "Please select a section" },
-                lecture_title: { required: "Please enter a lecture title", maxlength: "Title cannot exceed 255 characters" },
-                url: { url: "Please enter a valid URL" },
-                video: { accept: "Only MP4 or WebM files are allowed", filesize: "File must be less than 100MB" },
-                additional_video: { accept: "Only MP4 or WebM files are allowed", filesize: "File must be less than 100MB" },
-                file_path: { accept: "Only PDF, DOC, JPG, or PNG files are allowed", filesize: "File must be less than 20MB" },
-                external_link: { url: "Please enter a valid URL" },
-                resources_description: { maxlength: "Description cannot exceed 1000 characters" }
-            },
-            errorElement: 'span',
-            errorPlacement: function(error, element) {
-                error.addClass('invalid-feedback');
-                element.closest('.form-group').append(error);
-            },
-            highlight: function(element) {
-                $(element).addClass('is-invalid');
-            },
-            unhighlight: function(element) {
-                $(element).removeClass('is-invalid');
-            }
-        });
-
-        $.validator.addMethod('filesize', function(value, element, param) {
-            return this.optional(element) || (element.files[0] && element.files[0].size <= param);
-        });
+$(document).ready(function() {
+    $('#lectureForm').validate({
+        rules: {
+            section_id: { required: true },
+            lecture_title: { required: true, maxlength: 255 },
+            external_link: { url: true },
+            additional_external_link: { url: true },
+            video: { accept: "video/mp4,video/webm", filesize: 104857600 },
+            file_path: { accept: ".pdf,.doc,.docx,image/jpeg,image/png", filesize: 20971520 },
+            resources_description: { maxlength: 1000 }
+        },
+        messages: {
+            section_id: { required: "Please select a section" },
+            lecture_title: { required: "Please enter a lecture title", maxlength: "Title cannot exceed 255 characters" },
+            external_link: { url: "Please enter a valid URL" },
+            additional_external_link: { url: "Please enter a valid URL" },
+            video: { accept: "Only MP4 or WebM files are allowed", filesize: "File must be less than 100MB" },
+            file_path: { accept: "Only PDF, DOC, JPG, or PNG files are allowed", filesize: "File must be less than 20MB" },
+            resources_description: { maxlength: "Description cannot exceed 1000 characters" }
+        },
+        errorElement: 'span',
+        errorPlacement: function(error, element) {
+            error.addClass('invalid-feedback');
+            element.closest('.form-group').append(error);
+        },
+        highlight: function(element) {
+            $(element).addClass('is-invalid');
+        },
+        unhighlight: function(element) {
+            $(element).removeClass('is-invalid');
+        }
     });
+
+    $.validator.addMethod('filesize', function(value, element, param) {
+        return this.optional(element) || (element.files[0] && element.files[0].size <= param);
+    });
+});
 </script>
 @endsection

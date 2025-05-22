@@ -188,7 +188,7 @@ class MyCourseController extends Controller
     ));
 }
 
-    public function submitQuiz(Request $request, $courseId, $quizId)
+public function submitQuiz(Request $request, $courseId, $quizId)
     {
         $user = Auth::user();
         $quiz = Quiz::with('questions')->findOrFail($quizId);
@@ -217,13 +217,54 @@ class MyCourseController extends Controller
                 ->orderBy('completed_at', 'desc')
                 ->first();
 
-            $waitUntil = $lastAttempt->completed_at->addMinute();
-            if (Carbon::now()->lessThan($waitUntil)) {
-                $secondsLeft = Carbon::now()->diffInSeconds($waitUntil);
+            if (!$lastAttempt || !$lastAttempt->completed_at) {
+                \Log::warning('Invalid last attempt or completed_at', [
+                    'user_id' => $user->id,
+                    'quiz_id' => $quizId,
+                    'last_attempt' => $lastAttempt ? $lastAttempt->toArray() : null
+                ]);
                 return redirect()->route('course.start', [
                     'courseId' => $courseId,
                     'slug' => Str::slug($course->course_name)
-                ])->with('error', "You have reached the maximum of 3 attempts. Please wait $secondsLeft seconds before trying again.");
+                ])->with('error', 'Unable to process quiz attempts. Please contact support.');
+            }
+
+            $waitUntil = Carbon::parse($lastAttempt->completed_at)->addMinute();
+            \Log::info('Quiz Retry Check', [
+                'user_id' => $user->id,
+                'quiz_id' => $quizId,
+                'completed_at' => $lastAttempt->completed_at->toDateTimeString(),
+                'wait_until' => $waitUntil->toDateTimeString(),
+                'current_time' => Carbon::now()->toDateTimeString(),
+                'attempt_count' => $attemptCount
+            ]);
+
+            if (Carbon::now()->lessThan($waitUntil)) {
+                $secondsLeft = Carbon::now()->diffInSeconds($waitUntil);
+                $retryTimeDisplay = $waitUntil->setTimezone('Africa/Lagos')->toDateTimeString();
+                return redirect()->route('course.start', [
+                    'courseId' => $courseId,
+                    'slug' => Str::slug($course->course_name)
+                ])->with('error', "You have reached the maximum of 3 attempts. Please wait until $retryTimeDisplay to try again.");
+            } else {
+                try {
+                    \Log::info('Attempting to reset quiz attempts', ['user_id' => $user->id, 'quiz_id' => $quizId]);
+                    QuizAttempt::where('user_id', $user->id)
+                        ->where('quiz_id', $quizId)
+                        ->delete();
+                    $attemptCount = 0;
+                    \Log::info('Quiz attempts reset successfully', ['user_id' => $user->id, 'quiz_id' => $quizId]);
+                } catch (QueryException $e) {
+                    \Log::error('Failed to reset quiz attempts', [
+                        'user_id' => $user->id,
+                        'quiz_id' => $quizId,
+                        'error' => $e->getMessage()
+                    ]);
+                    return redirect()->route('course.start', [
+                        'courseId' => $courseId,
+                        'slug' => Str::slug($course->course_name)
+                    ])->with('error', 'Failed to reset quiz attempts. Please contact support.');
+                }
             }
         }
 
@@ -232,8 +273,16 @@ class MyCourseController extends Controller
         $totalQuestions = $quiz->questions->count();
 
         foreach ($quiz->questions as $question) {
-            $userAnswer = $answers[$question->id] ?? null;
-            if ($userAnswer && $userAnswer === $question->correct_answer) {
+            $userAnswerKey = $answers[$question->id] ?? null;
+            $options = is_string($question->options) ? json_decode($question->options, true) : $question->options;
+            $userAnswerValue = ($userAnswerKey !== null && isset($options[$userAnswerKey])) ? $options[$userAnswerKey] : null;
+            \Log::debug('Answer Validation', [
+                'question_id' => $question->id,
+                'user_answer_key' => $userAnswerKey,
+                'user_answer_value' => $userAnswerValue,
+                'correct_answer' => $question->correct_answer
+            ]);
+            if ($userAnswerValue && $userAnswerValue === $question->correct_answer) {
                 $correctAnswers++;
             }
         }
@@ -246,7 +295,7 @@ class MyCourseController extends Controller
             'quiz_id' => $quiz->id,
             'score' => $score,
             'passed' => $passed,
-            'completed_at' => now(),
+            'completed_at' => Carbon::now(),
         ]);
 
         $message = $passed 

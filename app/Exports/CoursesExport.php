@@ -19,7 +19,6 @@ class CoursesExport implements FromCollection, WithHeadings
                     'Subcategory' => $course->subcategory->subcategory_name,
                     'Selling Price' => $course->selling_price,
                     'Discount Price' => $course->discount_price ?? 'N/A',
-                    'Duration' => $course->duration,
                     'Status' => $course->status ? 'Active' : 'Inactive',
                     'Created At' => $course->created_at->format('Y-m-d H:i:s'),
                 ];
