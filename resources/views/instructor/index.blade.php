@@ -257,9 +257,9 @@
                     <span style="color: #f472b6;">🔥</span>
                     {{ $recommendation }}
                     @if(str_contains($recommendation, 'quiz'))
-                        <a href="{{ route('quiz.create') }}" class="btn btn-outline-primary action-btn ms-2">Add Quiz</a>
+                        <a href="{{ route('instructor.quiz.create') }}" class="btn btn-outline-primary action-btn ms-2">Add Quiz</a>
                     @elseif(str_contains($recommendation, 'blog'))
-                        <a href="{{ route('blog.create') }}" class="btn btn-outline-primary action-btn ms-2">Write Blog</a>
+                        <a href="{{ route('instructor.blog.create') }}" class="btn btn-outline-primary action-btn ms-2">Write Blog</a>
                     @elseif(str_contains($recommendation, 'rating'))
                         <a href="{{ route('instructor.all.review') }}" class="btn btn-outline-primary action-btn ms-2">View Feedback</a>
                     @endif
