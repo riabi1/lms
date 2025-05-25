@@ -63,11 +63,32 @@
                                      alt="{{ $admin->name }}'s Profile"
                                      style="width: 100px; height: 100px; object-fit: cover;">
                                 <div class="flex-grow-1">
-                                    <input type="file" name="photo" class="form-control" accept="image/jpeg,image/png" id="photoInput">
+                                    <input type="file" name="photo" class="form-control" accept="image/jpeg,image/png,image/jpg" id="photoInput">
                                     <small class="text-muted d-block mt-1">Max 5MB, .jpg/.png</small>
                                 </div>
                             </div>
                             @error('photo')
+                                <div class="text-danger small">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <!-- CV Upload -->
+                        <div class="col-12 mb-3">
+                            <label class="form-label fw-bold">Curriculum Vitae (CV)</label>
+                            <div class="d-flex align-items-center flex-wrap mb-2">
+                                @if($admin->cv)
+                                    <a href="{{ asset('upload/admin_cvs/' . $admin->cv) }}" target="_blank" class="me-3 text-primary">
+                                        <i class="bx bx-file me-1"></i>Current CV
+                                    </a>
+                                @else
+                                    <span class="me-3 text-muted">No CV uploaded</span>
+                                @endif
+                                <div class="flex-grow-1">
+                                    <input type="file" name="cv" class="form-control" accept="application/pdf" id="cvInput">
+                                    <small class="text-muted d-block mt-1">Max 2MB, .pdf only</small>
+                                </div>
+                            </div>
+                            @error('cv')
                                 <div class="text-danger small">{{ $message }}</div>
                             @enderror
                         </div>
@@ -170,6 +191,17 @@
                     document.querySelector('.rounded-circle').src = e.target.result;
                 };
                 reader.readAsDataURL(file);
+            }
+        });
+
+        // CV file name preview
+        document.getElementById('cvInput').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                const cvLink = document.querySelector('.text-primary') || document.querySelector('.text-muted');
+                cvLink.textContent = file.name;
+                cvLink.classList.remove('text-muted');
+                cvLink.classList.add('text-primary');
             }
         });
     </script>

@@ -1,19 +1,18 @@
 <?php
+
 namespace App\Http\Controllers\User;
 
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
-use App\Models\Category;
-
+use App\Models\Category; // Assuming a Category model for preferences
+use App\Http\Controllers\Controller;
 class ProfileController extends Controller
 {
     public function edit()
     {
-        $profileData = Auth::guard('web')->user();
-        $categories = Category::all();
+        $profileData = Auth::user(); // Changed variable name to match Blade
+        $categories = Category::all(); // Fetch categories for preferences
         return view('User.edit_profile', compact('profileData', 'categories'));
     }
 
@@ -22,44 +21,64 @@ class ProfileController extends Controller
         try {
             $request->validate([
                 'name' => 'required|string|max:255',
-                'email' => 'required|string|email|max:255|unique:users,email,' . Auth::guard('web')->id(),
+                'email' => 'required|string|email|max:255|unique:users,email,' . Auth::id(),
                 'phone' => 'nullable|string|max:20',
                 'address' => 'nullable|string|max:255',
-                'photo' => 'nullable|image|max:5120|mimes:jpg,png,jpeg',
-                'new_password' => 'nullable|string|min:8|confirmed',
+                'photo' => 'nullable|image|max:5120|mimes:jpeg,png,jpg',
+                'cv' => 'nullable|file|max:2048|mimes:pdf',
                 'preference' => 'nullable|array|max:3',
                 'preference.*' => 'exists:categories,id',
                 'grade_select' => 'required|string|max:255',
                 'grade_custom' => 'nullable|string|max:255|required_if:grade_select,Other',
+                'new_password' => 'nullable|string|min:8|confirmed',
             ]);
 
-            $user = Auth::guard('web')->user();
+            $user = Auth::user();
 
+            // Update basic information
             $user->name = $request->name;
             $user->email = $request->email;
             $user->phone = $request->phone;
             $user->address = $request->address;
-            $user->preference = $request->preference ? json_encode($request->preference) : null;
+
+            // Handle grade
             $user->grade = $request->grade_select === 'Other' ? $request->grade_custom : $request->grade_select;
 
-            if ($request->hasFile('photo')) {
-                if ($user->photo && Storage::disk('public')->exists('upload/user_images/' . $user->photo)) {
-                    Storage::disk('public')->delete('upload/user_images/' . $user->photo);
-                }
+            // Handle preferences
+            $user->preference = $request->preference ? json_encode($request->preference) : null;
 
+            // Handle photo upload
+            if ($request->hasFile('photo')) {
+                // Delete old photo if it exists
+                if ($user->photo && file_exists(public_path('upload/user_images/' . $user->photo))) {
+                    unlink(public_path('upload/user_images/' . $user->photo));
+                }
                 $file = $request->file('photo');
                 $filename = date('YmdHi') . '_' . $file->getClientOriginalName();
-                $file->storeAs('upload/user_images', $filename, 'public');
+                $file->move(public_path('upload/user_images'), $filename);
                 $user->photo = $filename;
             }
 
+            // Handle CV upload
+            if ($request->hasFile('cv')) {
+                // Delete old CV if it exists
+                if ($user->cv && file_exists(public_path('upload/user_cvs/' . $user->cv))) {
+                    unlink(public_path('upload/user_cvs/' . $user->cv));
+                }
+                $cvFile = $request->file('cv');
+                $cvFilename = date('YmdHi') . '_cv_' . $cvFile->getClientOriginalName();
+                $cvFile->move(public_path('upload/user_cvs'), $cvFilename);
+                $user->cv = $cvFilename;
+            }
+
+            // Handle password
             if ($request->filled('new_password')) {
                 $user->password = Hash::make($request->new_password);
             }
 
             $user->save();
 
-            return redirect()->back()->with('status', 'Profile updated successfully!');
+            return redirect()->route('profile.edit')->with('status', 'Profile updated successfully!');
         } catch (\Exception $e) {
             return redirect()->back()
                 ->withInput()
@@ -69,9 +88,9 @@ class ProfileController extends Controller
 
     public function logout(Request $request)
     {
-        Auth::guard('web')->logout();
+        Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         return redirect('/login');
     }
-} 
+}

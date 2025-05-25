@@ -64,7 +64,8 @@
             <div class="user-box dropdown px-3">
                 <a class="d-flex align-items-center nav-link dropdown-toggle gap-3 dropdown-toggle-nocaret" href="#" 
                    role="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                    <img src="{{ $user && $user->photo ? asset('storage/upload/user_images/' . $user->photo) : asset('upload/no_image.jpg') }}"
+                    <img class="rounded-circle me-3 shadow-sm"
+                         src="{{ $user ? ($user->photo ? asset('upload/user_images/' . $user->photo) : asset('upload/no_image.jpg')) : asset('upload/no_image.jpg') }}"
                          class="user-img rounded-circle" alt="{{ $user ? $user->name : 'User' }}'s Avatar" style="width: 40px; height: 40px;">
                     <div class="user-info">
                         <p class="user-name mb-0">{{ $user->name ?? 'User' }}</p>
@@ -72,7 +73,7 @@
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                     <li>
-                        <a class="dropdown-item d-flex align-items-center" href="{{route('purchase.history')}}">
+                        <a class="dropdown-item d-flex align-items-center" href="{{ route('purchase.history') }}">
                             <i class="bx bx-history fs-5 me-2 text-success"></i>
                             <span>Purchase History</span>
                         </a>
