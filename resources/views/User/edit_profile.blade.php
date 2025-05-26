@@ -39,24 +39,6 @@
                     @enderror
                 </div>
 
-                <!-- CV Upload -->
-                <div class="mb-4">
-                    <label class="form-label fw-semibold">Curriculum Vitae (CV)</label>
-                    <div class="d-flex align-items-center mb-2">
-                        @if($profileData->cv)
-                            <a href="{{ asset('upload/user_cvs/' . $profileData->cv) }}" target="_blank" class="me-3 text-primary">
-                                <i class="la la-file-pdf-o"></i> Current CV
-                            </a>
-                        @else
-                            <span class="me-3 text-muted">No CV uploaded</span>
-                        @endif
-                        <input type="file" name="cv" class="form-control" accept=".pdf">
-                    </div>
-                    <small class="text-muted">Max 2MB, .pdf only</small>
-                    @error('cv')
-                        <div class="text-danger mt-1">{{ $message }}</div>
-                    @enderror
-                </div>
 
                 <div class="row g-3">
                     <!-- Name -->

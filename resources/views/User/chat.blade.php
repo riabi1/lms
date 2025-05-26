@@ -8,13 +8,14 @@
             <div class="chat-sidebar-header">
                 <div class="d-flex align-items-center">
                     <div class="chat-user-online">
-                        <img src="{{ Auth::user()?->photo && \Storage::disk('public')->exists('upload/user_images/' . Auth::user()->photo) ? asset('storage/upload/user_images/' . Auth::user()->photo) : asset('upload/no_image.jpg') }}" 
-                             width="100" height="100" class="rounded-circle user-avatar" alt="{{ Auth::user()?->name ?? 'User' }}" 
+                        <img class="rounded-circle me-3 shadow-sm"
+                             src="{{ Auth::guard('web')->user() ? (Auth::guard('web')->user()->photo ? asset('upload/user_images/' . Auth::guard('web')->user()->photo) : asset('upload/no_image.jpg')) : asset('upload/no_image.jpg') }}"
+                             width="100" height="100" class="rounded-circle user-avatar" alt="{{ Auth::guard('web')->user()?->name ?? 'User' }}"
                              style="object-fit: cover;" loading="lazy" />
                         <span class="online-status"></span>
                     </div>
                     <div class="flex-grow-1 ms-2">
-                        <p class="mb-0 user-name" style="font-size: 14px; font-weight: 600;">{{ Auth::user()?->name ?? 'User' }}</p>
+                        <p class="mb-0 user-name" style="font-size: 14px; font-weight: 600;">{{ Auth::guard('web')->user()?->name ?? 'User' }}</p>
                     </div>
                 </div>
                 <div class="mb-2"></div>
@@ -38,8 +39,8 @@
                                     <a href="{{ route('messages.show', $conversation->id) }}" class="list-group-item conversation-item {{ $conversation->id == $selectedConversation?->id ? 'active' : '' }}">
                                         <div class="d-flex align-items-center">
                                             <div class="chat-user-online">
-                                                <img src="{{ $conversation->instructor?->photo && file_exists(public_path('upload/instructor_images/' . $conversation->instructor->photo)) ? asset('upload/instructor_images/' . $conversation->instructor->photo) : asset('upload/no_image.jpg') }}" 
-                                                     width="36" height="36" class="rounded-circle user-avatar" alt="{{ $conversation->instructor?->name ?? 'Instructeur inconnu' }}" 
+                                                <img src="{{ $conversation->instructor?->photo && file_exists(public_path('upload/instructor_images/' . $conversation->instructor->photo)) ? asset('upload/instructor_images/' . $conversation->instructor->photo) : asset('upload/no_image.jpg') }}"
+                                                     width="36" height="36" class="rounded-circle user-avatar" alt="{{ $conversation->instructor?->name ?? 'Instructeur inconnu' }}"
                                                      style="object-fit: cover;" loading="lazy" />
                                                 <span class="online-status {{ $conversation->instructor?->is_online ? 'online' : 'offline' }}"></span>
                                             </div>
@@ -66,8 +67,8 @@
             <div class="chat-header d-flex align-items-center">
                 <div class="chat-toggle-btn"><i class='bx bx-menu-alt-left'></i></div>
                 <div class="d-flex align-items-center">
-                    <img src="{{ $selectedConversation->instructor?->photo && file_exists(public_path('upload/instructor_images/' . $conversation->instructor->photo)) ? asset('upload/instructor_images/' . $conversation->instructor->photo) : asset('upload/no_image.jpg') }}" 
-                         width="40" height="40" class="rounded-circle user-avatar" alt="{{ $selectedConversation->instructor?->name ?? 'Instructeur inconnu' }}" 
+                    <img src="{{ $selectedConversation->instructor?->photo && file_exists(public_path('upload/instructor_images/' . $selectedConversation->instructor->photo)) ? asset('upload/instructor_images/' . $selectedConversation->instructor->photo) : asset('upload/no_image.jpg') }}"
+                         width="40" height="40" class="rounded-circle user-avatar" alt="{{ $selectedConversation->instructor?->name ?? 'Instructeur inconnu' }}"
                          style="object-fit: cover;" loading="lazy" />
                     <div class="ms-2">
                         <h4 class="mb-0 chat-user-name" style="font-size: 15px;">{{ $selectedConversation->instructor?->name ?? 'Instructeur inconnu' }}</h4>
@@ -87,16 +88,17 @@
                                     <p class="mb-0 chat-time text-end" style="font-size: 10px;">{{ \Carbon\Carbon::parse($message->created_at)->diffForHumans() }}</p>
                                     <p class="chat-right-msg three-d" data-message-id="{{ $message->id }}">{{ $message->message }}</p>
                                 </div>
-                                <img src="{{ Auth::user()?->photo && \Storage::disk('public')->exists('upload/user_images/' . Auth::user()->photo) ? asset('storage/upload/user_images/' . Auth::user()->photo) : asset('upload/no_image.jpg') }}" 
-                                     width="36" height="36" class="rounded-circle user-avatar" alt="{{ Auth::user()?->name ?? 'User' }}" 
+                                <img class="rounded-circle me-3 shadow-sm"
+                                     src="{{ Auth::guard('web')->user() ? (Auth::guard('web')->user()->photo ? asset('upload/user_images/' . Auth::guard('web')->user()->photo) : asset('upload/no_image.jpg')) : asset('upload/no_image.jpg') }}"
+                                     width="36" height="36" class="rounded-circle user-avatar" alt="{{ Auth::guard('web')->user()?->name ?? 'User' }}"
                                      style="object-fit: cover;" loading="lazy" />
                             </div>
                         </div>
                     @else
                         <div class="chat-content-leftside">
                             <div class="d-flex">
-                                <img src="{{ $selectedConversation->instructor?->photo && file_exists(public_path('upload/instructor_images/' . $selectedConversation->instructor->photo)) ? asset('upload/instructor_images/' . $selectedConversation->instructor->photo) : asset('upload/no_image.jpg') }}" 
-                                     width="36" height="36" class="rounded-circle user-avatar" alt="{{ $selectedConversation->instructor?->name ?? 'Instructeur inconnu' }}" 
+                                <img src="{{ $selectedConversation->instructor?->photo && file_exists(public_path('upload/instructor_images/' . $selectedConversation->instructor->photo)) ? asset('upload/instructor_images/' . $selectedConversation->instructor->photo) : asset('upload/no_image.jpg') }}"
+                                     width="36" height="36" class="rounded-circle user-avatar" alt="{{ $selectedConversation->instructor?->name ?? 'Instructeur inconnu' }}"
                                      style="object-fit: cover;" loading="lazy" />
                                 <div class="flex-grow-1 ms-2">
                                     <p class="mb-0 chat-time" style="font-size: 10px;">{{ $selectedConversation->instructor?->name ?? 'Instructeur inconnu' }}, {{ \Carbon\Carbon::parse($message->created_at)->diffForHumans() }}</p>
@@ -301,16 +303,16 @@
                                     <p class="mb-0 chat-time text-end" style="font-size: 10px;">Just now</p>
                                     <p class="chat-right-msg three-d" data-message-id="${e.message_id}">${e.message}</p>
                                 </div>
-                                <img src="${e.sender_photo}" 
-                                     width="36" height="36" class="rounded-circle user-avatar" alt="${e.sender_name}" 
+                                <img src="${e.sender_photo || '{{ Auth::guard('web')->user() ? (Auth::guard('web')->user()->photo ? asset('upload/user_images/' . Auth::guard('web')->user()->photo) : asset('upload/no_image.jpg')) : asset('upload/no_image.jpg') }}'}" 
+                                     width="36" height="36" class="rounded-circle user-avatar" alt="${e.sender_name || '{{ Auth::guard('web')->user()?->name ?? 'User' }}'}" 
                                      style="object-fit: cover;" loading="lazy" />
                             </div>` :
                             `<div class="d-flex">
-                                <img src="${e.sender_photo}" 
-                                     width="36" height="36" class="rounded-circle user-avatar" alt="${e.sender_name}" 
+                                <img src="${e.sender_photo || '{{ $selectedConversation->instructor?->photo && file_exists(public_path('upload/instructor_images/' . $selectedConversation->instructor->photo)) ? asset('upload/instructor_images/' . $selectedConversation->instructor->photo) : asset('upload/no_image.jpg') }}'}" 
+                                     width="36" height="36" class="rounded-circle user-avatar" alt="${e.sender_name || '{{ $selectedConversation->instructor?->name ?? 'Instructeur inconnu' }}'}" 
                                      style="object-fit: cover;" loading="lazy" />
                                 <div class="flex-grow-1 ms-2">
-                                    <p class="mb-0 chat-time" style="font-size: 10px;">${e.sender_name}, Just now</p>
+                                    <p class="mb-0 chat-time" style="font-size: 10px;">${e.sender_name || '{{ $selectedConversation->instructor?->name ?? 'Instructeur inconnu' }}'}, Just now</p>
                                     <p class="chat-left-msg three-d" data-message-id="${e.message_id}">${e.message}</p>
                                 </div>
                             </div>`;

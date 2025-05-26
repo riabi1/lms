@@ -9,12 +9,12 @@
                 <div class="d-flex align-items-center">
                     <div class="chat-user-online">
                         <img src="{{ Auth::guard('instructor')->user()->photo && file_exists(public_path('upload/instructor_images/' . Auth::guard('instructor')->user()->photo)) ? asset('upload/instructor_images/' . Auth::guard('instructor')->user()->photo) : asset('upload/no_image.jpg') }}"
-                             width="100" height="100" class="rounded-circle user-avatar" alt="{{ Auth::guard('instructor')->user()->name }}"
+                             width="100" height="100" class="rounded-circle user-avatar" alt="{{ Auth::guard('instructor')->user()->name ?? 'Instructor' }}"
                              style="object-fit: cover;" loading="lazy" />
                         <span class="online-status"></span>
                     </div>
                     <div class="flex-grow-1 ms-2">
-                        <p class="mb-0 user-name" style="font-size: 14px; font-weight: 600;">{{ Auth::guard('instructor')->user()->name }}</p>
+                        <p class="mb-0 user-name" style="font-size: 14px; font-weight: 600;">{{ Auth::guard('instructor')->user()->name ?? 'Instructor' }}</p>
                     </div>
                 </div>
                 <div class="mb-2"></div>
@@ -38,7 +38,7 @@
                                     <a href="{{ route('instructor.messages.show', $conversation->id) }}" class="list-group-item conversation-item {{ $conversation->id == $selectedConversation?->id ? 'active' : '' }}">
                                         <div class="d-flex align-items-center">
                                             <div class="chat-user-online">
-                                                <img src="{{ $conversation->user->photo && \Storage::disk('public')->exists('upload/user_images/' . $conversation->user->photo) ? asset('storage/upload/user_images/' . $conversation->user->photo) : asset('upload/no_image.jpg') }}"
+                                                <img src="{{ $conversation->user->photo && file_exists(public_path('upload/user_images/' . $conversation->user->photo)) ? asset('upload/user_images/' . $conversation->user->photo) : asset('upload/no_image.jpg') }}"
                                                      width="36" height="36" class="rounded-circle user-avatar" alt="{{ $conversation->user->name ?? 'Utilisateur inconnu' }}"
                                                      style="object-fit: cover;" loading="lazy" />
                                                 <span class="online-status {{ $conversation->user->is_online ? 'online' : 'offline' }}"></span>
@@ -66,7 +66,7 @@
             <div class="chat-header d-flex align-items-center">
                 <div class="chat-toggle-btn"><i class='bx bx-menu-alt-left'></i></div>
                 <div class="d-flex align-items-center">
-                    <img src="{{ $selectedConversation->user->photo && \Storage::disk('public')->exists('upload/user_images/' . $selectedConversation->user->photo) ? asset('storage/upload/user_images/' . $selectedConversation->user->photo) : asset('upload/no_image.jpg') }}"
+                    <img src="{{ $selectedConversation->user->photo && file_exists(public_path('upload/user_images/' . $selectedConversation->user->photo)) ? asset('upload/user_images/' . $selectedConversation->user->photo) : asset('upload/no_image.jpg') }}"
                          width="40" height="40" class="rounded-circle user-avatar" alt="{{ $selectedConversation->user->name ?? 'Utilisateur inconnu' }}"
                          style="object-fit: cover;" loading="lazy" />
                     <div class="ms-2">
@@ -88,14 +88,14 @@
                                     <p class="chat-right-msg three-d" data-message-id="{{ $message->id }}">{{ $message->message }}</p>
                                 </div>
                                 <img src="{{ Auth::guard('instructor')->user()->photo && file_exists(public_path('upload/instructor_images/' . Auth::guard('instructor')->user()->photo)) ? asset('upload/instructor_images/' . Auth::guard('instructor')->user()->photo) : asset('upload/no_image.jpg') }}"
-                                     width="36" height="36" class="rounded-circle user-avatar" alt="{{ Auth::guard('instructor')->user()->name }}"
+                                     width="36" height="36" class="rounded-circle user-avatar" alt="{{ Auth::guard('instructor')->user()->name ?? 'Instructor' }}"
                                      style="object-fit: cover;" loading="lazy" />
                             </div>
                         </div>
                     @else
                         <div class="chat-content-leftside">
                             <div class="d-flex">
-                                <img src="{{ $selectedConversation->user->photo && \Storage::disk('public')->exists('upload/user_images/' . $selectedConversation->user->photo) ? asset('storage/upload/user_images/' . $selectedConversation->user->photo) : asset('upload/no_image.jpg') }}"
+                                <img src="{{ $selectedConversation->user->photo && file_exists(public_path('upload/user_images/' . $selectedConversation->user->photo)) ? asset('upload/user_images/' . $selectedConversation->user->photo) : asset('upload/no_image.jpg') }}"
                                      width="36" height="36" class="rounded-circle user-avatar" alt="{{ $selectedConversation->user->name ?? 'Utilisateur inconnu' }}"
                                      style="object-fit: cover;" loading="lazy" />
                                 <div class="flex-grow-1 ms-2">
@@ -195,7 +195,7 @@
             margin: 0 2px;
             background: #6B7280;
             border-radius: 50%;
-            animation: dot-flashing 1s infinite alternate;
+           アニメーション: dot-flashing 1s infinite alternate;
         }
         .typing-indicator .dot:nth-child(2) {
             animation-delay: 0.2s;
@@ -301,16 +301,16 @@
                                     <p class="mb-0 chat-time text-end" style="font-size: 10px;">Just now</p>
                                     <p class="chat-right-msg three-d" data-message-id="${e.message_id}">${e.message}</p>
                                 </div>
-                                <img src="${e.sender_photo}" 
-                                     width="36" height="36" class="rounded-circle user-avatar" alt="${e.sender_name}" 
+                                <img src="${e.sender_photo || '{{ Auth::guard('instructor')->user()->photo && file_exists(public_path('upload/instructor_images/' . Auth::guard('instructor')->user()->photo)) ? asset('upload/instructor_images/' . Auth::guard('instructor')->user()->photo) : asset('upload/no_image.jpg') }}'}" 
+                                     width="36" height="36" class="rounded-circle user-avatar" alt="${e.sender_name || '{{ Auth::guard('instructor')->user()->name ?? 'Instructor' }}'}" 
                                      style="object-fit: cover;" loading="lazy" />
                             </div>` :
                             `<div class="d-flex">
-                                <img src="${e.sender_photo}" 
-                                     width="36" height="36" class="rounded-circle user-avatar" alt="${e.sender_name}" 
+                                <img src="${e.sender_photo || '{{ $selectedConversation->user->photo && file_exists(public_path('upload/user_images/' . $selectedConversation->user->photo)) ? asset('upload/user_images/' . $selectedConversation->user->photo) : asset('upload/no_image.jpg') }}'}" 
+                                     width="36" height="36" class="rounded-circle user-avatar" alt="${e.sender_name || '{{ $selectedConversation->user->name ?? 'Utilisateur inconnu' }}'}" 
                                      style="object-fit: cover;" loading="lazy" />
                                 <div class="flex-grow-1 ms-2">
-                                    <p class="mb-0 chat-time" style="font-size: 10px;">${e.sender_name}, Just now</p>
+                                    <p class="mb-0 chat-time" style="font-size: 10px;">${e.sender_name || '{{ $selectedConversation->user->name ?? 'Utilisateur inconnu' }}'}, Just now</p>
                                     <p class="chat-left-msg three-d" data-message-id="${e.message_id}">${e.message}</p>
                                 </div>
                             </div>`;

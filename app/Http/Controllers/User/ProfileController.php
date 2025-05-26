@@ -25,7 +25,6 @@ class ProfileController extends Controller
                 'phone' => 'nullable|string|max:20',
                 'address' => 'nullable|string|max:255',
                 'photo' => 'nullable|image|max:5120|mimes:jpeg,png,jpg',
-                'cv' => 'nullable|file|max:2048|mimes:pdf',
                 'preference' => 'nullable|array|max:3',
                 'preference.*' => 'exists:categories,id',
                 'grade_select' => 'required|string|max:255',
@@ -59,17 +58,6 @@ class ProfileController extends Controller
                 $user->photo = $filename;
             }
 
-            // Handle CV upload
-            if ($request->hasFile('cv')) {
-                // Delete old CV if it exists
-                if ($user->cv && file_exists(public_path('upload/user_cvs/' . $user->cv))) {
-                    unlink(public_path('upload/user_cvs/' . $user->cv));
-                }
-                $cvFile = $request->file('cv');
-                $cvFilename = date('YmdHi') . '_cv_' . $cvFile->getClientOriginalName();
-                $cvFile->move(public_path('upload/user_cvs'), $cvFilename);
-                $user->cv = $cvFilename;
-            }
 
             // Handle password
             if ($request->filled('new_password')) {
