@@ -8,21 +8,20 @@ use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
-use App\Models\Message;
 
 class MessageSent implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public $message;
-    public $sender_name;
-    public $sender_photo;
+    public $senderName;
+    public $senderPhoto;
 
-    public function __construct(Message $message, $sender_name, $sender_photo)
+    public function __construct($message, $senderName, $senderPhoto)
     {
         $this->message = $message;
-        $this->sender_name = $sender_name;
-        $this->sender_photo = $sender_photo;
+        $this->senderName = $senderName;
+        $this->senderPhoto = $senderPhoto;
     }
 
     public function broadcastOn()
@@ -38,9 +37,14 @@ class MessageSent implements ShouldBroadcast
             'message' => $this->message->message,
             'sender_id' => $this->message->sender_id,
             'sender_type' => $this->message->sender_type,
-            'sender_name' => $this->sender_name,
-            'sender_photo' => $this->sender_photo,
+            'sender_name' => $this->senderName,
+            'sender_photo' => $this->senderPhoto,
             'created_at' => $this->message->created_at->toDateTimeString(),
         ];
+    }
+
+    public function broadcastAs()
+    {
+        return 'MessageSent';
     }
 }

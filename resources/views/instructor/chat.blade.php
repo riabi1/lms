@@ -218,42 +218,24 @@
 
 @push('scripts')
     @if($selectedConversation)
-        <script src="{{ asset('vendor/laravel-reverb/reverb.js') }}"></script>
+        <script src="https://js.pusher.com/8.2/pusher.min.js"></script>
         <script>
             document.addEventListener('DOMContentLoaded', () => {
                 console.log('Initializing chat for conversation {{ $selectedConversation->id }}');
 
-                // Initialize WebSocket connection with Reverb
-                try {
-                    window.Echo = new Echo({
-                        broadcaster: 'reverb',
-                        key: '{{ env('REVERB_APP_KEY') }}',
-                        wsHost: '{{ env('REVERB_HOST', 'localhost') }}',
-                        wsPort: '{{ env('REVERB_PORT', 8080) }}',
-                        wssPort: '{{ env('REVERB_PORT', 8080) }}',
-                        scheme: '{{ env('REVERB_SCHEME', 'http') }}',
-                        authEndpoint: '/broadcasting/auth',
-                        disableStats: false,
-                        forceTLS: '{{ env('REVERB_SCHEME', 'http') === 'https' }}',
-                    });
-                    console.log('Echo initialized successfully');
-                } catch (error) {
-                    console.error('Failed to initialize Echo:', error);
-                }
-
                 const chatContent = document.querySelector('#chat-content');
                 const conversationList = document.querySelector('#conversation-list');
-                const scrollToBottomBtn = document.querySelector('.scroll-to-bottom');
+                const scrollToBottomBtn = document.querySelector('.scroll-to-bottom:not(.sidebar-scroll)');
                 const messageForm = document.querySelector('#message-form');
                 const messageInput = document.querySelector('.message-input');
                 const errorMessage = document.querySelector('.error-message');
                 const typingIndicator = document.querySelector('.typing-indicator');
                 let lastMessageId = {{ $selectedConversation->messages->max('id') ?? 0 }};
+                let usePolling = false;
+                let pollInterval = null;
 
-                // Scroll to bottom on load
                 chatContent.scrollTo({ top: chatContent.scrollHeight, behavior: 'smooth' });
 
-                // Show/hide scroll-to-bottom button
                 chatContent.addEventListener('scroll', () => {
                     const isNearBottom = chatContent.scrollHeight - chatContent.scrollTop - chatContent.clientHeight < 100;
                     scrollToBottomBtn.style.display = isNearBottom ? 'none' : 'flex';
@@ -263,10 +245,8 @@
                     chatContent.scrollTo({ top: chatContent.scrollHeight, behavior: 'smooth' });
                 });
 
-                // Handle message form submission
                 messageForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
-                    console.log('Form submission intercepted');
                     const message = messageInput.value.trim();
                     if (!message) return;
 
@@ -281,19 +261,14 @@
                             body: JSON.stringify({ message }),
                         });
 
-                        if (!response.ok) {
-                            throw new Error(`HTTP error! Status: ${response.status}`);
-                        }
+                        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 
                         const data = await response.json();
 
                         if (data.status === 'success') {
-                            console.log('Message sent successfully:', data);
                             messageInput.value = '';
                             errorMessage.style.display = 'none';
-                            errorMessage.textContent = '';
 
-                            // Append the message for the sender
                             const messageDiv = document.createElement('div');
                             messageDiv.className = 'chat-content-rightside';
                             messageDiv.style.opacity = '0';
@@ -315,7 +290,6 @@
                             chatContent.scrollTo({ top: chatContent.scrollHeight, behavior: 'smooth' });
                             lastMessageId = Math.max(lastMessageId, data.message.message_id);
 
-                            // Update conversation list
                             updateConversationList(data.message, data.conversation);
                         } else {
                             errorMessage.textContent = data.error || 'Failed to send message';
@@ -323,18 +297,17 @@
                         }
                     } catch (error) {
                         console.error('Error sending message:', error);
-                        errorMessage.textContent = 'Failed to send message. Please try again.';
+                        errorMessage.textContent = 'Failed to send message.';
                         errorMessage.style.display = 'block';
                     }
                 });
 
-                // Handle typing indicator
                 let typingTimer;
                 let isTyping = false;
                 messageInput.addEventListener('input', () => {
                     if (!isTyping) {
                         isTyping = true;
-                        fetch('/messages/{{ $selectedConversation->id }}/typing', {
+                        fetch('{{ route("instructor.messages.typing", $selectedConversation->id) }}', {
                             method: 'POST',
                             headers: {
                                 'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -348,7 +321,6 @@
                     }, 2000);
                 });
 
-                // Function to update conversation list
                 function updateConversationList(message, conversation) {
                     let conversationItem = document.querySelector(`.conversation-item[data-conversation-id="${message.conversation_id}"]`);
                     if (conversationItem) {
@@ -356,83 +328,183 @@
                         const chatTime = conversationItem.querySelector('.chat-time');
                         chatMsg.textContent = message.message.substring(0, 20) + (message.message.length > 20 ? '...' : '');
                         chatTime.textContent = 'Just now';
+                        conversationItem.classList.add('active');
                         conversationList.prepend(conversationItem);
                     }
                 }
 
-                // Listen for new messages
-                if (window.Echo) {
-                    Echo.private(`conversation.{{ $selectedConversation->id }}`)
-                        .listen('.MessageSent', (e) => {
-                            console.log('MessageSent event received:', e);
-                            if (e.message_id <= lastMessageId) {
-                                console.log('Duplicate message, skipping:', e.message_id);
-                                return;
-                            }
-                            lastMessageId = e.message_id;
-
-                            const isCurrentUser = e.sender_id === {{ Auth::guard('instructor')->id() }} && e.sender_type === 'App\\Models\\Instructor';
-                            if (isCurrentUser) {
-                                console.log('Message from current user, already appended');
-                                return;
-                            }
-
-                            const messageDiv = document.createElement('div');
-                            messageDiv.className = 'chat-content-leftside';
-                            messageDiv.style.opacity = '0';
-                            messageDiv.innerHTML = `
-                                <div class="d-flex">
-                                    <img src="${e.sender_photo}" 
-                                         width="36" height="36" class="rounded-circle user-avatar" alt="${e.sender_name}" 
-                                         style="object-fit: cover;" loading="lazy" />
-                                    <div class="flex-grow-1 ms-2">
-                                        <p class="mb-0 chat-time" style="font-size: 10px;">${e.sender_name}, Just now</p>
-                                        <p class="chat-left-msg three-d" data-message-id="${e.message_id}">${e.message}</p>
-                                    </div>
-                                </div>`;
-                            chatContent.appendChild(messageDiv);
-                            setTimeout(() => {
-                                messageDiv.style.transition = 'opacity 0.3s ease';
-                                messageDiv.style.opacity = '1';
-                            }, 10);
-
-                            const isNearBottom = chatContent.scrollHeight - chatContent.scrollTop - chatContent.clientHeight < 100;
-                            if (isNearBottom) {
-                                chatContent.scrollTo({ top: chatContent.scrollHeight, behavior: 'smooth' });
-                            }
-
-                            updateConversationList({
-                                conversation_id: {{ $selectedConversation->id }},
-                                message: e.message,
-                                message_id: e.message_id,
-                                sender_name: e.sender_name,
-                                sender_photo: e.sender_photo
-                            }, {
-                                id: {{ $selectedConversation->id }},
-                                last_message_at: new Date().toISOString()
-                            });
+                function startPolling() {
+                    if (pollInterval) return;
+                    console.log('Starting polling');
+                    pollInterval = setInterval(() => {
+                        fetch('{{ route("instructor.messages.fetch", $selectedConversation->id) }}?last_message_id=' + lastMessageId, {
+                            method: 'GET',
+                            headers: { 'Accept': 'application/json' },
                         })
-                        .listen('.Typing', (e) => {
-                            console.log('Typing event received:', e);
-                            if (e.user.id === {{ Auth::guard('instructor')->id() }}) return;
-                            typingIndicator.style.display = 'flex';
-                            typingIndicator.innerHTML = `<span class="dot"></span><span class="dot"></span><span class="dot"></span> ${e.user.name} is typing...`;
-                            setTimeout(() => {
-                                typingIndicator.style.display = 'none';
-                            }, 3000);
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === 'success' && data.messages.length > 0) {
+                                data.messages.forEach(message => {
+                                    if (message.message_id <= lastMessageId) return;
+                                    const isCurrentUser = message.sender_id === {{ Auth::guard('instructor')->id() }} && message.sender_type === 'App\\Models\\Instructor';
+                                    if (isCurrentUser) return;
+
+                                    const messageDiv = document.createElement('div');
+                                    messageDiv.className = 'chat-content-leftside';
+                                    messageDiv.style.opacity = '0';
+                                    messageDiv.innerHTML = `
+                                        <div class="d-flex">
+                                            <img src="${message.sender_photo}" 
+                                                 width="36" height="36" class="rounded-circle user-avatar" alt="${message.sender_name}" 
+                                                 style="object-fit: cover;" loading="lazy" />
+                                            <div class="flex-grow-1 ms-2">
+                                                <p class="mb-0 chat-time" style="font-size: 10px;">${message.sender_name}, Just now</p>
+                                                <p class="chat-left-msg three-d" data-message-id="${message.message_id}">${message.message}</p>
+                                            </div>
+                                        </div>`;
+                                    chatContent.appendChild(messageDiv);
+                                    setTimeout(() => {
+                                        messageDiv.style.transition = 'opacity 0.3s ease';
+                                        messageDiv.style.opacity = '1';
+                                    }, 10);
+
+                                    lastMessageId = Math.max(lastMessageId, message.message_id);
+                                    updateConversationList(message);
+                                });
+
+                                const isNearBottom = chatContent.scrollHeight - chatContent.scrollTop - chatContent.clientHeight < 100;
+                                if (isNearBottom) {
+                                    chatContent.scrollTo({ top: chatContent.scrollHeight, behavior: 'smooth' });
+                                }
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error polling messages:', error);
+                            errorMessage.textContent = 'Failed to fetch new messages.';
+                            errorMessage.style.display = 'block';
                         });
 
-                    Echo.connector.reverb.on('connect', () => {
-                        console.log('WebSocket connected to Reverb');
-                        errorMessage.style.display = 'none';
+                        fetch('{{ route("instructor.messages.typing-status", $selectedConversation->id) }}', {
+                            method: 'GET',
+                            headers: { 'Accept': 'application/json' },
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === 'success' && data.typing) {
+                                typingIndicator.style.display = 'flex';
+                                typingIndicator.innerHTML = `<span class="dot"></span><span class="dot"></span><span class="dot"></span> ${data.user_name} is typing...`;
+                            } else {
+                                typingIndicator.style.display = 'none';
+                            }
+                        })
+                        .catch(error => console.error('Error polling typing status:', error));
+                    }, 2000);
+                }
+
+                let pusher;
+                try {
+                    pusher = new Pusher('{{ env('PUSHER_APP_KEY') }}', {
+                        cluster: '{{ env('PUSHER_APP_CLUSTER') }}',
+                        encrypted: true,
+                        authEndpoint: '/broadcasting/auth',
+                        auth: {
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            }
+                        }
                     });
 
-                    Echo.connector.reverb.on('disconnect', () => {
-                        console.warn('WebSocket disconnected from Reverb');
-                        errorMessage.textContent = 'Connection lost. Reconnecting...';
-                        errorMessage.style.display = 'block';
+                    const channel = pusher.subscribe(`private-conversation.${{ $selectedConversation->id }}`);
+                    channel.bind('MessageSent', (e) => {
+                        if (usePolling) return;
+                        if (e.message_id <= lastMessageId) return;
+                        lastMessageId = e.message_id;
+
+                        const isCurrentUser = e.sender_id === {{ Auth::guard('instructor')->id() }} && e.sender_type === 'App\\Models\\Instructor';
+                        if (isCurrentUser) return;
+
+                        const messageDiv = document.createElement('div');
+                        messageDiv.className = 'chat-content-leftside';
+                        messageDiv.style.opacity = '0';
+                        messageDiv.innerHTML = `
+                            <div class="d-flex">
+                                <img src="${e.sender_photo}" 
+                                     width="36" height="36" class="rounded-circle user-avatar" alt="${e.sender_name}" 
+                                     style="object-fit: cover;" loading="lazy" />
+                                <div class="flex-grow-1 ms-2">
+                                    <p class="mb-0 chat-time" style="font-size: 10px;">${e.sender_name}, Just now</p>
+                                    <p class="chat-left-msg three-d" data-message-id="${e.message_id}">${e.message}</p>
+                                </div>
+                            </div>`;
+                        chatContent.appendChild(messageDiv);
+                        setTimeout(() => {
+                            messageDiv.style.transition = 'opacity 0.3s ease';
+                            messageDiv.style.opacity = '1';
+                        }, 10);
+
+                        const isNearBottom = chatContent.scrollHeight - chatContent.scrollTop - chatContent.clientHeight < 100;
+                        if (isNearBottom) {
+                            chatContent.scrollTo({ top: chatContent.scrollHeight, behavior: 'smooth' });
+                        }
+
+                        updateConversationList({
+                            conversation_id: {{ $selectedConversation->id }},
+                            message: e.message,
+                            message_id: e.message_id,
+                            sender_name: e.sender_name,
+                            sender_photo: e.sender_photo
+                        }, {
+                            id: {{ $selectedConversation->id }},
+                            last_message_at: new Date().toISOString()
+                        });
                     });
+
+                    channel.bind('Typing', (e) => {
+                        if (usePolling) return;
+                        if (e.user.id === {{ Auth::guard('instructor')->id() }}) return;
+                        typingIndicator.style.display = 'flex';
+                        typingIndicator.innerHTML = `<span class="dot"></span><span class="dot"></span><span class="dot"></span> ${e.user.name} is typing...`;
+                        setTimeout(() => {
+                            typingIndicator.style.display = 'none';
+                        }, 3000);
+                    });
+
+                    pusher.connection.bind('connected', () => {
+                        console.log('Pusher connected');
+                        errorMessage.style.display = 'none';
+                        if (pollInterval) {
+                            clearInterval(pollInterval);
+                            pollInterval = null;
+                            usePolling = false;
+                        }
+                    });
+
+                    pusher.connection.bind('error', (err) => {
+                        console.warn('Pusher error:', err);
+                        errorMessage.textContent = 'Real-time connection failed. Using fallback.';
+                        errorMessage.style.display = 'block';
+                        usePolling = true;
+                        startPolling();
+                    });
+
+                    pusher.connection.bind('disconnected', () => {
+                        console.warn('Pusher disconnected');
+                        errorMessage.textContent = 'Connection lost. Using fallback.';
+                        errorMessage.style.display = 'block';
+                        usePolling = true;
+                        startPolling();
+                    });
+                } catch (error) {
+                    console.error('Pusher failed:', error);
+                    errorMessage.textContent = 'Real-time connection failed. Using fallback.';
+                    errorMessage.style.display = 'block';
+                    usePolling = true;
+                    startPolling();
                 }
+
+                window.addEventListener('beforeunload', () => {
+                    if (pollInterval) clearInterval(pollInterval);
+                });
             });
         </script>
     @endif

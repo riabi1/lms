@@ -4,55 +4,56 @@ namespace App\Http\Controllers;
 
 use App\Models\Conversation;
 use App\Models\Message;
-use App\Notifications\NewMessageNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Notification;
-use App\Events\MessageSent;
 
 class MessageController extends Controller
 {
-    public function __construct()
+    public function index(Request $request)
     {
-        $this->middleware('auth:web,instructor');
-    }
+        $guard = Auth::guard('instructor')->check() ? 'instructor' : 'web';
+        $user = Auth::guard($guard)->user();
 
-    public function index()
-    {
-        $conversations = Conversation::where('user_id', Auth::id())
-            ->orWhere('instructor_id', Auth::id())
+        $conversations = Conversation::where('user_id', $user->id)
+            ->orWhere('instructor_id', $user->id)
             ->with(['user', 'instructor', 'messages' => function ($query) {
-                $query->orderBy('created_at', 'asc');
+                $query->orderBy('created_at', 'desc')->take(1);
             }])
             ->orderBy('last_message_at', 'desc')
             ->get();
 
-        $selectedConversation = $conversations->first();
+        $selectedConversation = null;
+        $view = $guard === 'instructor' ? 'instructor.chat' : 'User.chat';
 
-        $view = Auth::guard('web')->check() ? 'User.chat' : 'instructor.chat';
-
-        return view($view, compact('conversations', 'selectedConversation'));
+        return view($view, [
+            'conversations' => $conversations,
+            'selectedConversation' => $selectedConversation,
+        ]);
     }
 
-    public function show(Conversation $conversation)
+    public function show(Request $request, Conversation $conversation)
     {
-        if ($conversation->user_id !== Auth::id() && $conversation->instructor_id !== Auth::id()) {
-            abort(403, 'Unauthorized');
+        $guard = Auth::guard('instructor')->check() ? 'instructor' : 'web';
+        $user = Auth::guard($guard)->user();
+
+        if ($conversation->user_id !== $user->id && $conversation->instructor_id !== $user->id) {
+            return redirect()->route($guard === 'instructor' ? 'instructor.messages.index' : 'messages.index')
+                ->with('error', 'Unauthorized access to conversation.');
         }
 
-        $conversations = Conversation::where('user_id', Auth::id())
-            ->orWhere('instructor_id', Auth::id())
+        $conversations = Conversation::where('user_id', $user->id)
+            ->orWhere('instructor_id', $user->id)
             ->with(['user', 'instructor', 'messages' => function ($query) {
-                $query->orderBy('created_at', 'asc');
+                $query->orderBy('created_at', 'desc')->take(1);
             }])
             ->orderBy('last_message_at', 'desc')
             ->get();
 
         $conversation->load(['messages' => function ($query) {
             $query->orderBy('created_at', 'asc');
-        }]);
+        }, 'user', 'instructor']);
 
-        $view = Auth::guard('web')->check() ? 'User.chat' : 'instructor.chat';
+        $view = $guard === 'instructor' ? 'instructor.chat' : 'User.chat';
 
         return view($view, [
             'conversations' => $conversations,
@@ -60,42 +61,101 @@ class MessageController extends Controller
         ]);
     }
 
-    public function send(Request $request, Conversation $conversation)
+    public function fetchNewMessages(Request $request, Conversation $conversation)
     {
-        $request->validate([
-            'message' => 'required|string|max:1000',
-        ]);
-
         if ($conversation->user_id !== Auth::id() && $conversation->instructor_id !== Auth::id()) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
-        $message = Message::create([
-            'conversation_id' => $conversation->id,
-            'sender_id' => Auth::id(),
-            'sender_type' => Auth::guard('web')->check() ? 'App\\Models\\User' : 'App\\Models\\Instructor',
-            'message' => $request->message,
-        ]);
+        $lastMessageId = $request->query('last_message_id', 0);
 
-        $conversation->update(['last_message_at' => now()]);
+        $messages = Message::where('conversation_id', $conversation->id)
+            ->where('id', '>', $lastMessageId)
+            ->orderBy('created_at', 'asc')
+            ->get()
+            ->map(function ($message) {
+                $sender = $message->sender_type === 'App\\Models\\User'
+                    ? \App\Models\User::find($message->sender_id)
+                    : \App\Models\Instructor::find($message->sender_id);
+
+                $sender_photo = $sender->photo
+                    ? asset('upload/' . ($sender instanceof \App\Models\User ? 'user_images' : 'instructor_images') . '/' . $sender->photo)
+                    : asset('upload/no_image.jpg');
+
+                return [
+                    'message_id' => $message->id,
+                    'conversation_id' => $message->conversation_id,
+                    'message' => $message->message,
+                    'sender_id' => $message->sender_id,
+                    'sender_type' => $message->sender_type,
+                    'sender_name' => $sender->name,
+                    'sender_photo' => $sender_photo,
+                    'created_at' => $message->created_at->toDateTimeString(),
+                ];
+            });
+
+        $conversationData = [
+            'id' => $conversation->id,
+            'last_message_at' => $conversation->last_message_at->toDateTimeString(),
+        ];
+
+        return response()->json([
+            'status' => 'success',
+            'messages' => $messages,
+            'conversation' => $conversationData,
+        ]);
+    }
+
+    public function typing(Request $request, Conversation $conversation)
+    {
+        if ($conversation->user_id !== Auth::id() && $conversation->instructor_id !== Auth::id()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $typingKey = 'typing:conversation:' . $conversation->id;
+        \Illuminate\Support\Facades\Cache::put($typingKey, Auth::user()->name, now()->addSeconds(5));
+
+        return response()->json(['status' => 'success']);
+    }
+
+    public function checkTypingStatus(Request $request, Conversation $conversation)
+    {
+        if ($conversation->user_id !== Auth::id() && $conversation->instructor_id !== Auth::id()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $typingKey = 'typing:conversation:' . $conversation->id;
+        $typingUser = \Illuminate\Support\Facades\Cache::get($typingKey);
+
+        return response()->json([
+            'status' => 'success',
+            'typing' => $typingUser ? true : false,
+            'user_name' => $typingUser,
+        ]);
+    }
+
+    public function send(Request $request, Conversation $conversation)
+    {
+        if ($conversation->user_id !== Auth::id() && $conversation->instructor_id !== Auth::id()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $request->validate(['message' => 'required|string|max:1000']);
+
+        $message = new Message();
+        $message->conversation_id = $conversation->id;
+        $message->sender_id = Auth::id();
+        $message->sender_type = Auth::guard('instructor')->check() ? 'App\\Models\\Instructor' : 'App\\Models\\User';
+        $message->message = $request->input('message');
+        $message->save();
+
+        $conversation->last_message_at = now();
+        $conversation->save();
 
         $sender = Auth::user();
         $sender_photo = $sender->photo
             ? asset('upload/' . ($sender instanceof \App\Models\User ? 'user_images' : 'instructor_images') . '/' . $sender->photo)
             : asset('upload/no_image.jpg');
-        broadcast(new MessageSent($message, $sender->name, $sender_photo))->toOthers();
-
-        if (Auth::guard('web')->check()) {
-            $instructor = $conversation->instructor;
-            if ($instructor) {
-                Notification::send($instructor, new NewMessageNotification($conversation, $message, Auth::user()));
-            }
-        } elseif (Auth::guard('instructor')->check()) {
-            $user = $conversation->user;
-            if ($user) {
-                Notification::send($user, new NewMessageNotification($conversation, $message, Auth::guard('instructor')->user()));
-            }
-        }
 
         return response()->json([
             'status' => 'success',
@@ -114,32 +174,5 @@ class MessageController extends Controller
                 'last_message_at' => $conversation->last_message_at->toDateTimeString(),
             ],
         ]);
-    }
-
-    public function typing(Request $request, Conversation $conversation)
-    {
-        if ($conversation->user_id !== Auth::id() && $conversation->instructor_id !== Auth::id()) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
-
-        broadcast(new \App\Events\Typing(Auth::user(), $conversation->id))->toOthers();
-
-        return response()->json(['status' => 'success']);
-    }
-
-    public function markNotificationAsRead($notificationId)
-    {
-        $user = Auth::guard('instructor')->check() ? Auth::guard('instructor')->user() : Auth::guard('web')->user();
-        $notification = $user->notifications()->findOrFail($notificationId);
-
-        $notification->markAsRead();
-
-        if ($notification->data['type'] === 'message' && !empty($notification->data['conversation_id'])) {
-            $route = Auth::guard('instructor')->check() ? 'instructor.messages.show' : 'messages.show';
-            return redirect()->route($route, $notification->data['conversation_id']);
-        }
-
-        $route = Auth::guard('instructor')->check() ? 'instructor.dashboard' : 'user.dashboard';
-        return redirect()->route($route);
     }
 }

@@ -36,4 +36,9 @@ class Typing implements ShouldBroadcast
             ],
         ];
     }
+
+    public function broadcastAs()
+    {
+        return 'Typing';
+    }
 }
