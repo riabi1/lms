@@ -79,7 +79,11 @@ class MessageController extends Controller
 
         $conversation->update(['last_message_at' => now()]);
 
-        broadcast(new MessageSent($message));
+        $sender = Auth::user();
+        $sender_photo = $sender->photo
+            ? asset('upload/' . ($sender instanceof \App\Models\User ? 'user_images' : 'instructor_images') . '/' . $sender->photo)
+            : asset('upload/no_image.jpg');
+        broadcast(new MessageSent($message, $sender->name, $sender_photo))->toOthers();
 
         if (Auth::guard('web')->check()) {
             $instructor = $conversation->instructor;
@@ -101,7 +105,13 @@ class MessageController extends Controller
                 'message' => $message->message,
                 'sender_id' => $message->sender_id,
                 'sender_type' => $message->sender_type,
+                'sender_name' => $sender->name,
+                'sender_photo' => $sender_photo,
                 'created_at' => $message->created_at->toDateTimeString(),
+            ],
+            'conversation' => [
+                'id' => $conversation->id,
+                'last_message_at' => $conversation->last_message_at->toDateTimeString(),
             ],
         ]);
     }
@@ -114,7 +124,7 @@ class MessageController extends Controller
 
         broadcast(new \App\Events\Typing(Auth::user(), $conversation->id))->toOthers();
 
-  return response()->json(['status' => 'success']);
+        return response()->json(['status' => 'success']);
     }
 
     public function markNotificationAsRead($notificationId)

@@ -5,6 +5,7 @@ namespace App\Notifications;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\User;
+use App\Models\Instructor;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -18,7 +19,7 @@ class NewMessageNotification extends Notification
     public $message;
     public $sender;
 
-    public function __construct(Conversation $conversation, Message $message, User $sender)
+    public function __construct(Conversation $conversation, Message $message, User|Instructor $sender)
     {
         $this->conversation = $conversation;
         $this->message = $message;
