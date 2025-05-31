@@ -153,9 +153,9 @@ User Dashboard | Easy Learning
 
         <div class="mb-3">
             <div class="d-flex align-items-center">
-<img class="rounded-circle me-3 shadow-sm"
-                         src="{{ $user ? ($user->photo ? asset('upload/user_images/' . $user->photo) : asset('upload/no_image.jpg')) : asset('upload/no_image.jpg') }}"
-                     alt="{{ $user->name }}'s Profile" style="width: 100px; height: 100px; object-fit: cover;">
+                <img class="rounded-circle me-3 shadow-sm"
+                        src="{{ $user ? ($user->photo ? asset('upload/user_images/' . $user->photo) : asset('upload/no_image.jpg')) : asset('upload/no_image.jpg') }}"
+                    alt="{{ $user->name }}'s Profile" style="width: 100px; height: 100px; object-fit: cover;">
                 <div>
                     <h2 class="text-dark">Hello, {{ $user->name }}! 👋</h2>
                     <p class="motivational-message">{{ $message }}</p>

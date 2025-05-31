@@ -1,4 +1,3 @@
-
 @extends('Instructor.layout.Instructor_layout')
 
 @section('title', 'Chat')
@@ -43,7 +42,7 @@
                                                 <img src="{{ $conversation->user->photo && file_exists(public_path('upload/user_images/' . $conversation->user->photo)) ? asset('upload/user_images/' . $conversation->user->photo) : asset('upload/no_image.jpg') }}"
                                                      width="36" height="36" class="rounded-circle user-avatar" alt="{{ $conversation->user->name ?? 'Utilisateur inconnu' }}"
                                                      style="object-fit: cover;" loading="lazy" />
-                                                <span class="online-status {{ $conversation->user->is_online ? 'online' : 'offline' }}"></span>
+                                                <span>online</span>
                                             </div>
                                             <div class="flex-grow-1 ms-2">
                                                 <h6 class="mb-0 chat-title" style="font-size: 13px;">{{ $conversation->user->name ?? 'Utilisateur inconnu' }}</h6>
@@ -73,14 +72,11 @@
                          style="object-fit: cover;" loading="lazy" />
                     <div class="ms-2">
                         <h4 class="mb-0 chat-user-name" style="font-size: 15px;">{{ $selectedConversation->user->name ?? 'Utilisateur inconnu' }}</h4>
-                        <small class="chat-status" style="font-size: 11px;">{{ $selectedConversation->user->is_online ? 'Active Now' : 'Offline' }}</small>
+                        <small class="chat-status" style="font-size: 11px;">online</small>
                     </div>
                 </div>
             </div>
             <div class="chat-content" id="chat-content">
-                <div class="typing-indicator" style="display: none;">
-                    <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-                </div>
                 @forelse($selectedConversation->messages as $message)
                     @if($message->sender_id == Auth::guard('instructor')->id() && $message->sender_type == 'App\\Models\\Instructor')
                         <div class="chat-content-rightside">
@@ -187,55 +183,24 @@
             max-width: 70%;
             word-wrap: break-word;
         }
-        .typing-indicator {
-            padding: 10px;
-            font-size: 12px;
-            color: #6B7280;
-            display: flex;
-            align-items: center;
-        }
-        .typing-indicator .dot {
-            display: inline-block;
-            width: 6px;
-            height: 6px;
-            margin: 0 2px;
-            background: #6B7280;
-            border-radius: 50%;
-            animation: dot-flashing 1s infinite alternate;
-        }
-        .typing-indicator .dot:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-        .typing-indicator .dot:nth-child(3) {
-            animation-delay: 0.4s;
-        }
-        @keyframes dot-flashing {
-            0% { opacity: 0.2; }
-            100% { opacity: 1; }
-        }
     </style>
 @endpush
 
 @push('scripts')
     @if($selectedConversation)
-        <script src="https://js.pusher.com/8.2/pusher.min.js"></script>
         <script>
             document.addEventListener('DOMContentLoaded', () => {
-                console.log('Initializing chat for conversation {{ $selectedConversation->id }}');
-
                 const chatContent = document.querySelector('#chat-content');
                 const conversationList = document.querySelector('#conversation-list');
                 const scrollToBottomBtn = document.querySelector('.scroll-to-bottom:not(.sidebar-scroll)');
                 const messageForm = document.querySelector('#message-form');
                 const messageInput = document.querySelector('.message-input');
                 const errorMessage = document.querySelector('.error-message');
-                const typingIndicator = document.querySelector('.typing-indicator');
-                let lastMessageId = {{ $selectedConversation->messages->max('id') ?? 0 }};
-                let usePolling = false;
-                let pollInterval = null;
 
+                // Scroll to bottom on load
                 chatContent.scrollTo({ top: chatContent.scrollHeight, behavior: 'smooth' });
 
+                // Show/hide scroll-to-bottom button
                 chatContent.addEventListener('scroll', () => {
                     const isNearBottom = chatContent.scrollHeight - chatContent.scrollTop - chatContent.clientHeight < 100;
                     scrollToBottomBtn.style.display = isNearBottom ? 'none' : 'flex';
@@ -245,6 +210,7 @@
                     chatContent.scrollTo({ top: chatContent.scrollHeight, behavior: 'smooth' });
                 });
 
+                // Send message
                 messageForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
                     const message = messageInput.value.trim();
@@ -261,10 +227,9 @@
                             body: JSON.stringify({ message }),
                         });
 
-                        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                        if (!response.ok) throw new Error('Failed to send message');
 
                         const data = await response.json();
-
                         if (data.status === 'success') {
                             messageInput.value = '';
                             errorMessage.style.display = 'none';
@@ -288,7 +253,6 @@
                                 messageDiv.style.opacity = '1';
                             }, 10);
                             chatContent.scrollTo({ top: chatContent.scrollHeight, behavior: 'smooth' });
-                            lastMessageId = Math.max(lastMessageId, data.message.message_id);
 
                             updateConversationList(data.message, data.conversation);
                         } else {
@@ -296,29 +260,9 @@
                             errorMessage.style.display = 'block';
                         }
                     } catch (error) {
-                        console.error('Error sending message:', error);
-                        errorMessage.textContent = 'Failed to send message.';
+                        errorMessage.textContent = 'Failed to send message';
                         errorMessage.style.display = 'block';
                     }
-                });
-
-                let typingTimer;
-                let isTyping = false;
-                messageInput.addEventListener('input', () => {
-                    if (!isTyping) {
-                        isTyping = true;
-                        fetch('{{ route("instructor.messages.typing", $selectedConversation->id) }}', {
-                            method: 'POST',
-                            headers: {
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                'Content-Type': 'application/json',
-                            },
-                        }).catch(error => console.error('Typing request failed:', error));
-                    }
-                    clearTimeout(typingTimer);
-                    typingTimer = setTimeout(() => {
-                        isTyping = false;
-                    }, 2000);
                 });
 
                 function updateConversationList(message, conversation) {
@@ -333,95 +277,23 @@
                     }
                 }
 
-                function startPolling() {
-                    if (pollInterval) return;
-                    console.log('Starting polling');
-                    pollInterval = setInterval(() => {
-                        fetch('{{ route("instructor.messages.fetch", $selectedConversation->id) }}?last_message_id=' + lastMessageId, {
-                            method: 'GET',
-                            headers: { 'Accept': 'application/json' },
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.status === 'success' && data.messages.length > 0) {
-                                data.messages.forEach(message => {
-                                    if (message.message_id <= lastMessageId) return;
-                                    const isCurrentUser = message.sender_id === {{ Auth::guard('instructor')->id() }} && message.sender_type === 'App\\Models\\Instructor';
-                                    if (isCurrentUser) return;
+                // Reverb setup
+                window.Echo = new Echo({
+                    broadcaster: 'reverb',
+                    key: '{{ env('REVERB_APP_KEY') }}',
+                    wsHost: '{{ env('REVERB_HOST') }}',
+                    wsPort: '{{ env('REVERB_PORT', 443) }}',
+                    wssPort: '{{ env('REVERB_PORT', 443) }}',
+                    scheme: '{{ env('REVERB_SCHEME', 'https') }}',
+                    authEndpoint: '/broadcasting/auth',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                });
 
-                                    const messageDiv = document.createElement('div');
-                                    messageDiv.className = 'chat-content-leftside';
-                                    messageDiv.style.opacity = '0';
-                                    messageDiv.innerHTML = `
-                                        <div class="d-flex">
-                                            <img src="${message.sender_photo}" 
-                                                 width="36" height="36" class="rounded-circle user-avatar" alt="${message.sender_name}" 
-                                                 style="object-fit: cover;" loading="lazy" />
-                                            <div class="flex-grow-1 ms-2">
-                                                <p class="mb-0 chat-time" style="font-size: 10px;">${message.sender_name}, Just now</p>
-                                                <p class="chat-left-msg three-d" data-message-id="${message.message_id}">${message.message}</p>
-                                            </div>
-                                        </div>`;
-                                    chatContent.appendChild(messageDiv);
-                                    setTimeout(() => {
-                                        messageDiv.style.transition = 'opacity 0.3s ease';
-                                        messageDiv.style.opacity = '1';
-                                    }, 10);
-
-                                    lastMessageId = Math.max(lastMessageId, message.message_id);
-                                    updateConversationList(message);
-                                });
-
-                                const isNearBottom = chatContent.scrollHeight - chatContent.scrollTop - chatContent.clientHeight < 100;
-                                if (isNearBottom) {
-                                    chatContent.scrollTo({ top: chatContent.scrollHeight, behavior: 'smooth' });
-                                }
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error polling messages:', error);
-                            errorMessage.textContent = 'Failed to fetch new messages.';
-                            errorMessage.style.display = 'block';
-                        });
-
-                        fetch('{{ route("instructor.messages.typing-status", $selectedConversation->id) }}', {
-                            method: 'GET',
-                            headers: { 'Accept': 'application/json' },
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.status === 'success' && data.typing) {
-                                typingIndicator.style.display = 'flex';
-                                typingIndicator.innerHTML = `<span class="dot"></span><span class="dot"></span><span class="dot"></span> ${data.user_name} is typing...`;
-                            } else {
-                                typingIndicator.style.display = 'none';
-                            }
-                        })
-                        .catch(error => console.error('Error polling typing status:', error));
-                    }, 2000);
-                }
-
-                let pusher;
-                try {
-                    pusher = new Pusher('{{ env('PUSHER_APP_KEY') }}', {
-                        cluster: '{{ env('PUSHER_APP_CLUSTER') }}',
-                        encrypted: true,
-                        authEndpoint: '/broadcasting/auth',
-                        auth: {
-                            headers: {
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                            }
-                        }
-                    });
-
-                    const channel = pusher.subscribe(`private-conversation.${{ $selectedConversation->id }}`);
-                    channel.bind('MessageSent', (e) => {
-                        if (usePolling) return;
-                        if (e.message_id <= lastMessageId) return;
-                        lastMessageId = e.message_id;
-
-                        const isCurrentUser = e.sender_id === {{ Auth::guard('instructor')->id() }} && e.sender_type === 'App\\Models\\Instructor';
-                        if (isCurrentUser) return;
+                window.Echo.private(`conversation.{{ $selectedConversation->id }}`)
+                    .listen('MessageSent', (e) => {
+                        if (e.sender_id === {{ Auth::guard('instructor')->id() }} && e.sender_type === 'App\\Models\\Instructor') return;
 
                         const messageDiv = document.createElement('div');
                         messageDiv.className = 'chat-content-leftside';
@@ -458,53 +330,6 @@
                             last_message_at: new Date().toISOString()
                         });
                     });
-
-                    channel.bind('Typing', (e) => {
-                        if (usePolling) return;
-                        if (e.user.id === {{ Auth::guard('instructor')->id() }}) return;
-                        typingIndicator.style.display = 'flex';
-                        typingIndicator.innerHTML = `<span class="dot"></span><span class="dot"></span><span class="dot"></span> ${e.user.name} is typing...`;
-                        setTimeout(() => {
-                            typingIndicator.style.display = 'none';
-                        }, 3000);
-                    });
-
-                    pusher.connection.bind('connected', () => {
-                        console.log('Pusher connected');
-                        errorMessage.style.display = 'none';
-                        if (pollInterval) {
-                            clearInterval(pollInterval);
-                            pollInterval = null;
-                            usePolling = false;
-                        }
-                    });
-
-                    pusher.connection.bind('error', (err) => {
-                        console.warn('Pusher error:', err);
-                        errorMessage.textContent = 'Real-time connection failed. Using fallback.';
-                        errorMessage.style.display = 'block';
-                        usePolling = true;
-                        startPolling();
-                    });
-
-                    pusher.connection.bind('disconnected', () => {
-                        console.warn('Pusher disconnected');
-                        errorMessage.textContent = 'Connection lost. Using fallback.';
-                        errorMessage.style.display = 'block';
-                        usePolling = true;
-                        startPolling();
-                    });
-                } catch (error) {
-                    console.error('Pusher failed:', error);
-                    errorMessage.textContent = 'Real-time connection failed. Using fallback.';
-                    errorMessage.style.display = 'block';
-                    usePolling = true;
-                    startPolling();
-                }
-
-                window.addEventListener('beforeunload', () => {
-                    if (pollInterval) clearInterval(pollInterval);
-                });
             });
         </script>
     @endif

@@ -2,26 +2,22 @@
 
 namespace App\Events;
 
+use App\Models\Message;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
-use Illuminate\Foundation\Events\Dispatchable;
-use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Auth;
 
 class MessageSent implements ShouldBroadcast
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use InteractsWithSockets;
 
     public $message;
-    public $senderName;
-    public $senderPhoto;
 
-    public function __construct($message, $senderName, $senderPhoto)
+    public function __construct(Message $message)
     {
         $this->message = $message;
-        $this->senderName = $senderName;
-        $this->senderPhoto = $senderPhoto;
     }
 
     public function broadcastOn()
@@ -31,20 +27,23 @@ class MessageSent implements ShouldBroadcast
 
     public function broadcastWith()
     {
+        $sender = $this->message->sender_type === 'App\\Models\\User'
+            ? \App\Models\User::find($this->message->sender_id)
+            : \App\Models\Instructor::find($this->message->sender_id);
+
+        $sender_photo = $sender->photo
+            ? asset('upload/' . ($sender instanceof \App\Models\User ? 'user_images' : 'instructor_images') . '/' . $sender->photo)
+            : asset('upload/no_image.jpg');
+
         return [
             'message_id' => $this->message->id,
             'conversation_id' => $this->message->conversation_id,
             'message' => $this->message->message,
             'sender_id' => $this->message->sender_id,
             'sender_type' => $this->message->sender_type,
-            'sender_name' => $this->senderName,
-            'sender_photo' => $this->senderPhoto,
+            'sender_name' => $sender->name,
+            'sender_photo' => $sender_photo,
             'created_at' => $this->message->created_at->toDateTimeString(),
         ];
-    }
-
-    public function broadcastAs()
-    {
-        return 'MessageSent';
     }
 }
