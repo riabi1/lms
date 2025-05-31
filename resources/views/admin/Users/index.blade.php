@@ -103,6 +103,12 @@
 @push('scripts')
     <script>
         $(document).ready(function() {
+            // Destroy existing DataTable instance if it exists
+            if ($.fn.DataTable.isDataTable('#example')) {
+                $('#example').DataTable().destroy();
+            }
+            
+            // Initialize DataTable
             $('#example').DataTable({
                 "paging": true,
                 "searching": true,

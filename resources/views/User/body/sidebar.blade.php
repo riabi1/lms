@@ -53,7 +53,7 @@
         </li>
 
         <li>
-            <a href="{{ route('chat') }}">
+            <a href="{{ route('messages.index') }}">
                 <div class="parent-icon"><i class='bx bx-chat'></i></div>
                 <div class="menu-title">Live Chat</div>
                 <span class="badge badge-info p-1 ml-2">2</span>

@@ -9,12 +9,12 @@
                 <div class="d-flex align-items-center">
                     <div class="chat-user-online">
                         <img src="{{ Auth::guard('instructor')->user()->photo && file_exists(public_path('upload/instructor_images/' . Auth::guard('instructor')->user()->photo)) ? asset('upload/instructor_images/' . Auth::guard('instructor')->user()->photo) : asset('upload/no_image.jpg') }}"
-                             width="100" height="100" class="rounded-circle user-avatar" alt="{{ Auth::guard('instructor')->user()->name }}"
+                             width="100" height="100" class="rounded-circle user-avatar" alt="{{ Auth::guard('instructor')->user()->name ?? 'Instructor' }}"
                              style="object-fit: cover;" loading="lazy" />
                         <span class="online-status"></span>
                     </div>
                     <div class="flex-grow-1 ms-2">
-                        <p class="mb-0 user-name" style="font-size: 14px; font-weight: 600;">{{ Auth::guard('instructor')->user()->name }}</p>
+                        <p class="mb-0 user-name" style="font-size: 14px; font-weight: 600;">{{ Auth::guard('instructor')->user()->name ?? 'Instructor' }}</p>
                     </div>
                 </div>
                 <div class="mb-2"></div>
@@ -33,15 +33,16 @@
                 <div class="tab-content">
                     <div class="tab-pane fade show active">
                         <div class="chat-list">
-                            <div class="list-group list-group-flush">
+                            <div class="list-group list-group-flush" id="conversation-list">
                                 @forelse($conversations as $conversation)
-                                    <a href="{{ route('instructor.messages.show', $conversation->id) }}" class="list-group-item conversation-item {{ $conversation->id == $selectedConversation?->id ? 'active' : '' }}">
+                                    <a href="{{ route('instructor.messages.show', $conversation->id) }}" class="list-group-item conversation-item {{ $conversation->id == $selectedConversation?->id ? 'active' : '' }}"
+                                       data-conversation-id="{{ $conversation->id }}">
                                         <div class="d-flex align-items-center">
                                             <div class="chat-user-online">
-                                                <img src="{{ $conversation->user->photo && \Storage::disk('public')->exists('upload/user_images/' . $conversation->user->photo) ? asset('storage/upload/user_images/' . $conversation->user->photo) : asset('upload/no_image.jpg') }}"
+                                                <img src="{{ $conversation->user->photo && file_exists(public_path('upload/user_images/' . $conversation->user->photo)) ? asset('upload/user_images/' . $conversation->user->photo) : asset('upload/no_image.jpg') }}"
                                                      width="36" height="36" class="rounded-circle user-avatar" alt="{{ $conversation->user->name ?? 'Utilisateur inconnu' }}"
                                                      style="object-fit: cover;" loading="lazy" />
-                                                <span class="online-status {{ $conversation->user->is_online ? 'online' : 'offline' }}"></span>
+                                                <span>online</span>
                                             </div>
                                             <div class="flex-grow-1 ms-2">
                                                 <h6 class="mb-0 chat-title" style="font-size: 13px;">{{ $conversation->user->name ?? 'Utilisateur inconnu' }}</h6>
@@ -66,19 +67,16 @@
             <div class="chat-header d-flex align-items-center">
                 <div class="chat-toggle-btn"><i class='bx bx-menu-alt-left'></i></div>
                 <div class="d-flex align-items-center">
-                    <img src="{{ $selectedConversation->user->photo && \Storage::disk('public')->exists('upload/user_images/' . $selectedConversation->user->photo) ? asset('storage/upload/user_images/' . $selectedConversation->user->photo) : asset('upload/no_image.jpg') }}"
+                    <img src="{{ $selectedConversation->user->photo && file_exists(public_path('upload/user_images/' . $selectedConversation->user->photo)) ? asset('upload/user_images/' . $selectedConversation->user->photo) : asset('upload/no_image.jpg') }}"
                          width="40" height="40" class="rounded-circle user-avatar" alt="{{ $selectedConversation->user->name ?? 'Utilisateur inconnu' }}"
                          style="object-fit: cover;" loading="lazy" />
                     <div class="ms-2">
                         <h4 class="mb-0 chat-user-name" style="font-size: 15px;">{{ $selectedConversation->user->name ?? 'Utilisateur inconnu' }}</h4>
-                        <small class="chat-status" style="font-size: 11px;">{{ $selectedConversation->user->is_online ? 'Active Now' : 'Offline' }}</small>
+                        <small class="chat-status" style="font-size: 11px;">online</small>
                     </div>
                 </div>
             </div>
-            <div class="chat-content">
-                <div class="typing-indicator" style="display: none;">
-                    <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-                </div>
+            <div class="chat-content" id="chat-content">
                 @forelse($selectedConversation->messages as $message)
                     @if($message->sender_id == Auth::guard('instructor')->id() && $message->sender_type == 'App\\Models\\Instructor')
                         <div class="chat-content-rightside">
@@ -88,14 +86,14 @@
                                     <p class="chat-right-msg three-d" data-message-id="{{ $message->id }}">{{ $message->message }}</p>
                                 </div>
                                 <img src="{{ Auth::guard('instructor')->user()->photo && file_exists(public_path('upload/instructor_images/' . Auth::guard('instructor')->user()->photo)) ? asset('upload/instructor_images/' . Auth::guard('instructor')->user()->photo) : asset('upload/no_image.jpg') }}"
-                                     width="36" height="36" class="rounded-circle user-avatar" alt="{{ Auth::guard('instructor')->user()->name }}"
+                                     width="36" height="36" class="rounded-circle user-avatar" alt="{{ Auth::guard('instructor')->user()->name ?? 'Instructor' }}"
                                      style="object-fit: cover;" loading="lazy" />
                             </div>
                         </div>
                     @else
                         <div class="chat-content-leftside">
                             <div class="d-flex">
-                                <img src="{{ $selectedConversation->user->photo && \Storage::disk('public')->exists('upload/user_images/' . $selectedConversation->user->photo) ? asset('storage/upload/user_images/' . $selectedConversation->user->photo) : asset('upload/no_image.jpg') }}"
+                                <img src="{{ $selectedConversation->user->photo && file_exists(public_path('upload/user_images/' . $selectedConversation->user->photo)) ? asset('upload/user_images/' . $selectedConversation->user->photo) : asset('upload/no_image.jpg') }}"
                                      width="36" height="36" class="rounded-circle user-avatar" alt="{{ $selectedConversation->user->name ?? 'Utilisateur inconnu' }}"
                                      style="object-fit: cover;" loading="lazy" />
                                 <div class="flex-grow-1 ms-2">
@@ -112,7 +110,7 @@
             </div>
             <div class="chat-footer d-flex align-items-center">
                 <div class="flex-grow-1 pe-2">
-                    <form id="message-form" action="{{ route('instructor.messages.send', $selectedConversation->id) }}" method="POST" aria-label="Send message">
+                    <form id="message-form" aria-label="Send message">
                         @csrf
                         <div class="input-group input-group-sm three-d">
                             <span class="input-group-text"><i class='bx bx-smile'></i></span>
@@ -150,6 +148,7 @@
             overflow-y: auto;
             padding: 15px;
             max-height: calc(100vh - 240px);
+            position: relative;
         }
         .scroll-to-bottom {
             position: sticky;
@@ -166,6 +165,7 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
+            z-index: 10;
         }
         .chat-right-msg {
             background: #6992f0;
@@ -183,48 +183,24 @@
             max-width: 70%;
             word-wrap: break-word;
         }
-        .typing-indicator {
-            padding: 10px;
-            font-size: 12px;
-            color: #6B7280;
-        }
-        .typing-indicator .dot {
-            display: inline-block;
-            width: 6px;
-            height: 6px;
-            margin: 0 2px;
-            background: #6B7280;
-            border-radius: 50%;
-            animation: dot-flashing 1s infinite alternate;
-        }
-        .typing-indicator .dot:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-        .typing-indicator .dot:nth-child(3) {
-            animation-delay: 0.4s;
-        }
-        @keyframes dot-flashing {
-            0% { opacity: 0.2; }
-            100% { opacity: 1; }
-        }
     </style>
 @endpush
 
 @push('scripts')
     @if($selectedConversation)
-        <script src="{{ asset('js/echo.js') }}"></script>
         <script>
-            console.log('Initializing Echo for conversation {{ $selectedConversation->id }}');
             document.addEventListener('DOMContentLoaded', () => {
-                const chatContent = document.querySelector('.chat-content');
-                const scrollToBottomBtn = document.querySelector('.scroll-to-bottom');
+                const chatContent = document.querySelector('#chat-content');
+                const conversationList = document.querySelector('#conversation-list');
+                const scrollToBottomBtn = document.querySelector('.scroll-to-bottom:not(.sidebar-scroll)');
                 const messageForm = document.querySelector('#message-form');
                 const messageInput = document.querySelector('.message-input');
                 const errorMessage = document.querySelector('.error-message');
-                let lastMessageId = {{ $selectedConversation->messages->max('id') ?? 0 }};
 
+                // Scroll to bottom on load
                 chatContent.scrollTo({ top: chatContent.scrollHeight, behavior: 'smooth' });
 
+                // Show/hide scroll-to-bottom button
                 chatContent.addEventListener('scroll', () => {
                     const isNearBottom = chatContent.scrollHeight - chatContent.scrollTop - chatContent.clientHeight < 100;
                     scrollToBottomBtn.style.display = isNearBottom ? 'none' : 'flex';
@@ -234,78 +210,96 @@
                     chatContent.scrollTo({ top: chatContent.scrollHeight, behavior: 'smooth' });
                 });
 
-                messageForm.addEventListener('submit', (e) => {
+                // Send message
+                messageForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
                     const message = messageInput.value.trim();
                     if (!message) return;
 
-                    fetch('{{ route("instructor.messages.send", $selectedConversation->id) }}', {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json',
-                        },
-                        body: JSON.stringify({ message }),
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.status === 'success') {
-                            messageInput.value = '';
-                            errorMessage.style.display = 'none';
-                            errorMessage.textContent = '';
-                        } else {
-                            errorMessage.textContent = data.error || 'Failed to send message';
-                            errorMessage.style.display = 'block';
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error sending message:', error);
-                        errorMessage.textContent = 'An error occurred';
-                        errorMessage.style.display = 'block';
-                    });
-                });
-
-                let typingTimer;
-                let isTyping = false;
-                messageInput.addEventListener('input', () => {
-                    if (!isTyping) {
-                        isTyping = true;
-                        fetch('/messages/{{ $selectedConversation->id }}/typing', {
+                    try {
+                        const response = await fetch('{{ route("instructor.messages.send", $selectedConversation->id) }}', {
                             method: 'POST',
                             headers: {
                                 'X-CSRF-TOKEN': '{{ csrf_token() }}',
                                 'Content-Type': 'application/json',
+                                'Accept': 'application/json',
                             },
-                        }).catch(error => console.error('Typing request failed:', error));
+                            body: JSON.stringify({ message }),
+                        });
+
+                        if (!response.ok) throw new Error('Failed to send message');
+
+                        const data = await response.json();
+                        if (data.status === 'success') {
+                            messageInput.value = '';
+                            errorMessage.style.display = 'none';
+
+                            const messageDiv = document.createElement('div');
+                            messageDiv.className = 'chat-content-rightside';
+                            messageDiv.style.opacity = '0';
+                            messageDiv.innerHTML = `
+                                <div class="d-flex">
+                                    <div class="flex-grow-1 me-2">
+                                        <p class="mb-0 chat-time text-end" style="font-size: 10px;">Just now</p>
+                                        <p class="chat-right-msg three-d" data-message-id="${data.message.message_id}">${data.message.message}</p>
+                                    </div>
+                                    <img src="${data.message.sender_photo}" 
+                                         width="36" height="36" class="rounded-circle user-avatar" alt="${data.message.sender_name}" 
+                                         style="object-fit: cover;" loading="lazy" />
+                                </div>`;
+                            chatContent.appendChild(messageDiv);
+                            setTimeout(() => {
+                                messageDiv.style.transition = 'opacity 0.3s ease';
+                                messageDiv.style.opacity = '1';
+                            }, 10);
+                            chatContent.scrollTo({ top: chatContent.scrollHeight, behavior: 'smooth' });
+
+                            updateConversationList(data.message, data.conversation);
+                        } else {
+                            errorMessage.textContent = data.error || 'Failed to send message';
+                            errorMessage.style.display = 'block';
+                        }
+                    } catch (error) {
+                        errorMessage.textContent = 'Failed to send message';
+                        errorMessage.style.display = 'block';
                     }
-                    clearTimeout(typingTimer);
-                    typingTimer = setTimeout(() => {
-                        isTyping = false;
-                    }, 2000);
                 });
 
-                Echo.private(`conversation.{{ $selectedConversation->id }}`)
-                    .listen('.MessageSent', (e) => {
-                        console.log('MessageSent event received:', e);
-                        if (e.message_id <= lastMessageId) return;
-                        lastMessageId = e.message_id;
+                function updateConversationList(message, conversation) {
+                    let conversationItem = document.querySelector(`.conversation-item[data-conversation-id="${message.conversation_id}"]`);
+                    if (conversationItem) {
+                        const chatMsg = conversationItem.querySelector('.chat-msg');
+                        const chatTime = conversationItem.querySelector('.chat-time');
+                        chatMsg.textContent = message.message.substring(0, 20) + (message.message.length > 20 ? '...' : '');
+                        chatTime.textContent = 'Just now';
+                        conversationItem.classList.add('active');
+                        conversationList.prepend(conversationItem);
+                    }
+                }
 
-                        const isCurrentUser = e.sender_id === {{ Auth::guard('instructor')->id() }} && e.sender_type === 'App\\Models\\Instructor';
+                // Reverb setup
+                window.Echo = new Echo({
+                    broadcaster: 'reverb',
+                    key: '{{ env('REVERB_APP_KEY') }}',
+                    wsHost: '{{ env('REVERB_HOST') }}',
+                    wsPort: '{{ env('REVERB_PORT', 443) }}',
+                    wssPort: '{{ env('REVERB_PORT', 443) }}',
+                    scheme: '{{ env('REVERB_SCHEME', 'https') }}',
+                    authEndpoint: '/broadcasting/auth',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                });
+
+                window.Echo.private(`conversation.{{ $selectedConversation->id }}`)
+                    .listen('MessageSent', (e) => {
+                        if (e.sender_id === {{ Auth::guard('instructor')->id() }} && e.sender_type === 'App\\Models\\Instructor') return;
+
                         const messageDiv = document.createElement('div');
-                        messageDiv.className = isCurrentUser ? 'chat-content-rightside' : 'chat-content-leftside';
+                        messageDiv.className = 'chat-content-leftside';
                         messageDiv.style.opacity = '0';
-                        messageDiv.innerHTML = isCurrentUser ?
-                            `<div class="d-flex">
-                                <div class="flex-grow-1 me-2">
-                                    <p class="mb-0 chat-time text-end" style="font-size: 10px;">Just now</p>
-                                    <p class="chat-right-msg three-d" data-message-id="${e.message_id}">${e.message}</p>
-                                </div>
-                                <img src="${e.sender_photo}" 
-                                     width="36" height="36" class="rounded-circle user-avatar" alt="${e.sender_name}" 
-                                     style="object-fit: cover;" loading="lazy" />
-                            </div>` :
-                            `<div class="d-flex">
+                        messageDiv.innerHTML = `
+                            <div class="d-flex">
                                 <img src="${e.sender_photo}" 
                                      width="36" height="36" class="rounded-circle user-avatar" alt="${e.sender_name}" 
                                      style="object-fit: cover;" loading="lazy" />
@@ -324,16 +318,17 @@
                         if (isNearBottom) {
                             chatContent.scrollTo({ top: chatContent.scrollHeight, behavior: 'smooth' });
                         }
-                    })
-                    .listen('.Typing', (e) => {
-                        console.log('Typing event received:', e);
-                        if (e.user.id === {{ Auth::guard('instructor')->id() }}) return;
-                        const typingIndicator = document.querySelector('.typing-indicator');
-                        typingIndicator.style.display = 'flex';
-                        typingIndicator.innerHTML = `<span class="dot"></span><span class="dot"></span><span class="dot"></span> ${e.user.name} is typing...`;
-                        setTimeout(() => {
-                            typingIndicator.style.display = 'none';
-                        }, 3000);
+
+                        updateConversationList({
+                            conversation_id: {{ $selectedConversation->id }},
+                            message: e.message,
+                            message_id: e.message_id,
+                            sender_name: e.sender_name,
+                            sender_photo: e.sender_photo
+                        }, {
+                            id: {{ $selectedConversation->id }},
+                            last_message_at: new Date().toISOString()
+                        });
                     });
             });
         </script>

@@ -1,35 +1,18 @@
 {
     "version": 2,
     "framework": null,
-    "builds": [
-        {
-            "src": "/api/index.php",
-            "use": "vercel-php@0.7.1"
-        },
-        {
-            "src": "/public/**",
-            "use": "@vercel/static"
-        },
-        {
-            "src": "/public/build/assets/**",
-            "use": "@vercel/static"
-        }
-    ],
+    "functions": {
+        "api/index.php": { "runtime": "vercel-php@0.7.1" }
+    },
     "routes": [
-        {
-            "src": "/build/assets/(.*)",
-            "dest": "/public/build/assets/$1"
-        },
-        {
-            "src": "/(.*)",
-            "dest": "/api/index.php"
-        }
+        { "src": "/build/(.*)", "dest": "/build/$1" },
+        { "src": "/(.*)", "dest": "/api/index.php" }
     ],
     "outputDirectory": "public",
     "env": {
         "APP_ENV": "production",
         "APP_DEBUG": "false",
-        "APP_URL": "https://your-project-domain.vercel.app",
+        "APP_URL": "https://your-vercel-domain.vercel.app",
         "APP_CONFIG_CACHE": "/tmp/config.php",
         "APP_EVENTS_CACHE": "/tmp/events.php",
         "APP_PACKAGES_CACHE": "/tmp/packages.php",

@@ -16,9 +16,10 @@
                     <div class="card-body">
                         <div class="media media-card align-items-center pb-3">
                             <div class="media-img avatar-md">
-                                <img src="{{ $review->user && $review->user->photo ? asset('storage/upload/user_images/' . $review->user->photo) : asset('images/small-avatar-1.jpg') }}" 
-                                     alt="Testimonial avatar" 
-                                     class="rounded-full">
+                                <img src="{{ $review->user && $review->user->photo ? asset('upload/user_images/' . $review->user->photo) : asset('upload/no_image.jpg') }}" 
+                                     alt="{{ $review->user->name ?? 'Anonymous' }}'s Profile" 
+                                     class="rounded-circle shadow-sm"
+                                     style="width: 60px; height: 60px; object-fit: cover;">
                             </div>
                             <div class="media-body">
                                 <h5><i class="la la-user mr-1"></i>{{ $review->user->name ?? 'Anonymous' }}</h5>
@@ -65,9 +66,11 @@
     height: 100%; /* Ensure card-body takes full height */
 }
 .testimonial-area .media-img img { 
-    width: 40px; 
-    height: 40px; 
+    width: 60px; 
+    height: 60px; 
     border-radius: 50%; 
+    object-fit: cover; /* Ensure image fits well */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Match shadow-sm */
 }
 .testimonial-area .media-body h5 { 
     font-size: 16px; 
@@ -105,8 +108,8 @@
         height: 220px; /* Slightly smaller height for mobile */
     }
     .testimonial-area .media-img img { 
-        width: 35px; 
-        height: 35px; 
+        width: 50px; 
+        height: 50px; 
     }
     .testimonial-area .card-text {
         -webkit-line-clamp: 3; /* Reduce to 3 lines on mobile */

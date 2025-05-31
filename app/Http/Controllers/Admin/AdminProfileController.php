@@ -23,21 +23,22 @@ class AdminProfileController extends Controller
                 'email' => 'required|string|email|max:255|unique:admins,email,' . Auth::guard('admin')->id(),
                 'phone' => 'nullable|string|max:20',
                 'address' => 'nullable|string|max:255',
-                'photo' => 'nullable|image|max:5120|mimes:jpg,png',
+                'photo' => 'nullable|image|max:5120|mimes:jpeg,png,jpg',
+                'cv' => 'nullable|file|max:2048|mimes:pdf',
                 'new_password' => 'nullable|string|min:8|confirmed',
             ]);
 
             $admin = Auth::guard('admin')->user();
 
-            // Mise à jour des informations de base
+            // Update basic information
             $admin->name = $request->name;
             $admin->email = $request->email;
             $admin->phone = $request->phone;
             $admin->address = $request->address;
 
-            // Gestion de la photo
+            // Handle photo upload
             if ($request->hasFile('photo')) {
-                // Supprimer l'ancienne photo si elle existe
+                // Delete old photo if it exists
                 if ($admin->photo && file_exists(public_path('upload/admin_images/' . $admin->photo))) {
                     unlink(public_path('upload/admin_images/' . $admin->photo));
                 }
@@ -47,7 +48,19 @@ class AdminProfileController extends Controller
                 $admin->photo = $filename;
             }
 
-            // Gestion du mot de passe
+            // Handle CV upload
+            if ($request->hasFile('cv')) {
+                // Delete old CV if it exists
+                if ($admin->cv && file_exists(public_path('upload/admin_cvs/' . $admin->cv))) {
+                    unlink(public_path('upload/admin_cvs/' . $admin->cv));
+                }
+                $cvFile = $request->file('cv');
+                $cvFilename = date('YmdHi') . '_cv_' . $cvFile->getClientOriginalName();
+                $cvFile->move(public_path('upload/admin_cvs'), $cvFilename);
+                $admin->cv = $cvFilename;
+            }
+
+            // Handle password
             if ($request->filled('new_password')) {
                 $admin->password = Hash::make($request->new_password);
             }

@@ -36,7 +36,7 @@ class Review extends Model
         });
     }
 
-    // Relation polymorphique avec l'entité évaluée (ex. Course)
+    // Relation polymorphique avec l'entité évaluée (Course)
     public function reviewable()
     {
         return $this->morphTo();

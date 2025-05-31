@@ -4,55 +4,84 @@ namespace App\Http\Controllers;
 
 use App\Models\Conversation;
 use App\Models\Message;
-use App\Notifications\NewMessageNotification;
+use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Notification;
-use App\Events\MessageSent;
 
 class MessageController extends Controller
 {
-    public function __construct()
+    public function index(Request $request)
     {
-        $this->middleware('auth:web,instructor');
-    }
+        $guard = Auth::guard('instructor')->check() ? 'instructor' : 'web';
+        $user = Auth::guard($guard)->user();
 
-    public function index()
-    {
-        $conversations = Conversation::where('user_id', Auth::id())
-            ->orWhere('instructor_id', Auth::id())
+        // Create conversations for paid orders
+        $this->ensureConversations($user, $guard);
+
+        // Fetch all conversations for the user or instructor
+        $conversations = Conversation::where('user_id', $user->id)
+            ->orWhere('instructor_id', $user->id)
             ->with(['user', 'instructor', 'messages' => function ($query) {
-                $query->orderBy('created_at', 'asc');
+                $query->orderBy('created_at', 'desc')->take(1);
             }])
             ->orderBy('last_message_at', 'desc')
             ->get();
 
-        $selectedConversation = $conversations->first();
+        $view = $guard === 'instructor' ? 'instructor.chat' : 'User.chat';
 
-        $view = Auth::guard('web')->check() ? 'User.chat' : 'instructor.chat';
-
-        return view($view, compact('conversations', 'selectedConversation'));
+        return view($view, [
+            'conversations' => $conversations,
+            'selectedConversation' => null,
+        ]);
     }
 
-    public function show(Conversation $conversation)
+    protected function ensureConversations($user, $guard)
     {
-        if ($conversation->user_id !== Auth::id() && $conversation->instructor_id !== Auth::id()) {
-            abort(403, 'Unauthorized');
+        // Fetch paid orders for the user or instructor
+        $query = Order::where('payment_status', 'paid');
+        $query->where($guard === 'instructor' ? 'instructor_id' : 'user_id', $user->id);
+        $orders = $query->get();
+
+        foreach ($orders as $order) {
+            // Check if a conversation exists
+            $exists = Conversation::where('user_id', $order->user_id)
+                ->where('instructor_id', $order->instructor_id)
+                ->exists();
+
+            if (!$exists) {
+                Conversation::create([
+                    'user_id' => $order->user_id,
+                    'instructor_id' => $order->instructor_id,
+                    'last_message_at' => now(),
+                ]);
+            }
+        }
+    }
+
+    public function show(Request $request, Conversation $conversation)
+    {
+        $guard = Auth::guard('instructor')->check() ? 'instructor' : 'web';
+        $user = Auth::guard($guard)->user();
+
+        // Ensure the user or instructor is part of the conversation
+        if ($conversation->user_id !== $user->id && $conversation->instructor_id !== $user->id) {
+            return redirect()->route($guard === 'instructor' ? 'instructor.messages.index' : 'messages.index')
+                ->with('error', 'Unauthorized access.');
         }
 
-        $conversations = Conversation::where('user_id', Auth::id())
-            ->orWhere('instructor_id', Auth::id())
+        $conversations = Conversation::where('user_id', $user->id)
+            ->orWhere('instructor_id', $user->id)
             ->with(['user', 'instructor', 'messages' => function ($query) {
-                $query->orderBy('created_at', 'asc');
+                $query->orderBy('created_at', 'desc')->take(1);
             }])
             ->orderBy('last_message_at', 'desc')
             ->get();
 
         $conversation->load(['messages' => function ($query) {
             $query->orderBy('created_at', 'asc');
-        }]);
+        }, 'user', 'instructor']);
 
-        $view = Auth::guard('web')->check() ? 'User.chat' : 'instructor.chat';
+        $view = $guard === 'instructor' ? 'instructor.chat' : 'User.chat';
 
         return view($view, [
             'conversations' => $conversations,
@@ -62,36 +91,28 @@ class MessageController extends Controller
 
     public function send(Request $request, Conversation $conversation)
     {
-        $request->validate([
-            'message' => 'required|string|max:1000',
-        ]);
-
         if ($conversation->user_id !== Auth::id() && $conversation->instructor_id !== Auth::id()) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
+        $request->validate(['message' => 'required|string|max:1000']);
+
         $message = Message::create([
             'conversation_id' => $conversation->id,
             'sender_id' => Auth::id(),
-            'sender_type' => Auth::guard('web')->check() ? 'App\\Models\\User' : 'App\\Models\\Instructor',
-            'message' => $request->message,
+            'sender_type' => Auth::guard('instructor')->check() ? 'App\\Models\\Instructor' : 'App\\Models\\User',
+            'message' => $request->input('message'),
         ]);
 
         $conversation->update(['last_message_at' => now()]);
 
-        broadcast(new MessageSent($message));
+        // Broadcast the message using Reverb
+        broadcast(new \App\Events\MessageSent($message))->toOthers();
 
-        if (Auth::guard('web')->check()) {
-            $instructor = $conversation->instructor;
-            if ($instructor) {
-                Notification::send($instructor, new NewMessageNotification($conversation, $message, Auth::user()));
-            }
-        } elseif (Auth::guard('instructor')->check()) {
-            $user = $conversation->user;
-            if ($user) {
-                Notification::send($user, new NewMessageNotification($conversation, $message, Auth::guard('instructor')->user()));
-            }
-        }
+        $sender = Auth::user();
+        $sender_photo = $sender->photo
+            ? asset('upload/' . ($sender instanceof \App\Models\User ? 'user_images' : 'instructor_images') . '/' . $sender->photo)
+            : asset('upload/no_image.jpg');
 
         return response()->json([
             'status' => 'success',
@@ -101,35 +122,14 @@ class MessageController extends Controller
                 'message' => $message->message,
                 'sender_id' => $message->sender_id,
                 'sender_type' => $message->sender_type,
+                'sender_name' => $sender->name,
+                'sender_photo' => $sender_photo,
                 'created_at' => $message->created_at->toDateTimeString(),
             ],
+            'conversation' => [
+                'id' => $conversation->id,
+                'last_message_at' => $conversation->last_message_at->toDateTimeString(),
+            ],
         ]);
-    }
-
-    public function typing(Request $request, Conversation $conversation)
-    {
-        if ($conversation->user_id !== Auth::id() && $conversation->instructor_id !== Auth::id()) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
-
-        broadcast(new \App\Events\Typing(Auth::user(), $conversation->id))->toOthers();
-
-  return response()->json(['status' => 'success']);
-    }
-
-    public function markNotificationAsRead($notificationId)
-    {
-        $user = Auth::guard('instructor')->check() ? Auth::guard('instructor')->user() : Auth::guard('web')->user();
-        $notification = $user->notifications()->findOrFail($notificationId);
-
-        $notification->markAsRead();
-
-        if ($notification->data['type'] === 'message' && !empty($notification->data['conversation_id'])) {
-            $route = Auth::guard('instructor')->check() ? 'instructor.messages.show' : 'messages.show';
-            return redirect()->route($route, $notification->data['conversation_id']);
-        }
-
-        $route = Auth::guard('instructor')->check() ? 'instructor.dashboard' : 'user.dashboard';
-        return redirect()->route($route);
     }
 }

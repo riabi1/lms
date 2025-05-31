@@ -69,16 +69,15 @@ Route::name('')->group(function () {
   Route::get('/user/dashboard/wishlist-data', [UserDashboardController::class, 'getWishlistData'])->name('user.wishlistdata');
 
   Route::middleware('auth:web')->group(function () {
-        
+ 
     Route::get('/user/enrollmenttrends', [UserDashboardController::class, 'getEnrollmentTrendsData'])->name('enrollmenttrends');
     Route::get('/completiondata', [UserDashboardController::class, 'getCompletionData'])->name('completiondata');
 Route::get('/user/quizperformance', [UserDashboardController::class, 'getQuizPerformanceData'])->name('quizperformance');
 Route::get('/user/wishlistdata', [UserDashboardController::class, 'getWishlistData'])->name('wishlistdata');
 Route::get('/user/categoryengagement', [UserDashboardController::class, 'getCategoryEngagementData'])->name('categoryengagement');
+    
+    
 Route::post('/chat', [ChatController::class, 'handleChat'])->name('user.chat');
-    
-    
-    
     
     // Cart Routes
         Route::post('/cart/sync', [CartController::class, 'syncTempCart'])->name('cart.sync');
@@ -140,10 +139,13 @@ Route::post('/chat', [ChatController::class, 'handleChat'])->name('user.chat');
         Route::post('/blog/{slug}/comments/{commentId}/reply', [BlogArticleController::class, 'replyComment'])->name('comments.reply');
 
         // Chat Routes for User
-        Route::get('/chat', [MessageController::class, 'index'])->name('chat');
+        Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
         Route::get('/messages/{conversation}', [MessageController::class, 'show'])->name('messages.show');
-        Route::post('/messages/{conversation}/send', [MessageController::class, 'send'])->name('messages.send');
+        Route::get('/messages/{conversation}/fetch', [MessageController::class, 'fetchNewMessages'])->name('messages.fetch');
+        Route::get('/messages/{conversation}/typing-status', [MessageController::class, 'checkTypingStatus'])->name('messages.typing-status');
         Route::post('/messages/{conversation}/typing', [MessageController::class, 'typing'])->name('messages.typing');
+        Route::post('/messages/{conversation}/send', [MessageController::class, 'send'])->name('messages.send');
+    
 
         // Report Routes
         Route::get('/reports', [ReportController::class, 'index'])->name('report.index');
@@ -226,8 +228,7 @@ Route::prefix('instructor')->name('instructor.')->group(function () {
     require base_path('routes/auth/instructor.php');
 
   Route::get('/dashboard', [InstructorDashboardController::class, 'index'])->name('dashboard');
-  
-
+ 
   Route::middleware(['auth:instructor', 'verified'])->group(function () {
     Route::post('/instructor/chat', [InstructorChatController::class, 'handleChat'])->name('chat.handle');
         Route::resource('courses', CourseController::class)->names('courses');
@@ -254,10 +255,13 @@ Route::prefix('instructor')->name('instructor.')->group(function () {
         Route::post('/instructor/comments/{comment}/reply', [BlogController::class, 'replyComment'])->name('comments.reply');
         
         // Chat Routes for Instructor
-        Route::get('/chat', [MessageController::class, 'index'])->name('chat');
+        Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
         Route::get('/messages/{conversation}', [MessageController::class, 'show'])->name('messages.show');
-        Route::post('/messages/{conversation}/send', [MessageController::class, 'send'])->name('messages.send');
+        Route::get('/messages/{conversation}/fetch', [MessageController::class, 'fetchNewMessages'])->name('messages.fetch');
+        Route::get('/messages/{conversation}/typing-status', [MessageController::class, 'checkTypingStatus'])->name('messages.typing-status');
         Route::post('/messages/{conversation}/typing', [MessageController::class, 'typing'])->name('messages.typing');
+        Route::post('/messages/{conversation}/send', [MessageController::class, 'send'])->name('messages.send');
+    
 
         Route::get('/earnings', [InstructorEarningsController::class, 'index'])->name('earnings');
 
