@@ -140,29 +140,9 @@
       </ul>
     </li>
 
-    <li class="menu-label">Role & Permission</li>
-    <li>
-      <a class="has-arrow" href="javascript:;">
-        <div class="parent-icon"><i class='bx bx-shield'></i></div>
-        <div class="menu-title">Role & Permission</div>
-      </a>
-      <ul class="mm-collapse">
-        <li><a href="#"><i class='bx bx-radio-circle'></i>All Permission</a></li>
-        <li><a href="#"><i class='bx bx-radio-circle'></i>All Roles</a></li>
-        <li><a href="#"><i class='bx bx-radio-circle'></i>Role In Permission</a></li>
-        <li><a href="#"><i class='bx bx-radio-circle'></i>All Role In Permission</a></li>
-      </ul>
-    </li>
 
-    <li>
-      <a class="has-arrow" href="javascript:;">
-        <div class="parent-icon"><i class='bx bx-user-plus'></i></div>
-        <div class="menu-title">Manage Admin</div>
-      </a>
-      <ul class="mm-collapse">
-        <li><a href="#"><i class='bx bx-radio-circle'></i>All Admin</a></li>
-      </ul>
-    </li>
+
+
   </ul>
   <!--end navigation-->
 </div>

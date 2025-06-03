@@ -66,15 +66,6 @@
                         </div>
 
                         <div class="form-group mt-3">
-                            <label for="external_link" class="form-label">Main External Video URL</label>
-                            <input type="url" name="external_link" class="form-control @error('external_link') is-invalid @enderror" 
-                                   id="external_link" value="{{ old('external_link', $lecture->external_link) }}" placeholder="https://youtube.com/watch?v=example">
-                            @error('external_link')
-                                <span class="invalid-feedback">{{ $message }}</span>
-                            @enderror
-                        </div>
-
-                        <div class="form-group mt-3">
                             <label for="video" class="form-label">Upload Main Video (MP4/WebM, max 100MB)</label>
                             <input type="file" name="video" class="form-control @error('video') is-invalid @enderror" 
                                    id="video" accept="video/mp4,video/webm">

@@ -70,7 +70,7 @@
             <!-- Additional Resources -->
             <div class="mb-4">
                 <h6>Additional Resources</h6>
-                @if ($lecture->additional_video || $lecture->file_path || $lecture->external_link || $lecture->resources_description)
+                @if ($lecture->additional_video || $lecture->file_path ||$lecture->resources_description)
                     <div class="border p-3 bg-light rounded">
                         @if ($lecture->additional_video)
                             <p><strong>Additional Video:</strong></p>
@@ -82,9 +82,7 @@
                         @if ($lecture->file_path)
                             <p><strong>Resource File:</strong> <a href="{{ asset('upload/lectures/files/' . $lecture->file_path) }}" target="_blank" rel="noopener noreferrer">Download File</a></p>
                         @endif
-                        @if ($lecture->external_link)
-                            <p><strong>External Link:</strong> <a href="{{ $lecture->external_link }}" target="_blank" rel="noopener noreferrer">{{ $lecture->external_link }}</a></p>
-                        @endif
+
                         @if ($lecture->resources_description)
                             <p><strong>Resources Description:</strong></p>
                             <div>{!! nl2br(e($lecture->resources_description)) !!}</div>
