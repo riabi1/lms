@@ -5,11 +5,59 @@ namespace App\Http\Controllers;
 use App\Events\MessageSent;
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class MessageController extends Controller
 {
+
+  public function index(Request $request)
+  {
+      $guard = Auth::guard('instructor')->check() ? 'instructor' : 'web';
+      $user = Auth::guard($guard)->user();
+
+      // Create conversations for paid orders
+      $this->ensureConversations($user, $guard);
+
+      // Fetch all conversations for the user or instructor
+      $conversations = Conversation::where('user_id', $user->id)
+          ->orWhere('instructor_id', $user->id)
+          ->with(['user', 'instructor', 'messages' => function ($query) {
+              $query->orderBy('created_at', 'desc')->take(1);
+          }])
+          ->orderBy('last_message_at', 'desc')
+          ->get();
+
+      $view = $guard === 'instructor' ? 'instructor.chat' : 'User.chat';
+
+      return view($view, [
+          'conversations' => $conversations,
+          'selectedConversation' => null,
+      ]);
+  }
+  protected function ensureConversations($user, $guard)
+  {
+      // Fetch paid orders for the user or instructor
+      $query = Order::where('payment_status', 'paid');
+      $query->where($guard === 'instructor' ? 'instructor_id' : 'user_id', $user->id);
+      $orders = $query->get();
+
+      foreach ($orders as $order) {
+          // Check if a conversation exists
+          $exists = Conversation::where('user_id', $order->user_id)
+              ->where('instructor_id', $order->instructor_id)
+              ->exists();
+
+          if (!$exists) {
+              Conversation::create([
+                  'user_id' => $order->user_id,
+                  'instructor_id' => $order->instructor_id,
+                  'last_message_at' => now(),
+              ]);
+          }
+      }
+  }
     public function show($conversationId)
     {
         $conversation = Conversation::with('messages', 'instructor', 'user')->findOrFail($conversationId);
