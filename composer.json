@@ -10,7 +10,7 @@
         "binafy/laravel-cart": "^1.2",
         "consoletvs/charts": "^6.8",
         "darryldecode/cart": "^4.2",
-        "guzzlehttp/guzzle": "^7.2",
+        "guzzlehttp/guzzle": "^7.9",
         "intervention/image": "^3.11",
         "laravel/framework": "^10.0",
         "laravel/reverb": "^1.5",

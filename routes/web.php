@@ -141,10 +141,8 @@ Route::post('/chat', [ChatController::class, 'handleChat'])->name('user.chat');
         // Chat Routes for User
         Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
         Route::get('/messages/{conversation}', [MessageController::class, 'show'])->name('messages.show');
-        Route::get('/messages/{conversation}/fetch', [MessageController::class, 'fetchNewMessages'])->name('messages.fetch');
-        Route::get('/messages/{conversation}/typing-status', [MessageController::class, 'checkTypingStatus'])->name('messages.typing-status');
-        Route::post('/messages/{conversation}/typing', [MessageController::class, 'typing'])->name('messages.typing');
         Route::post('/messages/{conversation}/send', [MessageController::class, 'send'])->name('messages.send');
+  
     
 
         // Report Routes
@@ -257,9 +255,6 @@ Route::prefix('instructor')->name('instructor.')->group(function () {
         // Chat Routes for Instructor
         Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
         Route::get('/messages/{conversation}', [MessageController::class, 'show'])->name('messages.show');
-        Route::get('/messages/{conversation}/fetch', [MessageController::class, 'fetchNewMessages'])->name('messages.fetch');
-        Route::get('/messages/{conversation}/typing-status', [MessageController::class, 'checkTypingStatus'])->name('messages.typing-status');
-        Route::post('/messages/{conversation}/typing', [MessageController::class, 'typing'])->name('messages.typing');
         Route::post('/messages/{conversation}/send', [MessageController::class, 'send'])->name('messages.send');
     
 

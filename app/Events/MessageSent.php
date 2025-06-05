@@ -2,48 +2,51 @@
 
 namespace App\Events;
 
-use App\Models\Message;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Foundation\Events\Dispatchable;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Http;
 
 class MessageSent implements ShouldBroadcast
 {
-    use InteractsWithSockets;
+    use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public $message;
 
-    public function __construct(Message $message)
+    public function __construct($message)
     {
         $this->message = $message;
+
+        // Log event firing
+        \Log::info('MessageSent event fired', [
+            'conversation_id' => $message->conversation_id,
+            'message_id' => $message->id,
+            'sender_id' => $message->sender_id,
+            'sender_type' => $message->sender_type,
+            'sender_photo' => $message->sender->photo ? asset('upload/' . ($message->sender_type === 'App\\Models\\Instructor' ? 'instructor_images' : 'user_images') . '/' . $message->sender->photo) : asset('upload/no_image.jpg'),
+        ]);
+
+        // Send to Socket.IO server
+        $response = Http::post('http://localhost:3000/send-message', [
+            'conversationId' => $message->conversation_id,
+            'message' => $message->message,
+            'sender_id' => $message->sender_id,
+            'sender_type' => $message->sender_type,
+            'sender_name' => $message->sender->name ?? 'Anonymous',
+            'sender_photo' => $message->sender->photo ? asset('upload/' . ($message->sender_type === 'App\\Models\\Instructor' ? 'instructor_images' : 'user_images') . '/' . $message->sender->photo) : asset('upload/no_image.jpg'),
+            'message_id' => $message->id,
+        ]);
+
+        \Log::info('HTTP POST to Socket.IO server', [
+            'status' => $response->status(),
+            'body' => $response->body(),
+        ]);
     }
 
     public function broadcastOn()
     {
-        return new PrivateChannel('conversation.' . $this->message->conversation_id);
-    }
-
-    public function broadcastWith()
-    {
-        $sender = $this->message->sender_type === 'App\\Models\\User'
-            ? \App\Models\User::find($this->message->sender_id)
-            : \App\Models\Instructor::find($this->message->sender_id);
-
-        $sender_photo = $sender->photo
-            ? asset('upload/' . ($sender instanceof \App\Models\User ? 'user_images' : 'instructor_images') . '/' . $sender->photo)
-            : asset('upload/no_image.jpg');
-
-        return [
-            'message_id' => $this->message->id,
-            'conversation_id' => $this->message->conversation_id,
-            'message' => $this->message->message,
-            'sender_id' => $this->message->sender_id,
-            'sender_type' => $this->message->sender_type,
-            'sender_name' => $sender->name,
-            'sender_photo' => $sender_photo,
-            'created_at' => $this->message->created_at->toDateTimeString(),
-        ];
+        return new Channel('conversation.' . $this->message->conversation_id);
     }
 }

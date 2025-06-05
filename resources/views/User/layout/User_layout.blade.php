@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -175,7 +176,7 @@
     <!-- Bootstrap JS -->
     <script src="{{ asset('backend/assets/js/bootstrap.bundle.min.js') }}"></script>
 
-    <!-- jQuery (already in head) -->
+    <!-- jQuery -->
     <script src="{{ asset('backend/assets/js/jquery.min.js') }}"></script>
 
     <!-- Plugins -->
@@ -211,25 +212,6 @@
 
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
-
-    <!-- Laravel Echo and Reverb -->
-    <script src="https://cdn.jsdelivr.net/npm/pusher-js@8.0.0/dist/web/pusher.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/laravel-echo@1.15.0/dist/echo.min.js"></script>
-    <script>
-        window.Pusher = Pusher;
-        window.Echo = new Echo({
-            broadcaster: 'reverb',
-            key: '{{ env('REVERB_APP_KEY') }}',
-            wsHost: '{{ env('REVERB_HOST', 'localhost') }}',
-            wsPort: '{{ env('REVERB_PORT', 8080) }}',
-            wssPort: '{{ env('REVERB_PORT', 8080) }}',
-            scheme: '{{ env('REVERB_SCHEME', 'http') }}',
-            enabledTransports: ['ws', 'wss'],
-            forceTLS: '{{ env('REVERB_SCHEME', 'http') === 'https' }}',
-            disableStats: true,
-        });
-        console.log('Echo initialized for Reverb');
-    </script>
 
     <!-- Sidebar Toggle and MetisMenu -->
     <script>
