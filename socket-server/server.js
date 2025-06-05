@@ -31,6 +31,19 @@ app.post('/send-message', (req, res) => {
     res.status(200).send({ status: 'success' });
 });
 
+app.post("/send-notification", (req, res) => {
+    const { recipient_id, recipient_type, notification } = req.body;
+    console.log(
+        `Notification received for ${recipient_type} ${recipient_id}:`,
+        notification
+    );
+    io.to(`${recipient_type}_${recipient_id}`).emit(
+        "notification",
+        notification
+    );
+    res.status(200).send({ status: "success" });
+});
+
 http.listen(3000, () => {
     console.log('Socket.IO server running on port 3000');
 });

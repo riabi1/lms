@@ -6,8 +6,11 @@ use App\Events\MessageSent;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\Order;
+use App\Notifications\NewMessageNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
+
 
 class MessageController extends Controller
 {
@@ -91,6 +94,42 @@ class MessageController extends Controller
 
         // Get the authenticated user or instructor
         $authUser = Auth::guard('instructor')->check() ? Auth::guard('instructor')->user() : Auth::user();
+              // Emit message via Socket.IO
+              $messageData = [
+                'conversation_id' => $conversation->id,
+                'message_id' => $message->id,
+                'message' => $message->message,
+                'sender_id' => $authUser->id,
+                'sender_type' => Auth::guard('instructor')->check() ? 'App\\Models\\Instructor' : 'App\\Models\\User',
+                'sender_name' => $authUser->name ?? 'Anonymous',
+                'sender_photo' => $authUser->photo ? asset('upload/' . (Auth::guard('instructor')->check() ? 'instructor_images' : 'user_images') . '/' . $authUser->photo) : asset('upload/no_image.jpg'),
+                'created_at' => $message->created_at->toISOString(),
+            ];
+    
+            Http::post('http://localhost:3000/send-message', $messageData);
+    
+            // Notify the recipient
+            $recipient = Auth::guard('instructor')->check() ? $conversation->user : $conversation->instructor;
+            $recipient->notify(new NewMessageNotification($conversation, $message, $authUser));
+    
+            // Emit Socket.IO notification
+            $notificationData = [
+                'id' => $message->id,
+                'type' => 'message',
+                'conversation_id' => $conversation->id,
+                'message_id' => $message->id,
+                'sender_id' => $authUser->id,
+                'sender_name' => $authUser->name ?? 'Anonymous',
+                'message' => $message->message,
+                'report_id' => null,
+            ];
+    
+            $recipientType = Auth::guard('instructor')->check() ? 'user' : 'instructor';
+            Http::post('http://localhost:3000/send-notification', [
+                'recipient_id' => $recipient->id,
+                'recipient_type' => $recipientType,
+                'notification' => $notificationData,
+            ]);
 
         return response()->json([
             'status' => 'success',

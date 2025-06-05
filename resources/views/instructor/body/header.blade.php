@@ -82,43 +82,64 @@
     </div>
 
     @push('scripts')
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
         <script>
             document.addEventListener('DOMContentLoaded', function () {
-                window.Echo.private(`App.Models.Instructor.${{ Auth::guard('instructor')->id() }}`)
-                    .notification((notification) => {
-                        const notificationList = document.getElementById('notificationList');
-                        const notificationCount = document.getElementById('notificationCount');
-                        const notificationCountText = document.getElementById('notificationCountText');
+                const socket = io('{{ env('SOCKET_IO_URL', 'http://localhost:3000') }}', {
+                    withCredentials: true
+                });
 
-                        // Create new notification item
-                        const newItem = document.createElement('a');
-                        newItem.className = 'dropdown-item py-2 px-3 border-bottom notification-item';
-                        newItem.href = notification.type === 'report_resolution' 
-                            ? `/instructor/reports/${notification.report_id}`
-                            : `/instructor/notifications/${notification.id}/mark-as-read`;
-                        newItem.setAttribute('data-notification-id', notification.id);
-                        newItem.innerHTML = `
-                            <div class="d-flex align-items-center gap-2">
-                                <i class="bx bx-book text-primary fs-5"></i>
-                                <div class="flex-grow-1">
-                                    <p class="mb-0 text-dark">${notification.message.substring(0, 50)}${notification.message.length > 50 ? '...' : ''}</p>
-                                    <small class="text-muted">Just now</small>
-                                </div>
+                socket.emit('joinInstructor', {{ Auth::guard('instructor')->id() }});
+                console.log('Instructor joined:', {{ Auth::guard('instructor')->id() }});
+
+                socket.on('notification', (notification) => {
+                    console.log('Received notification:', notification);
+                    const notificationList = document.getElementById('notificationList');
+                    const notificationCount = document.getElementById('notificationCount');
+                    const notificationCountText = document.getElementById('notificationCountText');
+
+                    if (!notificationList || !notificationCount || !notificationCountText) {
+                        console.error('Notification DOM elements not found');
+                        return;
+                    }
+
+                    // Create new notification item
+                    const newItem = document.createElement('a');
+                    newItem.className = 'dropdown-item py-2 px-3 border-bottom notification-item';
+                    newItem.href = notification.type === 'report_resolution' 
+                        ? `/instructor/reports/${notification.report_id}`
+                        : `/instructor/notifications/${notification.id}/mark-as-read`;
+                    newItem.setAttribute('data-notification-id', notification.id);
+                    newItem.innerHTML = `
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bx bx-book text-primary fs-5"></i>
+                            <div class="flex-grow-1">
+                                <p class="mb-0 text-dark">${notification.message.substring(0, 50)}${notification.message.length > 50 ? '...' : ''}</p>
+                                <small class="text-muted">Just now</small>
                             </div>
-                        `;
-                        notificationList.prepend(newItem);
+                        </div>
+                    `;
+                    notificationList.prepend(newItem);
 
-                        // Update notification count
-                        let count = parseInt(notificationCountText.textContent) || 0;
-                        count++;
-                        notificationCountText.textContent = count;
-                        notificationCount.classList.remove('d-none');
-                        notificationCount.textContent = count > 9 ? '9+' : count;
+                    // Update notification count
+                    let count = parseInt(notificationCountText.textContent) || 0;
+                    count++;
+                    notificationCountText.textContent = count;
+                    notificationCount.classList.remove('d-none');
+                    notificationCount.textContent = count > 9 ? '9+' : count;
 
-                        // Show notification dropdown
+                    // Show notification dropdown
+                    try {
                         const dropdown = new bootstrap.Dropdown(document.querySelector('.dropdown-toggle'));
                         dropdown.show();
-                    });
+                    } catch (e) {
+                        console.error('Failed to show dropdown:', e);
+                    }
+                });
+
+                socket.on('connect_error', (error) => {
+                    console.error('Socket.IO connection error:', error);
+                });
             });
         </script>
     @endpush

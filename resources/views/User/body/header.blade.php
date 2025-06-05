@@ -155,60 +155,64 @@
     @endpush
 
     @push('scripts')
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
         <script>
             document.addEventListener('DOMContentLoaded', function () {
-                try {
-                    window.Echo.private(`App.Models.User.${{ Auth::guard('web')->id() }}`)
-                        .notification((notification) => {
-                            console.log('Received notification:', notification);
-                            const notificationList = document.getElementById('notificationList');
-                            const notificationCount = document.getElementById('notificationCount');
-                            const notificationCountText = document.getElementById('notificationCountText');
+                const socket = io('{{ env('SOCKET_IO_URL', 'http://localhost:3000') }}', {
+                    withCredentials: true
+                });
 
-                            if (!notificationList || !notificationCount || !notificationCountText) {
-                                console.error('Notification DOM elements not found');
-                                return;
-                            }
+                socket.emit('joinUser', {{ Auth::guard('web')->id() }});
+                console.log('User joined:', {{ Auth::guard('web')->id() }});
 
-                            // Create new notification item
-                            const newItem = document.createElement('a');
-                            newItem.className = 'dropdown-item py-2 px-3 border-bottom notification-item';
-                            newItem.href = notification.type === 'report_resolution' 
-                                ? `/user/notifications/${notification.id}/read?report_id=${notification.report_id}`
-                                : `/user/notifications/${notification.id}/mark-as-read`;
-                            newItem.setAttribute('data-notification-id', notification.id || 'unknown');
-                            newItem.innerHTML = `
-                                <div class="d-flex align-items-center gap-2">
-                                    <i class="bx bx-book text-primary fs-5"></i>
-                                    <div class="flex-grow-1">
-                                        <p class="mb-0 text-dark">${notification.message.substring(0, 50)}${notification.message.length > 50 ? '...' : ''}</p>
-                                        <small class="text-muted">Just now</small>
-                                    </div>
-                                </div>
-                            `;
-                            notificationList.prepend(newItem);
+                socket.on('notification', (notification) => {
+                    console.log('Received notification:', notification);
+                    const notificationList = document.getElementById('notificationList');
+                    const notificationCount = document.getElementById('notificationCount');
+                    const notificationCountText = document.getElementById('notificationCountText');
 
-                            // Update notification count
-                            let count = parseInt(notificationCountText.textContent) || 0;
-                            count++;
-                            notificationCountText.textContent = count;
-                            notificationCount.classList.remove('d-none');
-                            notificationCount.textContent = count > 9 ? '9+' : count;
+                    if (!notificationList || !notificationCount || !notificationCountText) {
+                        console.error('Notification DOM elements not found');
+                        return;
+                    }
 
-                            // Show notification dropdown
-                            try {
-                                const dropdown = new bootstrap.Dropdown(document.querySelector('#notificationDropdown'));
-                                dropdown.show();
-                            } catch (e) {
-                                console.error('Failed to show dropdown:', e);
-                            }
-                        })
-                        .error((error) => {
-                            console.error('Echo error:', error);
-                        });
-                } catch (e) {
-                    console.error('Failed to initialize Echo:', e);
-                }
+                    // Create new notification item
+                    const newItem = document.createElement('a');
+                    newItem.className = 'dropdown-item py-2 px-3 border-bottom notification-item';
+                    newItem.href = notification.type === 'report_resolution' 
+                        ? `/user/notifications/${notification.id}/read?report_id=${notification.report_id}`
+                        : `/user/notifications/${notification.id}/mark-as-read`;
+                    newItem.setAttribute('data-notification-id', notification.id || 'unknown');
+                    newItem.innerHTML = `
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bx bx-book text-primary fs-5"></i>
+                            <div class="flex-grow-1">
+                                <p class="mb-0 text-dark">${notification.message.substring(0, 50)}${notification.message.length > 50 ? '...' : ''}</p>
+                                <small class="text-muted">Just now</small>
+                            </div>
+                        </div>
+                    `;
+                    notificationList.prepend(newItem);
+
+                    // Update notification count
+                    let count = parseInt(notificationCountText.textContent) || 0;
+                    count++;
+                    notificationCountText.textContent = count;
+                    notificationCount.classList.remove('d-none');
+                    notificationCount.textContent = count > 9 ? '9+' : count;
+
+                    // Show notification dropdown
+                    try {
+                        const dropdown = new bootstrap.Dropdown(document.querySelector('#notificationDropdown'));
+                        dropdown.show();
+                    } catch (e) {
+                        console.error('Failed to show dropdown:', e);
+                    }
+                });
+
+                socket.on('connect_error', (error) => {
+                    console.error('Socket.IO connection error:', error);
+                });
             });
         </script>
     @endpush
