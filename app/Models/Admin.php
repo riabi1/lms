@@ -8,12 +8,14 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Auth\Notifications\ResetPassword as ResetPasswordNotification;
 use Illuminate\Notifications\Messages\MailMessage;
+use Spatie\Permission\Traits\HasRoles;
 
 class Admin extends Authenticatable implements MustVerifyEmail
 {
-  use Notifiable;
+    use Notifiable, HasRoles;
 
     protected $guard = 'admin';
+    protected $guard_name = 'admin'; // Add for Spatie
 
     protected $fillable = [
         'name', 'email', 'phone', 'address', 'photo', 'password',
@@ -22,13 +24,11 @@ class Admin extends Authenticatable implements MustVerifyEmail
     protected $hidden = [
         'password', 'remember_token',
     ];
+
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
 
-    /**
-     * Send the email verification notification.
-     */
     public function sendEmailVerificationNotification()
     {
         $this->notify(new class ($this) extends VerifyEmail {
@@ -53,9 +53,6 @@ class Admin extends Authenticatable implements MustVerifyEmail
         });
     }
 
-    /**
-     * Send the password reset notification.
-     */
     public function sendPasswordResetNotification($token)
     {
         $this->notify(new class($token) extends ResetPasswordNotification {
@@ -74,6 +71,4 @@ class Admin extends Authenticatable implements MustVerifyEmail
             }
         });
     }
-
- 
 }
