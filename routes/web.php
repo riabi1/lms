@@ -53,6 +53,7 @@ use App\Http\Controllers\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\Instructor\ReportController as InstructorReportController;
 use App\Http\Controllers\Instructor\ReviewController as InstructorReviewController;
 use App\Http\Controllers\User\NotificationController as UserNotificationController;
+use App\Http\Controllers\Admin\RoleController;
 
 // Home Page Route
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -161,64 +162,117 @@ Route::post('/chat', [ChatController::class, 'handleChat'])->name('user.chat');
 
 // Admin Routes
 Route::prefix('admin')->name('admin.')->group(function () {
-    require base_path('routes/auth/admin.php');
+  require base_path('routes/auth/admin.php');
 
-    Route::get('/dashboard', [AdmindashboardController::class, 'index'])
-    ->middleware(['auth:admin'])->name('dashboard');
+  Route::get('/dashboard', [AdmindashboardController::class, 'index'])
+      ->middleware(['auth:admin'])->name('dashboard');
 
-    Route::middleware(['auth:admin', 'verified'])->group(function () {
-        Route::resource('categories', CategoryController::class)->except(['show']);
-        Route::resource('subcategories', SubCategoryController::class)->except(['show']);
-        Route::resource('courses', AdminCourseController::class)->names('courses');
-        Route::resource('instructors', InstructorManagementController::class)->names('instructors');
-        Route::resource('report-categories', ReportCategoryController::class)->names('report-categories');
-        Route::post('/courses/update-status', [AdminCourseController::class, 'updateCourseStatus'])->name('courses.updateStatus');
-        Route::post('/instructors/update-status', [InstructorManagementController::class, 'updateStatus'])->name('instructors.updateStatus');
-        Route::get('/instructors/{id}/download-cv', [InstructorManagementController::class, 'downloadCv'])->name('instructors.downloadCv');
+  Route::middleware(['auth:admin', 'verified'])->group(function () {
+      // Role Management
+      Route::get('/roles', [RoleController::class, 'index'])->middleware('permission:admin.roles.index')->name('roles.index');
+      Route::post('/roles/{admin}/assign', [RoleController::class, 'assignRole'])->middleware('permission:admin.roles.assign')->name('roles.assign');
+      Route::post('/roles/create', [RoleController::class, 'createRole'])->middleware('permission:admin.roles.create')->name('roles.create');
+      Route::post('/roles/{role}/permissions', [RoleController::class, 'assignPermissions'])->middleware('permission:admin.permissions.manage')->name('roles.permissions');
 
-        Route::get('/pending/review', [AdminReviewController::class, 'pending'])->name('pending.review');
-        Route::get('/active/review', [AdminReviewController::class, 'active'])->name('active.review');
-        Route::post('/update/review/status', [AdminReviewController::class, 'updateStatus'])->name('update.review.status');
+      // Category Management
+      Route::resource('categories', CategoryController::class)->except(['show'])->middleware([
+          'index' => 'permission:admin.categories.index',
+          'create' => 'permission:admin.categories.create',
+          'store' => 'permission:admin.categories.store',
+          'edit' => 'permission:admin.categories.edit',
+          'update' => 'permission:admin.categories.update',
+          'destroy' => 'permission:admin.categories.destroy',
+      ]);
 
-        Route::get('/orders', [AllOrdersController::class, 'index'])->name('orders.index');
-        Route::get('/orders/{id}', [AllOrdersController::class, 'show'])->name('orders.show');
+      // Subcategory Management
+      Route::resource('subcategories', SubCategoryController::class)->except(['show'])->middleware([
+          'index' => 'permission:admin.subcategories.index',
+          'create' => 'permission:admin.subcategories.create',
+          'store' => 'permission:admin.subcategories.store',
+          'edit' => 'permission:admin.subcategories.edit',
+          'update' => 'permission:admin.subcategories.update',
+          'destroy' => 'permission:admin.subcategories.destroy',
+      ]);
 
-        Route::get('/coupons', [CouponViewController::class, 'index'])->name('coupon.index');
-        Route::get('/coupons/{coupon}', [CouponViewController::class, 'show'])->name('coupon.show');
+      // Course Management
+      Route::get('/courses', [AdminCourseController::class, 'index'])->middleware('permission:admin.courses.index')->name('courses.index');
+      Route::get('/courses/{course}', [AdminCourseController::class, 'show'])->middleware('permission:admin.courses.show')->name('courses.show');
+      Route::post('/courses/update-status', [AdminCourseController::class, 'updateCourseStatus'])->middleware('permission:admin.courses.updateStatus')->name('courses.updateStatus');
 
-        Route::get('/users', [UserController::class, 'index'])->name('users.index');
+      // Instructor Management
+      Route::get('/instructors', [InstructorManagementController::class, 'index'])->middleware('permission:admin.instructors.index')->name('instructors.index');
+      Route::post('/instructors/update-status', [InstructorManagementController::class, 'updateStatus'])->middleware('permission:admin.instructors.updateStatus')->name('instructors.updateStatus');
+      Route::get('/instructors/{id}/download-cv', [InstructorManagementController::class, 'downloadCv'])->middleware('permission:admin.instructors.downloadCv')->name('instructors.downloadCv');
 
-        Route::get('/site-settings', [SettingController::class, 'siteSetting'])->name('site.settings');
-        Route::post('/site-settings/update', [SettingController::class, 'updateSite'])->name('site.update');
+      // Review Management
+      Route::get('/pending/review', [AdminReviewController::class, 'pending'])->middleware('permission:admin.pending.review')->name('pending.review');
+      Route::get('/active/review', [AdminReviewController::class, 'active'])->middleware('permission:admin.active.review')->name('active.review');
+      Route::post('/update/review/status', [AdminReviewController::class, 'updateStatus'])->middleware('permission:admin.update.review.status')->name('update.review.status');
 
-        // Blog Category Routes
-        Route::resource('blog-categories', BlogCategoriesController::class);
-        Route::get('/blog-posts', [BlogPostsController::class, 'index'])->name('blog-posts.index');
-        Route::post('/blog-posts/{id}/toggle', [BlogPostsController::class, 'toggle'])->name('blog-posts.toggle');
+      // Order Management
+      Route::get('/orders', [AllOrdersController::class, 'index'])->middleware('permission:admin.orders.index')->name('orders.index');
+      Route::get('/orders/{id}', [AllOrdersController::class, 'show'])->middleware('permission:admin.orders.show')->name('orders.show');
 
-        // Comment Routes
-        Route::get('/comments', [CommentController::class, 'index'])->name('comments.index');
-        Route::put('/comments/{id}/toggle/{type?}', [CommentController::class, 'toggleApproval'])->name('comments.toggle');
-        Route::delete('/comments/{id}/{type?}', [CommentController::class, 'destroy'])->name('comments.destroy');
+      // Coupon Management
+      Route::get('/coupons', [CouponViewController::class, 'index'])->middleware('permission:admin.coupon.index')->name('coupon.index');
+      Route::get('/coupons/{coupon}', [CouponViewController::class, 'show'])->middleware('permission:admin.coupon.show')->name('coupon.show');
 
-        Route::get('/earnings', [EarningsController::class, 'index'])->name('earnings');
+      // User Management
+      Route::get('/users', [UserController::class, 'index'])->middleware('permission:admin.users.index')->name('users.index');
 
-        Route::get('/reports', [AdminReportController::class, 'index'])->name('reports.index');
-        Route::patch('/reports/{report}', [AdminReportController::class, 'update'])->name('reports.update');
+      // Site Settings
+      Route::get('/site-settings', [SettingController::class, 'siteSetting'])->middleware('permission:admin.site.settings')->name('site.settings');
+      Route::post('/site-settings/update', [SettingController::class, 'updateSite'])->middleware('permission:admin.site.update')->name('site.update');
 
-        // Excel Export Routes
-        Route::get('/admin/excel', [ExcelReportController::class, 'index'])->name('excel.index');
-        Route::get('/admin/excel/export/enrollments', [ExcelReportController::class, 'exportEnrollments'])->name('excel.enrollments');
-        Route::get('/admin/excel/export/payments', [ExcelReportController::class, 'exportPayments'])->name('excel.payments');
-        Route::get('/admin/excel/export/users', [ExcelReportController::class, 'exportUsers'])->name('excel.users');
-        Route::get('/admin/excel/export/instructors', [ExcelReportController::class, 'exportInstructors'])->name('excel.instructors');
-        Route::get('/admin/excel/export/orders', [ExcelReportController::class, 'exportOrders'])->name('excel.orders');
-        Route::get('/admin/excel/export/courses', [ExcelReportController::class, 'exportCourses'])->name('excel.courses');
-        Route::get('/admin/excel/export/admins', [ExcelReportController::class, 'exportAdmins'])->name('excel.admins');
-        Route::get('/admin/excel/export/blog-posts', [ExcelReportController::class, 'exportBlogPosts'])->name('excel.blog_posts');
-        Route::get('/admin/excel/export/blog-categories', [ExcelReportController::class, 'exportBlogCategories'])->name('excel.blog_categories');
-        Route::get('/admin/excel/export/coupons', [ExcelReportController::class, 'exportCoupons'])->name('excel.coupons');
-    });
+      // Blog Category Management
+      Route::resource('blog-categories', BlogCategoriesController::class)->middleware([
+          'index' => 'permission:admin.blog-categories.index',
+          'create' => 'permission:admin.blog-categories.create',
+          'store' => 'permission:admin.blog-categories.store',
+          'edit' => 'permission:admin.blog-categories.edit',
+          'update' => 'permission:admin.blog-categories.update',
+          'destroy' => 'permission:admin.blog-categories.destroy',
+      ]);
+
+      // Blog Post Management
+      Route::get('/blog-posts', [BlogPostsController::class, 'index'])->middleware('permission:admin.blog-posts.index')->name('blog-posts.index');
+      Route::post('/blog-posts/{id}/toggle', [BlogPostsController::class, 'toggle'])->middleware('permission:admin.blog-posts.toggle')->name('blog-posts.toggle');
+
+      // Comment Management
+      Route::get('/comments', [CommentController::class, 'index'])->middleware('permission:admin.comments.index')->name('comments.index');
+      Route::put('/comments/{id}/toggle/{type?}', [CommentController::class, 'toggleApproval'])->middleware('permission:admin.comments.toggle')->name('comments.toggle');
+      Route::delete('/comments/{id}/{type?}', [CommentController::class, 'destroy'])->middleware('permission:admin.comments.destroy')->name('comments.destroy');
+
+      // Earnings
+      Route::get('/earnings', [EarningsController::class, 'index'])->middleware('permission:admin.earnings')->name('earnings');
+
+      // Report Management
+      Route::get('/reports', [AdminReportController::class, 'index'])->middleware('permission:admin.reports.index')->name('reports.index');
+      Route::patch('/reports/{report}', [AdminReportController::class, 'update'])->middleware('permission:admin.reports.update')->name('reports.update');
+
+      // Report Category Management
+      Route::resource('report-categories', ReportCategoryController::class)->names('report-categories')->middleware([
+          'index' => 'permission:admin.report-categories.index',
+          'create' => 'permission:admin.report-categories.create',
+          'store' => 'permission:admin.report-categories.store',
+          'edit' => 'permission:admin.report-categories.edit',
+          'update' => 'permission:admin.report-categories.update',
+          'destroy' => 'permission:admin.report-categories.destroy',
+      ]);
+
+      // Excel Export Routes
+      Route::get('/admin/excel', [ExcelReportController::class, 'index'])->middleware('permission:admin.excel.index')->name('excel.index');
+      Route::get('/admin/excel/export/enrollments', [ExcelReportController::class, 'exportEnrollments'])->middleware('permission:admin.excel.enrollments')->name('excel.enrollments');
+      Route::get('/admin/excel/export/payments', [ExcelReportController::class, 'exportPayments'])->middleware('permission:admin.excel.payments')->name('excel.payments');
+      Route::get('/admin/excel/export/users', [ExcelReportController::class, 'exportUsers'])->middleware('permission:admin.excel.users')->name('excel.users');
+      Route::get('/admin/excel/export/instructors', [ExcelReportController::class, 'exportInstructors'])->middleware('permission:admin.excel.instructors')->name('excel.instructors');
+      Route::get('/admin/excel/export/orders', [ExcelReportController::class, 'exportOrders'])->middleware('permission:admin.excel.orders')->name('excel.orders');
+      Route::get('/admin/excel/export/courses', [ExcelReportController::class, 'exportCourses'])->middleware('permission:admin.excel.courses')->name('excel.courses');
+      Route::get('/admin/excel/export/admins', [ExcelReportController::class, 'exportAdmins'])->middleware('permission:admin.excel.admins')->name('excel.admins');
+      Route::get('/admin/excel/export/blog-posts', [ExcelReportController::class, 'exportBlogPosts'])->middleware('permission:admin.excel.blog_posts')->name('excel.blog_posts');
+      Route::get('/admin/excel/export/blog-categories', [ExcelReportController::class, 'exportBlogCategories'])->middleware('permission:admin.excel.blog_categories')->name('excel.blog_categories');
+      Route::get('/admin/excel/export/coupons', [ExcelReportController::class, 'exportCoupons'])->middleware('permission:admin.excel.coupons')->name('excel.coupons');
+  });
 });
 
 // Instructor Routes
@@ -273,7 +327,9 @@ Route::prefix('instructor')->name('instructor.')->group(function () {
         Route::delete('/question/answer/destroy', [QuestionController::class, 'destroyAnswer'])->name('question.answer.destroy');
         
     });
+
 });
+
 
 // Frontend Routes (Public)
 Route::get('/course/details/{id}/{slug}', [IndexController::class, 'CourseDetails'])->name('course.details');
